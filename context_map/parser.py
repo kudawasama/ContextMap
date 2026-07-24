@@ -132,76 +132,245 @@ def _now() -> str:
 
 
 def _generar_summary(tipo: str, texto: str, source: str, tags: List[str]) -> str:
-    """Genera un summary descriptivo basado en el tipo y contenido."""
-    # Limpiar texto
+    """Genera un summary educativo, profesional e intuitivo.
+
+    Objetivo: que cualquier agente o persona pueda entender el contexto
+    sin necesidad de leer el código fuente. Las descripciones deben ser
+    útiles para estudiar y revisar el proyecto.
+    """
     texto_limpio = texto.strip()
-
-    # Templates por tipo
-    templates = {
-        "BASE": {
-            "default": f"Este elemento representa un fundamento del proyecto. {texto_limpio}",
-            "proyecto": f"El proyecto actual. {texto_limpio}",
-            "doc": f"Documentación encontrada en el proyecto. {texto_limpio}",
-            "config": f"Configuración del proyecto. {texto_limpio}",
-        },
-        "IDEA": {
-            "default": f"Idea o concepto importante. {texto_limpio}",
-            "estructura": f"Aspecto estructural del proyecto. {texto_limpio}",
-            "docstring": f"Descripción de módulo. {texto_limpio}",
-            "clase": f"Clase definida en el código. {texto_limpio}",
-            "decisión": f"Decisión tomada en el proyecto. {texto_limpio}",
-            "implementación": f"Implementación planificada. {texto_limpio}",
-        },
-        "RIESGO": {
-            "default": f"Riesgo identificado que requiere atención. {texto_limpio}",
-            "complejidad": f"Área de alta complejidad. {texto_limpio}",
-            "tests": f"Falta de pruebas. {texto_limpio}",
-            "análisis": f"Análisis de riesgos. {texto_limpio}",
-        },
-        "CAMBIO": {
-            "default": f"Cambio en curso o reciente. {texto_limpio}",
-            "config": f"Cambio en configuración. {texto_limpio}",
-            "conversación": f"Discusión relevante. {texto_limpio}",
-        },
-        "PRUEBA": {
-            "default": f"Prueba o validación. {texto_limpio}",
-            "tests": f"Archivo de prueba. {texto_limpio}",
-        },
-        "FUTURO": {
-            "default": f"Elemento pendiente o futuro. {texto_limpio}",
-            "pendiente": f"TODO pendiente de implementar. {texto_limpio}",
-            "análisis": f"Análisis pendiente. {texto_limpio}",
-        },
-        "HITO": {
-            "default": f"Hito o milestone alcanzado. {texto_limpio}",
-            "tag": f"Versión publicada. {texto_limpio}",
-        },
-        "CORRECCION": {
-            "default": f"Corrección o fix aplicado. {texto_limpio}",
-            "commit": f"Commit de corrección. {texto_limpio}",
-        },
-    }
-
-    # Buscar template específico
-    tipo_templates = templates.get(tipo, templates["IDEA"])
-
-    # Buscar por tags
-    for tag in tags:
-        if tag in tipo_templates:
-            return tipo_templates[tag]
-
-    # Buscar por contenido en texto
     texto_lower = texto_limpio.lower()
-    if "proyecto" in texto_lower:
-        return tipo_templates.get("proyecto", tipo_templates["default"])
-    elif "doc" in texto_lower or "readme" in texto_lower:
-        return tipo_templates.get("doc", tipo_templates["default"])
-    elif "test" in texto_lower:
-        return tipo_templates.get("tests", tipo_templates["default"])
-    elif "config" in texto_lower:
-        return tipo_templates.get("config", tipo_templates["default"])
 
-    return tipo_templates["default"]
+    # Detectar contexto del evento
+    es_scanner = source == "scanner"
+    es_git = source == "git"
+    es_chat = source.startswith("chat")
+    es_manual = source in ("manual", "")
+
+    # === BASE: Fundamentos del proyecto ===
+    if tipo == "BASE":
+        if es_scanner:
+            if "archivos" in texto_lower and "líneas" in texto_lower:
+                return (
+                    f"Este es el estado actual del código fuente. "
+                    f"{texto_limpio}. "
+                    f"Esta métrica te da una idea del tamaño y complejidad del proyecto: "
+                    f"más archivos y líneas implican mayor superficie de mantenimiento."
+                )
+            if "entry point" in texto_lower or "entrypoint" in texto_lower:
+                modulo = texto_limpio.split(":")[-1].strip() if ":" in texto_limpio else texto_limpio
+                return (
+                    f"El punto de entrada del proyecto es `{modulo}`. "
+                    f"Este es el archivo que se ejecuta primero cuando corres el programa. "
+                    f"Si necesitas entender cómo funciona el proyecto, empieza por aquí."
+                )
+            if "config" in texto_lower or "pyproject" in texto_lower:
+                return (
+                    f"Configuración del proyecto detectada: {texto_limpio}. "
+                    f"Este archivo define metadatos, dependencias y puntos de entrada. "
+                    f"Los agentes de IA lo usan para entender qué librerías están disponibles."
+                )
+            if "doc" in texto_lower or "readme" in texto_lower or "contributing" in texto_lower:
+                return (
+                    f"Documentación encontrada: {texto_limpio}. "
+                    f"Estos archivos explican cómo usar, contribuir y entender el proyecto. "
+                    f"Lee el README primero para una visión general."
+                )
+            if "lenguaje" in texto_lower or "python" in texto_lower:
+                return (
+                    f"Tecnología principal: {texto_limpio}. "
+                    f"Esto define qué herramientas y librerías puedes usar al trabajar en el proyecto."
+                )
+        if es_git:
+            return (
+                f"Estado del repositorio: {texto_limpio}. "
+                f"El historial de git muestra la evolución del proyecto y las decisiones tomadas."
+            )
+        # Default BASE
+        return (
+            f"Elemento fundamento del proyecto. {texto_limpio}. "
+            f"Entender esto es esencial antes de hacer cambios."
+        )
+
+    # === IDEA: Ideas, conceptos, implementaciones ===
+    if tipo == "IDEA":
+        if es_git:
+            # Parsear commit: [hash] tipo: descripción
+            commit_match = texto_limpio
+            if "] " in commit_match:
+                partes = commit_match.split("] ", 1)
+                if len(partes) == 2:
+                    commit_hash = partes[0].replace("[", "")
+                    commit_msg = partes[1]
+                    return (
+                        f"Este commit (`{commit_hash}`) implementa: {commit_msg}. "
+                        f"Los commits son unidades atómicas de cambio que mantienen el historial limpio. "
+                        f"Cada commit debe resolver un solo problema o agregar una funcionalidad."
+                    )
+        if es_scanner:
+            if "clase" in texto_lower or "función" in texto_lower:
+                return (
+                    f"Componente de código detectado: {texto_limpio}. "
+                    f"Las clases y funciones son los bloques de construcción del proyecto. "
+                    f"Cada una tiene una responsabilidad específica."
+                )
+            if "docstring" in texto_lower or "descripción" in texto_lower:
+                return (
+                    f"Documentación interna del código: {texto_limpio}. "
+                    f"Los docstrings explican qué hace cada módulo, clase o función. "
+                    f"Son esenciales para entender el código sin leerlo línea por línea."
+                )
+            if "estructura" in texto_lower:
+                return (
+                    f"Aspecto estructural: {texto_limpio}. "
+                    f"La estructura del proyecto determina cómo se organiza el código "
+                    f"y cómo los diferentes módulos se relacionan entre sí."
+                )
+        # Default IDEA
+        return (
+            f"Idea o implementación relevante. {texto_limpio}. "
+            f"Este concepto es parte fundamental de cómo funciona o evoluciona el proyecto."
+        )
+
+    # === RIESGO: Problemas potenciales ===
+    if tipo == "RIESGO":
+        if "test" in texto_lower:
+            return (
+                f"⚠️ Riesgo importante: {texto_limpio}. "
+                f"Sin tests automatizados, cualquier cambio puede romper funcionalidad "
+                f"existente sin que te des cuenta. Los tests protegen contra regresiones "
+                f"y dan confianza para hacer cambios."
+            )
+        if "complejidad" in texto_lower or "complejo" in texto_lower:
+            return (
+                f"⚠️ Zona de alta complejidad: {texto_limpio}. "
+                f"Estas áreas son propensas a bugs y difíciles de mantener. "
+                f"Considera refactorizar o agregar documentación extra."
+            )
+        if "dependencia" in texto_lower or "depend" in texto_lower:
+            return (
+                f"⚠️ Dependencia potencial: {texto_limpio}. "
+                f"Las dependencias externas pueden cambiar o dejarse de mantener. "
+                f"Verifica que estén activas y sean compatibles."
+            )
+        # Default RIESGO
+        return (
+            f"⚠️ Riesgo identificado: {texto_limpio}. "
+            f"Este problema puede afectar la calidad, mantenibilidad o estabilidad del proyecto. "
+            f"Requiere atención antes de hacer cambios significativos."
+        )
+
+    # === CAMBIO: Modificaciones en curso ===
+    if tipo == "CAMBIO":
+        if es_git:
+            if "] " in texto_limpio:
+                partes = texto_limpio.split("] ", 1)
+                if len(partes) == 2:
+                    commit_hash = partes[0].replace("[", "")
+                    commit_msg = partes[1]
+                    return (
+                        f"Cambio registrado en commit `{commit_hash}`: {commit_msg}. "
+                        f"Cada cambio en git es rastreable y reversible. "
+                        f"Esto te permite entender qué se modificó y por qué."
+                    )
+        if "conversación" in texto_lower or "chat" in texto_lower:
+            return (
+                f"Decisión discutida en conversación: {texto_limpio}. "
+                f"Las decisiones tomadas en chat definen la dirección del proyecto "
+                f"y son tan importantes como el código mismo."
+            )
+        # Default CAMBIO
+        return (
+            f"Cambio en el proyecto: {texto_limpio}. "
+            f"Los cambios deben ser bien documentados para que otros entiendan "
+            f"qué se modificó y cuál fue la razón."
+        )
+
+    # === PRUEBA: Testing y validación ===
+    if tipo == "PRUEBA":
+        if "test" in texto_lower or "pytest" in texto_lower:
+            return (
+                f"Prueba detectada: {texto_limpio}. "
+                f"Los tests verifican que el código funciona correctamente. "
+                f"Ejecuta `pytest` antes de cada commit para asegurar que nada se rompió."
+            )
+        return (
+            f"Validación del proyecto: {texto_limpio}. "
+            f"Las pruebas son la红线 de defensa contra bugs. "
+            f"Siempre prueba antes de desplegar."
+        )
+
+    # === FUTURO: Lo que viene ===
+    if tipo == "FUTURO":
+        if "todo" in texto_lower or "pendiente" in texto_lower:
+            # Extraer ubicación si existe
+            ubicacion = ""
+            if "en " in texto_lower or ":" in texto_limpio:
+                partes = texto_limpio.split(":")
+                if len(partes) >= 2:
+                    ubicacion = partes[0].strip()
+            return (
+                f"📝 Tarea pendiente: {texto_limpio}. "
+                f"Los TODOs son recordatorios de funcionalidad que falta por implementar. "
+                f"Revisa estos items cuando busques cómo contribuir al proyecto."
+                + (f"\n\nUbicación: `{ubicacion}`" if ubicacion else "")
+            )
+        if "futuro" in texto_lower or "próximo" in texto_lower or "roadmap" in texto_limpio:
+            return (
+                f"🔮 Planificación futura: {texto_limpio}. "
+                f"Estos elementos están en la hoja de ruta del proyecto "
+                f"y se implementarán cuando las prioridades lo permitan."
+            )
+        # Default FUTURO
+        return (
+            f"Elemento futuro o pendiente: {texto_limpio}. "
+            f"Esto está planificado pero aún no se ha implementado. "
+            f"Puede ser una buena oportunidad para contribuir."
+        )
+
+    # === HITO: Logros y versiones ===
+    if tipo == "HITO":
+        if "tag" in texto_lower or "v0" in texto_lower or "release" in texto_lower:
+            return (
+                f"🎯 Versión publicada: {texto_limpio}. "
+                f"Los hitos marcan puntos estables del proyecto donde se puede "
+                f"usar en producción con confianza."
+            )
+        if es_git:
+            return (
+                f"Hito alcanzado: {texto_limpio}. "
+                f"Este commit marca un punto importante en la evolución del proyecto."
+            )
+        return (
+            f"🎯 Hito del proyecto: {texto_limpio}. "
+            f"Los hitos ayudan a trackear el progreso y celebrar logros."
+        )
+
+    # === CORRECCION: Bugs y fixes ===
+    if tipo == "CORRECCION":
+        if es_git:
+            if "] " in texto_limpio:
+                partes = texto_limpio.split("] ", 1)
+                if len(partes) == 2:
+                    commit_hash = partes[0].replace("[", "")
+                    commit_msg = partes[1]
+                    return (
+                        f"🔧 Corrección aplicada en `{commit_hash}`: {commit_msg}. "
+                        f"Los fixes deben ser atómicos y describir claramente "
+                        f"qué problema resuelven."
+                    )
+        return (
+            f"🔧 Corrección: {texto_limpio}. "
+            f"Los bugs deben documentarse para evitar que reaparezcan "
+            f"y para entender qué problemas ha tenido el proyecto."
+        )
+
+    # === Default genérico ===
+    return (
+        f"{tipo}: {texto_limpio}. "
+        f"Este evento es parte del contexto del proyecto y ayuda a entender "
+        f"su historia y evolución."
+    )
 
 
 def events_to_model(
