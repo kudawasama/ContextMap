@@ -29,6 +29,13 @@ from context_map.store import (
 from context_map.writer import render_active_map, render_obsidian_vault
 from context_map.sync import sync_incremental
 from context_map.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
+from context_map.integrations.git import leer_historial_git, CommitInfo
+
+
+def _ahora() -> str:
+    """Timestamp actual."""
+    from datetime import datetime
+    return datetime.now().isoformat(timespec="seconds")
 
 
 CONTEXT_DIR = ".context-map"
@@ -210,6 +217,95 @@ def cmd_scan(args: argparse.Namespace) -> None:
         print("Sin eventos nuevos")
 
 
+def cmd_import_git(args: argparse.Namespace) -> None:
+    """Importa historial de git como eventos."""
+    _ensure_dirs()
+
+    ruta = args.target or os.getcwd()
+    print(f"Leyendo historial git de: {os.path.abspath(ruta)}")
+
+    history = leer_historial_git(ruta, limite=args.limit or 50)
+
+    if not history.commits:
+        print("No se encontraron commits o no es un repositorio git")
+        return
+
+    print(f"Commits encontrados: {len(history.commits)}")
+    print(f"Tags: {len(history.tags)}")
+
+    # Convertir commits a eventos
+    eventos = []
+
+    # Evento BASE del repo
+    eventos.append(Event(
+        type="BASE",
+        text=f"Repositorio git con {history.total_commits} commits totales, branch: {history.branch_actual}",
+        timestamp=_ahora(),
+        source="git",
+        tags=["git", "repo"],
+    ))
+
+    # Eventos por commits recientes (últimos 20)
+    for commit in history.commits[:20]:
+        # Clasificar commit por mensaje
+        msg_lower = commit.mensaje.lower()
+        if any(kw in msg_lower for kw in ["fix", "bug", "correc", "patch"]):
+            tipo = "CORRECCION"
+        elif any(kw in msg_lower for kw in ["feat", "add", "nuevo", "new"]):
+            tipo = "IDEA"
+        elif any(kw in msg_lower for kw in ["test", "qa"]):
+            tipo = "PRUEBA"
+        elif any(kw in msg_lower for kw in ["doc", "readme", "changelog"]):
+            tipo = "CAMBIO"
+        else:
+            tipo = "CAMBIO"
+
+        eventos.append(Event(
+            type=tipo,
+            text=f"[{commit.sha[:7]}] {commit.mensaje}",
+            timestamp=commit.fecha or _ahora(),
+            source="git",
+            tags=["commit", tipo.lower()],
+        ))
+
+    # Eventos por tags
+    for tag in history.tags[:10]:
+        eventos.append(Event(
+            type="HITO",
+            text=f"Release tag: {tag}",
+            timestamp=_ahora(),
+            source="git",
+            tags=["tag", "release"],
+        ))
+
+    # Guardar
+    output = os.path.join(RAW_DIR, "events.jsonl")
+    guardados = guardar_eventos_escaneados(eventos, output)
+    print(f"Eventos nuevos guardados: {guardados}")
+
+    # Sync
+    if guardados > 0:
+        stats = sync_incremental(
+            chats_dir=CHATS_DIR,
+            raw_dir=RAW_DIR,
+            state_dir=STATE_DIR,
+        )
+
+        records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
+        e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
+        nodes = [Node.from_dict(r) for r in records]
+        edges = [Edge.from_dict(r) for r in e_records]
+
+        md = render_active_map(args.project or "Repo", nodes, edges)
+        write_map(md)
+
+        vault_dir = os.path.join(CONTEXT_DIR, "vault")
+        render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
+
+        print(f"sync: nodos {stats['nodos_existentes']} → {stats['nodos_existentes'] + stats['nodos_agregados']}")
+        print(f"vault: {vault_dir}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="ctxmap")
     sub = p.add_subparsers(dest="cmd")
@@ -227,6 +323,11 @@ def main() -> None:
     s_scan.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a escanear")
     s_scan.add_argument("--project", default="Repo")
 
+    s_git = sub.add_parser("import-git")
+    s_git.add_argument("target", nargs="?", default=".", help="Ruta del repositorio")
+    s_git.add_argument("--project", default="Repo")
+    s_git.add_argument("--limit", type=int, default=50, help="Máximo de commits")
+
     s_watch = sub.add_parser("watch")
     s_watch.add_argument("--interval", type=int, default=10)
 
@@ -239,6 +340,8 @@ def main() -> None:
         cmd_sync(args)
     elif args.cmd == "scan":
         cmd_scan(args)
+    elif args.cmd == "import-git":
+        cmd_import_git(args)
     elif args.cmd == "watch":
         cmd_watch(args)
     else:
