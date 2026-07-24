@@ -30,6 +30,7 @@ from context_map.writer import render_active_map, render_obsidian_vault
 from context_map.sync import sync_incremental
 from context_map.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
 from context_map.integrations.git import leer_historial_git, CommitInfo
+from context_map.integrations.hermes import importar_sesiones
 from context_map.checker import analizar_readiness, formatear_readiness
 
 
@@ -322,6 +323,44 @@ def cmd_check(args: argparse.Namespace) -> None:
     print(formatear_readiness(resultado))
 
 
+def cmd_import_sessions(args: argparse.Namespace) -> None:
+    """Importa sesiones de Hermes como eventos."""
+    _ensure_dirs()
+
+    print("Buscando base de datos de sesiones...")
+
+    output = os.path.join(RAW_DIR, "events.jsonl")
+    importados = importar_sesiones(
+        db_path=args.db,
+        limite=args.limit or 5,
+        output_path=output,
+    )
+
+    print(f"Sesiones importadas: {importados} eventos nuevos")
+
+    if importados > 0:
+        # Sync
+        stats = sync_incremental(
+            chats_dir=CHATS_DIR,
+            raw_dir=RAW_DIR,
+            state_dir=STATE_DIR,
+        )
+
+        records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
+        e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
+        nodes = [Node.from_dict(r) for r in records]
+        edges = [Edge.from_dict(r) for r in e_records]
+
+        md = render_active_map(args.project or "Repo", nodes, edges)
+        write_map(md)
+
+        vault_dir = os.path.join(CONTEXT_DIR, "vault")
+        render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
+
+        print(f"sync: nodos {stats['nodos_existentes']} → {stats['nodos_existentes'] + stats['nodos_agregados']}")
+        print(f"vault: {vault_dir}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="ctxmap")
     sub = p.add_subparsers(dest="cmd")
@@ -352,6 +391,11 @@ def main() -> None:
     s_check.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_check.add_argument("--json", action="store_true", help="Salida JSON")
 
+    s_sessions = sub.add_parser("import-sessions")
+    s_sessions.add_argument("--project", default="Repo")
+    s_sessions.add_argument("--db", default=None, help="Ruta a sessions.db")
+    s_sessions.add_argument("--limit", type=int, default=5, help="Máximo de sesiones")
+
     args = p.parse_args()
     if args.cmd == "init":
         cmd_init(args)
@@ -363,6 +407,8 @@ def main() -> None:
         cmd_scan(args)
     elif args.cmd == "import-git":
         cmd_import_git(args)
+    elif args.cmd == "import-sessions":
+        cmd_import_sessions(args)
     elif args.cmd == "watch":
         cmd_watch(args)
     elif args.cmd == "check":
