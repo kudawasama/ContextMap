@@ -1,4 +1,4 @@
-# Context Map Generator
+# Context Map
 
 **Mapa mental narrativo de proyectos para agentes de IA**
 
@@ -9,7 +9,7 @@
 
 ## ¿Qué es?
 
-Context Map Generator crea un **vault de Obsidian** con el contexto completo de tu proyecto: qué es, por qué existe, qué riesgos tiene, qué ideas hay pendientes, y qué decisiones se tomaron.
+Context Map crea un **vault de Obsidian** con el contexto completo de tu proyecto: qué es, por qué existe, qué riesgos tiene, qué ideas hay pendientes, y qué decisiones se tomaron.
 
 No es un escáner de archivos. Es un sistema que captura el **alma** del proyecto.
 
@@ -26,10 +26,10 @@ Cuando un agente de IA (Hermes, OpenCode, Cursor, Claude) entra a trabajar en tu
 
 Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al final no entiende el espíritu del proyecto.
 
-## Comparativa: Otros vs Context Map Generator
+## Comparativa: Otros vs Context Map
 
-| Característica | Otros | Context Map Generator |
-|----------------|:-----:|:---------------------:|
+| Característica | Otros | Context Map |
+|----------------|:-----:|:-----------:|
 | Escaneo técnico de archivos | ✅ | ✅ |
 | Briefs para agentes | ✅ | ❌ |
 | Score de readiness | ✅ | ✅ |
@@ -55,13 +55,13 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 ## Instalación
 
 ```bash
-# Instalar desde el repositorio
-pip install git+https://github.com/kudawasama/context-map-generator.git
+# Instalar con UV (recomendado)
+uv pip install git+https://github.com/kudawasama/ContextMap.git
 
 # O instalar en modo desarrollo
-git clone https://github.com/kudawasama/context-map-generator.git
-cd context-map-generator
-pip install -e .
+git clone https://github.com/kudawasama/ContextMap.git
+cd ContextMap
+uv pip install -e .
 ```
 
 ## Uso

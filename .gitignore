@@ -21,10 +21,10 @@ wheels/
 *.egg
 
 # Virtual environments
+.venv/
 venv/
 env/
-.venv/
-.env
+ENV/
 
 # IDE
 .vscode/
@@ -33,20 +33,23 @@ env/
 *.swo
 *~
 
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pytype/
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Context Map Generator
-.context-map/state/
-.context-map/vault/
-.context-map/maps/
-.context-map/chats/
-.context-map/raw/events.jsonl
+# Context Map (generated)
+.context-map/
 
-# Keep structure
-!.context-map/
-!.context-map/raw/
-!.context-map/raw/events.jsonl.example
-!.context-map/chats/
-!.context-map/README.md
+# Logs
+*.log

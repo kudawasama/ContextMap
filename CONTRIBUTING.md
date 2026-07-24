@@ -1,4 +1,4 @@
-# Contribuir a Context Map Generator
+# Contribuir a Context Map
 
 Gracias por tu interés en contribuir.
 
@@ -6,47 +6,62 @@ Gracias por tu interés en contribuir.
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/kudawasama/context-map-generator.git
-cd context-map-generator
+git clone https://github.com/kudawasama/ContextMap.git
+cd ContextMap
 
-# Instalar en modo desarrollo
-pip install -e .
+# Instalar en modo desarrollo con UV
+uv pip install -e .
 
 # Ejecutar tests
-python -m context_map.__tests__.smoke
+python -m pytest context_map/__tests__
+
+# Verificar lint
+python -m mypy context_map
+python -m ruff check context_map
 ```
 
-## Estructura del Código
+## Estructura del Proyecto
 
 ```
 context_map/
-├── __init__.py     # Package init
-├── cli.py          # Comandos: init, build, sync, watch
-├── models.py       # Node, Edge, Event
-├── parser.py       # Clasificador de eventos
-├── store.py        # Persistencia JSONL
-├── sync.py         # Sync incremental
-└── writer.py       # Generador de vault Obsidian
+├── cli.py              # CLI principal
+├── models.py           # Modelos de datos
+├── parser.py           # Parser de eventos
+├── store.py            # Persistencia JSONL
+├── sync.py             # Sync incremental
+├── writer.py           # Generador vault Obsidian
+├── scanner.py          # Escáner de proyecto
+├── checker.py          # Analizador de readiness
+├── reporter.py         # Generador de reportes
+├── analyzers/          # Análisis de proyecto
+│   ├── structure.py
+│   └── content.py
+└── integrations/       # Integraciones externas
+    ├── git.py
+    ├── hermes.py
+    └── chat_export.py
 ```
 
-## Flujo de Trabajo
+## Commits
 
-1. Haz tu cambio
-2. Ejecuta `python -m context_map.__tests__.smoke`
-3. Crea un commit con mensaje descriptivo
-4. Abre un Pull Request
+Usa convención de commits:
+- `feat:` nueva funcionalidad
+- `fix:` corrección de bug
+- `docs:` documentación
+- `refactor:` refactoring
+- `test:` tests
+- `chore:` mantenimiento
 
-## Convenciones
+## Pull Requests
 
-- Código en español (comentarios, docstrings, UI)
-- Type hints en todas las funciones
-- Archivos menores a 100 líneas
-- Sin imports cruzados entre módulos
+1. Crea una rama para tu feature
+2. Haz commits atómicos
+3. Actualiza documentación si es necesario
+4. Ejecuta tests antes de enviar
+5. Crea PR con descripción clara
 
 ## Issues
 
-Si encuentras un bug o tienes una idea, abre un issue con:
-
-- Descripción clara del problema
-- Pasos para reproducir
-- Comportamiento esperado vs actual
+- Usa templates de issues
+- Incluye pasos para reproducir
+- Incluye versión de Python y SO
