@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Context Map Generator
+.context-map/state/
+.context-map/vault/
+.context-map/maps/
+.context-map/chats/
+.context-map/raw/events.jsonl
+
+# Keep structure
+!.context-map/
+!.context-map/raw/
+!.context-map/raw/events.jsonl.example
+!.context-map/chats/
+!.context-map/README.md

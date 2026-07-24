@@ -1,0 +1,6 @@
+{"type":"BASE","text":"Context Map Generator es un CLI Python que genera mapas mentales narrativos de proyectos en formato Obsidian","timestamp":"2026-07-24T00:00:00","source":"seed","tags":["proposito"]}
+{"type":"IDEA","text":"El problema que resuelve: agentes de IA pierden contexto por limites de tokens al entrar a proyectos nuevos","timestamp":"2026-07-24T00:01:00","source":"seed","tags":["problema"]}
+{"type":"IDEA","text":"La solucion es un vault de Obsidian con [[wiki-links]], tags YAML, y grafo de conexiones","timestamp":"2026-07-24T00:02:00","source":"seed","tags":["solucion"]}
+{"type":"CAMBIO","text":"Sistema agnostico: funciona con Hermes, OpenCode, Cursor, Claude, o cualquier herramienta","timestamp":"2026-07-24T00:03:00","source":"seed","tags":["diseno"]}
+{"type":"RIESGO","text":"Sin contexto real, el mapa es solo estructura vacia sin valor para el agente","timestamp":"2026-07-24T00:04:00","source":"seed","tags":["riesgo"]}
+{"type":"HITO","text":"v0.2.0: CLI con init, build, sync incremental, watch. Vault Obsidian completo","timestamp":"2026-07-24T00:05:00","source":"seed","tags":["version"]}
