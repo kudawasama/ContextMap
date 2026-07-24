@@ -26,58 +26,60 @@ Cuando un agente de IA (Hermes, OpenCode, Cursor, Claude) entra a trabajar en tu
 
 Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al final no entiende el espíritu del proyecto.
 
-## Comparativa con Proyectos Existentes
+## Comparativa: Otros vs Context Map Generator
 
-### Lo que hacen otros
+### Qué hacen otros
 
-| Herramienta | ¿Qué hace? | Limitaciones |
-|-------------|-------------|--------------|
-| **[repo-context-map](https://github.com/yanqr213/repo-context-map)** | Escanea archivos, genera brief para agentes, Mermaid diagrams | Solo ve estructura técnica, no captura "por qué" |
-| **[agent-repo-map](https://github.com/manuelsampedro1/agent-repo-map)** | Analiza repos, genera score de "readiness" | No tiene memoria, no recuerda decisiones |
-| **CLAUDE.md / AGENTS.md** | Instrucciones estáticas para el agente | No evoluciona, no captura contexto dinámico |
-| **Obsidian (vanilla)** | Notas interconectadas con graph view | No se auto-genera desde código |
+Los proyectos existentes (como generadores de contexto para agentes) se enfocan en:
 
-### Lo que tiene Context Map Generator
+- **Escanear archivos** del proyecto y generar un reporte técnico
+- **Clasificar archivos** por lenguaje, tamaño, rol
+- **Detectar archivos de riesgo** (.env, secrets, configs sensibles)
+- **Generar briefs** para copiar y pegar en Claude/Cursor
+- **Calcular un score** de "readiness" del proyecto
+- **Crear diagramas Mermaid** de dependencias
 
-| Característica | repo-context-map | agent-repo-map | CLAUDE.md | **Context Map Generator** |
-|----------------|:----------------:|:--------------:|:---------:|:-------------------------:|
-| Escanea estructura técnica | ✅ | ✅ | ❌ | ❌ |
-| Genera brief para agentes | ✅ | ✅ | ❌ | ❌ |
-| Score de readiness | ❌ | ✅ | ❌ | ❌ |
-| Vault Obsidian con graph view | ❌ | ❌ | ❌ | ✅ |
-| Wiki-links `[[entre-notas]]` | ❌ | ❌ | ❌ | ✅ |
-| Tags YAML frontmatter | ❌ | ❌ | ❌ | ✅ |
-| Captura "por qué" del proyecto | ❌ | ❌ | ❌ | ✅ |
-| Contexto emocional/decisorio | ❌ | ❌ | ❌ | ✅ |
-| Sync incremental (sin reescribir) | ❌ | ❌ | ❌ | ✅ |
-| Lee chats y conversaciones | ❌ | ❌ | ❌ | ✅ |
-| Evoluciona con el proyecto | ❌ | ❌ | ❌ | ✅ |
-| Genérico (cualquier agente) | ⚠️ | ⚠️ | ❌ | ✅ |
-| Mermaid diagrams | ✅ | ❌ | ❌ | ❌ |
-| CI/CD integration | ✅ | ❌ | ❌ | ❌ |
-| Detección de riesgos técnicos | ✅ | ✅ | ❌ | ❌ |
+**Lo que no hacen:**
+- No capturan el **por qué** del proyecto
+- No tienen **memoria** entre ejecuciones
+- No evolucionan con el proyecto
+- No generan **visualizaciones** interactivas
+- No leen **chats ni conversaciones**
+- No tienen **contexto emocional** (qué genera entusiasmo, qué frustra)
+- No usan **Obsidian** ni formato similar
+- No tienen **wiki-links** entre conceptos
 
-### Lo que le falta a cada uno
+### Qué tiene Context Map Generator
 
-**repo-context-map le falta:**
-- No genera mapas mentales, solo reportes
-- No tiene memoria entre ejecuciones
-- No captura el contexto emocional del proyecto
-- No se integra con Obsidian
+| Característica | Otros | Context Map Generator |
+|----------------|:-----:|:---------------------:|
+| Escaneo técnico de archivos | ✅ | ❌ |
+| Briefs para agentes | ✅ | ❌ |
+| Score de readiness | ✅ | ❌ |
+| Mermaid diagrams | ✅ | ❌ |
+| CI/CD integration | ✅ | ❌ |
+| Detección de riesgos técnicos | ✅ | ❌ |
+| **Vault Obsidian con graph view** | ❌ | ✅ |
+| **Wiki-links `[[entre-notas]]`** | ❌ | ✅ |
+| **Tags YAML frontmatter** | ❌ | ✅ |
+| **Captura "por qué" del proyecto** | ❌ | ✅ |
+| **Contexto emocional/decisorio** | ❌ | ✅ |
+| **Sync incremental (sin reescribir)** | ❌ | ✅ |
+| **Lee chats y conversaciones** | ❌ | ✅ |
+| **Evoluciona con el proyecto** | ❌ | ✅ |
+| **Memoria persistente entre sesiones** | ❌ | ✅ |
+| **Genérico (cualquier agente)** | ⚠️ | ✅ |
 
-**agent-repo-map le falta:**
-- No tiene memoria persistente
-- No evoluciona con el proyecto
-- No genera visualizaciones
-- Solo manda un "score", no contexto narrativo
+### Qué le falta a cada uno
 
-**CLAUDE.md / AGENTS.md le falta:**
-- Es estático, no cambia
-- No se auto-genera
-- No captura historial de decisiones
-- No tiene conexiones entre conceptos
+**A otros les falta:**
+- No generan mapas mentales, solo reportes planos
+- No tienen memoria entre ejecuciones
+- No capturan el contexto emocional del proyecto
+- No se integran con Obsidian
+- No evolucionan con el proyecto
 
-**Context Map Generator le falta:**
+**A Context Map Generator le falta:**
 - No escanea archivos del proyecto (todavía)
 - No tiene Mermaid diagrams
 - No tiene CI/CD integration
@@ -85,20 +87,21 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 - No tiene detección automática de riesgos técnicos
 - Es nuevo, poca comunidad todavía
 
-### ¿Por qué usar Context Map Generator?
+### ¿Por qué elegir Context Map Generator?
 
 Si necesitas:
 - **Entender el "por qué"** del proyecto, no solo el "qué"
 - **Un mapa que evolucione** con el proyecto
 - **Visualización en Obsidian** con graph view
 - **Contexto narrativo** para agentes de IA
+- **Memoria persistente** entre sesiones
 
 Si necesitas:
-- **Escaneo técnico rápido** → usa repo-context-map
-- **Score de readiness** → usa agent-repo-map
-- **Instrucciones estáticas** → usa CLAUDE.md
+- **Escaneo técnico rápido** → usa otras herramientas
+- **Score de readiness** → usa otras herramientas
+- **Instrucciones estáticas** → usa CLAUDE.md / AGENTS.md
 
-**Lo ideal: combinarlos.** Usar repo-context-map para lo técnico y Context Map Generator para lo narrativo.
+**Lo ideal: combinarlos.** Usar otras herramientas para lo técnico y Context Map Generator para lo narrativo.
 
 ---
 
@@ -208,7 +211,7 @@ ctxmap sync
 - [ ] Mermaid diagrams
 - [ ] Exportador de chats de Telegram/Discord
 - [ ] Generador de resúmenes semanales
-- [ ] Score de readiness (como agent-repo-map)
+- [ ] Score de readiness
 - [ ] Dashboard web (opcional)
 
 ## Contribuir
