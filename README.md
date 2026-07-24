@@ -53,12 +53,12 @@ Los proyectos existentes (como generadores de contexto para agentes) se enfocan 
 
 | Característica | Otros | Context Map Generator |
 |----------------|:-----:|:---------------------:|
-| Escaneo técnico de archivos | ✅ | ❌ |
+| Escaneo técnico de archivos | ✅ | ✅ |
 | Briefs para agentes | ✅ | ❌ |
-| Score de readiness | ✅ | ❌ |
-| Mermaid diagrams | ✅ | ❌ |
+| Score de readiness | ✅ | ✅ |
+| Mermaid diagrams | ✅ | ✅ |
 | CI/CD integration | ✅ | ❌ |
-| Detección de riesgos técnicos | ✅ | ❌ |
+| Detección de riesgos técnicos | ✅ | ✅ |
 | **Vault Obsidian con graph view** | ❌ | ✅ |
 | **Wiki-links `[[entre-notas]]`** | ❌ | ✅ |
 | **Tags YAML frontmatter** | ❌ | ✅ |
@@ -80,11 +80,8 @@ Los proyectos existentes (como generadores de contexto para agentes) se enfocan 
 - No evolucionan con el proyecto
 
 **A Context Map Generator le falta:**
-- No escanea archivos del proyecto (todavía)
-- No tiene Mermaid diagrams
 - No tiene CI/CD integration
-- No tiene score de readiness
-- No tiene detección automática de riesgos técnicos
+- No genera briefs para agentes
 - Es nuevo, poca comunidad todavía
 
 ### ¿Por qué elegir Context Map Generator?
@@ -98,10 +95,8 @@ Si necesitas:
 
 Si necesitas:
 - **Escaneo técnico rápido** → usa otras herramientas
-- **Score de readiness** → usa otras herramientas
+- **Score de readiness** → ya lo tenemos
 - **Instrucciones estáticas** → usa CLAUDE.md / AGENTS.md
-
-**Lo ideal: combinarlos.** Usar otras herramientas para lo técnico y Context Map Generator para lo narrativo.
 
 ---
 
@@ -123,15 +118,42 @@ pip install -e .
 # Primera vez: crear estructura
 ctxmap init
 
+# Escanear proyecto automáticamente
+ctxmap scan .                        # Escanea proyecto actual
+ctxmap scan /ruta/otro/proyecto      # Escanea otro proyecto
+
+# Importar historial git
+ctxmap import-git .                  # Importa commits recientes
+ctxmap import-git . --limit 100      # Importar más commits
+
 # Generar el vault completo
 ctxmap build --project "Mi Proyecto"
+
+# Generar con diagrama Mermaid
+ctxmap build --project "Mi Proyecto" --mermaid
 
 # Sync incremental (solo agrega nuevos eventos)
 ctxmap sync --project "Mi Proyecto"
 
+# Verificar readiness del proyecto
+ctxmap check .                       # Score y sugerencias
+
 # Observar cambios y regenerar automáticamente
 ctxmap watch --project "Mi Proyecto" --interval 30
 ```
+
+## Comandos
+
+| Comando | Descripción |
+|---------|-------------|
+| `ctxmap init` | Crea estructura `.context-map/` |
+| `ctxmap scan [target]` | Escanea proyecto y genera eventos |
+| `ctxmap import-git [target]` | Importa historial de commits |
+| `ctxmap build` | Genera vault completo |
+| `ctxmap build --mermaid` | Genera con diagrama Mermaid |
+| `ctxmap sync` | Sync incremental (solo nuevos) |
+| `ctxmap check` | Verifica readiness (0-100) |
+| `ctxmap watch` | Observa cambios automáticamente |
 
 ## Estructura del Vault
 
@@ -139,6 +161,7 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 .context-map/
 ├── vault/
 │   ├── 00-INDICE.md                    # Map of Content
+│   ├── 00-GRAPH.md                     # Diagrama Mermaid
 │   ├── 00-CONEXIONES.md                # Grafo de relaciones
 │   ├── 01-PROYECTOS/                   # Qué es cada proyecto
 │   ├── 02-IDEAS/                       # Ideas y conceptos
@@ -159,7 +182,35 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 
 ## Fuentes de Eventos
 
-### 1. JSONL Manual
+### 1. Escaneo Automático
+
+```bash
+ctxmap scan .
+```
+
+Escanea archivos, detecta:
+- Estructura del proyecto
+- Entry points
+- Documentación
+- Configs
+- Tests
+- TODOs/FIXMEs
+- Complejidad del código
+
+### 2. Historial Git
+
+```bash
+ctxmap import-git .
+```
+
+Importa commits y los clasifica:
+- `fix/bug` → CORRECCION
+- `feat/add` → IDEA
+- `test` → PRUEBA
+- `doc` → CAMBIO
+- Tags → HITO
+
+### 3. JSONL Manual
 
 Crea `.context-map/raw/events.jsonl`:
 
@@ -168,26 +219,12 @@ Crea `.context-map/raw/events.jsonl`:
 {"type":"RIESGO","text":"Perder trazabilidad si se edita el mapa a mano","timestamp":"2026-07-24T14:01:00","source":"manual"}
 ```
 
-### 2. Chats Exportados
+### 4. Chats Exportados
 
 Coloca archivos de texto en `.context-map/chats/`:
 
 ```
 chat-export-2026-07-24.txt
-```
-
-El parser clasifica automáticamente cada línea por keywords:
-- `feat`, `adding` → IDEA
-- `fix`, `correc` → CORRECCION
-- `test`, `qa` → PRUEBA
-- `todo`, `future` → FUTURO
-- `risk`, `bug` → RIESGO
-
-### 3. Sync Incremental
-
-```bash
-# Solo procesa eventos nuevos, no reescribe lo existente
-ctxmap sync
 ```
 
 ## Tipos de Eventos
@@ -205,13 +242,13 @@ ctxmap sync
 
 ## Roadmap
 
-- [ ] Escaneo automático de archivos del proyecto
+- [x] Escaneo automático de archivos del proyecto
+- [x] Lector de historial git
+- [x] Mermaid diagrams
+- [x] Score de readiness
 - [ ] Integración con sesiones de Hermes
-- [ ] Lector de historial git
-- [ ] Mermaid diagrams
 - [ ] Exportador de chats de Telegram/Discord
 - [ ] Generador de resúmenes semanales
-- [ ] Score de readiness
 - [ ] Dashboard web (opcional)
 
 ## Contribuir
