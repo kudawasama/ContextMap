@@ -30,6 +30,7 @@ from context_map.writer import render_active_map, render_obsidian_vault
 from context_map.sync import sync_incremental
 from context_map.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
 from context_map.integrations.git import leer_historial_git, CommitInfo
+from context_map.checker import analizar_readiness, formatear_readiness
 
 
 def _ahora() -> str:
@@ -219,7 +220,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         vault_dir = os.path.join(CONTEXT_DIR, "vault")
         render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
 
-        print(f"sync: nodos {stats['nodos_existentes']} -> {stats['nodos_existentes'] + stats['nodos_agregados']}")
+        print(f"sync: nodos {stats['nodos_existentes']} → {stats['nodos_existentes'] + stats['nodos_agregados']}")
         print(f"vault: {vault_dir}")
     else:
         print("Sin eventos nuevos")
@@ -314,6 +315,13 @@ def cmd_import_git(args: argparse.Namespace) -> None:
         print(f"vault: {vault_dir}")
 
 
+def cmd_check(args: argparse.Namespace) -> None:
+    """Analiza readiness del proyecto."""
+    ruta = args.target or os.getcwd()
+    resultado = analizar_readiness(ruta)
+    print(formatear_readiness(resultado))
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="ctxmap")
     sub = p.add_subparsers(dest="cmd")
@@ -340,6 +348,10 @@ def main() -> None:
     s_watch = sub.add_parser("watch")
     s_watch.add_argument("--interval", type=int, default=10)
 
+    s_check = sub.add_parser("check")
+    s_check.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_check.add_argument("--json", action="store_true", help="Salida JSON")
+
     args = p.parse_args()
     if args.cmd == "init":
         cmd_init(args)
@@ -353,6 +365,8 @@ def main() -> None:
         cmd_import_git(args)
     elif args.cmd == "watch":
         cmd_watch(args)
+    elif args.cmd == "check":
+        cmd_check(args)
     else:
         p.print_help()
 
