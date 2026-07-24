@@ -33,6 +33,7 @@ from context_map.integrations.git import leer_historial_git, CommitInfo
 from context_map.integrations.hermes import importar_sesiones
 from context_map.integrations.chat_export import importar_chat
 from context_map.checker import analizar_readiness, formatear_readiness
+from context_map.reporter import generar_semanal, guardar_reporte
 
 
 def _ahora() -> str:
@@ -400,6 +401,25 @@ def cmd_import_chat(args: argparse.Namespace) -> None:
         print(f"vault: {vault_dir}")
 
 
+def cmd_weekly(args: argparse.Namespace) -> None:
+    """Genera reporte semanal."""
+    _ensure_dirs()
+
+    dias = args.days or 7
+    output = os.path.join(MAPS_DIR, f"semanal-{dias}d.md")
+
+    print(f"Generando reporte de los últimos {dias} días...")
+
+    reporte = guardar_reporte(STATE_DIR, output, dias)
+
+    print(f"Reporte generado: {reporte}")
+    print("")
+    # Mostrar preview
+    with open(reporte, "r", encoding="utf-8") as f:
+        lineas = f.readlines()[:30]
+        print("".join(lineas))
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="ctxmap")
     sub = p.add_subparsers(dest="cmd")
@@ -439,6 +459,9 @@ def main() -> None:
     s_chat.add_argument("file", help="Ruta al archivo de chat")
     s_chat.add_argument("--project", default="Repo")
 
+    s_weekly = sub.add_parser("weekly")
+    s_weekly.add_argument("--days", type=int, default=7, help="Días a reportar")
+
     args = p.parse_args()
     if args.cmd == "init":
         cmd_init(args)
@@ -458,6 +481,8 @@ def main() -> None:
         cmd_watch(args)
     elif args.cmd == "check":
         cmd_check(args)
+    elif args.cmd == "weekly":
+        cmd_weekly(args)
     else:
         p.print_help()
 
