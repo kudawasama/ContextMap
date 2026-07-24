@@ -124,9 +124,14 @@ def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
         partes.append(f"**Tags**: {tags_badges}")
         partes.append("")
 
-    # Resumen
+    # Información de origen
+    if node.source:
+        partes.append(f"**Origen**: `{node.source}`")
+        partes.append("")
+
+    # Resumen/Descripción
     if node.summary and node.summary != node.title:
-        partes.append("## Descripción")
+        partes.append("## 📝 Descripción")
         partes.append("")
         partes.append(node.summary)
         partes.append("")

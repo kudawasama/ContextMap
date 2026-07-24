@@ -131,6 +131,79 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def _generar_summary(tipo: str, texto: str, source: str, tags: List[str]) -> str:
+    """Genera un summary descriptivo basado en el tipo y contenido."""
+    # Limpiar texto
+    texto_limpio = texto.strip()
+
+    # Templates por tipo
+    templates = {
+        "BASE": {
+            "default": f"Este elemento representa un fundamento del proyecto. {texto_limpio}",
+            "proyecto": f"El proyecto actual. {texto_limpio}",
+            "doc": f"Documentación encontrada en el proyecto. {texto_limpio}",
+            "config": f"Configuración del proyecto. {texto_limpio}",
+        },
+        "IDEA": {
+            "default": f"Idea o concepto importante. {texto_limpio}",
+            "estructura": f"Aspecto estructural del proyecto. {texto_limpio}",
+            "docstring": f"Descripción de módulo. {texto_limpio}",
+            "clase": f"Clase definida en el código. {texto_limpio}",
+            "decisión": f"Decisión tomada en el proyecto. {texto_limpio}",
+            "implementación": f"Implementación planificada. {texto_limpio}",
+        },
+        "RIESGO": {
+            "default": f"Riesgo identificado que requiere atención. {texto_limpio}",
+            "complejidad": f"Área de alta complejidad. {texto_limpio}",
+            "tests": f"Falta de pruebas. {texto_limpio}",
+            "análisis": f"Análisis de riesgos. {texto_limpio}",
+        },
+        "CAMBIO": {
+            "default": f"Cambio en curso o reciente. {texto_limpio}",
+            "config": f"Cambio en configuración. {texto_limpio}",
+            "conversación": f"Discusión relevante. {texto_limpio}",
+        },
+        "PRUEBA": {
+            "default": f"Prueba o validación. {texto_limpio}",
+            "tests": f"Archivo de prueba. {texto_limpio}",
+        },
+        "FUTURO": {
+            "default": f"Elemento pendiente o futuro. {texto_limpio}",
+            "pendiente": f"TODO pendiente de implementar. {texto_limpio}",
+            "análisis": f"Análisis pendiente. {texto_limpio}",
+        },
+        "HITO": {
+            "default": f"Hito o milestone alcanzado. {texto_limpio}",
+            "tag": f"Versión publicada. {texto_limpio}",
+        },
+        "CORRECCION": {
+            "default": f"Corrección o fix aplicado. {texto_limpio}",
+            "commit": f"Commit de corrección. {texto_limpio}",
+        },
+    }
+
+    # Buscar template específico
+    tipo_templates = templates.get(tipo, templates["IDEA"])
+
+    # Buscar por tags
+    for tag in tags:
+        if tag in tipo_templates:
+            return tipo_templates[tag]
+
+    # Buscar por contenido en texto
+    texto_lower = texto_limpio.lower()
+    if "proyecto" in texto_lower:
+        return tipo_templates.get("proyecto", tipo_templates["default"])
+    elif "doc" in texto_lower or "readme" in texto_lower:
+        return tipo_templates.get("doc", tipo_templates["default"])
+    elif "test" in texto_lower:
+        return tipo_templates.get("tests", tipo_templates["default"])
+    elif "config" in texto_lower:
+        return tipo_templates.get("config", tipo_templates["default"])
+
+    return tipo_templates["default"]
+
+
 def events_to_model(
     events: List[Event], start_id: int = 1
 ) -> Tuple[List[Node], List[Edge]]:
@@ -153,11 +226,15 @@ def events_to_model(
         counters[prefix] = counters.get(prefix, 0) + 1
         pid = f"{prefix}.{counters[prefix]:003d}"
         title = e.text.split("\n")[0][:90]
+
+        # Generar summary más descriptivo
+        summary = _generar_summary(e.type, e.text, e.source, e.tags)
+
         node = Node(
             id=pid,
             type=prefix,
             title=title,
-            summary=e.text,
+            summary=summary,
             tags=list(e.tags),
             source=e.source,
             created_at=e.timestamp or _now(),
