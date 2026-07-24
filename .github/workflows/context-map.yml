@@ -1,0 +1,59 @@
+name: Actualizar Context Map
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: 'Nombre del proyecto'
+        required: false
+        default: 'Context Map'
+
+jobs:
+  update-context:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: |
+          uv pip install -e .
+      
+      - name: Init Context Map
+        run: |
+          ctxmap init
+      
+      - name: Scan project
+        run: |
+          ctxmap scan . --project "${{ github.event.inputs.project_name || github.event.repository.name }}"
+      
+      - name: Import git history
+        run: |
+          ctxmap import-git . --limit 50
+      
+      - name: Build vault
+        run: |
+          ctxmap build --project "${{ github.event.inputs.project_name || github.event.repository.name }}" --brief
+      
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .context-map/
+          git diff --staged --quiet || git commit -m "chore: actualización automática de context map"
+          git push
