@@ -28,29 +28,6 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 
 ## Comparativa: Otros vs Context Map Generator
 
-### Qué hacen otros
-
-Los proyectos existentes (como generadores de contexto para agentes) se enfocan en:
-
-- **Escanear archivos** del proyecto y generar un reporte técnico
-- **Clasificar archivos** por lenguaje, tamaño, rol
-- **Detectar archivos de riesgo** (.env, secrets, configs sensibles)
-- **Generar briefs** para copiar y pegar en Claude/Cursor
-- **Calcular un score** de "readiness" del proyecto
-- **Crear diagramas Mermaid** de dependencias
-
-**Lo que no hacen:**
-- No capturan el **por qué** del proyecto
-- No tienen **memoria** entre ejecuciones
-- No evolucionan con el proyecto
-- No generan **visualizaciones** interactivas
-- No leen **chats ni conversaciones**
-- No tienen **contexto emocional** (qué genera entusiasmo, qué frustra)
-- No usan **Obsidian** ni formato similar
-- No tienen **wiki-links** entre conceptos
-
-### Qué tiene Context Map Generator
-
 | Característica | Otros | Context Map Generator |
 |----------------|:-----:|:---------------------:|
 | Escaneo técnico de archivos | ✅ | ✅ |
@@ -69,34 +46,9 @@ Los proyectos existentes (como generadores de contexto para agentes) se enfocan 
 | **Evoluciona con el proyecto** | ❌ | ✅ |
 | **Memoria persistente entre sesiones** | ❌ | ✅ |
 | **Genérico (cualquier agente)** | ⚠️ | ✅ |
-
-### Qué le falta a cada uno
-
-**A otros les falta:**
-- No generan mapas mentales, solo reportes planos
-- No tienen memoria entre ejecuciones
-- No capturan el contexto emocional del proyecto
-- No se integran con Obsidian
-- No evolucionan con el proyecto
-
-**A Context Map Generator le falta:**
-- No tiene CI/CD integration
-- No genera briefs para agentes
-- Es nuevo, poca comunidad todavía
-
-### ¿Por qué elegir Context Map Generator?
-
-Si necesitas:
-- **Entender el "por qué"** del proyecto, no solo el "qué"
-- **Un mapa que evolucione** con el proyecto
-- **Visualización en Obsidian** con graph view
-- **Contexto narrativo** para agentes de IA
-- **Memoria persistente** entre sesiones
-
-Si necesitas:
-- **Escaneo técnico rápido** → usa otras herramientas
-- **Score de readiness** → ya lo tenemos
-- **Instrucciones estáticas** → usa CLAUDE.md / AGENTS.md
+| **Importa sesiones de Hermes** | ❌ | ✅ |
+| **Importa chats externos** | ❌ | ✅ |
+| **Reportes semanales** | ❌ | ✅ |
 
 ---
 
@@ -120,11 +72,17 @@ ctxmap init
 
 # Escanear proyecto automáticamente
 ctxmap scan .                        # Escanea proyecto actual
-ctxmap scan /ruta/otro/proyecto      # Escanea otro proyecto
 
 # Importar historial git
 ctxmap import-git .                  # Importa commits recientes
-ctxmap import-git . --limit 100      # Importar más commits
+
+# Importar sesiones de Hermes
+ctxmap import-sessions               # Importa últimas 5 sesiones
+ctxmap import-sessions --limit 10    # Importar más sesiones
+
+# Importar chats externos
+ctxmap import-chat telegram.txt      # Importa chat de Telegram
+ctxmap import-chat discord.json      # Importa chat de Discord
 
 # Generar el vault completo
 ctxmap build --project "Mi Proyecto"
@@ -138,6 +96,10 @@ ctxmap sync --project "Mi Proyecto"
 # Verificar readiness del proyecto
 ctxmap check .                       # Score y sugerencias
 
+# Generar reporte semanal
+ctxmap weekly                        # Últimos 7 días
+ctxmap weekly --days 30              # Últimos 30 días
+
 # Observar cambios y regenerar automáticamente
 ctxmap watch --project "Mi Proyecto" --interval 30
 ```
@@ -149,10 +111,13 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 | `ctxmap init` | Crea estructura `.context-map/` |
 | `ctxmap scan [target]` | Escanea proyecto y genera eventos |
 | `ctxmap import-git [target]` | Importa historial de commits |
+| `ctxmap import-sessions` | Importa sesiones de Hermes |
+| `ctxmap import-chat [file]` | Importa chats externos |
 | `ctxmap build` | Genera vault completo |
 | `ctxmap build --mermaid` | Genera con diagrama Mermaid |
 | `ctxmap sync` | Sync incremental (solo nuevos) |
 | `ctxmap check` | Verifica readiness (0-100) |
+| `ctxmap weekly` | Genera reporte semanal |
 | `ctxmap watch` | Observa cambios automáticamente |
 
 ## Estructura del Vault
@@ -183,48 +148,33 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 ## Fuentes de Eventos
 
 ### 1. Escaneo Automático
-
 ```bash
 ctxmap scan .
 ```
-
-Escanea archivos, detecta:
-- Estructura del proyecto
-- Entry points
-- Documentación
-- Configs
-- Tests
-- TODOs/FIXMEs
-- Complejidad del código
+Escanea archivos, detecta estructura, entry points, docs, configs, tests, TODOs/FIXMEs.
 
 ### 2. Historial Git
-
 ```bash
 ctxmap import-git .
 ```
+Importa commits y los clasifica: fix→CORRECCION, feat→IDEA, test→PRUEBA.
 
-Importa commits y los clasifica:
-- `fix/bug` → CORRECCION
-- `feat/add` → IDEA
-- `test` → PRUEBA
-- `doc` → CAMBIO
-- Tags → HITO
+### 3. Sesiones de Hermes
+```bash
+ctxmap import-sessions
+```
+Lee la base de datos de sesiones y extrae contexto de conversaciones.
 
-### 3. JSONL Manual
+### 4. Chats Externos
+```bash
+ctxmap import-chat archivo.txt
+```
+Soporta Telegram, Discord, Slack, WhatsApp, JSON, texto simple.
 
+### 5. JSONL Manual
 Crea `.context-map/raw/events.jsonl`:
-
 ```json
 {"type":"IDEA","text":"Agregar soporte multiagente","timestamp":"2026-07-24T14:00:00","source":"manual"}
-{"type":"RIESGO","text":"Perder trazabilidad si se edita el mapa a mano","timestamp":"2026-07-24T14:01:00","source":"manual"}
-```
-
-### 4. Chats Exportados
-
-Coloca archivos de texto en `.context-map/chats/`:
-
-```
-chat-export-2026-07-24.txt
 ```
 
 ## Tipos de Eventos
@@ -246,9 +196,9 @@ chat-export-2026-07-24.txt
 - [x] Lector de historial git
 - [x] Mermaid diagrams
 - [x] Score de readiness
-- [ ] Integración con sesiones de Hermes
-- [ ] Exportador de chats de Telegram/Discord
-- [ ] Generador de resúmenes semanales
+- [x] Integración con sesiones de Hermes
+- [x] Exportador de chats externos
+- [x] Generador de resúmenes semanales
 - [ ] Dashboard web (opcional)
 
 ## Contribuir
