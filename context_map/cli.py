@@ -119,6 +119,14 @@ def cmd_build(args: argparse.Namespace) -> None:
     vault_dir = os.path.join(CONTEXT_DIR, "vault")
     render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
 
+    # Generar diagrama Mermaid si se pide
+    if getattr(args, 'mermaid', False):
+        from context_map.writer import render_mermaid
+        mermaid_md = render_mermaid(nodes, edges)
+        mermaid_path = os.path.join(vault_dir, "00-GRAPH.md")
+        with open(mermaid_path, "w", encoding="utf-8") as f:
+            f.write(f"---\ntype: graph\ntitle: Grafo de conexiones\n---\n\n# Grafo de conexiones\n\n{mermaid_md}\n")
+
     print("build:ok -> ACTIVE.md")
     print("vault:ok ->", vault_dir)
     if snapshot_path:
@@ -211,7 +219,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         vault_dir = os.path.join(CONTEXT_DIR, "vault")
         render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
 
-        print(f"sync: nodos {stats['nodos_existentes']} → {stats['nodos_existentes'] + stats['nodos_agregados']}")
+        print(f"sync: nodos {stats['nodos_existentes']} -> {stats['nodos_existentes'] + stats['nodos_agregados']}")
         print(f"vault: {vault_dir}")
     else:
         print("Sin eventos nuevos")
@@ -315,6 +323,7 @@ def main() -> None:
     s_build = sub.add_parser("build")
     s_build.add_argument("--project", default="Repo")
     s_build.add_argument("--snapshot-name", default="")
+    s_build.add_argument("--mermaid", action="store_true", help="Generar diagrama Mermaid")
 
     s_sync = sub.add_parser("sync")
     s_sync.add_argument("--project", default="Repo")

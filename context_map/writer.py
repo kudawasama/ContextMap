@@ -366,3 +366,52 @@ def render_active_map(project_name: str, nodes: List[Node], edges: List[Edge]) -
     )
 
     return f"# {project_name} — Context Map\n\n{body}"
+
+
+# ============================================================
+# Generador de diagramas Mermaid
+# ============================================================
+
+def _mermaid_safe_id(text: str) -> str:
+    """Convierte texto a un ID seguro para Mermaid."""
+    safe = re.sub(r"[^a-zA-Z0-9]", "_", text)
+    return safe[:30]
+
+
+def render_mermaid(nodes: List[Node], edges: List[Edge]) -> str:
+    """Genera un diagrama Mermaid de las conexiones.
+
+    Returns:
+        String con el diagrama en formato Mermaid
+    """
+    if not nodes:
+        return "```mermaid\ngraph TD\n    empty[Vacío]\n```"
+
+    # Colores por tipo
+    colores = {
+        "BASE": "#4CAF50",
+        "IDEA": "#2196F3",
+        "RIESGO": "#F44336",
+        "CAMBIO": "#FF9800",
+        "PRUEBA": "#9C27B0",
+        "FUTURO": "#00BCD4",
+        "HITO": "#FFEB3B",
+        "CORRECCION": "#795548",
+    }
+
+    lineas = ["graph TD"]
+
+    # Nodos
+    for n in nodes[:30]:  # Límite para legibilidad
+        node_id = _mermaid_safe_id(n.id)
+        titulo = n.title[:40].replace('"', "'")
+        color = colores.get(n.type, "#9E9E9E")
+        lineas.append(f'    {node_id}["{titulo}"]')
+
+    # Aristas
+    for e in edges[:50]:
+        src = _mermaid_safe_id(e.source)
+        dst = _mermaid_safe_id(e.target)
+        lineas.append(f"    {src} --> {dst}")
+
+    return "```mermaid\n" + "\n".join(lineas) + "\n```"
