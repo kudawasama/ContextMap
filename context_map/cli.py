@@ -28,6 +28,7 @@ from context_map.store import (
 )
 from context_map.writer import render_active_map, render_obsidian_vault
 from context_map.sync import sync_incremental
+from context_map.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
 
 
 CONTEXT_DIR = ".context-map"
@@ -168,6 +169,47 @@ def cmd_sync(args: argparse.Namespace) -> None:
     print(f"  vault: {vault_dir}")
 
 
+def cmd_scan(args: argparse.Namespace) -> None:
+    """Escanea el proyecto y genera eventos automáticamente."""
+    _ensure_dirs()
+
+    ruta = args.target or os.getcwd()
+    print(f"Escaneando: {os.path.abspath(ruta)}")
+
+    eventos = escanear_y_generar_eventos(ruta)
+    print(f"Eventos generados: {len(eventos)}")
+
+    # Guardar en events.jsonl
+    output = os.path.join(RAW_DIR, "events.jsonl")
+    guardados = guardar_eventos_escaneados(eventos, output)
+    print(f"Eventos nuevos guardados: {guardados}")
+
+    # Ejecutar sync para procesarlos
+    if guardados > 0:
+        stats = sync_incremental(
+            chats_dir=CHATS_DIR,
+            raw_dir=RAW_DIR,
+            state_dir=STATE_DIR,
+        )
+
+        # Regenerar vault
+        records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
+        e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
+        nodes = [Node.from_dict(r) for r in records]
+        edges = [Edge.from_dict(r) for r in e_records]
+
+        md = render_active_map(args.project or "Repo", nodes, edges)
+        write_map(md)
+
+        vault_dir = os.path.join(CONTEXT_DIR, "vault")
+        render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
+
+        print(f"sync: nodos {stats['nodos_existentes']} → {stats['nodos_existentes'] + stats['nodos_agregados']}")
+        print(f"vault: {vault_dir}")
+    else:
+        print("Sin eventos nuevos")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="ctxmap")
     sub = p.add_subparsers(dest="cmd")
@@ -181,6 +223,10 @@ def main() -> None:
     s_sync = sub.add_parser("sync")
     s_sync.add_argument("--project", default="Repo")
 
+    s_scan = sub.add_parser("scan")
+    s_scan.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a escanear")
+    s_scan.add_argument("--project", default="Repo")
+
     s_watch = sub.add_parser("watch")
     s_watch.add_argument("--interval", type=int, default=10)
 
@@ -191,6 +237,8 @@ def main() -> None:
         cmd_build(args)
     elif args.cmd == "sync":
         cmd_sync(args)
+    elif args.cmd == "scan":
+        cmd_scan(args)
     elif args.cmd == "watch":
         cmd_watch(args)
     else:
