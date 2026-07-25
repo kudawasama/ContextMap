@@ -429,9 +429,9 @@ def cmd_update(args):
 
     # Detectar gestor de paquetes
     if shutil.which("uv"):
-        installer = ["uv", "pip", "install", "-e", update_dir]
+        installer = ["uv", "pip", "install", update_dir]
     else:
-        installer = [sys.executable, "-m", "pip", "install", "-e", update_dir]
+        installer = [sys.executable, "-m", "pip", "install", update_dir]
 
     result = subprocess.run(installer, capture_output=True, text=True)
 
@@ -440,6 +440,8 @@ def cmd_update(args):
         return
 
     print("✅ Instalación completada")
+    # Limpiar directorio temporal
+    shutil.rmtree(update_dir, ignore_errors=True)
     print()
 
     # Mostrar versión
@@ -466,7 +468,6 @@ def cmd_update(args):
     print("   ctxmap sync --migrate")
     print()
     print("🧹 Para limpiar archivos temporales:")
-    print(f"   rm -rf {update_dir}")
 
 
 def cmd_sync_migrate(args):
