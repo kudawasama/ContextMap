@@ -17,6 +17,8 @@ from context_map.application.commands import (
     cmd_import_git,
     cmd_import_sessions,
     cmd_import_chat,
+    cmd_import_antigravity,
+    cmd_import_antigravity2,
     cmd_weekly,
     cmd_watch,
     cmd_brief,
@@ -84,6 +86,16 @@ def create_parser() -> argparse.ArgumentParser:
     s_brief = sub.add_parser("brief", help="Genera brief para agentes de IA")
     s_brief.add_argument("--project", default="Repo", help="Nombre del proyecto")
 
+    # import-antigravity
+    s_antigravity = sub.add_parser("import-antigravity", help="Importa chats de Antigravity IDE")
+    s_antigravity.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_antigravity.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
+
+    # import-antigravity2
+    s_antigravity2 = sub.add_parser("import-antigravity2", help="Importa chats de Antigravity 2.0")
+    s_antigravity2.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_antigravity2.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
+
     return p
 
 
@@ -106,6 +118,8 @@ def main() -> None:
         "import-git": cmd_import_git,
         "import-sessions": cmd_import_sessions,
         "import-chat": cmd_import_chat,
+        "import-antigravity": cmd_import_antigravity,
+        "import-antigravity2": cmd_import_antigravity2,
         "weekly": cmd_weekly,
         "watch": cmd_watch,
         "brief": cmd_brief,

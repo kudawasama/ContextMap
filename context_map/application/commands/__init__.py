@@ -32,6 +32,7 @@ from context_map.domain.reporter import generar_semanal, guardar_reporte
 from context_map.infrastructure.integrations.git import leer_historial_git
 from context_map.infrastructure.integrations.hermes import importar_sesiones
 from context_map.infrastructure.integrations.chat_export import importar_chat
+from context_map.infrastructure.integrations.antigravity import importar_antigravity
 
 # Constantes de directorios
 CONTEXT_DIR = ".context-map"
@@ -326,3 +327,41 @@ def cmd_brief(args):
 
     generar_brief(args.project or "Repo", nodes, edges, readiness.score, brief_path)
     print(f"brief:ok -> {brief_path}")
+
+
+def cmd_import_antigravity(args):
+    """Importa chats de Antigravity IDE."""
+    _ensure_dirs()
+
+    print("Importando conversaciones de Antigravity IDE...")
+
+    output = os.path.join(RAW_DIR, "events.jsonl")
+    importados = importar_antigravity(
+        ide=True,
+        limite=args.limit or 5,
+        output_path=output,
+    )
+
+    print(f"Conversaciones importadas: {importados} eventos nuevos")
+
+    if importados > 0:
+        _do_sync(args, args.project)
+
+
+def cmd_import_antigravity2(args):
+    """Importa chats de Antigravity 2.0."""
+    _ensure_dirs()
+
+    print("Importando conversaciones de Antigravity 2.0...")
+
+    output = os.path.join(RAW_DIR, "events.jsonl")
+    importados = importar_antigravity(
+        ide=False,
+        limite=args.limit or 5,
+        output_path=output,
+    )
+
+    print(f"Conversaciones importadas: {importados} eventos nuevos")
+
+    if importados > 0:
+        _do_sync(args, args.project)
