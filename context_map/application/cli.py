@@ -22,6 +22,8 @@ from context_map.application.commands import (
     cmd_weekly,
     cmd_watch,
     cmd_brief,
+    cmd_update,
+    cmd_sync_migrate,
 )
 
 
@@ -49,8 +51,9 @@ def create_parser() -> argparse.ArgumentParser:
     s_scan.add_argument("--project", default="Repo", help="Nombre del proyecto")
 
     # sync
-    s_sync = sub.add_parser("sync", help="Sync incremental (solo nuevos)")
+    s_sync = sub.add_parser("sync", help="Sync incremental (use --migrate para migración)")
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_sync.add_argument("--migrate", action="store_true", help="Migrar a nueva versión")
 
     # check
     s_check = sub.add_parser("check", help="Verifica readiness (0-100)")
@@ -96,6 +99,9 @@ def create_parser() -> argparse.ArgumentParser:
     s_antigravity2.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_antigravity2.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
 
+    # update
+    sub.add_parser("update", help="Actualiza ContextMap a la última versión")
+
     return p
 
 
@@ -113,7 +119,6 @@ def main() -> None:
         "init": cmd_init,
         "build": cmd_build,
         "scan": cmd_scan,
-        "sync": cmd_sync,
         "check": cmd_check,
         "import-git": cmd_import_git,
         "import-sessions": cmd_import_sessions,
@@ -123,13 +128,21 @@ def main() -> None:
         "weekly": cmd_weekly,
         "watch": cmd_watch,
         "brief": cmd_brief,
+        "update": cmd_update,
     }
 
-    cmd_func = commands.get(args.cmd)
-    if cmd_func:
-        cmd_func(args)
+    # sync tiene dos modos
+    if args.cmd == "sync":
+        if getattr(args, "migrate", False):
+            cmd_sync_migrate(args)
+        else:
+            cmd_sync(args)
     else:
-        p.print_help()
+        cmd_func = commands.get(args.cmd)
+        if cmd_func:
+            cmd_func(args)
+        else:
+            p.print_help()
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import sys
+import shutil
 from typing import List
 
 from context_map.core.models import Event, Node, Edge
@@ -370,3 +371,172 @@ def cmd_import_antigravity2(args):
 
     if importados > 0:
         _do_sync(args, args.project)
+
+
+def cmd_update(args):
+    """Actualiza ContextMap a la última versión desde GitHub."""
+    import subprocess
+    import sys
+
+    print("🔄 Actualizando ContextMap...")
+    print()
+
+    # Verificar si hay git
+    try:
+        subprocess.run(["git", "--version"], capture_output=True, check=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        print("❌ Git no encontrado. Instala git primero.")
+        print("   https://git-scm.com/downloads")
+        return
+
+    # Clonar/actualizar repo
+    repo_url = "https://github.com/kudawasama/ContextMap.git"
+    update_dir = os.path.join(os.path.expanduser("~"), ".context-map-update")
+
+    print(f"📥 Descargando desde: {repo_url}")
+
+    # Si ya existe el directorio, hacer pull
+    if os.path.exists(update_dir):
+        print("   Actualizando repositorio existente...")
+        result = subprocess.run(
+            ["git", "-C", update_dir, "pull"],
+            capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            print(f"   Error al actualizar: {result.stderr}")
+            # Intentar clonar de nuevo
+            subprocess.run(["rm", "-rf", update_dir], check=True)
+            result = subprocess.run(
+                ["git", "clone", repo_url, update_dir],
+                capture_output=True, text=True
+            )
+    else:
+        print("   Clonando repositorio...")
+        result = subprocess.run(
+            ["git", "clone", repo_url, update_dir],
+            capture_output=True, text=True
+        )
+
+    if result.returncode != 0:
+        print(f"❌ Error al descargar: {result.stderr}")
+        return
+
+    print("✅ Repositorio actualizado")
+    print()
+
+    # Instalar con pip/uv
+    print("📦 Instalando nueva versión...")
+
+    # Detectar gestor de paquetes
+    if shutil.which("uv"):
+        installer = ["uv", "pip", "install", "-e", update_dir]
+    else:
+        installer = [sys.executable, "-m", "pip", "install", "-e", update_dir]
+
+    result = subprocess.run(installer, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"❌ Error al instalar: {result.stderr}")
+        return
+
+    print("✅ Instalación completada")
+    print()
+
+    # Mostrar versión
+    print("📋 Versión instalada:")
+    result = subprocess.run(
+        [sys.executable, "-m", "context_map.cli", "--version"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print(f"   {result.stdout.strip()}")
+    else:
+        # Intentar con ctxmap
+        result = subprocess.run(
+            ["ctxmap", "--version"],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            print(f"   {result.stdout.strip()}")
+        else:
+            print("   (versión desconocida)")
+
+    print()
+    print("💡 Para aplicar cambios a un proyecto existente:")
+    print("   ctxmap sync --migrate")
+    print()
+    print("🧹 Para limpiar archivos temporales:")
+    print(f"   rm -rf {update_dir}")
+
+
+def cmd_sync_migrate(args):
+    """Sincroniza un proyecto existente con la nueva versión de ContextMap."""
+    import json
+
+    _ensure_dirs()
+
+    print("🔄 Sincronizando proyecto con nueva versión...")
+    print()
+
+    # 1. Cargar estado actual
+    graph_file = os.path.join(STATE_DIR, "graph.jsonl")
+    edges_file = os.path.join(STATE_DIR, "edges.jsonl")
+
+    if not os.path.exists(graph_file):
+        print("⚠️  No se encontró estado del proyecto.")
+        print("   Ejecuta: ctxmap scan . && ctxmap build --project 'Nombre'")
+        return
+
+    # 2. Cargar nodos
+    records = load_jsonl(graph_file)
+    edges_records = load_jsonl(edges_file)
+
+    if not records:
+        print("⚠️  No hay nodos en el estado.")
+        return
+
+    nodes = [Node.from_dict(r) for r in records]
+    edges = [Edge.from_dict(r) for r in edges_records]
+
+    print(f"📊 Estado actual: {len(nodes)} nodos, {len(edges)} aristas")
+    print()
+
+    # 3. Aplicar estandarización
+    from context_map.core.standardize import estandarizar_nodos
+    nodes_estandarizados = estandarizar_nodos(nodes)
+
+    # 4. Guardar cambios
+    with open(graph_file, "w", encoding="utf-8") as f:
+        for n in nodes_estandarizados:
+            f.write(json.dumps(n.to_dict(), ensure_ascii=False) + "\n")
+
+    print("✅ Nodos estandarizados")
+    print()
+
+    # 5. Regenerar vault
+    project_name = getattr(args, "project", None) or "Repo"
+    vault_dir = os.path.join(CONTEXT_DIR, "vault")
+
+    render_obsidian_vault(project_name, nodes_estandarizados, edges, vault_dir)
+    print(f"✅ Vault regenerado: {vault_dir}")
+
+    # 6. Regenerar brief
+    brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
+    from context_map.domain.checker import analizar_readiness
+    readiness = analizar_readiness(".")
+    from context_map.presentation.brief import generar_brief
+    generar_brief(project_name, nodes_estandarizados, edges, readiness.score, brief_path)
+    print(f"✅ Brief regenerado: {brief_path}")
+
+    # 7. Resumen de cambios
+    print()
+    print("📋 Resumen de cambios:")
+    print(f"   - Nodos estandarizados: {len(nodes_estandarizados)}")
+    print(f"   - Vault regenerado: {vault_dir}")
+    print(f"   - Brief regenerado: {brief_path}")
+    print()
+    print("💡 Para verificar:")
+    print("   ctxmap check .")
+    print()
+    print("💡 Para reconstruir completo:")
+    print("   ctxmap build --project 'Nombre'")
