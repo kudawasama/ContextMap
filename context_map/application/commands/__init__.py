@@ -424,10 +424,16 @@ def cmd_update(args):
     print("✅ Repositorio actualizado")
     print()
 
-    # Instalar con pip/uv
-    print("📦 Instalando nueva versión...")
+    # Desinstalar versión anterior (Windows bloquea el exe si está en uso)
+    print("📦 Desinstalando versión anterior...")
+    if shutil.which("uv"):
+        uninstaller = ["uv", "pip", "uninstall", "context-map", "-y"]
+    else:
+        uninstaller = [sys.executable, "-m", "pip", "uninstall", "context-map", "-y"]
+    subprocess.run(uninstaller, capture_output=True, text=True)
 
-    # Detectar gestor de paquetes
+    # Instalar nueva versión
+    print("📦 Instalando nueva versión...")
     if shutil.which("uv"):
         installer = ["uv", "pip", "install", update_dir]
     else:
