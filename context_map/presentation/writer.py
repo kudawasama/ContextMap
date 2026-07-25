@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Generador de vault Obsidian desde el grafo de contexto.
 
 Produce archivos .md con:
@@ -7,15 +5,19 @@ Produce archivos .md con:
 - [[wiki-links]] entre conceptos
 - Secciones de descripción, conexiones y evidencia
 - Un MOC (Map of Content) como índice principal
+- Carpetas por estado (COMPLETADO, EN_PROGRESO, PENDIENTE)
+- Consolidación de notas relacionadas
 """
+
+from __future__ import annotations
 
 import os
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime
+from collections import defaultdict
 
 from context_map.core.models import Node, Edge
-
 
 # Mapeo de tipos a carpetas del vault
 TYPE_TO_FOLDER = {
@@ -27,6 +29,14 @@ TYPE_TO_FOLDER = {
     "FUTURO": "06-FUTURO",
     "HITO": "07-HITORIAL",
     "CORRECCION": "08-CORRECCIONES",
+}
+
+# Subcarpetas por estado
+STATUS_FOLDERS = {
+    "completado": "COMPLETADO",
+    "en_progreso": "EN_PROGRESO",
+    "pendiente": "PENDIENTE",
+    "cancelado": "CANCELADO",
 }
 
 
@@ -111,12 +121,26 @@ def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
     }
     icono = iconos.get(node.type, "📝")
 
+    # Badge de estado
+    status_badges = {
+        "completado": "✅ COMPLETADO",
+        "en_progreso": "🔄 EN PROGRESO",
+        "pendiente": "⏳ PENDIENTE",
+        "cancelado": "❌ CANCELADO",
+    }
+    status_badge = status_badges.get(node.status, "")
+
     partes = [
         frontmatter,
         "",
         f"# {icono} {node.title}",
         "",
     ]
+
+    # Badge de estado
+    if status_badge:
+        partes.append(f"**Estado**: {status_badge}")
+        partes.append("")
 
     # Tags como badges
     if node.tags:
@@ -211,6 +235,127 @@ total_edges: {len(edges)}
     return "\n".join(partes)
 
 
+# ============================================================
+# CONSOLIDACIÓN DE NOTAS RELACIONADAS
+# ============================================================
+
+def _detectar_grupo(nodo: Node) -> Optional[str]:
+    """Detecta si un nodo pertenece a un grupo que puede consolidarse."""
+    title_lower = nodo.title.lower()
+    text = nodo.summary.lower() if nodo.summary else ""
+
+    # Grupo: Estructura del proyecto
+    if "archivos de tipo" in title_lower or "archivos de tipo" in text:
+        return "ESTRUCTURA"
+
+    # Grupo: Descripciones de módulos Python
+    if re.match(r".*\.py\s+(define|descripción|docstring)", title_lower):
+        return "MODULOS_PYTHON"
+
+    # Grupo: TODOs/pendientes del scanner
+    if "pendiente en" in title_lower and ("l" in title_lower and ":" in title_lower):
+        return "TODOS_SCANNER"
+
+    # Grupo: Commits de features
+    if re.match(r"[a-f0-9]{7}\s+feat:", title_lower):
+        return "FEATURES"
+
+    # Grupo: Commits de docs
+    if re.match(r"[a-f0-9]{7}\s+docs?:", title_lower):
+        return "DOCS"
+
+    # Grupo: Commits de chore
+    if re.match(r"[a-f0-9]{7}\s+chore:", title_lower):
+        return "CHORES"
+
+    return None
+
+
+def _consolidar_grupo(nombre: str, nodos: List[Node]) -> Node:
+    """Consolida un grupo de nodos relacionados en uno solo."""
+    if not nodos:
+        return None
+
+    # Tomar el primero como base
+    base = nodos[0]
+
+    # Construir contenido consolidado
+    contenido_parts = []
+    for n in nodos:
+        contenido_parts.append(f"### {n.title}\n\n{n.summary or '(sin descripción)'}")
+
+    contenido = "\n\n".join(contenido_parts)
+
+    # Crear nodo consolidado
+    return Node(
+        id=f"CONSOLIDADO-{nombre}",
+        type=base.type,
+        title=f"{nombre} ({len(nodos)} items)",
+        summary=contenido,
+        tags=list(set(t for n in nodos for t in n.tags)),
+        source="consolidacion",
+        status="completado",
+        version=base.version,
+    )
+
+
+def _consolidar_nodos(nodes: List[Node]) -> Tuple[List[Node], Dict[str, List[str]]]:
+    """Consolida notas relacionadas.
+
+    Retorna:
+        - Lista de nodos (algunos consolidados)
+        - Mapa de grupo -> IDs originales (para tracking)
+    """
+    # Agrupar por grupo
+    grupos: Dict[str, List[Node]] = defaultdict(list)
+    sin_grupo: List[Node] = []
+
+    for n in nodes:
+        grupo = _detectar_grupo(n)
+        if grupo:
+            grupos[grupo].append(n)
+        else:
+            sin_grupo.append(n)
+
+    # Consolidar grupos con 3+ miembros
+    resultado = list(sin_grupo)
+    tracking: Dict[str, List[str]] = {}
+
+    for nombre, nodos_grupo in grupos.items():
+        if len(nodos_grupo) >= 3:
+            consolidado = _consolidar_grupo(nombre, nodos_grupo)
+            if consolidado:
+                resultado.append(consolidado)
+                tracking[nombre] = [n.id for n in nodos_grupo]
+        else:
+            # Si tiene menos de 3, agregar individuales
+            resultado.extend(nodos_grupo)
+
+    return resultado, tracking
+
+
+# ============================================================
+# CARPETAS POR ESTADO
+# ============================================================
+
+def _obtener_carpeta_estado(node: Node) -> str:
+    """Determina la subcarpeta de estado para un nodo."""
+    status = node.status.lower() if node.status else "pendiente"
+    return STATUS_FOLDERS.get(status, STATUS_FOLDERS["pendiente"])
+
+
+def _crear_estructura_carpetas(output_dir: str) -> None:
+    """Crea la estructura de carpetas con estados."""
+    for folder in TYPE_TO_FOLDER.values():
+        folder_path = os.path.join(output_dir, folder)
+        for status_folder in STATUS_FOLDERS.values():
+            os.makedirs(os.path.join(folder_path, status_folder), exist_ok=True)
+
+
+# ============================================================
+# RENDER PRINCIPAL
+# ============================================================
+
 def render_obsidian_vault(
     project_name: str,
     nodes: List[Node],
@@ -219,29 +364,44 @@ def render_obsidian_vault(
 ) -> str:
     """Genera un vault completo de Obsidian.
 
+    Incluye:
+    - Carpetas por estado
+    - Notas consolidadas
+    - MOC principal
+    - Conexiones
+
     Retorna la ruta del vault creado.
     """
-    # Crear carpetas del vault
-    for folder in TYPE_TO_FOLDER.values():
-        os.makedirs(os.path.join(output_dir, folder), exist_ok=True)
+    # Crear estructura de carpetas
+    _crear_estructura_carpetas(output_dir)
+
+    # Consolidar notas relacionadas
+    nodos_consolidados, tracking = _consolidar_nodos(nodes)
 
     # Generar MOC principal
     moc_path = os.path.join(output_dir, "00-INDICE.md")
     with open(moc_path, "w", encoding="utf-8") as f:
-        f.write(_render_moc(project_name, nodes, edges))
+        f.write(_render_moc(project_name, nodos_consolidados, edges))
 
     # Generar notas individuales
-    for node in nodes:
+    for node in nodos_consolidados:
         folder = TYPE_TO_FOLDER.get(node.type, "02-IDEAS")
+        status_folder = _obtener_carpeta_estado(node)
         slug = _slugificar(node.title)
         filename = f"{slug}.md"
-        filepath = os.path.join(output_dir, folder, filename)
+
+        filepath = os.path.join(output_dir, folder, status_folder, filename)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(_render_nota(node, nodes, edges))
+            f.write(_render_nota(node, nodos_consolidados, edges))
 
     # Generar archivo de conexiones (graph view helper)
-    _render_conexiones(output_dir, nodes, edges)
+    _render_conexiones(output_dir, nodos_consolidados, edges)
+
+    # Generar archivo de tracking de consolidación
+    if tracking:
+        _render_tracking_consolidacion(output_dir, tracking)
 
     return output_dir
 
@@ -278,6 +438,36 @@ def _render_conexiones(output_dir: str, nodes: List[Node], edges: List[Edge]) ->
         src_title = src.title[:40] if src else e.source
         tgt_title = tgt.title[:40] if tgt else e.target
         partes.append(f"| [[{src_slug}\\|{src_title}]] | [[{tgt_slug}\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(partes))
+
+
+def _render_tracking_consolidacion(output_dir: str, tracking: Dict[str, List[str]]) -> None:
+    """Genera archivo de tracking de consolidación."""
+    path = os.path.join(output_dir, "00-CONSOLIDACION.md")
+
+    partes = [
+        "---",
+        "type: consolidacion",
+        f"created: {datetime.now().isoformat(timespec='seconds')}",
+        "---",
+        "",
+        "# 📦 Notas Consolidadas",
+        "",
+        "Este archivo rastrea qué notas fueron consolidadas en una sola.",
+        "Útil para auditoría y referencia.",
+        "",
+    ]
+
+    for grupo, ids in tracking.items():
+        partes.append(f"## {grupo}")
+        partes.append("")
+        partes.append(f"**Notas originales**: {len(ids)}")
+        partes.append("")
+        for id_ in ids:
+            partes.append(f"- `{id_}`")
+        partes.append("")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(partes))
