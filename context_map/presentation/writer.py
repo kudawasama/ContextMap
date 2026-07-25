@@ -248,9 +248,16 @@ def _detectar_grupo(nodo: Node) -> Optional[str]:
     if "archivos de tipo" in title_lower or "archivos de tipo" in text:
         return "ESTRUCTURA"
 
-    # Grupo: Descripciones de módulos Python
-    if re.match(r".*\.py\s+(define|descripción|docstring)", title_lower):
-        return "MODULOS_PYTHON"
+    # Grupo: Descripciones de __init__.py
+    if "__init__" in title_lower:
+        return "PAQUETES_PYTHON"
+
+    # Grupo: Descripciones de módulos Python (por .py en título)
+    if ".py" in title_lower:
+        # No consolidar módulos únicos importantes
+        modulos_unicos = ["cli.py", "models.py", "parser.py"]
+        if not any(m in title_lower for m in modulos_unicos):
+            return "MODULOS_PYTHON"
 
     # Grupo: TODOs/pendientes del scanner
     if "pendiente en" in title_lower and ("l" in title_lower and ":" in title_lower):
@@ -267,6 +274,10 @@ def _detectar_grupo(nodo: Node) -> Optional[str]:
     # Grupo: Commits de chore
     if re.match(r"[a-f0-9]{7}\s+chore:", title_lower):
         return "CHORES"
+
+    # Grupo: Commits por hash (cualquier tipo)
+    if re.match(r"\[?[a-f0-9]{7}\]?", title_lower):
+        return "COMMITS"
 
     return None
 
@@ -306,27 +317,28 @@ def _consolidar_nodos(nodes: List[Node]) -> Tuple[List[Node], Dict[str, List[str
         - Lista de nodos (algunos consolidados)
         - Mapa de grupo -> IDs originales (para tracking)
     """
-    # Agrupar por grupo
-    grupos: Dict[str, List[Node]] = defaultdict(list)
+    # Agrupar por grupo Y tipo (para no mezclar)
+    grupos: Dict[Tuple[str, str], List[Node]] = defaultdict(list)
     sin_grupo: List[Node] = []
 
     for n in nodes:
         grupo = _detectar_grupo(n)
         if grupo:
-            grupos[grupo].append(n)
+            clave = (grupo, n.type)  # Grupo + Tipo
+            grupos[clave].append(n)
         else:
             sin_grupo.append(n)
 
-    # Consolidar grupos con 3+ miembros
+    # Consolidar grupos con 3+ miembros del mismo tipo
     resultado = list(sin_grupo)
     tracking: Dict[str, List[str]] = {}
 
-    for nombre, nodos_grupo in grupos.items():
+    for (nombre, tipo), nodos_grupo in grupos.items():
         if len(nodos_grupo) >= 3:
             consolidado = _consolidar_grupo(nombre, nodos_grupo)
             if consolidado:
                 resultado.append(consolidado)
-                tracking[nombre] = [n.id for n in nodos_grupo]
+                tracking[f"{nombre} ({tipo})"] = [n.id for n in nodos_grupo]
         else:
             # Si tiene menos de 3, agregar individuales
             resultado.extend(nodos_grupo)
