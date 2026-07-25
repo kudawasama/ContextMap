@@ -289,6 +289,45 @@ def clasificar_mensaje(msg: MensajeAntigravity) -> str:
         return "CAMBIO"
 
 
+def es_mensaje_ruido(msg: MensajeAntigravity) -> bool:
+    """Determina si un mensaje es ruido (no informativo)."""
+    content_lower = msg.content.lower() if msg.content else ""
+    title_lower = msg.title.lower() if msg.title else ""
+
+    # Patrones de ruido
+    ruido = [
+        "checking if",
+        "notice all your",
+        "the agent",
+        "background tasks",
+        "validation log",
+        "has been stopped",
+        "has completed",
+        "without warnings",
+        "conversa",  # Mensajes truncados
+    ]
+
+    for patron in ruido:
+        if patron in content_lower or patron in title_lower:
+            return True
+
+    # Mensajes muy cortos (menos de 10 chars)
+    if msg.content and len(msg.content.strip()) < 10:
+        return True
+
+    # Detectar caracteres de control (datos corruptos)
+    if msg.content:
+        control_chars = sum(1 for c in msg.content if ord(c) < 32 or ord(c) > 126)
+        if control_chars > 5:
+            return True
+
+    # Títulos vacíos o con solo espacios
+    if not msg.title or not msg.title.strip():
+        return True
+
+    return False
+
+
 def importar_antigravity(
     ide: bool = True,
     limite: int = 5,
@@ -322,6 +361,10 @@ def importar_antigravity(
 
         # Clasificar y agregar eventos por mensaje significativo
         for msg in conv.mensajes[:20]:  # Últimos 20 mensajes
+            # Filtrar ruido
+            if es_mensaje_ruido(msg):
+                continue
+
             tipo = clasificar_mensaje(msg)
 
             # Crear evento con contexto
