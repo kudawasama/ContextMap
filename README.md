@@ -31,10 +31,9 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 | Característica | Otros | Context Map |
 |----------------|:-----:|:-----------:|
 | Escaneo técnico de archivos | ✅ | ✅ |
-| Briefs para agentes | ✅ | ❌ |
+| Briefs para agentes | ✅ | ✅ |
 | Score de readiness | ✅ | ✅ |
 | Mermaid diagrams | ✅ | ✅ |
-| CI/CD integration | ✅ | ❌ |
 | Detección de riesgos técnicos | ✅ | ✅ |
 | **Vault Obsidian con graph view** | ❌ | ✅ |
 | **Wiki-links `[[entre-notas]]`** | ❌ | ✅ |
@@ -49,6 +48,9 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 | **Importa sesiones de Hermes** | ❌ | ✅ |
 | **Importa chats externos** | ❌ | ✅ |
 | **Reportes semanales** | ❌ | ✅ |
+| **Importa chats de Antigravity IDE** | ❌ | ✅ |
+| **Actualización automática** | ❌ | ✅ |
+| **Estandarización de nodos** | ❌ | ✅ |
 
 ---
 
@@ -84,6 +86,10 @@ ctxmap import-sessions --limit 10    # Importar más sesiones
 ctxmap import-chat telegram.txt      # Importa chat de Telegram
 ctxmap import-chat discord.json      # Importa chat de Discord
 
+# Importar chats de Antigravity IDE
+ctxmap import-antigravity            # Importa chats de IDE
+ctxmap import-antigravity --limit 10 # Importar más conversaciones
+
 # Generar el vault completo
 ctxmap build --project "Mi Proyecto"
 
@@ -102,6 +108,12 @@ ctxmap weekly --days 30              # Últimos 30 días
 
 # Observar cambios y regenerar automáticamente
 ctxmap watch --project "Mi Proyecto" --interval 30
+
+# Actualizar ContextMap a la última versión
+ctxmap update                        # Descarga e instala desde GitHub
+
+# Migrar proyecto existente a nueva versión
+ctxmap sync --migrate                # Estandariza y regenera vault
 ```
 
 ## Comandos
@@ -113,12 +125,15 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 | `ctxmap import-git [target]` | Importa historial de commits |
 | `ctxmap import-sessions` | Importa sesiones de Hermes |
 | `ctxmap import-chat [file]` | Importa chats externos |
+| `ctxmap import-antigravity` | Importa chats de Antigravity IDE |
 | `ctxmap build` | Genera vault completo |
 | `ctxmap build --mermaid` | Genera con diagrama Mermaid |
 | `ctxmap sync` | Sync incremental (solo nuevos) |
+| `ctxmap sync --migrate` | Migrar proyecto a nueva versión |
 | `ctxmap check` | Verifica readiness (0-100) |
 | `ctxmap weekly` | Genera reporte semanal |
 | `ctxmap watch` | Observa cambios automáticamente |
+| `ctxmap update` | Actualiza ContextMap desde GitHub |
 
 ## Estructura del Vault
 
@@ -128,8 +143,17 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 │   ├── 00-INDICE.md                    # Map of Content
 │   ├── 00-GRAPH.md                     # Diagrama Mermaid
 │   ├── 00-CONEXIONES.md                # Grafo de relaciones
+│   ├── 00-CONSOLIDACION.md             # Tracking de consolidación
 │   ├── 01-PROYECTOS/                   # Qué es cada proyecto
+│   │   ├── COMPLETADO/                 # Archivos completados
+│   │   ├── EN_PROGRESO/                # En desarrollo
+│   │   ├── PENDIENTE/                  # Por hacer
+│   │   └── CANCELADO/                  # Cancelados
 │   ├── 02-IDEAS/                       # Ideas y conceptos
+│   │   ├── COMPLETADO/
+│   │   ├── EN_PROGRESO/
+│   │   ├── PENDIENTE/
+│   │   └── CANCELADO/
 │   ├── 03-RIESGO/                      # Riesgos identificados
 │   ├── 04-CAMBIOS/                     # Cambios en curso
 │   ├── 05-PRUEBAS/                     # Pruebas y validaciones
@@ -139,7 +163,10 @@ ctxmap watch --project "Mi Proyecto" --interval 30
 ├── state/
 │   ├── graph.jsonl                     # Grafo de nodos
 │   ├── edges.jsonl                     # Conexiones
-│   └── processed_events.txt            # Eventos ya procesados
+│   ├── processed_events.txt            # Eventos ya procesados
+│   └── REPORTE_ESTANDARIZACION.md      # Reporte de estandarización
+├── maps/                               # Snapshots históricos
+│   └── HISTORY/
 ├── chats/                              # Exportaciones de chat
 └── raw/
     └── events.jsonl                    # Eventos manuales
@@ -171,7 +198,13 @@ ctxmap import-chat archivo.txt
 ```
 Soporta Telegram, Discord, Slack, WhatsApp, JSON, texto simple.
 
-### 5. JSONL Manual
+### 5. Antigravity IDE
+```bash
+ctxmap import-antigravity
+```
+Lee conversaciones de Antigravity IDE (Gemini) desde `~/.gemini/antigravity-ide/`.
+
+### 6. JSONL Manual
 Crea `.context-map/raw/events.jsonl`:
 ```json
 {"type":"IDEA","text":"Agregar soporte multiagente","timestamp":"2026-07-24T14:00:00","source":"manual"}
@@ -199,6 +232,11 @@ Crea `.context-map/raw/events.jsonl`:
 - [x] Integración con sesiones de Hermes
 - [x] Exportador de chats externos
 - [x] Generador de resúmenes semanales
+- [x] Integración con Antigravity IDE
+- [x] Actualización automática (ctxmap update)
+- [x] Estandarización de nodos (tags, status, evidence)
+- [x] Carpetas por estado (COMPLETADO, EN_PROGRESO, PENDIENTE, CANCELADO)
+- [x] Consolidación automática de notas relacionadas
 - [ ] Dashboard web (opcional)
 
 ## Contribuir
