@@ -108,11 +108,16 @@ def cmd_build(args):
     extra_events = _collect_events()
     if extra_events:
         nodes, edges = events_to_model(extra_events)
+        # Estandarizar nodos nuevos antes de persistir
+        from context_map.core.standardize import estandarizar_nodos
+        nodes = estandarizar_nodos(nodes)
         _append_nodes_edges(nodes, edges)
 
+    # Cargar nodos y re-estandarizar todo (por si quedaron viejos)
+    from context_map.core.standardize import estandarizar_nodo
     records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
     e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
-    nodes = [Node.from_dict(r) for r in records]
+    nodes = [estandarizar_nodo(Node.from_dict(r)) for r in records]
     edges = [Edge.from_dict(r) for r in e_records]
 
     md = render_active_map(args.project or "Repo", nodes, edges)

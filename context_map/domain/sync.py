@@ -18,6 +18,7 @@ from context_map.core.parser import (
     load_events_from_jsonl,
 )
 from context_map.core.store import append_jsonl, load_jsonl
+from context_map.core.standardize import estandarizar_nodo
 
 
 def _hash_evento(e: Event) -> str:
@@ -42,12 +43,16 @@ def _guardar_evento_procesado(state_dir: str, evento_hash: str) -> None:
 
 
 def _cargar_estado_existente(state_dir: str) -> Tuple[List[Node], List[Edge]]:
-    """Carga nodos y aristas existentes sin reescribir."""
+    """Carga nodos y aristas existentes, estandarizando los nodos."""
     graph_file = os.path.join(state_dir, "graph.jsonl")
     edges_file = os.path.join(state_dir, "edges.jsonl")
 
-    nodes = [Node.from_dict(r) for r in load_jsonl(graph_file)]
+    nodos_raw = [Node.from_dict(r) for r in load_jsonl(graph_file)]
     edges = [Edge.from_dict(r) for r in load_jsonl(edges_file)]
+
+    # Estandarizar nodos existentes
+    from context_map.core.standardize import estandarizar_nodo
+    nodes = [estandarizar_nodo(n) for n in nodos_raw]
 
     return nodes, edges
 
@@ -112,6 +117,9 @@ def sync_incremental(
         offset_id = len(nodos_existentes) + 1
         nodos_nuevos, aristas_nuevas = events_to_model(eventos_reales_nuevos, offset_id)
 
+        # Estandarizar nodos nuevos
+        nodos_nuevos = [estandarizar_nodo(n) for n in nodos_nuevos]
+
         # Agregar nodos al grafo
         append_jsonl(
             os.path.join(state_dir, "graph.jsonl"),
@@ -131,6 +139,14 @@ def sync_incremental(
     # 7. Marcar todos los eventos como procesados
     for e in eventos_nuevos:
         _guardar_evento_procesado(state_dir, _hash_evento(e))
+
+    # 8. Guardar TODOS los nodos estandarizados
+    graph_file = os.path.join(state_dir, "graph.jsonl")
+    import json
+    todos_nodos = nodos_existentes + (nodos_nuevos if nodos_nuevos else [])
+    with open(graph_file, "w", encoding="utf-8") as f:
+        for n in todos_nodos:
+            f.write(json.dumps(n.to_dict(), ensure_ascii=False) + "\n")
 
     return {
         "nodos_existentes": len(nodos_existentes),
