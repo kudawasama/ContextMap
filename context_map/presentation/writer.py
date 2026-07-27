@@ -195,14 +195,19 @@ total_nodes: {len(nodes)}
 total_edges: {len(edges)}
 ---"""
 
-    # Agrupar por tipo
     por_tipo: Dict[str, List[Node]] = {}
     for n in nodes:
         por_tipo.setdefault(n.type, []).append(n)
 
     iconos = {
-        "BASE": "📦", "IDEA": "💡", "RIESGO": "⚠️", "CAMBIO": "🔄",
-        "PRUEBA": "🧪", "FUTURO": "🔮", "HITO": "🎯", "CORRECCION": "🔧",
+        "BASE": "📦",
+        "IDEA": "💡",
+        "RIESGO": "⚠️",
+        "CAMBIO": "🔄",
+        "PRUEBA": "🧪",
+        "FUTURO": "🔮",
+        "HITO": "🎯",
+        "CORRECCION": "🔧",
     }
 
     partes = [
@@ -210,22 +215,22 @@ total_edges: {len(edges)}
         "",
         f"# 🗺️ {project_name}",
         "",
-        "Mapa mental del proyecto — contexto técnico y emocional.",
+        "> Mapa central del proyecto. Desde acá podés navegar toda la documentación.",
         "",
         "---",
         "",
+        "## 📊 Resumen",
+        "",
     ]
 
-    # Stats rápidas
-    partes.append("## 📊 Resumen")
-    partes.append("")
     for tipo, items in sorted(por_tipo.items()):
         icono = iconos.get(tipo, "📝")
-        partes.append(f"- {icono} **{tipo}**: {len(items)} notas")
-    partes.append(f"- 🔗 **Conexiones**: {len(edges)} aristas")
+        partes.append(f"- {icono} **{tipo}**: {len(items)}")
+    partes.append(f"- 🔗 Conexiones: {len(edges)}")
+    partes.append("")
+    partes.append("---")
     partes.append("")
 
-    # Notas por tipo
     for tipo in ["BASE", "IDEA", "RIESGO", "CAMBIO", "PRUEBA", "FUTURO", "HITO", "CORRECCION"]:
         items = por_tipo.get(tipo, [])
         if not items:
@@ -233,10 +238,20 @@ total_edges: {len(edges)}
         icono = iconos.get(tipo, "📝")
         partes.append(f"## {icono} {tipo}")
         partes.append("")
-        for n in items:
+        for n in items[:40]:
             slug = _slugificar(n.title)
-            partes.append(f"- [[{slug}|{n.title[:70]}]]")
+            partes.append(f"- [[{slug}|{n.title[:60]}]]")
         partes.append("")
+
+    partes += [
+        "---",
+        "",
+        "## 🔍 Otros",
+        "",
+        "- [[00-CONEXIONES|Ver todas las conexiones]]",
+        "- [[00-CONSOLIDACION|Ver consolidación]]",
+        "",
+    ]
 
     return "\n".join(partes)
 
