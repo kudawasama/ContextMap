@@ -58,12 +58,12 @@ Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al fi
 
 ```bash
 # Instalar con UV (recomendado)
-uv pip install git+https://github.com/kudawasama/ContextMap.git
+uv tool install git+https://github.com/kudawasama/ContextMap.git
 
 # O instalar en modo desarrollo
 git clone https://github.com/kudawasama/ContextMap.git
 cd ContextMap
-uv pip install -e .
+uv tool install . // modo desarrollo
 ```
 
 ## Uso

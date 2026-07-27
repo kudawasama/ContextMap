@@ -10,7 +10,7 @@ git clone https://github.com/kudawasama/ContextMap.git
 cd ContextMap
 
 # Instalar en modo desarrollo con UV
-uv pip install -e .
+uv tool install . // modo desarrollo
 
 # Ejecutar tests
 python -m pytest context_map/__tests__
