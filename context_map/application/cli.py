@@ -24,6 +24,7 @@ from context_map.application.commands import (
     cmd_brief,
     cmd_update,
     cmd_doctor,
+    cmd_sync_migrate,
 )
 
 
