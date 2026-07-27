@@ -162,18 +162,36 @@ def analizar_contenido(ruta: str) -> Optional[InfoContenido]:
 
 def analizar_directorio(ruta: str) -> List[InfoContenido]:
     """Analiza todos los archivos Python de un directorio."""
+    ignorar = {
+        "__pycache__", ".git", ".venv", "venv", "env",
+        "node_modules", ".mypy_cache", ".pytest_cache",
+        ".tox", "dist", "build", "*.egg-info",
+        ".context-map", "__pycache__",
+    }
     resultados = []
     contador = 0
-    for dirpath, _, filenames in os.walk(ruta):
+    for dirpath, dirnames, filenames in os.walk(ruta):
+        # Filtrar directorios ignorados
+        dirnames[:] = [
+            d for d in dirnames
+            if d not in ignorar and not d.endswith(".egg-info")
+        ]
         for filename in filenames:
-            if filename.endswith(".py"):
-                ruta_completa = os.path.join(dirpath, filename)
-                contador += 1
-                if contador % 10 == 0:
-                    print(f"   📝 Archivos Python analizados: {contador}\r", end="", flush=True)
-                info = analizar_contenido(ruta_completa)
-                if info:
-                    resultados.append(info)
+            if not filename.endswith(".py"):
+                continue
+            ruta_completa = os.path.join(dirpath, filename)
+            # Saltar archivos grandes
+            try:
+                if os.path.getsize(ruta_completa) > 1_000_000:
+                    continue
+            except OSError:
+                continue
+            contador += 1
+            if contador % 10 == 0:
+                print(f"   📝 Archivos Python analizados: {contador}\r", end="", flush=True)
+            info = analizar_contenido(ruta_completa)
+            if info:
+                resultados.append(info)
     if contador > 0:
         print(f"   ✅ Archivos Python analizados: {contador} total    ")
     return resultados
