@@ -49,9 +49,25 @@ class DoctorReport:
 
 
 def _safe_rmtree(path: str) -> None:
-    """Borra directorios de forma multiplataforma, ignorando errores no críticos."""
+    """Borra directorios de forma multiplataforma, con verificación posterior."""
     if os.path.isdir(path):
         shutil.rmtree(path, ignore_errors=True)
+        # Windows puede retener archivos (antivirus, handles abiertos)
+        if os.path.isdir(path):
+            for attempt in range(3):
+                shutil.rmtree(path, ignore_errors=True)
+                if not os.path.isdir(path):
+                    break
+                # fallback: cmd rd
+                try:
+                    subprocess.run(
+                        ["cmd", "/c", "rd", "/s", "/q", path],
+                        capture_output=True, timeout=10,
+                    )
+                except Exception:
+                    pass
+                if not os.path.isdir(path):
+                    break
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:

@@ -434,6 +434,18 @@ def cmd_update(args):
         result = None
 
     if result is None or result.returncode != 0:
+        # Asegurar que no queden restos del directorio corrupto
+        if os.path.exists(update_dir):
+            shutil.rmtree(update_dir, ignore_errors=True)
+            # rmtree puede fallar silenciosamente en Windows (archivos bloqueados)
+            if os.path.exists(update_dir):
+                try:
+                    subprocess.run(
+                        ["cmd", "/c", "rd", "/s", "/q", update_dir],
+                        capture_output=True, timeout=10,
+                    )
+                except Exception:
+                    pass
         print("   Clonando repositorio...")
         result = subprocess.run(
             ["git", "clone", repo_url, update_dir],
