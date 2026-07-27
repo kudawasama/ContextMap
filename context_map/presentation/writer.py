@@ -168,6 +168,12 @@ def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
             partes.append(f"- {link}")
         partes.append("")
 
+    # Link de retorno al índice
+    partes.append("---")
+    partes.append("")
+    partes.append("[[00-INDICE|⬅ Volver al índice]]")
+    partes.append("")
+
     # Evidencia
     if node.evidence:
         partes.append("## 📋 Evidencia")
