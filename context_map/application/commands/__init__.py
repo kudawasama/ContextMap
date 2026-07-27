@@ -30,6 +30,7 @@ from context_map.domain.sync import sync_incremental
 from context_map.domain.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
 from context_map.domain.checker import analizar_readiness, formatear_readiness
 from context_map.domain.reporter import generar_semanal, guardar_reporte
+from context_map.domain.doctor import run as doctor_run, DoctorReport
 from context_map.infrastructure.integrations.git import leer_historial_git
 from context_map.infrastructure.integrations.hermes import importar_sesiones
 from context_map.infrastructure.integrations.chat_export import importar_chat
@@ -551,3 +552,25 @@ def cmd_sync_migrate(args):
     print()
     print("💡 Para reconstruir completo:")
     print("   ctxmap build --project 'Nombre'")
+
+
+def cmd_doctor(args):
+    """Diagnostica el entorno y repara problemas conocidos."""
+    report = doctor_run()
+
+    for check in report.checks:
+        icon = "✅" if check.status == "OK" else "⚠️" if check.status == "WARN" else "❌"
+        print(f"{icon} {check.name}: {check.message}")
+
+        if check.fix_applied:
+            print(f"   🔧 Reparacion: {check.fix_message}")
+
+        print()
+
+    if report.ok:
+        print("👌 Doctor: sin fallos detectados.")
+    else:
+        print("🧰 Doctor: se detectaron fallos.")
+        if any(c.fix_applied for c in report.checks):
+            print("   Algunos se intentaron reparar automaticamente.")
+        print("   Revisa los mensajes anteriores y reejecuta 'ctxmap doctor' si es necesario.")

@@ -23,7 +23,7 @@ from context_map.application.commands import (
     cmd_watch,
     cmd_brief,
     cmd_update,
-    cmd_sync_migrate,
+    cmd_doctor,
 )
 
 
@@ -102,6 +102,9 @@ def create_parser() -> argparse.ArgumentParser:
     # update
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
 
+    # doctor
+    sub.add_parser("doctor", help="Diagnostica el entorno y repara problemas conocidos")
+
     return p
 
 
@@ -129,6 +132,7 @@ def main() -> None:
         "watch": cmd_watch,
         "brief": cmd_brief,
         "update": cmd_update,
+        "doctor": cmd_doctor,
     }
 
     # sync tiene dos modos
