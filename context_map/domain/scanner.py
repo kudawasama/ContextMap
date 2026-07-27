@@ -80,22 +80,65 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["config"],
         ))
 
-    # Eventos por tests
-    if est.tests:
+    # Carpetas principales como nodos estructurales
+    carpetas_principales = sorted({os.path.dirname(a.ruta) for a in est.archivos})
+    for carpeta in carpetas_principales[:8]:
+        eventos.append(Event(
+            type="BASE",
+            text=f"Carpeta: {carpeta}",
+            timestamp=_ahora(),
+            source="folder-map",
+            tags=["carpeta", carpeta],
+        ))
+
+    # Archivos relevantes por categoría, limitados para no saturar
+    for archivo in est.entrypoints[:3]:
+        eventos.append(Event(
+            type="BASE",
+            text=f"Entrypoint: {archivo}",
+            timestamp=_ahora(),
+            source="structure",
+            tags=["entrypoint", os.path.dirname(archivo), os.path.basename(archivo)],
+        ))
+    for archivo in est.configs[:5]:
+        eventos.append(Event(
+            type="CAMBIO",
+            text=f"Config: {archivo}",
+            timestamp=_ahora(),
+            source="structure",
+            tags=["config", os.path.dirname(archivo), os.path.basename(archivo)],
+        ))
+    for archivo in est.docs[:5]:
+        eventos.append(Event(
+            type="IDEA",
+            text=f"Doc: {archivo}",
+            timestamp=_ahora(),
+            source="structure",
+            tags=["doc", os.path.dirname(archivo), os.path.basename(archivo)],
+        ))
+    for archivo in est.tests[:5]:
         eventos.append(Event(
             type="PRUEBA",
-            text=f"Se detectaron {len(est.tests)} archivos de test",
+            text=f"Test: {archivo}",
             timestamp=_ahora(),
-            source="scanner",
-            tags=["tests"],
+            source="structure",
+            tags=["test", os.path.dirname(archivo), os.path.basename(archivo)],
         ))
-    else:
+
+    # Archivo más grande por tipo relevante como muestra
+    candidatos_tipo = {}
+    for archivo in est.archivos:
+        if archivo.tamano <= 0:
+            continue
+        if archivo.tipo not in candidatos_tipo or archivo.tamano > candidatos_tipo[archivo.tipo].tamano:
+            candidatos_tipo[archivo.tipo] = archivo
+    for tipo, archivo in sorted(candidatos_tipo.items())[:6]:
         eventos.append(Event(
-            type="RIESGO",
-            text="No se detectaron archivos de test en el proyecto",
+            type="IDEA",
+            text=f"{tipo}: {archivo.ruta} ({archivo.tamano} bytes)",
             timestamp=_ahora(),
-            source="scanner",
-            tags=["tests", "riesgo"],
+            source="structure",
+            tags=[tipo, os.path.dirname(archivo.ruta), os.path.basename(archivo.ruta)],
         ))
 
     return eventos

@@ -421,27 +421,67 @@ def render_obsidian_vault(
     edges: List[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
-    """Genera un vault limpio de Obsidian.
+    """Genera un vault limpio de Obsidian con grafo jerárquico real.
 
     - 00-INDICE.md como MOC central
     - Carpetas por tipo, sin subcarpetas de estado
+    - Notas conectadas a su carpeta y al indice
+    - Carpetas conectadas a su carpeta padre y al indice
     - Consolidación más limitada
     """
     _crear_estructura_carpetas(output_dir)
-
     nodos_consolidados, tracking = _consolidar_nodos(nodes, project_name=project_name)
+
+    index_slug = "00-INDICE"
 
     moc_path = os.path.join(output_dir, "00-INDICE.md")
     with open(moc_path, "w", encoding="utf-8") as f:
         f.write(_render_moc(project_name, nodos_consolidados, edges))
 
+    node_slugs = {}
     for node in nodos_consolidados:
         filepath = _obtener_ruta_nota(node, output_dir)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(_render_nota(node, nodos_consolidados, edges))
+        node_slugs[node.id] = _slugificar(node.title)
 
-    _render_conexiones(output_dir, nodos_consolidados, edges)
+    # Build structural edges from folders
+    folder_nodes = {}
+    folder_edges = []
+    type_folders = {v: k for k, v in TYPE_TO_FOLDER.items()}
+
+    for node in nodos_consolidados:
+        slug = node_slugs.get(node.id)
+        if not slug:
+            continue
+        filepath = _obtener_ruta_nota(node, output_dir)
+        rel = os.path.relpath(filepath, output_dir)
+        parts = [p for p in rel.replace("\\", "/").split("/") if p]
+        if len(parts) < 2:
+            continue
+        folder_name = parts[-2]
+        type_name = type_folders.get(folder_name, folder_name)
+        folder_slug = _slugificar(type_name)
+        parent_slug = index_slug
+
+        if folder_slug not in folder_nodes:
+            folder_nodes[folder_slug] = Node(
+                id=f"folder:{folder_slug}",
+                type="BASE",
+                title=type_name.replace("-", " ").title(),
+                summary=f"Carpeta: {type_name}",
+                tags=["carpeta", type_name.lower()],
+                source="vault",
+                status="vigente",
+            )
+
+        folder_edges.append(Edge(source=parent_slug, target=f"folder:{folder_slug}", kind="has_child", note=type_name))
+        folder_edges.append(Edge(source=f"folder:{folder_slug}", target=slug, kind="contains", note=node.title))
+
+    all_nodes = nodos_consolidados + list(folder_nodes.values())
+    all_edges = edges + folder_edges
+    _render_conexiones(output_dir, all_nodes, all_edges)
 
     if tracking:
         _render_tracking_consolidacion(output_dir, tracking)
