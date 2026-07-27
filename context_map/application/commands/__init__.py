@@ -431,20 +431,17 @@ def cmd_update(args):
     print("✅ Repositorio actualizado")
     print()
 
-    # Desinstalar versión anterior (Windows bloquea el exe si está en uso)
-    print("📦 Desinstalando versión anterior...")
-    if shutil.which("uv"):
-        uninstaller = ["uv", "pip", "uninstall", "context-map", "-y"]
-    else:
-        uninstaller = [sys.executable, "-m", "pip", "uninstall", "context-map", "-y"]
-    subprocess.run(uninstaller, capture_output=True, text=True)
-
-    # Instalar nueva versión
+    # Instalar como herramienta global (uv tool o pipx)
     print("📦 Instalando nueva versión...")
     if shutil.which("uv"):
-        installer = ["uv", "pip", "install", update_dir]
+        # uv tool install crea entorno aislado global
+        installer = ["uv", "tool", "install", "--force", update_dir]
+    elif shutil.which("pipx"):
+        installer = ["pipx", "install", "--force", update_dir]
     else:
-        installer = [sys.executable, "-m", "pip", "install", update_dir]
+        print("❌ Se requiere 'uv' o 'pipx' para instalar globalmente.")
+        print("   Instala uv: curl -LsSf https://astral.sh/uv/install.sh | sh")
+        return
 
     result = subprocess.run(installer, capture_output=True, text=True)
 
