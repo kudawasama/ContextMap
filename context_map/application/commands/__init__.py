@@ -445,12 +445,24 @@ def cmd_update(args):
         return
 
     result = subprocess.run(installer, capture_output=True, text=True)
+    stderr_lower = result.stderr.lower()
 
-    if result.returncode != 0:
+    if result.returncode == 0:
+        print("✅ Instalación completada")
+    elif "os error 32" in stderr_lower or "archivo" in stderr_lower and "utilizado" in stderr_lower:
+        # Windows: entrypoint bloqueado porque el .exe está en uso
+        print("⚠️  Código actualizado, pero el entrypoint está bloqueado en Windows.")
+        print("   Para completar la actualización, ejecutá en una shell NUEVA:")
+        print()
+        if shutil.which("uv"):
+            print(f"     uv tool install --force {update_dir}")
+        elif shutil.which("pipx"):
+            print(f"     pipx install --force {update_dir}")
+        print()
+        print("   El paquete ya se actualizó; los comandos nuevos deberían funcionar.")
+    else:
         print(f"❌ Error al instalar: {result.stderr}")
         return
-
-    print("✅ Instalación completada")
     # Limpiar directorio temporal
     shutil.rmtree(update_dir, ignore_errors=True)
     print()
