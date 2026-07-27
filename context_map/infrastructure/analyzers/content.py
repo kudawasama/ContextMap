@@ -163,11 +163,17 @@ def analizar_contenido(ruta: str) -> Optional[InfoContenido]:
 def analizar_directorio(ruta: str) -> List[InfoContenido]:
     """Analiza todos los archivos Python de un directorio."""
     resultados = []
+    contador = 0
     for dirpath, _, filenames in os.walk(ruta):
         for filename in filenames:
             if filename.endswith(".py"):
                 ruta_completa = os.path.join(dirpath, filename)
+                contador += 1
+                if contador % 10 == 0:
+                    print(f"   📝 Archivos Python analizados: {contador}\r", end="", flush=True)
                 info = analizar_contenido(ruta_completa)
                 if info:
                     resultados.append(info)
+    if contador > 0:
+        print(f"   ✅ Archivos Python analizados: {contador} total    ")
     return resultados

@@ -158,9 +158,13 @@ def escanear_y_generar_eventos(
     Returns:
         Lista de eventos generados desde el código
     """
+    print("   ⏳ Fase 1/2: Escaneando estructura del proyecto...")
     # Análisis de estructura
     estructura = escanear_proyecto(ruta_raiz, ignorar)
+    print(f"   → {len(estructura.archivos)} archivos encontrados, {estructura.total_lineas} líneas totales")
 
+    print()
+    print("   ⏳ Fase 2/2: Analizando contenido de archivos Python...")
     # Análisis de contenido (solo Python por ahora)
     contenidos = analizar_directorio(ruta_raiz)
 
@@ -168,6 +172,9 @@ def escanear_y_generar_eventos(
     eventos = []
     eventos.extend(_events_desde_estructura(estructura))
     eventos.extend(_events_desde_contenido(contenidos))
+
+    print(f"   → {len(eventos)} eventos generados")
+    print()
 
     return eventos
 

@@ -133,6 +133,7 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
 
     nombre = os.path.basename(os.path.abspath(ruta_raiz))
     estructura = EstructuraProyecto(nombre=nombre, ruta_raiz=ruta_raiz)
+    contador = 0
 
     for dirpath, dirnames, filenames in os.walk(ruta_raiz):
         # Filtrar directorios ignorados
@@ -144,6 +145,10 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
         for filename in filenames:
             ruta_completa = os.path.join(dirpath, filename)
             ruta_relativa = os.path.relpath(ruta_completa, ruta_raiz)
+
+            contador += 1
+            if contador % 50 == 0:
+                print(f"   📁 Archivos escaneados: {contador}\r", end="", flush=True)
 
             # Saltar archivos binarios grandes
             try:
@@ -183,5 +188,6 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
                 estructura.tests.append(ruta_relativa)
             if archivo.es_doc:
                 estructura.docs.append(ruta_relativa)
-
+    
+    print(f"   ✅ Archivos escaneados: {contador} total    ")
     return estructura
