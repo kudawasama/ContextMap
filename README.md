@@ -67,6 +67,8 @@ uv pip install -e .
 ```
 
 ## Uso
+n> **Nota**: Los comandos detectan automáticamente el nombre del proyecto del directorio actual.
+> No es necesario usar `--project` a menos que quieras un nombre diferente.
 
 ```bash
 # Primera vez: crear estructura
@@ -91,13 +93,13 @@ ctxmap import-antigravity            # Importa chats de IDE
 ctxmap import-antigravity --limit 10 # Importar más conversaciones
 
 # Generar el vault completo
-ctxmap build --project "Mi Proyecto"
+ctxmap build
 
 # Generar con diagrama Mermaid
-ctxmap build --project "Mi Proyecto" --mermaid
+ctxmap build --mermaid
 
 # Sync incremental (solo agrega nuevos eventos)
-ctxmap sync --project "Mi Proyecto"
+ctxmap sync
 
 # Verificar readiness del proyecto
 ctxmap check .                       # Score y sugerencias
@@ -107,7 +109,7 @@ ctxmap weekly                        # Últimos 7 días
 ctxmap weekly --days 30              # Últimos 30 días
 
 # Observar cambios y regenerar automáticamente
-ctxmap watch --project "Mi Proyecto" --interval 30
+ctxmap watch --interval 30
 
 # Actualizar ContextMap a la última versión
 ctxmap update                        # Descarga e instala desde GitHub
