@@ -356,18 +356,18 @@ def _consolidar_nodos(nodes: List[Node], project_name: str = "") -> Tuple[List[N
         else:
             sin_grupo.append(n)
 
-    # Consolidar grupos con 3+ miembros del mismo tipo
+    # Consolidar grupos con 5 o más miembros del mismo tipo
     resultado = list(sin_grupo)
     tracking: Dict[str, List[str]] = {}
 
     for (nombre, tipo), nodos_grupo in grupos.items():
-        if len(nodos_grupo) >= 3:
+        if len(nodos_grupo) >= 5:
             consolidado = _consolidar_grupo(nombre, nodos_grupo, project_name=project_name)
             if consolidado:
                 resultado.append(consolidado)
                 tracking[f"{nombre} ({tipo})"] = [n.id for n in nodos_grupo]
         else:
-            # Si tiene menos de 3, agregar individuales
+            # Si tiene menos de 5, agregar individuales
             resultado.extend(nodos_grupo)
 
     return resultado, tracking
@@ -384,11 +384,16 @@ def _obtener_carpeta_estado(node: Node) -> str:
 
 
 def _crear_estructura_carpetas(output_dir: str) -> None:
-    """Crea la estructura de carpetas con estados."""
+    """Crea la estructura de carpetas del vault."""
     for folder in TYPE_TO_FOLDER.values():
-        folder_path = os.path.join(output_dir, folder)
-        for status_folder in STATUS_FOLDERS.values():
-            os.makedirs(os.path.join(folder_path, status_folder), exist_ok=True)
+        os.makedirs(os.path.join(output_dir, folder), exist_ok=True)
+
+
+def _obtener_ruta_nota(node: Node, output_dir: str) -> str:
+    """Ruta de archivo para un nodo, sin subcarpetas de estado."""
+    folder = TYPE_TO_FOLDER.get(node.type, "02-IDEAS")
+    slug = _slugificar(node.title)
+    return os.path.join(output_dir, folder, f"{slug}.md")
 
 
 # ============================================================
@@ -401,44 +406,28 @@ def render_obsidian_vault(
     edges: List[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
-    """Genera un vault completo de Obsidian.
+    """Genera un vault limpio de Obsidian.
 
-    Incluye:
-    - Carpetas por estado
-    - Notas consolidadas
-    - MOC principal
-    - Conexiones
-
-    Retorna la ruta del vault creado.
+    - 00-INDICE.md como MOC central
+    - Carpetas por tipo, sin subcarpetas de estado
+    - Consolidación más limitada
     """
-    # Crear estructura de carpetas
     _crear_estructura_carpetas(output_dir)
 
-    # Consolidar notas relacionadas
     nodos_consolidados, tracking = _consolidar_nodos(nodes, project_name=project_name)
 
-    # Generar MOC principal
     moc_path = os.path.join(output_dir, "00-INDICE.md")
     with open(moc_path, "w", encoding="utf-8") as f:
         f.write(_render_moc(project_name, nodos_consolidados, edges))
 
-    # Generar notas individuales
     for node in nodos_consolidados:
-        folder = TYPE_TO_FOLDER.get(node.type, "02-IDEAS")
-        status_folder = _obtener_carpeta_estado(node)
-        slug = _slugificar(node.title)
-        filename = f"{slug}.md"
-
-        filepath = os.path.join(output_dir, folder, status_folder, filename)
+        filepath = _obtener_ruta_nota(node, output_dir)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(_render_nota(node, nodos_consolidados, edges))
 
-    # Generar archivo de conexiones (graph view helper)
     _render_conexiones(output_dir, nodos_consolidados, edges)
 
-    # Generar archivo de tracking de consolidación
     if tracking:
         _render_tracking_consolidacion(output_dir, tracking)
 
