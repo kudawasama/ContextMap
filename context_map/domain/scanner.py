@@ -35,6 +35,8 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
     ))
 
     # Evento por tipo de archivo
+    max_tipos = 3
+    vistos = 0
     for tipo, cantidad in est.por_tipo.items():
         if cantidad > 0:
             eventos.append(Event(
@@ -44,9 +46,12 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
                 source="scanner",
                 tags=["estructura", tipo],
             ))
+            vistos += 1
+            if vistos >= max_tipos:
+                break
 
-    # Eventos por entrypoints
-    for ep in est.entrypoints[:3]:
+    # Entrypoints
+    for ep in est.entrypoints[:1]:
         eventos.append(Event(
             type="BASE",
             text=f"Entrypoint detectado: {ep}",
@@ -55,8 +60,8 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["entrypoint"],
         ))
 
-    # Eventos por docs
-    for doc in est.docs[:3]:
+    # Docs relevantes
+    for doc in est.docs[:1]:
         eventos.append(Event(
             type="BASE",
             text=f"Documentación encontrada: {doc}",
@@ -65,8 +70,8 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["docs"],
         ))
 
-    # Eventos por configs
-    for config in est.configs[:3]:
+    # Configs relevantes
+    for config in est.configs[:2]:
         eventos.append(Event(
             type="CAMBIO",
             text=f"Archivo de configuración: {config}",
@@ -96,50 +101,74 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
     return eventos
 
 
-def _events_desde_contenido(contenidos: List[InfoContenido]) -> List[Event]:
-    """Genera eventos desde el análisis de contenido."""
-    eventos = []
+def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 60) -> List[Event]:
+    """Genera eventos desde el análisis de contenido, limitados para no saturar el grafo."""
+    eventos: List[Event] = []
 
+    # Priorizar: alta complejidad → TODOs → docstrings → clases
+    relevantes = []
+    resto = []
     for info in contenidos:
-        # Docstrings principales
-        if info.docstring_principal:
-            ruta = os.path.basename(info.ruta)
+        score = 0
+        if info.complejidad == "alta":
+            score += 4
+        if info.todos:
+            score += 3
+        if info.docstring_principal and len(info.docstring_principal) > 40:
+            score += 2
+        if len(info.clases) >= 3:
+            score += 1
+        if score >= 3:
+            relevantes.append((score, info))
+        else:
+            resto.append((score, info))
+
+    # Tomar los más relevantes primero
+    candidatos = sorted(relevantes, reverse=True)[:max_eventos // 2]
+    if len(candidatos) < max_eventos:
+        candidatos += sorted(resto, reverse=True)[: max_eventos - len(candidatos)]
+
+    for _, info in candidatos:
+        ruta = os.path.basename(info.ruta)
+
+        # Alta complejidad
+        if info.complejidad == "alta":
+            eventos.append(Event(
+                type="RIESGO",
+                text=f"Archivo complejo ({info.lineas_codigo} líneas): {ruta}",
+                timestamp=_ahora(),
+                source="scanner",
+                tags=["complejidad", "riesgo", ruta],
+            ))
+
+        # TODOs/FIXMEs
+        if info.todos:
+            eventos.append(Event(
+                type="FUTURO",
+                text=f"Pendientes en {ruta}: {info.todos[0]}",
+                timestamp=_ahora(),
+                source="scanner",
+                tags=["todo", ruta],
+            ))
+
+        # Docstring principal
+        if info.docstring_principal and len(info.docstring_principal) > 40:
             eventos.append(Event(
                 type="IDEA",
-                text=f"{ruta}: {info.docstring_principal[:150]}",
+                text=f"{ruta}: {info.docstring_principal[:120]}",
                 timestamp=_ahora(),
                 source="scanner",
                 tags=["docstring", ruta],
             ))
 
         # Clases importantes
-        if len(info.clases) > 0:
+        if len(info.clases) >= 3:
             eventos.append(Event(
                 type="IDEA",
-                text=f"{os.path.basename(info.ruta)} define {len(info.clases)} clase(s): {', '.join(info.clases[:5])}",
+                text=f"{ruta}: {len(info.clases)} clases ({', '.join(info.clases[:5])})",
                 timestamp=_ahora(),
                 source="scanner",
-                tags=["clases", os.path.basename(info.ruta)],
-            ))
-
-        # Complejidad alta
-        if info.complejidad == "alta":
-            eventos.append(Event(
-                type="RIESGO",
-                text=f"Archivo de alta complejidad: {info.ruta} ({info.lineas_codigo} líneas)",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["complejidad", "riesgo"],
-            ))
-
-        # TODOs/FIXMEs
-        for todo in info.todos[:3]:
-            eventos.append(Event(
-                type="FUTURO",
-                text=f"Pendiente en {info.ruta}: {todo}",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["todo", "pendiente"],
+                tags=["clases", ruta],
             ))
 
     return eventos

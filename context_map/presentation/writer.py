@@ -288,7 +288,7 @@ def _detectar_grupo(nodo: Node) -> Optional[str]:
     return None
 
 
-def _consolidar_grupo(nombre: str, nodos: List[Node]) -> Node:
+def _consolidar_grupo(nombre: str, nodos: List[Node], proyecto: str = "") -> Node:
     """Consolida un grupo de nodos relacionados en uno solo."""
     if not nodos:
         return None
@@ -296,27 +296,48 @@ def _consolidar_grupo(nombre: str, nodos: List[Node]) -> Node:
     # Tomar el primero como base
     base = nodos[0]
 
+    # Priorizar resumen más representativo
+    candidatos = sorted(
+        [n for n in nodos if n.summary and len(n.summary) > 20],
+        key=lambda n: len(n.summary or ""),
+        reverse=True,
+    )
+    resumen_principal = candidatos[0].summary if candidatos else (base.summary or "(sin descripción)")
+
+    # Tags más representativos
+    tag_counts = {}
+    for n in nodos:
+        for t in n.tags:
+            tag_counts[t] = tag_counts.get(t, 0) + 1
+    tags_top = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:8]
+    tags = [t for t, _ in tags_top] or base.tags
+
+    # Título más legible: usar el nombre del grupo, proyecto y cantidad
+    proyecto_slug = proyecto.replace(" ", "-").lower()[:30] if proyecto else ""
+    titulo = f"{proyecto_slug} {nombre}" if proyecto_slug else nombre
+    titulo = titulo.replace("-", " ").title()
+
     # Construir contenido consolidado
     contenido_parts = []
-    for n in nodos:
-        contenido_parts.append(f"### {n.title}\n\n{n.summary or '(sin descripción)'}")
+    for n in nodos[:20]:
+        tit = n.title.replace("**", "")
+        contenido_parts.append(f"### {tit}\n\n{n.summary or '(sin descripción)'}")
 
     contenido = "\n\n".join(contenido_parts)
 
-    # Crear nodo consolidado
     return Node(
         id=f"CONSOLIDADO-{nombre}",
         type=base.type,
-        title=f"{nombre} ({len(nodos)} items)",
+        title=f"{titulo} ({len(nodos)} items)",
         summary=contenido,
-        tags=list(set(t for n in nodos for t in n.tags)),
+        tags=list(set(tags)),
         source="consolidacion",
         status="completado",
         version=base.version,
     )
 
 
-def _consolidar_nodos(nodes: List[Node]) -> Tuple[List[Node], Dict[str, List[str]]]:
+def _consolidar_nodos(nodes: List[Node], project_name: str = "") -> Tuple[List[Node], Dict[str, List[str]]]:
     """Consolida notas relacionadas.
 
     Retorna:
@@ -341,7 +362,7 @@ def _consolidar_nodos(nodes: List[Node]) -> Tuple[List[Node], Dict[str, List[str
 
     for (nombre, tipo), nodos_grupo in grupos.items():
         if len(nodos_grupo) >= 3:
-            consolidado = _consolidar_grupo(nombre, nodos_grupo)
+            consolidado = _consolidar_grupo(nombre, nodos_grupo, project_name=project_name)
             if consolidado:
                 resultado.append(consolidado)
                 tracking[f"{nombre} ({tipo})"] = [n.id for n in nodos_grupo]
@@ -394,7 +415,7 @@ def render_obsidian_vault(
     _crear_estructura_carpetas(output_dir)
 
     # Consolidar notas relacionadas
-    nodos_consolidados, tracking = _consolidar_nodos(nodes)
+    nodos_consolidados, tracking = _consolidar_nodos(nodes, project_name=project_name)
 
     # Generar MOC principal
     moc_path = os.path.join(output_dir, "00-INDICE.md")
