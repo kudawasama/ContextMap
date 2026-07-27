@@ -124,9 +124,9 @@ def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 
             resto.append((score, info))
 
     # Tomar los más relevantes primero
-    candidatos = sorted(relevantes, reverse=True)[:max_eventos // 2]
+    candidatos = sorted(relevantes, key=lambda x: x[0], reverse=True)[:max_eventos // 2]
     if len(candidatos) < max_eventos:
-        candidatos += sorted(resto, reverse=True)[: max_eventos - len(candidatos)]
+        candidatos += sorted(resto, key=lambda x: x[0], reverse=True)[: max_eventos - len(candidatos)]
 
     for _, info in candidatos:
         ruta = os.path.basename(info.ruta)

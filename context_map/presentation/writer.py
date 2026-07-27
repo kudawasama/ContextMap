@@ -377,7 +377,7 @@ def _consolidar_nodos(nodes: List[Node], project_name: str = "") -> Tuple[List[N
 
     for (nombre, tipo), nodos_grupo in grupos.items():
         if len(nodos_grupo) >= 5:
-            consolidado = _consolidar_grupo(nombre, nodos_grupo, project_name=project_name)
+            consolidado = _consolidar_grupo(nombre, nodos_grupo, proyecto=project_name)
             if consolidado:
                 resultado.append(consolidado)
                 tracking[f"{nombre} ({tipo})"] = [n.id for n in nodos_grupo]
