@@ -51,6 +51,13 @@ def _ahora() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def _project_name(args) -> str:
+    """Obtiene nombre del proyecto: argumento o directorio actual."""
+    name = getattr(args, "project", None)
+    if name and name != "Repo":
+        return name
+    return os.path.basename(os.getcwd()) or "Repo"
+
 def _ensure_dirs() -> None:
     """Prepara el árbol de directorios."""
     for p in [STATE_DIR, MAPS_DIR, HISTORY_DIR, CHATS_DIR, RAW_DIR, VAULT_DIR]:
@@ -121,11 +128,11 @@ def cmd_build(args):
     nodes = [estandarizar_nodo(Node.from_dict(r)) for r in records]
     edges = [Edge.from_dict(r) for r in e_records]
 
-    md = render_active_map(args.project or "Repo", nodes, edges)
+    md = render_active_map(_project_name(args), nodes, edges)
     write_map(md)
 
     vault_dir = os.path.join(CONTEXT_DIR, "vault")
-    render_obsidian_vault(args.project or "Repo", nodes, edges, vault_dir)
+    render_obsidian_vault(_project_name(args), nodes, edges, vault_dir)
 
     # Snapshot
     snapshot_name = getattr(args, "snapshot_name", "") or None
@@ -137,7 +144,7 @@ def cmd_build(args):
     if getattr(args, "brief", False):
         brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
         readiness = analizar_readiness(".")
-        generar_brief(args.project or "Repo", nodes, edges, readiness.score, brief_path)
+        generar_brief(_project_name(args), nodes, edges, readiness.score, brief_path)
         print(f"brief: {brief_path}")
 
     print("build:ok -> ACTIVE.md")
@@ -158,13 +165,13 @@ def cmd_scan(args):
     print(f"Eventos nuevos guardados: {guardados}")
 
     if guardados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_sync(args):
     """Sync incremental."""
     _ensure_dirs()
-    _do_sync(args, args.project)
+    _do_sync(args, _project_name(args))
 
 
 def cmd_check(args):
@@ -235,7 +242,7 @@ def cmd_import_git(args):
     print(f"Eventos nuevos guardados: {guardados}")
 
     if guardados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_import_sessions(args):
@@ -254,7 +261,7 @@ def cmd_import_sessions(args):
     print(f"Sesiones importadas: {importados} eventos nuevos")
 
     if importados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_import_chat(args):
@@ -273,7 +280,7 @@ def cmd_import_chat(args):
     print(f"Eventos importados: {importados}")
 
     if importados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_weekly(args):
@@ -331,7 +338,7 @@ def cmd_brief(args):
     readiness = analizar_readiness(".")
     brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
 
-    generar_brief(args.project or "Repo", nodes, edges, readiness.score, brief_path)
+    generar_brief(_project_name(args), nodes, edges, readiness.score, brief_path)
     print(f"brief:ok -> {brief_path}")
 
 
@@ -351,7 +358,7 @@ def cmd_import_antigravity(args):
     print(f"Conversaciones importadas: {importados} eventos nuevos")
 
     if importados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_import_antigravity2(args):
@@ -370,7 +377,7 @@ def cmd_import_antigravity2(args):
     print(f"Conversaciones importadas: {importados} eventos nuevos")
 
     if importados > 0:
-        _do_sync(args, args.project)
+        _do_sync(args, _project_name(args))
 
 
 def cmd_update(args):
