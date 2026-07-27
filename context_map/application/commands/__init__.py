@@ -403,26 +403,41 @@ def cmd_update(args):
 
     print(f"📥 Descargando desde: {repo_url}")
 
-    # Si ya existe el directorio, hacer pull
-    if os.path.exists(update_dir):
-        print("   Actualizando repositorio existente...")
-        result = subprocess.run(
-            ["git", "-C", update_dir, "pull"],
-            capture_output=True, text=True
+    def _es_repo_valido(path: str) -> bool:
+        """Verifica si un directorio es un repo git válido."""
+        r = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--is-inside-work-tree"],
+            capture_output=True, text=True, timeout=10,
         )
-        if result.returncode != 0:
-            print(f"   Error al actualizar: {result.stderr}")
-            # Intentar clonar de nuevo
-            subprocess.run(["rm", "-rf", update_dir], check=True)
+        return r.returncode == 0 and r.stdout.strip() == "true"
+
+    # Si existe pero no es repo válido, lo borra y empieza de cero
+    if os.path.exists(update_dir):
+        if _es_repo_valido(update_dir):
+            print("   Actualizando repositorio existente...")
             result = subprocess.run(
-                ["git", "clone", repo_url, update_dir],
-                capture_output=True, text=True
+                ["git", "-C", update_dir, "pull"],
+                capture_output=True, text=True, timeout=60,
             )
+            if result.returncode != 0:
+                print(f"   Error al actualizar: {result.stderr}")
+                # Caerá al clone de abajo
+                _safe_rmtree(update_dir)
+                result = None
+            else:
+                result = result  # pull ok
+        else:
+            print("   Directorio corrupto, clonando de nuevo...")
+            _safe_rmtree(update_dir)
+            result = None
     else:
+        result = None
+
+    if result is None or result.returncode != 0:
         print("   Clonando repositorio...")
         result = subprocess.run(
             ["git", "clone", repo_url, update_dir],
-            capture_output=True, text=True
+            capture_output=True, text=True, timeout=120,
         )
 
     if result.returncode != 0:
