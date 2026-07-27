@@ -24,25 +24,58 @@ python -m ruff check context_map
 
 ```
 context_map/
-├── cli.py              # CLI principal
-├── models.py           # Modelos de datos
-├── parser.py           # Parser de eventos
-├── store.py            # Persistencia JSONL
-├── sync.py             # Sync incremental
-├── writer.py           # Generador vault Obsidian
-├── scanner.py          # Escáner de proyecto
-├── checker.py          # Analizador de readiness
-├── reporter.py         # Generador de reportes
-├── analyzers/          # Análisis de proyecto
-│   ├── structure.py
-│   └── content.py
-└── integrations/       # Integraciones externas
-    ├── git.py
-    ├── hermes.py
-    └── chat_export.py
+├── cli.py                          # Punto de entrada
+├── core/                           # Lógica fundamental
+│   ├── models.py                   # Node, Edge, Event
+│   ├── parser.py                   # Clasificación de eventos
+│   ├── store.py                    # Persistencia JSONL
+│   ├── standardize.py              # Estandarización de nodos
+│   └── generadores.py              # Generación de resúmenes
+├── domain/                         # Lógica de negocio
+│   ├── scanner.py                  # Escáner de proyecto
+│   ├── sync.py                     # Sincronización incremental
+│   ├── checker.py                  # Análisis de readiness
+│   └── reporter.py                 # Reportes semanales
+├── application/                    # CLI y comandos
+│   ├── cli.py                      # Parser principal (argparse)
+│   └── commands/
+│       └── __init__.py             # 16 comandos unificados
+├── infrastructure/                 # Integraciones externas
+│   ├── integrations/
+│   │   ├── git.py                  # Historial git
+│   │   ├── hermes.py               # Sesiones de Hermes
+│   │   ├── chat_export.py          # Chats multi-plataforma
+│   │   └── antigravity.py          # Antigravity IDE
+│   └── analyzers/
+│       ├── structure.py            # Análisis de estructura
+│       └── content.py              # Análisis de contenido
+├── presentation/                   # Generación de salida
+│   ├── writer.py                   # Vault Obsidian
+│   └── brief.py                    # CONTEXT.md
+├── scripts/                        # Scripts auxiliares
+│   └── standardize.py              # CLI de estandarización
+└── __tests__/                      # Tests
+    └── smoke.py
 ```
 
-## Commits
+## Comandos del CLI
+
+| Comando | Descripción |
+|---------|-------------|
+| `ctxmap init` | Crea estructura `.context-map/` |
+| `ctxmap scan [target]` | Escanea proyecto y genera eventos |
+| `ctxmap import-git [target]` | Importa historial de commits |
+| `ctxmap import-sessions` | Importa sesiones de Hermes |
+| `ctxmap import-chat [file]` | Importa chats externos |
+| `ctxmap import-antigravity` | Importa chats de Antigravity IDE |
+| `ctxmap build` | Genera vault completo |
+| `ctxmap sync` | Sync incremental (solo nuevos) |
+| `ctxmap sync --migrate` | Migrar proyecto a nueva versión |
+| `ctxmap check` | Verifica readiness (0-100) |
+| `ctxmap weekly` | Genera reporte semanal |
+| `ctxmap update` | Actualiza ContextMap desde GitHub |
+
+## Convención de Commits
 
 Usa convención de commits:
 - `feat:` nueva funcionalidad
