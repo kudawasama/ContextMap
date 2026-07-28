@@ -61,13 +61,18 @@ def _encontrar_nodos_nuevos(
     eventos_nuevos: List[Event],
     nodos_existentes: List[Node],
 ) -> List[Event]:
-    """Identifica eventos que no tienen nodo correspondiente."""
-    titulos_existentes = {n.title[:60].lower() for n in nodos_existentes}
+    """Identifica eventos que no tienen nodo correspondiente.
+
+    Compara por tipo + título para evitar que un evento de tipo
+    diferente (ej. RIESGO vs IDEA) se considere duplicado aunque
+    compartan texto similar.
+    """
+    existentes = {(n.type, n.title[:60].lower()) for n in nodos_existentes}
 
     nuevos = []
     for e in eventos_nuevos:
         titulo = e.text.split("\n")[0][:60].lower()
-        if titulo not in titulos_existentes:
+        if (e.type, titulo) not in existentes:
             nuevos.append(e)
 
     return nuevos

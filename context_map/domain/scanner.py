@@ -65,9 +65,11 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
         timestamp=_ahora(),
         source="scanner",
         tags=["estructura", "proyecto"],
-        summary=f"Proyecto detectado en {est.ruta_raiz}. "
-                f"Compuesto por {len(est.archivos)} archivos ({est.total_lineas} líneas totales). "
-                f"{entrypoints_ratio.replace('entrypoints: ', 'Puntos de entrada: ').replace('sin entrypoints', 'Sin entrypoints detectados')}.",
+        meta={"descripcion": (
+            f"Proyecto detectado en {est.ruta_raiz}. "
+            f"Compuesto por {len(est.archivos)} archivos ({est.total_lineas} líneas totales). "
+            f"{entrypoints_ratio.replace('entrypoints: ', 'Puntos de entrada: ').replace('sin entrypoints', 'Sin entrypoints detectados')}."
+        )},
     ))
 
     # 2. Doc principal (README o similar) como IDEA del dominio
@@ -133,9 +135,11 @@ def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 
             timestamp=_ahora(),
             source="scanner",
             tags=["complejidad", "riesgo"],
-            summary=f"Se detectaron {len(complejos)} archivos con complejidad alta. "
-                    f"Los más extensos son: {resumen}. "
-                    "Estas áreas son propensas a bugs y difíciles de mantener.",
+            meta={"descripcion": (
+                f"Se detectaron {len(complejos)} archivos con complejidad alta. "
+                f"Los más extensos son: {resumen}. "
+                "Estas áreas son propensas a bugs y difíciles de mantener."
+            )},
         ))
     elif len(complejos) == 1:
         c = complejos[0]
