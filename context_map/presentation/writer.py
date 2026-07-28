@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import shutil
 from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime
@@ -1758,6 +1759,7 @@ def _render_hierarchical_vault(
         "",
         f"- [[6.1-Cambios|6.1 Cambios]] ({len(cambio_only)} registros)",
         f"- [[6.2-Correcciones|6.2 Correcciones]] ({len(correccion_only)} registros)",
+        "- [[6.3-Versiones|6.3 Versiones / Changelog]]",
         "",
     ]
     if hito_nodes:
@@ -1841,6 +1843,129 @@ def _render_hierarchical_vault(
 
     with open(os.path.join(historial_dir, "6.2-Correcciones.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(correcciones_parts))
+
+    # ============================================================
+    # 6.3-Versiones.md (Changelog / Historial de Versiones)
+    # ============================================================
+    versiones_parts = [
+        "---",
+        "type: versiones",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, versiones, changelog]",
+        "---",
+        "",
+        "# 6.3 Versiones",
+        "",
+        "Registro de versiones del proyecto, generado a partir del historial git.",
+        "",
+    ]
+
+    project_root = os.getcwd()
+    try:
+        # Obtener tags ordenados por fecha (mas reciente primero)
+        result = subprocess.run(
+            ["git", "tag", "--sort=-creatordate"],
+            capture_output=True, text=True, cwd=project_root,
+            timeout=10
+        )
+        all_tags = [t.strip() for t in result.stdout.split("\n")
+                    if t.strip() and "desktop.ini" not in t]
+
+        if all_tags:
+            versiones_parts.append("## Versiones publicadas")
+            versiones_parts.append("")
+
+            prev_tag = None
+            for tag in all_tags:
+                # Fecha del tag
+                date_result = subprocess.run(
+                    ["git", "log", "-1", "--format=%ai", tag],
+                    capture_output=True, text=True, cwd=project_root,
+                    timeout=10
+                )
+                tag_date = date_result.stdout.strip()[:10] if date_result.stdout.strip() else "?"
+
+                # Mensaje anotado del tag
+                msg_result = subprocess.run(
+                    ["git", "tag", "-l", tag, "--format=%(contents)"],
+                    capture_output=True, text=True, cwd=project_root,
+                    timeout=10
+                )
+                tag_msg = msg_result.stdout.strip()
+
+                # Commits desde la version anterior
+                if prev_tag:
+                    log_result = subprocess.run(
+                        ["git", "log", "--oneline", f"{tag}..{prev_tag}"],
+                        capture_output=True, text=True, cwd=project_root,
+                        timeout=10
+                    )
+                else:
+                    log_result = subprocess.run(
+                        ["git", "log", "--oneline", tag],
+                        capture_output=True, text=True, cwd=project_root,
+                        timeout=10
+                    )
+
+                commits = log_result.stdout.strip()
+                commit_lines = [c for c in commits.split("\n") if c.strip()]
+                commit_count = len(commit_lines)
+
+                versiones_parts.append(f"### {tag} ({tag_date})")
+                versiones_parts.append("")
+                if tag_msg:
+                    versiones_parts.append(tag_msg)
+                    versiones_parts.append("")
+                if commit_lines:
+                    versiones_parts.append(f"**{commit_count} commits** desde la versión anterior:")
+                    versiones_parts.append("")
+                    for c in commit_lines[:20]:
+                        versiones_parts.append(f"- `{c}`")
+                    if commit_count > 20:
+                        versiones_parts.append(f"- ... y {commit_count - 20} commits más")
+                    versiones_parts.append("")
+
+                prev_tag = tag
+        else:
+            # Sin tags: agrupar commits por mes
+            versiones_parts.append("## Historial por Meses")
+            versiones_parts.append("")
+
+            log_result = subprocess.run(
+                ["git", "log", "--oneline", "--format=%ai | %s"],
+                capture_output=True, text=True, cwd=project_root,
+                timeout=10
+            )
+            all_commits = log_result.stdout.strip().split("\n")
+
+            meses = defaultdict(list)
+            for line in all_commits:
+                if " | " in line:
+                    date_part, msg = line.split(" | ", 1)
+                    month_key = date_part[:7]
+                    meses[month_key].append(msg)
+
+            for mes in sorted(meses.keys(), reverse=True):
+                items = meses[mes]
+                versiones_parts.append(f"### {mes} ({len(items)} commits)")
+                versiones_parts.append("")
+                for msg in items[:15]:
+                    versiones_parts.append(f"- {msg}")
+                if len(items) > 15:
+                    versiones_parts.append(f"- ... y {len(items) - 15} commits más")
+                versiones_parts.append("")
+
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+        versiones_parts.append("_(No se pudo obtener el historial de versiones)_")
+        versiones_parts.append("")
+
+    versiones_parts.append("---")
+    versiones_parts.append("[[6.0-HISTORIAL/6.0-HISTORIAL|⬅ Volver a 6.0 Historial]]")
+    versiones_parts.append("")
+
+    with open(os.path.join(historial_dir, "6.3-Versiones.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(versiones_parts))
 
     # Generar tabla de conexiones
     _render_conexiones(output_dir, nodes, edges)
