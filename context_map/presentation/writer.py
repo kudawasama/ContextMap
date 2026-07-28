@@ -1134,12 +1134,12 @@ def _render_hierarchical_vault(
         "",
         "## 📂 Secciones",
         "",
-        "- [[1.0-PROPOSITO|1.0 Propósito]]",
-        "- [[2.0-IDEAS|2.0 Ideas]]",
-        "- [[3.0-ESTRUCTURA|3.0 Estructura]]",
-        "- [[4.0-RIESGOS|4.0 Riesgos]]",
-        "- [[5.0-BACKLOG|5.0 Backlog]]",
-        "- [[6.0-HISTORIAL|6.0 Historial]]",
+        "- [[1.0-PROPOSITO/1.0-PROPOSITO|1.0 Propósito]]",
+        "- [[2.0-IDEAS/2.0-IDEAS|2.0 Ideas]]",
+        "- [[3.0-ESTRUCTURA/3.0-ESTRUCTURA|3.0 Estructura]]",
+        "- [[4.0-RIESGOS/4.0-RIESGOS|4.0 Riesgos]]",
+        "- [[5.0-BACKLOG/5.0-BACKLOG|5.0 Backlog]]",
+        "- [[6.0-HISTORIAL/6.0-HISTORIAL|6.0 Historial]]",
         "- [[00-CONEXIONES|7.0 Conexiones]]",
         "",
         "---",
@@ -1154,8 +1154,11 @@ def _render_hierarchical_vault(
         f.write("\n".join(indice_parts))
 
     # ============================================================
-    # 1.0-PROPOSITO.md (Sección Propósito)
+    # 1.0-PROPOSITO/ (CARPETA - Sección Propósito)
     # ============================================================
+    proposito_dir = os.path.join(output_dir, "1.0-PROPOSITO")
+    os.makedirs(proposito_dir, exist_ok=True)
+
     proposito_seccion_parts = [
         "---",
         "type: seccion",
@@ -1182,7 +1185,7 @@ def _render_hierarchical_vault(
         "",
     ]
 
-    with open(os.path.join(output_dir, "1.0-PROPOSITO.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(proposito_dir, "1.0-PROPOSITO.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(proposito_seccion_parts))
 
     # ============================================================
@@ -1214,7 +1217,7 @@ def _render_hierarchical_vault(
         "",
     ])
 
-    with open(os.path.join(output_dir, "1.1-Mapa-Mental-Narrativo.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(proposito_dir, "1.1-Mapa-Mental-Narrativo.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(narrativa_parts))
 
     # ============================================================
@@ -1268,7 +1271,7 @@ def _render_hierarchical_vault(
     datos_clave_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     datos_clave_parts.append("")
 
-    with open(os.path.join(output_dir, "1.2-Datos-Clave.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(proposito_dir, "1.2-Datos-Clave.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(datos_clave_parts))
 
     # ============================================================
@@ -1306,12 +1309,14 @@ def _render_hierarchical_vault(
     identidad_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     identidad_parts.append("")
 
-    with open(os.path.join(output_dir, "1.3-Proposito.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(proposito_dir, "1.3-Proposito.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(identidad_parts))
 
     # ============================================================
-    # 2.0-IDEAS.md (Sección Ideas)
+    # 2.0-IDEAS/ (CARPETA - Sección Ideas)
     # ============================================================
+    ideas_dir = os.path.join(output_dir, "2.0-IDEAS")
+    os.makedirs(ideas_dir, exist_ok=True)
     completadas = [n for n in idea_nodes if n.status == "completado"]
     pendientes = [n for n in idea_nodes if n.status == "pendiente"]
     activas = [n for n in idea_nodes if n.status == "activo"]
@@ -1339,24 +1344,24 @@ def _render_hierarchical_vault(
         "",
         "## Sub-secciones",
         "",
-        "- [[2.1-Ideas-Pendientes|2.1 Ideas Pendientes]]",
-        "- [[2.2-Ideas-Futuras|2.2 Ideas Futuras]]",
-        "- [[2.3-Ideas-Completas-e-Implementadas|2.3 Ideas Completas e Implementadas]]",
-        "- [[2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
+        "- **2.1 Ideas Pendientes** (carpeta de ideas pendientes individuales)",
+        "- **2.2 Ideas Futuras** (carpeta de ideas futuras)",
+        "- **2.3 Ideas Completas e Implementadas** (carpeta de ideas completas, 10 por archivo)",
+        "- [[2.0-IDEAS/2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
         "",
         "---",
         "[[00-INDICE|⬅ Volver al índice]]",
         "",
     ]
 
-    with open(os.path.join(output_dir, "2.0-IDEAS.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ideas_dir, "2.0-IDEAS.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(ideas_seccion_parts))
 
     # ============================================================
     # 2.1-Ideas-Pendientes/ (carpeta con archivos individuales)
     # ============================================================
     if pendientes:
-        pendientes_dir = os.path.join(output_dir, "2.1-Ideas-Pendientes")
+        pendientes_dir = os.path.join(ideas_dir, "2.1-Ideas-Pendientes")
         os.makedirs(pendientes_dir, exist_ok=True)
         for n in pendientes:
             filename = _safe_filename(n.title) + ".md"
@@ -1385,7 +1390,7 @@ def _render_hierarchical_vault(
                     parts.append(f"- {ev}")
                 parts.append("")
             parts.append("---")
-            parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
             parts.append("")
 
             with open(os.path.join(pendientes_dir, filename), "w", encoding="utf-8") as f:
@@ -1424,7 +1429,7 @@ def _render_hierarchical_vault(
                     parts.append(f"- {ev}")
                 parts.append("")
             parts.append("---")
-            parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
             parts.append("")
 
             with open(os.path.join(futuras_dir, filename), "w", encoding="utf-8") as f:
@@ -1434,7 +1439,7 @@ def _render_hierarchical_vault(
     # 2.3-Ideas-Completas-e-Implementadas/ (batches de 10)
     # ============================================================
     if completadas:
-        completadas_dir = os.path.join(output_dir, "2.3-Ideas-Completas-e-Implementadas")
+        completadas_dir = os.path.join(ideas_dir, "2.3-Ideas-Completas-e-Implementadas")
         os.makedirs(completadas_dir, exist_ok=True)
         batch_size = 10
         for batch_idx in range(0, len(completadas), batch_size):
@@ -1462,7 +1467,7 @@ def _render_hierarchical_vault(
                     batch_parts.append(n.summary)
                     batch_parts.append("")
             batch_parts.append("---")
-            batch_parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            batch_parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
             batch_parts.append("")
 
             with open(os.path.join(completadas_dir, filename), "w", encoding="utf-8") as f:
@@ -1504,15 +1509,20 @@ def _render_hierarchical_vault(
     ideas_top_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     ideas_top_parts.append("")
 
-    with open(os.path.join(output_dir, "2.4-Ideas-Relevantes.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ideas_dir, "2.4-Ideas-Relevantes.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(ideas_top_parts))
 
     # ============================================================
-    # 3.0-ESTRUCTURA.md
+    # 3.0-ESTRUCTURA/ (CARPETA jerarquica)
     # ============================================================
-    est_parts = [
+    estructura_dir = os.path.join(output_dir, "3.0-ESTRUCTURA")
+    os.makedirs(estructura_dir, exist_ok=True)
+
+    # 3.0-ESTRUCTURA.md — Indice
+    est_seccion_parts = [
         "---",
-        "type: estructura",
+        "type: seccion",
+        "subtype: estructura",
         f"created: {fecha_actual}",
         f'project: "{project_name}"',
         "tags: [context-map, estructura]",
@@ -1524,6 +1534,32 @@ def _render_hierarchical_vault(
         "",
         "---",
         "",
+        "## Sub-secciones",
+        "",
+        "- [[3.1-Fundamentos|3.1 Fundamentos]]",
+        "",
+        "---",
+        "[[00-INDICE|⬅ Volver al índice]]",
+        "",
+    ]
+    with open(os.path.join(estructura_dir, "3.0-ESTRUCTURA.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(est_seccion_parts))
+
+    # 3.1-Fundamentos.md — Todos los BASE nodes
+    fund_parts = [
+        "---",
+        "type: fundamentos",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, fundamentos, estructura]",
+        "---",
+        "",
+        "# 3.1 Fundamentos",
+        "",
+        "Componentes base del proyecto con sus descripciones y orígenes.",
+        "",
+        "---",
+        "",
     ]
     if base_nodes:
         seen_base = set()
@@ -1532,32 +1568,37 @@ def _render_hierarchical_vault(
             if key in seen_base:
                 continue
             seen_base.add(key)
-            est_parts.append(f"- **{n.title}**")
+            fund_parts.append(f"- **{n.title}**")
             if n.summary:
-                est_parts.append(f"  - {n.summary}")
+                fund_parts.append(f"  - {n.summary}")
             if n.source:
-                est_parts.append(f"  - *Origen*: `{n.source}`")
-            est_parts.append("")
+                fund_parts.append(f"  - *Origen*: `{n.source}`")
+            fund_parts.append("")
     else:
-        est_parts.append("_(No se registraron componentes base)_")
-        est_parts.append("")
+        fund_parts.append("_(No se registraron componentes base)_")
+        fund_parts.append("")
 
-    est_parts.append("---")
-    est_parts.append("[[00-INDICE|⬅ Volver al índice]]")
-    est_parts.append("")
+    fund_parts.append("---")
+    fund_parts.append("[[3.0-ESTRUCTURA/3.0-ESTRUCTURA|⬅ Volver a 3.0 Estructura]]")
+    fund_parts.append("")
 
-    with open(os.path.join(output_dir, "3.0-ESTRUCTURA.md"), "w", encoding="utf-8") as f:
-        f.write("\n".join(est_parts))
+    with open(os.path.join(estructura_dir, "3.1-Fundamentos.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(fund_parts))
 
     # ============================================================
-    # 4.0-RIESGOS.md
+    # 4.0-RIESGOS/ (CARPETA jerarquica)
     # ============================================================
-    riesgo_parts = [
+    riesgos_dir = os.path.join(output_dir, "4.0-RIESGOS")
+    os.makedirs(riesgos_dir, exist_ok=True)
+
+    # 4.0-RIESGOS.md — Indice con links a cada riesgo
+    riesgo_seccion_parts = [
         "---",
-        "type: riesgos",
+        "type: seccion",
+        "subtype: riesgos",
         f"created: {fecha_actual}",
         f'project: "{project_name}"',
-        "tags: [context-map, riesgo, complejidad]",
+        "tags: [context-map, riesgos]",
         "---",
         "",
         f"# 4.0 Riesgos — {project_name}",
@@ -1568,34 +1609,72 @@ def _render_hierarchical_vault(
         "",
     ]
     if riesgo_nodes:
+        riesgo_seccion_parts.append("## Riesgos Identificados")
+        riesgo_seccion_parts.append("")
         for n in riesgo_nodes:
-            riesgo_parts.append(f"### ⚠️ {n.title}")
-            riesgo_parts.append(f"{n.summary or 'Punto de atención técnica'}")
-            if n.evidence:
-                riesgo_parts.append("- **Evidencia**:")
-                for ev in n.evidence:
-                    riesgo_parts.append(f"  - {ev}")
-            riesgo_parts.append("")
+            slug = _safe_filename(n.title)
+            riesgo_seccion_parts.append(f"- [[{slug}|⚠️ {n.title}]]")
+        riesgo_seccion_parts.append("")
     else:
-        riesgo_parts.append("✅ **Sin riesgos o alertas críticas detectadas.**")
-        riesgo_parts.append("")
+        riesgo_seccion_parts.append("✅ **Sin riesgos o alertas críticas detectadas.**")
+        riesgo_seccion_parts.append("")
 
-    riesgo_parts.append("---")
-    riesgo_parts.append("[[00-INDICE|⬅ Volver al índice]]")
-    riesgo_parts.append("")
+    riesgo_seccion_parts.append("---")
+    riesgo_seccion_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    riesgo_seccion_parts.append("")
 
-    with open(os.path.join(output_dir, "4.0-RIESGOS.md"), "w", encoding="utf-8") as f:
-        f.write("\n".join(riesgo_parts))
+    with open(os.path.join(riesgos_dir, "4.0-RIESGOS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(riesgo_seccion_parts))
+
+    # Archivo individual por cada riesgo
+    if riesgo_nodes:
+        for n in riesgo_nodes:
+            filename = _safe_filename(n.title) + ".md"
+            tags_list = _normalize_tags(n.tags, n.type)
+            tags_str = ", ".join(f'"{t}"' for t in tags_list)
+            riesgo_item_parts = [
+                "---",
+                "type: riesgo",
+                f"status: {n.status}",
+                f"created: {fecha_actual}",
+                f'project: "{project_name}"',
+                f"tags: [{tags_str}]",
+                f'source: "{n.source}"' if n.source else "source: ''",
+                "---",
+                "",
+                f"# ⚠️ {n.title}",
+                "",
+            ]
+            if n.summary:
+                riesgo_item_parts.append(n.summary)
+                riesgo_item_parts.append("")
+            if n.evidence:
+                riesgo_item_parts.append("## 📋 Evidencia")
+                riesgo_item_parts.append("")
+                for ev in n.evidence:
+                    riesgo_item_parts.append(f"- {ev}")
+                riesgo_item_parts.append("")
+            riesgo_item_parts.append("---")
+            riesgo_item_parts.append("[[4.0-RIESGOS/4.0-RIESGOS|⬅ Volver a 4.0 Riesgos]]")
+            riesgo_item_parts.append("")
+
+            with open(os.path.join(riesgos_dir, filename), "w", encoding="utf-8") as f:
+                f.write("\n".join(riesgo_item_parts))
 
     # ============================================================
-    # 5.0-BACKLOG.md
+    # 5.0-BACKLOG/ (CARPETA jerarquica)
     # ============================================================
-    backlog_parts = [
+    backlog_dir = os.path.join(output_dir, "5.0-BACKLOG")
+    os.makedirs(backlog_dir, exist_ok=True)
+
+    # 5.0-BACKLOG.md — Indice
+    backlog_seccion_parts = [
         "---",
-        "type: backlog",
+        "type: seccion",
+        "subtype: backlog",
         f"created: {fecha_actual}",
         f'project: "{project_name}"',
-        "tags: [context-map, backlog, todos]",
+        "tags: [context-map, backlog]",
         "---",
         "",
         f"# 5.0 Backlog — {project_name}",
@@ -1604,34 +1683,69 @@ def _render_hierarchical_vault(
         "",
         "---",
         "",
+        "## Sub-secciones",
+        "",
+        "- [[5.1-Tareas|5.1 Tareas]]",
+        "",
+        "---",
+        "[[00-INDICE|⬅ Volver al índice]]",
+        "",
+    ]
+    with open(os.path.join(backlog_dir, "5.0-BACKLOG.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(backlog_seccion_parts))
+
+    # 5.1-Tareas.md — Todos los FUTURO nodes
+    tareas_parts = [
+        "---",
+        "type: tareas",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, tareas, backlog]",
+        "---",
+        "",
+        "# 5.1 Tareas",
+        "",
+        "Lista de tareas futuras y pendientes del proyecto.",
+        "",
+        "---",
+        "",
     ]
     if futuro_nodes:
         for n in futuro_nodes:
             estado_mark = "[x]" if n.status == "completado" else "[ ]"
-            backlog_parts.append(f"- {estado_mark} **{n.title}**")
+            tareas_parts.append(f"- {estado_mark} **{n.title}**")
             if n.summary:
-                backlog_parts.append(f"  - _{n.summary}_")
-        backlog_parts.append("")
+                tareas_parts.append(f"  - _{n.summary}_")
+        tareas_parts.append("")
     else:
-        backlog_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
-        backlog_parts.append("")
+        tareas_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
+        tareas_parts.append("")
 
-    backlog_parts.append("---")
-    backlog_parts.append("[[00-INDICE|⬅ Volver al índice]]")
-    backlog_parts.append("")
+    tareas_parts.append("---")
+    tareas_parts.append("[[5.0-BACKLOG/5.0-BACKLOG|⬅ Volver a 5.0 Backlog]]")
+    tareas_parts.append("")
 
-    with open(os.path.join(output_dir, "5.0-BACKLOG.md"), "w", encoding="utf-8") as f:
-        f.write("\n".join(backlog_parts))
+    with open(os.path.join(backlog_dir, "5.1-Tareas.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(tareas_parts))
 
     # ============================================================
-    # 6.0-HISTORIAL.md
+    # 6.0-HISTORIAL/ (CARPETA jerarquica)
     # ============================================================
-    historial_parts = [
+    historial_dir = os.path.join(output_dir, "6.0-HISTORIAL")
+    os.makedirs(historial_dir, exist_ok=True)
+
+    # Separar CAMBIO y CORRECCION
+    cambio_only = [n for n in cambio_nodes if n.type == "CAMBIO"]
+    correccion_only = [n for n in cambio_nodes if n.type == "CORRECCION"]
+
+    # 6.0-HISTORIAL.md — Indice
+    historial_seccion_parts = [
         "---",
-        "type: historial",
+        "type: seccion",
+        "subtype: historial",
         f"created: {fecha_actual}",
         f'project: "{project_name}"',
-        "tags: [context-map, historial, cambios]",
+        "tags: [context-map, historial]",
         "---",
         "",
         f"# 6.0 Historial — {project_name}",
@@ -1640,33 +1754,93 @@ def _render_hierarchical_vault(
         "",
         "---",
         "",
+        "## Sub-secciones",
+        "",
+        f"- [[6.1-Cambios|6.1 Cambios]] ({len(cambio_only)} registros)",
+        f"- [[6.2-Correcciones|6.2 Correcciones]] ({len(correccion_only)} registros)",
+        "",
     ]
     if hito_nodes:
-        historial_parts.append("## 🎯 Hitos")
-        historial_parts.append("")
+        historial_seccion_parts.append("## 🎯 Hitos")
+        historial_seccion_parts.append("")
         for n in hito_nodes:
-            historial_parts.append(f"- 🎯 **{n.title}**: {n.summary or 'Hito alcanzado'}")
-        historial_parts.append("")
-    if cambio_nodes:
-        historial_parts.append("## 🔄 Cambios y Correcciones")
-        historial_parts.append("")
-        for n in cambio_nodes[:50]:
-            icon = "🔧" if n.type == "CORRECCION" else "🔄"
-            historial_parts.append(f"- {icon} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            historial_seccion_parts.append(f"- 🎯 **{n.title}**: {n.summary or 'Hito alcanzado'}")
+        historial_seccion_parts.append("")
+        historial_seccion_parts.append("---")
+        historial_seccion_parts.append("")
+
+    historial_seccion_parts.append("---")
+    historial_seccion_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    historial_seccion_parts.append("")
+
+    with open(os.path.join(historial_dir, "6.0-HISTORIAL.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(historial_seccion_parts))
+
+    # 6.1-Cambios.md — Solo CAMBIO nodes
+    cambios_parts = [
+        "---",
+        "type: cambios",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, cambios]",
+        "---",
+        "",
+        "# 6.1 Cambios",
+        "",
+        "Registro de cambios realizados en el proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if cambio_only:
+        for n in cambio_only:
+            cambios_parts.append(f"- 🔄 **{n.title}** ({n.created_at or 'Fecha no esp.'})")
             if n.summary and n.summary != n.title:
-                historial_parts.append(f"  - {n.summary}")
-        historial_parts.append("")
+                cambios_parts.append(f"  - {n.summary}")
+        cambios_parts.append("")
+    else:
+        cambios_parts.append("_(No se registraron cambios)_")
+        cambios_parts.append("")
 
-    if not hito_nodes and not cambio_nodes:
-        historial_parts.append("_(Sin registros de cambios o hitos)_")
-        historial_parts.append("")
+    cambios_parts.append("---")
+    cambios_parts.append("[[6.0-HISTORIAL/6.0-HISTORIAL|⬅ Volver a 6.0 Historial]]")
+    cambios_parts.append("")
 
-    historial_parts.append("---")
-    historial_parts.append("[[00-INDICE|⬅ Volver al índice]]")
-    historial_parts.append("")
+    with open(os.path.join(historial_dir, "6.1-Cambios.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(cambios_parts))
 
-    with open(os.path.join(output_dir, "6.0-HISTORIAL.md"), "w", encoding="utf-8") as f:
-        f.write("\n".join(historial_parts))
+    # 6.2-Correcciones.md — Solo CORRECCION nodes
+    correcciones_parts = [
+        "---",
+        "type: correcciones",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, correcciones]",
+        "---",
+        "",
+        "# 6.2 Correcciones",
+        "",
+        "Registro de correcciones aplicadas al proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if correccion_only:
+        for n in correccion_only:
+            correcciones_parts.append(f"- 🔧 **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            if n.summary and n.summary != n.title:
+                correcciones_parts.append(f"  - {n.summary}")
+        correcciones_parts.append("")
+    else:
+        correcciones_parts.append("_(No se registraron correcciones)_")
+        correcciones_parts.append("")
+
+    correcciones_parts.append("---")
+    correcciones_parts.append("[[6.0-HISTORIAL/6.0-HISTORIAL|⬅ Volver a 6.0 Historial]]")
+    correcciones_parts.append("")
+
+    with open(os.path.join(historial_dir, "6.2-Correcciones.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(correcciones_parts))
 
     # Generar tabla de conexiones
     _render_conexiones(output_dir, nodes, edges)

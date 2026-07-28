@@ -200,29 +200,26 @@ def test_hierarchical_vault_estructura() -> None:
             mode="hierarchical",
         )
 
-        # Verificar archivos raíz del modo hierarchical
+        # Verificar archivos y carpetas del modo hierarchical
         assert os.path.exists(os.path.join(temp_dir, "00-INDICE.md")), \
             "No se generó 00-INDICE.md"
-        assert os.path.exists(os.path.join(temp_dir, "1.0-PROPOSITO.md")), \
-            "No se generó 1.0-PROPOSITO.md"
-        assert os.path.exists(os.path.join(temp_dir, "1.1-Mapa-Mental-Narrativo.md")), \
-            "No se generó 1.1-Mapa-Mental-Narrativo.md"
-        assert os.path.exists(os.path.join(temp_dir, "1.2-Datos-Clave.md")), \
-            "No se generó 1.2-Datos-Clave.md"
-        assert os.path.exists(os.path.join(temp_dir, "1.3-Proposito.md")), \
-            "No se generó 1.3-Proposito.md"
-        assert os.path.exists(os.path.join(temp_dir, "2.0-IDEAS.md")), \
-            "No se generó 2.0-IDEAS.md"
-        assert os.path.exists(os.path.join(temp_dir, "2.4-Ideas-Relevantes.md")), \
-            "No se generó 2.4-Ideas-Relevantes.md"
-        assert os.path.exists(os.path.join(temp_dir, "3.0-ESTRUCTURA.md")), \
-            "No se generó 3.0-ESTRUCTURA.md"
-        assert os.path.exists(os.path.join(temp_dir, "4.0-RIESGOS.md")), \
-            "No se generó 4.0-RIESGOS.md"
-        assert os.path.exists(os.path.join(temp_dir, "5.0-BACKLOG.md")), \
-            "No se generó 5.0-BACKLOG.md"
-        assert os.path.exists(os.path.join(temp_dir, "6.0-HISTORIAL.md")), \
-            "No se generó 6.0-HISTORIAL.md"
+
+        # Verificar carpetas de secciones
+        seccion_dirs = ["1.0-PROPOSITO", "2.0-IDEAS", "3.0-ESTRUCTURA",
+                        "4.0-RIESGOS", "5.0-BACKLOG", "6.0-HISTORIAL"]
+        for sd in seccion_dirs:
+            assert os.path.isdir(os.path.join(temp_dir, sd)), \
+                f"No se creó la carpeta {sd}"
+
+        # Verificar archivos dentro de carpetas
+        assert os.path.exists(os.path.join(temp_dir, "1.0-PROPOSITO", "1.0-PROPOSITO.md")), \
+            "No se generó la sección 1.0-PROPOSITO"
+        assert os.path.exists(os.path.join(temp_dir, "1.0-PROPOSITO", "1.1-Mapa-Mental-Narrativo.md")), \
+            "No se generó 1.1-Mapa-Mental-Narrativo"
+        assert os.path.exists(os.path.join(temp_dir, "2.0-IDEAS", "2.0-IDEAS.md")), \
+            "No se generó 2.0-IDEAS"
+        assert os.path.exists(os.path.join(temp_dir, "3.0-ESTRUCTURA", "3.0-ESTRUCTURA.md")), \
+            "No se generó 3.0-ESTRUCTURA"
 
         # Verificar que NO genera archivos del modo consolidated
         assert not os.path.exists(os.path.join(temp_dir, "01-PROPOSITO.md")), \
@@ -232,20 +229,20 @@ def test_hierarchical_vault_estructura() -> None:
         assert not os.path.exists(os.path.join(temp_dir, "03-ESTRUCTURA.md")), \
             "No debería generar 03-ESTRUCTURA.md (modo consolidated)"
 
-        # Verificar que todos los archivos .md (raíz) tienen frontmatter YAML
-        archivos_raiz = [
-            f for f in os.listdir(temp_dir)
-            if f.endswith(".md") and os.path.isfile(os.path.join(temp_dir, f))
-        ]
-        for archivo in archivos_raiz:
-            ruta = os.path.join(temp_dir, archivo)
+        # Verificar que todos los archivos .md (raíz y carpetas) tienen frontmatter YAML
+        todos_md = []
+        for root, _dirs, files in os.walk(temp_dir):
+            for f in files:
+                if f.endswith(".md"):
+                    todos_md.append(os.path.join(root, f))
+        for ruta in todos_md:
             with open(ruta, "r", encoding="utf-8") as f:
                 contenido = f.read()
             assert contenido.startswith("---"), (
-                f"El archivo {archivo} no comienza con YAML Frontmatter"
+                f"El archivo {ruta} no comienza con YAML Frontmatter"
             )
             assert "---" in contenido[3:], (
-                f"El archivo {archivo} no cierra el bloque YAML Frontmatter"
+                f"El archivo {ruta} no cierra el bloque YAML Frontmatter"
             )
 
         # Verificar que el índice contiene wikilinks a las secciones
