@@ -164,7 +164,7 @@ def corregir_tipo(node: Node) -> str:
             return 'CAMBIO'
 
     # RIESGO: complejidad, problemas
-    if 'riesgo' in title_lower or 'complejidad' in title_lower:
+    if 'riesgo' in title_lower or 'complejidad' in title_lower or 'complejo' in title_lower:
         return 'RIESGO'
 
     # FUTURO: TODOs, pendientes
