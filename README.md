@@ -92,14 +92,22 @@ ctxmap import-chat discord.json      # Importa chat de Discord
 ctxmap import-antigravity            # Importa chats de IDE
 ctxmap import-antigravity --limit 10 # Importar más conversaciones
 
-# Generar el vault completo
+# Generar el vault completo (modo consolidado por defecto)
 ctxmap build
+
+# Generar vault atómico heredado
+ctxmap build --raw                   # Alias de --mode raw
+ctxmap build --mode raw              # Modo atómico explícito
+
+# Reconstruir limpio (elimina archivos previos del vault)
+ctxmap build --clean                 # Purga vault antes de generar
 
 # Generar con diagrama Mermaid
 ctxmap build --mermaid
 
 # Sync incremental (solo agrega nuevos eventos)
 ctxmap sync
+ctxmap sync --clean                  # Sync con limpieza previa
 
 # Verificar readiness del proyecto
 ctxmap check .                       # Score y sugerencias
@@ -128,7 +136,9 @@ ctxmap sync --migrate                # Estandariza y regenera vault
 | `ctxmap import-sessions` | Importa sesiones de Hermes |
 | `ctxmap import-chat [file]` | Importa chats externos |
 | `ctxmap import-antigravity` | Importa chats de Antigravity IDE |
-| `ctxmap build` | Genera vault completo |
+| `ctxmap build` | Genera vault consolidado (por defecto) |
+| `ctxmap build --raw` | Genera vault atómico heredado |
+| `ctxmap build --clean` | Limpia vault previo y regenera |
 | `ctxmap build --mermaid` | Genera con diagrama Mermaid |
 | `ctxmap sync` | Sync incremental (solo nuevos) |
 | `ctxmap sync --migrate` | Migrar proyecto a nueva versión |
@@ -139,29 +149,19 @@ ctxmap sync --migrate                # Estandariza y regenera vault
 
 ## Estructura del Vault
 
+### Modo Consolidado (por defecto)
+
+Genera 5-6 notas temáticas de alto valor semántico:
+
 ```
 .context-map/
 ├── vault/
-│   ├── 00-INDICE.md                    # Map of Content
-│   ├── 00-GRAPH.md                     # Diagrama Mermaid
-│   ├── 00-CONEXIONES.md                # Grafo de relaciones
-│   ├── 00-CONSOLIDACION.md             # Tracking de consolidación
-│   ├── 01-PROYECTOS/                   # Qué es cada proyecto
-│   │   ├── COMPLETADO/                 # Archivos completados
-│   │   ├── EN_PROGRESO/                # En desarrollo
-│   │   ├── PENDIENTE/                  # Por hacer
-│   │   └── CANCELADO/                  # Cancelados
-│   ├── 02-IDEAS/                       # Ideas y conceptos
-│   │   ├── COMPLETADO/
-│   │   ├── EN_PROGRESO/
-│   │   ├── PENDIENTE/
-│   │   └── CANCELADO/
-│   ├── 03-RIESGO/                      # Riesgos identificados
-│   ├── 04-CAMBIOS/                     # Cambios en curso
-│   ├── 05-PRUEBAS/                     # Pruebas y validaciones
-│   ├── 06-FUTURO/                      # Lo que viene
-│   ├── 07-HITORIAL/                    # Hitos y changelog
-│   └── 08-CORRECCIONES/                # Bugs y fixes
+│   ├── 00-INDICE.md                    # Dashboard MOC con métricas y navegación
+│   ├── 00-CONEXIONES.md                # Grafo completo de relaciones
+│   ├── 01-ESTRUCTURA_Y_MODULOS.md      # Paquetes, carpetas, entrypoints
+│   ├── 02-RIESGOS_Y_COMPLEJIDAD.md     # Módulos complejos y alertas
+│   ├── 03-BACKLOG_Y_TODOS.md           # Checklists interactivas (- [ ])
+│   └── 04-HISTORIAL_Y_DECISIONES.md    # Commits, hitos y correcciones
 ├── state/
 │   ├── graph.jsonl                     # Grafo de nodos
 │   ├── edges.jsonl                     # Conexiones
@@ -172,6 +172,28 @@ ctxmap sync --migrate                # Estandariza y regenera vault
 ├── chats/                              # Exportaciones de chat
 └── raw/
     └── events.jsonl                    # Eventos manuales
+```
+
+### Modo Atómico (`--raw`)
+
+Genera notas individuales organizadas en carpetas por tipo y estado:
+
+```
+.context-map/vault/
+├── 00-INDICE.md                        # Map of Content
+├── 00-CONEXIONES.md                    # Grafo de relaciones
+├── 00-CONSOLIDACION.md                 # Tracking de consolidación
+├── 01-PROYECTOS/                       # Qué es cada proyecto
+│   ├── COMPLETADO/
+│   ├── EN_PROGRESO/
+│   └── PENDIENTE/
+├── 02-IDEAS/                           # Ideas y conceptos
+├── 03-RIESGO/                          # Riesgos identificados
+├── 04-CAMBIOS/                         # Cambios en curso
+├── 05-PRUEBAS/                         # Pruebas y validaciones
+├── 06-FUTURO/                          # Lo que viene
+├── 07-HITORIAL/                        # Hitos y changelog
+└── 08-CORRECCIONES/                    # Bugs y fixes
 ```
 
 ## Fuentes de Eventos
@@ -239,6 +261,9 @@ Crea `.context-map/raw/events.jsonl`:
 - [x] Estandarización de nodos (tags, status, evidence)
 - [x] Carpetas por estado (COMPLETADO, EN_PROGRESO, PENDIENTE, CANCELADO)
 - [x] Consolidación automática de notas relacionadas
+- [x] **Vault consolidado Obsidian Skills (4-6 notas temáticas)**
+- [x] **Filtrado de ruido en scanner (exclusiones inteligentes)**
+- [x] **Flags --mode, --raw, --clean en CLI**
 - [ ] Dashboard web (opcional)
 
 ## Contribuir

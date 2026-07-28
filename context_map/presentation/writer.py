@@ -550,23 +550,286 @@ def _obtener_ruta_nota(node: Node, output_dir: str) -> str:
 # ============================================================
 # RENDER PRINCIPAL
 # ============================================================
-def render_obsidian_vault(
+def _render_consolidated_vault(
     project_name: str,
     nodes: List[Node],
     edges: List[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
+    """Renderiza la bóveda Obsidian en modo consolidado (4-6 notas temáticas sintéticas).
+
+    Args:
+        project_name: Nombre del proyecto
+        nodes: Lista de nodos del mapa de contexto
+        edges: Lista de aristas/relaciones
+        output_dir: Directorio de salida del vault
+
+    Returns:
+        Ruta del directorio del vault
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    fecha_actual = datetime.now().isoformat(timespec="seconds")
+
+    # Clasificación de nodos por categoría temática
+    base_nodes = [n for n in nodes if n.type == "BASE"]
+    idea_nodes = [n for n in nodes if n.type == "IDEA"]
+    riesgo_nodes = [n for n in nodes if n.type == "RIESGO"]
+    cambio_nodes = [n for n in nodes if n.type in ("CAMBIO", "CORRECCION")]
+    prueba_nodes = [n for n in nodes if n.type == "PRUEBA"]
+    futuro_nodes = [n for n in nodes if n.type == "FUTURO"]
+    hito_nodes = [n for n in nodes if n.type == "HITO"]
+
+    # 1. 00-INDICE.md (Dashboard principal)
+    indice_parts = [
+        "---",
+        "type: moc",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        f"total_nodes: {len(nodes)}",
+        f"total_edges: {len(edges)}",
+        "tags: [context-map, indice, moc]",
+        "---",
+        "",
+        f"# 🗺️ Índice MOC — {project_name}",
+        "",
+        "> Bóveda consolidada bajo el paradigma Obsidian Skills. Bóveda sin atomización para consumo eficiente de contexto en agentes de IA.",
+        "",
+        "---",
+        "",
+        "## 📊 Métricas Generales del Grafo",
+        "",
+        f"- 📦 Nodos Totales: **{len(nodes)}**",
+        f"- 🔗 Conexiones (Edges): **{len(edges)}**",
+        f"- 🧱 Módulos y Estructura (BASE): **{len(base_nodes)}**",
+        f"- 💡 Ideas y Conceptos (IDEA): **{len(idea_nodes)}**",
+        f"- ⚠️ Riesgos y Complejidad (RIESGO): **{len(riesgo_nodes)}**",
+        f"- 🔮 Tareas y Pendientes (FUTURO): **{len(futuro_nodes)}**",
+        f"- 🔄 Cambios e Historial (CAMBIO/CORRECCION): **{len(cambio_nodes)}**",
+        f"- 🎯 Hitos (HITO): **{len(hito_nodes)}**",
+        f"- 🧪 Pruebas (PRUEBA): **{len(prueba_nodes)}**",
+        "",
+        "---",
+        "",
+        "## 📂 Secciones Consolidadas",
+        "",
+        "- [[01-ESTRUCTURA_Y_MODULOS|01. Estructura y Módulos del Proyecto]]",
+        "- [[02-RIESGOS_Y_COMPLEJIDAD|02. Riesgos y Complejidad]]",
+        "- [[03-BACKLOG_Y_TODOS|03. Backlog y Tareas Pendientes]]",
+        "- [[04-HISTORIAL_Y_DECISIONES|04. Historial y Decisiones]]",
+        "- [[00-CONEXIONES|05. Grafo Completo de Conexiones]]",
+        "",
+        "---",
+        "",
+        "## 🏷️ Tags Principales",
+        "",
+    ]
+    all_tags = set()
+    for n in nodes:
+        all_tags.update(n.tags)
+    tags_badges = " ".join(f"`#{t}`" for t in sorted(all_tags)[:20])
+    indice_parts.append(tags_badges or "`#context-map`")
+    indice_parts.append("")
+
+    with open(os.path.join(output_dir, "00-INDICE.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(indice_parts))
+
+    # 2. 01-ESTRUCTURA_Y_MODULOS.md
+    est_parts = [
+        "---",
+        "type: estructura",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, estructura, modulos]",
+        "---",
+        "",
+        f"# 🧱 Estructura y Módulos — {project_name}",
+        "",
+        "Resumen consolidado de paquetes, módulos, carpetas y componentes principales del proyecto.",
+        "",
+        "---",
+        "",
+        "## 📦 Componentes Base y Carpetas",
+        "",
+    ]
+    if base_nodes:
+        for n in base_nodes:
+            est_parts.append(f"### {n.title}")
+            if n.summary:
+                est_parts.append(f"{n.summary}")
+            if n.source:
+                est_parts.append(f"- **Origen**: `{n.source}`")
+            if n.tags:
+                est_parts.append(f"- **Tags**: {' '.join(f'`#{t}`' for t in n.tags)}")
+            est_parts.append("")
+    else:
+        est_parts.append("_(No se registraron componentes base)_")
+        est_parts.append("")
+
+    if idea_nodes:
+        est_parts.append("## 💡 Conceptos y Clases Relevantes")
+        est_parts.append("")
+        for n in idea_nodes[:30]:
+            est_parts.append(f"- **{n.title}**: {n.summary or 'Sin descripción'}")
+        est_parts.append("")
+
+    est_parts.append("---")
+    est_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    est_parts.append("")
+
+    with open(os.path.join(output_dir, "01-ESTRUCTURA_Y_MODULOS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(est_parts))
+
+    # 3. 02-RIESGOS_Y_COMPLEJIDAD.md
+    riesgo_parts = [
+        "---",
+        "type: riesgos",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, riesgo, complejidad]",
+        "---",
+        "",
+        f"# ⚠️ Riesgos y Complejidad — {project_name}",
+        "",
+        "Identificación de puntos de alta complejidad, alertas de mantenimiento y cobertura de pruebas.",
+        "",
+        "---",
+        "",
+        "## 🚨 Alertas de Riesgo y Alta Complejidad",
+        "",
+    ]
+    if riesgo_nodes:
+        for n in riesgo_nodes:
+            riesgo_parts.append(f"### ⚠️ {n.title}")
+            riesgo_parts.append(f"{n.summary or 'Punto de atención técnica'}")
+            if n.evidence:
+                riesgo_parts.append("- **Evidencia**:")
+                for ev in n.evidence:
+                    riesgo_parts.append(f"  - {ev}")
+            riesgo_parts.append("")
+    else:
+        riesgo_parts.append("✅ **Sin riesgos o alertas críticas detectadas.**")
+        riesgo_parts.append("")
+
+    if prueba_nodes:
+        riesgo_parts.append("## 🧪 Cobertura de Pruebas Detectadas")
+        riesgo_parts.append("")
+        for n in prueba_nodes:
+            riesgo_parts.append(f"- **{n.title}**: {n.summary or 'Test'}")
+        riesgo_parts.append("")
+
+    riesgo_parts.append("---")
+    riesgo_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    riesgo_parts.append("")
+
+    with open(os.path.join(output_dir, "02-RIESGOS_Y_COMPLEJIDAD.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(riesgo_parts))
+
+    # 4. 03-BACKLOG_Y_TODOS.md
+    backlog_parts = [
+        "---",
+        "type: backlog",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, backlog, todos]",
+        "---",
+        "",
+        f"# 🔮 Backlog y Tareas Pendientes — {project_name}",
+        "",
+        "Listado consolidado de tareas futuras, TODOs e iniciativas registradas en el proyecto.",
+        "",
+        "---",
+        "",
+        "## 📋 Checklists de Tareas (TODOs / FUTURO)",
+        "",
+    ]
+    if futuro_nodes:
+        for n in futuro_nodes:
+            estado_mark = "[x]" if n.status == "completado" else "[ ]"
+            backlog_parts.append(f"- {estado_mark} **{n.title}**")
+            if n.summary:
+                backlog_parts.append(f"  - _{n.summary}_")
+    else:
+        backlog_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
+
+    backlog_parts.append("")
+    backlog_parts.append("---")
+    backlog_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    backlog_parts.append("")
+
+    with open(os.path.join(output_dir, "03-BACKLOG_Y_TODOS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(backlog_parts))
+
+    # 5. 04-HISTORIAL_Y_DECISIONES.md
+    historial_parts = [
+        "---",
+        "type: historial",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, historial, cambios]",
+        "---",
+        "",
+        f"# 🔄 Historial y Decisiones — {project_name}",
+        "",
+        "Registro consolidado de cambios, correcciones y decisiones arquitectónicas.",
+        "",
+        "---",
+        "",
+        "## 🎯 Hitos",
+        "",
+    ]
+    if hito_nodes:
+        for n in hito_nodes:
+            historial_parts.append(f"- 🎯 **{n.title}**: {n.summary or 'Hito alcanzado'}")
+        historial_parts.append("")
+    else:
+        historial_parts.append("_(Sin hitos registrados)_")
+        historial_parts.append("")
+
+    historial_parts.append("## 🔄 Registro de Cambios y Correcciones")
+    historial_parts.append("")
+    if cambio_nodes:
+        for n in cambio_nodes[:50]:
+            icon = "🔧" if n.type == "CORRECCION" else "🔄"
+            historial_parts.append(f"- {icon} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            if n.summary and n.summary != n.title:
+                historial_parts.append(f"  - {n.summary}")
+        historial_parts.append("")
+    else:
+        historial_parts.append("_(Sin registros de cambios)_")
+        historial_parts.append("")
+
+    historial_parts.append("---")
+    historial_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    historial_parts.append("")
+
+    with open(os.path.join(output_dir, "04-HISTORIAL_Y_DECISIONES.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(historial_parts))
+
+    # Generar tabla de conexiones unificada
+    _render_conexiones(output_dir, nodes, edges)
+
+    return output_dir
+
+
+def render_obsidian_vault(
+    project_name: str,
+    nodes: List[Node],
+    edges: List[Edge],
+    output_dir: str = ".context-map/vault",
+    mode: str = "consolidated",
+) -> str:
     """Genera un vault limpio de Obsidian con grafo jerárquico real.
 
-    Estructura:
-    00-INDICE
-    ├── 01-PROYECTOS
-    │   ├── PENDIENTE
-    │   │   └── archivo.md
-    │   └── COMPLETADO
-    └── 02-IDEAS
-        └── PENDIENTE
+    Args:
+        project_name: Nombre del proyecto
+        nodes: Nodos del grafo
+        edges: Aristas del grafo
+        output_dir: Bóveda de salida
+        mode: Modo de generación ('consolidated' o 'raw')
     """
+    if mode == "consolidated":
+        return _render_consolidated_vault(project_name, nodes, edges, output_dir)
+
     _crear_estructura_carpetas(output_dir)
     nodos_consolidados, tracking = _consolidar_nodos(nodes, project_name=project_name)
     

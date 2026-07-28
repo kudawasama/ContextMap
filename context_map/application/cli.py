@@ -45,6 +45,18 @@ def create_parser() -> argparse.ArgumentParser:
     s_build.add_argument("--snapshot-name", default="", help="Nombre del snapshot")
     s_build.add_argument("--mermaid", action="store_true", help="Generar diagrama Mermaid")
     s_build.add_argument("--brief", action="store_true", help="Generar brief para agentes")
+    s_build.add_argument(
+        "--mode", choices=["consolidated", "raw"], default="consolidated",
+        help="Modo de generación del vault: 'consolidated' (por defecto, 4-6 notas temáticas) o 'raw' (atómico heredado)",
+    )
+    s_build.add_argument(
+        "--raw", action="store_true",
+        help="Alias para --mode raw (generación atómica heredada)",
+    )
+    s_build.add_argument(
+        "--clean", action="store_true",
+        help="Eliminar contenido previo de .context-map/vault/ antes de reconstruir",
+    )
 
     # scan
     s_scan = sub.add_parser("scan", help="Escanea proyecto y genera eventos")
@@ -55,6 +67,18 @@ def create_parser() -> argparse.ArgumentParser:
     s_sync = sub.add_parser("sync", help="Sync incremental (use --migrate para migración)")
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_sync.add_argument("--migrate", action="store_true", help="Migrar a nueva versión")
+    s_sync.add_argument(
+        "--mode", choices=["consolidated", "raw"], default="consolidated",
+        help="Modo de generación del vault: 'consolidated' (por defecto) o 'raw' (atómico)",
+    )
+    s_sync.add_argument(
+        "--raw", action="store_true",
+        help="Alias para --mode raw (generación atómica heredada)",
+    )
+    s_sync.add_argument(
+        "--clean", action="store_true",
+        help="Eliminar contenido previo de .context-map/vault/ antes de reconstruir",
+    )
 
     # check
     s_check = sub.add_parser("check", help="Verifica readiness (0-100)")

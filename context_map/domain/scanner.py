@@ -21,8 +21,57 @@ def _ahora() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+
+# Carpetas y patrones que deben excluirse del escaneo para evitar ruido
+_CARPETAS_EXCLUIDAS: set = {
+    ".context-map", ".venv", ".git", "__pycache__", "node_modules",
+    ".mypy_cache", ".pytest_cache", ".tox", ".eggs", "dist", "build",
+    ".idea", ".vscode", ".vs", "egg-info",
+}
+
+# Archivos de configuración menores que no aportan valor semántico
+_CONFIGS_MENORES: set = {
+    ".editorconfig", ".flake8", ".pylintrc", ".prettierrc",
+    ".eslintrc", "tox.ini", "setup.cfg", "MANIFEST.in",
+    ".dockerignore", ".browserslistrc",
+}
+
+# Tamaño mínimo (en bytes) para considerar un archivo relevante
+_UMBRAL_TAMANO_MINIMO: int = 50
+
+
+def _es_ruta_excluida(ruta: str) -> bool:
+    """Verifica si una ruta contiene carpetas que deben excluirse del escaneo.
+
+    Args:
+        ruta: Ruta relativa del archivo o carpeta
+
+    Returns:
+        True si la ruta debe excluirse
+    """
+    partes = ruta.replace("\\", "/").split("/")
+    return any(parte in _CARPETAS_EXCLUIDAS for parte in partes)
+
+
+def _es_config_menor(ruta: str) -> bool:
+    """Verifica si un archivo es una configuración menor sin valor semántico.
+
+    Args:
+        ruta: Ruta del archivo
+
+    Returns:
+        True si el archivo es una configuración menor
+    """
+    nombre = os.path.basename(ruta)
+    return nombre in _CONFIGS_MENORES
+
+
 def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
-    """Genera eventos desde la estructura del proyecto."""
+    """Genera eventos desde la estructura del proyecto.
+
+    Aplica umbrales de relevancia y consolidación para evitar
+    la emisión excesiva de eventos ruidosos.
+    """
     eventos = []
 
     # Evento BASE: identidad del proyecto
@@ -34,24 +83,30 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
         tags=["estructura", "metricas"],
     ))
 
-    # Evento por tipo de archivo
-    max_tipos = 3
-    vistos = 0
-    for tipo, cantidad in est.por_tipo.items():
-        if cantidad > 0:
-            eventos.append(Event(
-                type="IDEA",
-                text=f"El proyecto contiene {cantidad} archivos de tipo '{tipo}'",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["estructura", tipo],
-            ))
-            vistos += 1
-            if vistos >= max_tipos:
-                break
+    # Evento CONSOLIDADO por tipos de archivo (en lugar de 1 evento por tipo)
+    tipos_relevantes = {
+        tipo: cantidad
+        for tipo, cantidad in est.por_tipo.items()
+        if cantidad > 0
+    }
+    if tipos_relevantes:
+        resumen_tipos = ", ".join(
+            f"{tipo}: {cant}" for tipo, cant in sorted(
+                tipos_relevantes.items(), key=lambda x: x[1], reverse=True
+            )[:6]
+        )
+        eventos.append(Event(
+            type="IDEA",
+            text=f"Distribución de archivos por tipo — {resumen_tipos}",
+            timestamp=_ahora(),
+            source="scanner",
+            tags=["estructura", "tipos-archivo"],
+        ))
 
-    # Entrypoints
-    for ep in est.entrypoints[:1]:
+    # Entrypoints (solo los más relevantes)
+    for ep in est.entrypoints[:2]:
+        if _es_ruta_excluida(ep):
+            continue
         eventos.append(Event(
             type="BASE",
             text=f"Entrypoint detectado: {ep}",
@@ -60,7 +115,7 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["entrypoint"],
         ))
 
-    # Docs relevantes
+    # Docs relevantes (solo el principal)
     for doc in est.docs[:1]:
         eventos.append(Event(
             type="BASE",
@@ -70,8 +125,9 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["docs"],
         ))
 
-    # Configs relevantes
-    for config in est.configs[:2]:
+    # Configs: solo las relevantes, no menores
+    configs_filtradas = [c for c in est.configs if not _es_config_menor(c)]
+    for config in configs_filtradas[:2]:
         eventos.append(Event(
             type="CAMBIO",
             text=f"Archivo de configuración: {config}",
@@ -80,9 +136,12 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["config"],
         ))
 
-    # Carpetas principales como nodos estructurales
-    carpetas_principales = sorted({os.path.dirname(a.ruta) for a in est.archivos})
-    for carpeta in carpetas_principales[:8]:
+    # Carpetas principales: filtrar excluidas, limitar a las 5 más relevantes
+    carpetas_principales = sorted({
+        os.path.dirname(a.ruta) for a in est.archivos
+        if not _es_ruta_excluida(a.ruta) and os.path.dirname(a.ruta)
+    })
+    for carpeta in carpetas_principales[:5]:
         eventos.append(Event(
             type="BASE",
             text=f"Carpeta: {carpeta}",
@@ -91,8 +150,10 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["carpeta", carpeta],
         ))
 
-    # Archivos relevantes por categoría, limitados para no saturar
-    for archivo in est.entrypoints[:3]:
+    # Archivos relevantes por categoría (filtrados y limitados)
+    for archivo in est.entrypoints[:2]:
+        if _es_ruta_excluida(archivo):
+            continue
         eventos.append(Event(
             type="BASE",
             text=f"Entrypoint: {archivo}",
@@ -100,7 +161,7 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             source="structure",
             tags=["entrypoint", os.path.dirname(archivo), os.path.basename(archivo)],
         ))
-    for archivo in est.configs[:5]:
+    for archivo in configs_filtradas[:3]:
         eventos.append(Event(
             type="CAMBIO",
             text=f"Config: {archivo}",
@@ -108,7 +169,7 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             source="structure",
             tags=["config", os.path.dirname(archivo), os.path.basename(archivo)],
         ))
-    for archivo in est.docs[:5]:
+    for archivo in est.docs[:3]:
         eventos.append(Event(
             type="IDEA",
             text=f"Doc: {archivo}",
@@ -116,7 +177,9 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             source="structure",
             tags=["doc", os.path.dirname(archivo), os.path.basename(archivo)],
         ))
-    for archivo in est.tests[:5]:
+    for archivo in est.tests[:3]:
+        if _es_ruta_excluida(archivo):
+            continue
         eventos.append(Event(
             type="PRUEBA",
             text=f"Test: {archivo}",
@@ -125,14 +188,16 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
             tags=["test", os.path.dirname(archivo), os.path.basename(archivo)],
         ))
 
-    # Archivo más grande por tipo relevante como muestra
+    # Archivo más grande por tipo relevante (filtrado por umbral mínimo)
     candidatos_tipo = {}
     for archivo in est.archivos:
-        if archivo.tamano <= 0:
+        if archivo.tamano < _UMBRAL_TAMANO_MINIMO:
+            continue
+        if _es_ruta_excluida(archivo.ruta):
             continue
         if archivo.tipo not in candidatos_tipo or archivo.tamano > candidatos_tipo[archivo.tipo].tamano:
             candidatos_tipo[archivo.tipo] = archivo
-    for tipo, archivo in sorted(candidatos_tipo.items())[:6]:
+    for tipo, archivo in sorted(candidatos_tipo.items())[:4]:
         eventos.append(Event(
             type="IDEA",
             text=f"{tipo}: {archivo.ruta} ({archivo.tamano} bytes)",
