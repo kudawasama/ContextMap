@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime
 from collections import defaultdict
@@ -558,6 +559,9 @@ def _render_consolidated_vault(
 ) -> str:
     """Renderiza la bóveda Obsidian en modo consolidado (4-6 notas temáticas sintéticas).
 
+    Siempre limpia el directorio del vault antes de regenerar para evitar
+    mezclar archivos de generaciones anteriores (modo raw, etc.).
+
     Args:
         project_name: Nombre del proyecto
         nodes: Lista de nodos del mapa de contexto
@@ -567,6 +571,9 @@ def _render_consolidated_vault(
     Returns:
         Ruta del directorio del vault
     """
+    # Limpiar vault previo para no mezclar archivos raw viejos
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir, ignore_errors=True)
     os.makedirs(output_dir, exist_ok=True)
     fecha_actual = datetime.now().isoformat(timespec="seconds")
 
@@ -668,7 +675,12 @@ def _render_consolidated_vault(
     if idea_nodes:
         est_parts.append("## 💡 Conceptos y Clases Relevantes")
         est_parts.append("")
+        seen_idea = set()
         for n in idea_nodes[:30]:
+            key = n.title[:80]
+            if key in seen_idea:
+                continue
+            seen_idea.add(key)
             est_parts.append(f"- **{n.title}**: {n.summary or 'Sin descripción'}")
         est_parts.append("")
 
@@ -679,7 +691,7 @@ def _render_consolidated_vault(
     with open(os.path.join(output_dir, "01-ESTRUCTURA_Y_MODULOS.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(est_parts))
 
-    # 3. 02-RIESGOS_Y_COMPLEJIDAD.md
+    # 3. 02-RIESGOS_Y_COMPLEJIDAD.md (con dedup por texto para evitar nodos repetidos)
     riesgo_parts = [
         "---",
         "type: riesgos",
@@ -698,7 +710,12 @@ def _render_consolidated_vault(
         "",
     ]
     if riesgo_nodes:
+        seen_riesgo = set()
         for n in riesgo_nodes:
+            key = n.title[:80]
+            if key in seen_riesgo:
+                continue
+            seen_riesgo.add(key)
             riesgo_parts.append(f"### ⚠️ {n.title}")
             riesgo_parts.append(f"{n.summary or 'Punto de atención técnica'}")
             if n.evidence:
@@ -713,7 +730,12 @@ def _render_consolidated_vault(
     if prueba_nodes:
         riesgo_parts.append("## 🧪 Cobertura de Pruebas Detectadas")
         riesgo_parts.append("")
+        seen_prueba = set()
         for n in prueba_nodes:
+            key = n.title[:80]
+            if key in seen_prueba:
+                continue
+            seen_prueba.add(key)
             riesgo_parts.append(f"- **{n.title}**: {n.summary or 'Test'}")
         riesgo_parts.append("")
 
@@ -743,7 +765,12 @@ def _render_consolidated_vault(
         "",
     ]
     if futuro_nodes:
+        seen_futuro = set()
         for n in futuro_nodes:
+            key = n.title[:80]
+            if key in seen_futuro:
+                continue
+            seen_futuro.add(key)
             estado_mark = "[x]" if n.status == "completado" else "[ ]"
             backlog_parts.append(f"- {estado_mark} **{n.title}**")
             if n.summary:
@@ -788,7 +815,12 @@ def _render_consolidated_vault(
     historial_parts.append("## 🔄 Registro de Cambios y Correcciones")
     historial_parts.append("")
     if cambio_nodes:
+        seen_cambio = set()
         for n in cambio_nodes[:50]:
+            key = n.title[:80]
+            if key in seen_cambio:
+                continue
+            seen_cambio.add(key)
             icon = "🔧" if n.type == "CORRECCION" else "🔄"
             historial_parts.append(f"- {icon} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
             if n.summary and n.summary != n.title:

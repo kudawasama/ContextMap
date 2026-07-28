@@ -29,17 +29,6 @@ _CARPETAS_EXCLUIDAS: set = {
     ".idea", ".vscode", ".vs", "egg-info",
 }
 
-# Archivos de configuración menores que no aportan valor semántico
-_CONFIGS_MENORES: set = {
-    ".editorconfig", ".flake8", ".pylintrc", ".prettierrc",
-    ".eslintrc", "tox.ini", "setup.cfg", "MANIFEST.in",
-    ".dockerignore", ".browserslistrc",
-}
-
-# Tamaño mínimo (en bytes) para considerar un archivo relevante
-_UMBRAL_TAMANO_MINIMO: int = 50
-
-
 def _es_ruta_excluida(ruta: str) -> bool:
     """Verifica si una ruta contiene carpetas que deben excluirse del escaneo.
 
@@ -53,230 +42,130 @@ def _es_ruta_excluida(ruta: str) -> bool:
     return any(parte in _CARPETAS_EXCLUIDAS for parte in partes)
 
 
-def _es_config_menor(ruta: str) -> bool:
-    """Verifica si un archivo es una configuración menor sin valor semántico.
+def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
+    """Genera eventos semánticos desde la estructura del proyecto.
+
+    NO produce eventos de métricas de archivos, carpetas, tipos,
+    ni configuraciones menores. Solo captura la identidad del
+    proyecto y sus entrypoints principales.
 
     Args:
-        ruta: Ruta del archivo
+        est: Estructura del proyecto escaneada
 
     Returns:
-        True si el archivo es una configuración menor
+        Lista reducida de eventos de alto valor semántico
     """
-    nombre = os.path.basename(ruta)
-    return nombre in _CONFIGS_MENORES
+    eventos: List[Event] = []
 
-
-def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
-    """Genera eventos desde la estructura del proyecto.
-
-    Aplica umbrales de relevancia y consolidación para evitar
-    la emisión excesiva de eventos ruidosos.
-    """
-    eventos = []
-
-    # Evento BASE: identidad del proyecto
+    # 1. BASE: identidad del proyecto (1 evento único)
+    entrypoints_ratio = f"entrypoints: {len(est.entrypoints)}" if est.entrypoints else "sin entrypoints"
     eventos.append(Event(
         type="BASE",
-        text=f"Proyecto '{est.nombre}' con {len(est.archivos)} archivos, {est.total_lineas} líneas totales",
+        text=f"Proyecto '{est.nombre}' — {len(est.archivos)} archivos, {est.total_lineas} líneas, {entrypoints_ratio}",
         timestamp=_ahora(),
         source="scanner",
-        tags=["estructura", "metricas"],
+        tags=["estructura", "proyecto"],
+        summary=f"Proyecto detectado en {est.ruta_raiz}. "
+                f"Compuesto por {len(est.archivos)} archivos ({est.total_lineas} líneas totales). "
+                f"{entrypoints_ratio.replace('entrypoints: ', 'Puntos de entrada: ').replace('sin entrypoints', 'Sin entrypoints detectados')}.",
     ))
 
-    # Evento CONSOLIDADO por tipos de archivo (en lugar de 1 evento por tipo)
-    tipos_relevantes = {
-        tipo: cantidad
-        for tipo, cantidad in est.por_tipo.items()
-        if cantidad > 0
-    }
-    if tipos_relevantes:
-        resumen_tipos = ", ".join(
-            f"{tipo}: {cant}" for tipo, cant in sorted(
-                tipos_relevantes.items(), key=lambda x: x[1], reverse=True
-            )[:6]
-        )
+    # 2. Doc principal (README o similar) como IDEA del dominio
+    if est.docs:
+        doc_principal = est.docs[0]
+        doc_path = os.path.relpath(doc_principal, est.ruta_raiz) if os.path.isabs(doc_principal) else doc_principal
         eventos.append(Event(
-            type="IDEA",
-            text=f"Distribución de archivos por tipo — {resumen_tipos}",
+            type="BASE",
+            text=f"Documentación principal: {doc_path}",
             timestamp=_ahora(),
             source="scanner",
-            tags=["estructura", "tipos-archivo"],
+            tags=["documentacion", "proyecto"],
         ))
 
-    # Entrypoints (solo los más relevantes)
+    # 3. Entrypoints principales (hasta 2) como BASE
     for ep in est.entrypoints[:2]:
         if _es_ruta_excluida(ep):
             continue
         eventos.append(Event(
             type="BASE",
-            text=f"Entrypoint detectado: {ep}",
+            text=f"Entrypoint: {ep}",
             timestamp=_ahora(),
             source="scanner",
-            tags=["entrypoint"],
-        ))
-
-    # Docs relevantes (solo el principal)
-    for doc in est.docs[:1]:
-        eventos.append(Event(
-            type="BASE",
-            text=f"Documentación encontrada: {doc}",
-            timestamp=_ahora(),
-            source="scanner",
-            tags=["docs"],
-        ))
-
-    # Configs: solo las relevantes, no menores
-    configs_filtradas = [c for c in est.configs if not _es_config_menor(c)]
-    for config in configs_filtradas[:2]:
-        eventos.append(Event(
-            type="CAMBIO",
-            text=f"Archivo de configuración: {config}",
-            timestamp=_ahora(),
-            source="scanner",
-            tags=["config"],
-        ))
-
-    # Carpetas principales: filtrar excluidas, limitar a las 5 más relevantes
-    carpetas_principales = sorted({
-        os.path.dirname(a.ruta) for a in est.archivos
-        if not _es_ruta_excluida(a.ruta) and os.path.dirname(a.ruta)
-    })
-    for carpeta in carpetas_principales[:5]:
-        eventos.append(Event(
-            type="BASE",
-            text=f"Carpeta: {carpeta}",
-            timestamp=_ahora(),
-            source="folder-map",
-            tags=["carpeta", carpeta],
-        ))
-
-    # Archivos relevantes por categoría (filtrados y limitados)
-    for archivo in est.entrypoints[:2]:
-        if _es_ruta_excluida(archivo):
-            continue
-        eventos.append(Event(
-            type="BASE",
-            text=f"Entrypoint: {archivo}",
-            timestamp=_ahora(),
-            source="structure",
-            tags=["entrypoint", os.path.dirname(archivo), os.path.basename(archivo)],
-        ))
-    for archivo in configs_filtradas[:3]:
-        eventos.append(Event(
-            type="CAMBIO",
-            text=f"Config: {archivo}",
-            timestamp=_ahora(),
-            source="structure",
-            tags=["config", os.path.dirname(archivo), os.path.basename(archivo)],
-        ))
-    for archivo in est.docs[:3]:
-        eventos.append(Event(
-            type="IDEA",
-            text=f"Doc: {archivo}",
-            timestamp=_ahora(),
-            source="structure",
-            tags=["doc", os.path.dirname(archivo), os.path.basename(archivo)],
-        ))
-    for archivo in est.tests[:3]:
-        if _es_ruta_excluida(archivo):
-            continue
-        eventos.append(Event(
-            type="PRUEBA",
-            text=f"Test: {archivo}",
-            timestamp=_ahora(),
-            source="structure",
-            tags=["test", os.path.dirname(archivo), os.path.basename(archivo)],
-        ))
-
-    # Archivo más grande por tipo relevante (filtrado por umbral mínimo)
-    candidatos_tipo = {}
-    for archivo in est.archivos:
-        if archivo.tamano < _UMBRAL_TAMANO_MINIMO:
-            continue
-        if _es_ruta_excluida(archivo.ruta):
-            continue
-        if archivo.tipo not in candidatos_tipo or archivo.tamano > candidatos_tipo[archivo.tipo].tamano:
-            candidatos_tipo[archivo.tipo] = archivo
-    for tipo, archivo in sorted(candidatos_tipo.items())[:4]:
-        eventos.append(Event(
-            type="IDEA",
-            text=f"{tipo}: {archivo.ruta} ({archivo.tamano} bytes)",
-            timestamp=_ahora(),
-            source="structure",
-            tags=[tipo, os.path.dirname(archivo.ruta), os.path.basename(archivo.ruta)],
+            tags=["entrypoint", os.path.dirname(ep) if os.path.dirname(ep) != "." else "raiz"],
         ))
 
     return eventos
 
 
-def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 60) -> List[Event]:
-    """Genera eventos desde el análisis de contenido, limitados para no saturar el grafo."""
+def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 30) -> List[Event]:
+    """Genera eventos semánticos desde el análisis de contenido.
+
+    NO produce eventos por docstring, clases, ni archivos individuales.
+    Solo genera:
+
+    - 1 evento RIESGO consolidado con los 3 archivos más complejos
+    - 1-2 eventos FUTURO con TODOs/FIXMEs detectados (max 5 total)
+
+    Args:
+        contenidos: Lista de información de contenido analizado
+        max_eventos: Límite máximo de eventos a generar
+
+    Returns:
+        Lista reducida de eventos de alto valor
+    """
     eventos: List[Event] = []
 
-    # Priorizar: alta complejidad → TODOs → docstrings → clases
-    relevantes = []
-    resto = []
+    if not contenidos:
+        return eventos
+
+    # === RIESGO: archivos más complejos (consolidado) ===
+    complejos = [info for info in contenidos if info.complejidad == "alta"]
+    if len(complejos) >= 2:
+        # Top 3 archivos complejos en un solo evento
+        top3 = sorted(complejos, key=lambda x: x.lineas_codigo, reverse=True)[:3]
+        resumen = "; ".join(
+            f"{os.path.basename(c.ruta)} ({c.lineas_codigo} líneas)"
+            for c in top3
+        )
+        eventos.append(Event(
+            type="RIESGO",
+            text=f"Archivos de alta complejidad ({len(complejos)} total): {resumen}",
+            timestamp=_ahora(),
+            source="scanner",
+            tags=["complejidad", "riesgo"],
+            summary=f"Se detectaron {len(complejos)} archivos con complejidad alta. "
+                    f"Los más extensos son: {resumen}. "
+                    "Estas áreas son propensas a bugs y difíciles de mantener.",
+        ))
+    elif len(complejos) == 1:
+        c = complejos[0]
+        eventos.append(Event(
+            type="RIESGO",
+            text=f"Archivo complejo: {os.path.basename(c.ruta)} ({c.lineas_codigo} líneas)",
+            timestamp=_ahora(),
+            source="scanner",
+            tags=["complejidad", "riesgo"],
+        ))
+
+    # === FUTURO: TODOs/FIXMEs consolidados (máximo 5 total) ===
+    todos_global: List[str] = []
     for info in contenidos:
-        score = 0
-        if info.complejidad == "alta":
-            score += 4
         if info.todos:
-            score += 3
-        if info.docstring_principal and len(info.docstring_principal) > 40:
-            score += 2
-        if len(info.clases) >= 3:
-            score += 1
-        if score >= 3:
-            relevantes.append((score, info))
-        else:
-            resto.append((score, info))
+            for todo in info.todos:
+                # Limpiar marcadores comunes
+                texto = todo.replace("TODO:", "").replace("FIXME:", "").replace("HACK:", "").strip()
+                if texto and texto not in todos_global:
+                    todos_global.append(texto)
 
-    # Tomar los más relevantes primero
-    candidatos = sorted(relevantes, key=lambda x: x[0], reverse=True)[:max_eventos // 2]
-    if len(candidatos) < max_eventos:
-        candidatos += sorted(resto, key=lambda x: x[0], reverse=True)[: max_eventos - len(candidatos)]
-
-    for _, info in candidatos:
-        ruta = os.path.basename(info.ruta)
-
-        # Alta complejidad
-        if info.complejidad == "alta":
-            eventos.append(Event(
-                type="RIESGO",
-                text=f"Archivo complejo ({info.lineas_codigo} líneas): {ruta}",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["complejidad", "riesgo", ruta],
-            ))
-
-        # TODOs/FIXMEs
-        if info.todos:
+    if todos_global:
+        # Hasta 5 TODOs distintos
+        for todo_texto in todos_global[:5]:
             eventos.append(Event(
                 type="FUTURO",
-                text=f"Pendientes en {ruta}: {info.todos[0]}",
+                text=f"TODO: {todo_texto}",
                 timestamp=_ahora(),
                 source="scanner",
-                tags=["todo", ruta],
-            ))
-
-        # Docstring principal
-        if info.docstring_principal and len(info.docstring_principal) > 40:
-            eventos.append(Event(
-                type="IDEA",
-                text=f"{ruta}: {info.docstring_principal[:120]}",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["docstring", ruta],
-            ))
-
-        # Clases importantes
-        if len(info.clases) >= 3:
-            eventos.append(Event(
-                type="IDEA",
-                text=f"{ruta}: {len(info.clases)} clases ({', '.join(info.clases[:5])})",
-                timestamp=_ahora(),
-                source="scanner",
-                tags=["clases", ruta],
+                tags=["todo"],
             ))
 
     return eventos
