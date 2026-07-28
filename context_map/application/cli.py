@@ -46,8 +46,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_build.add_argument("--mermaid", action="store_true", help="Generar diagrama Mermaid")
     s_build.add_argument("--brief", action="store_true", help="Generar brief para agentes")
     s_build.add_argument(
-        "--mode", choices=["consolidated", "raw"], default="consolidated",
-        help="Modo de generación del vault: 'consolidated' (por defecto, 4-6 notas temáticas) o 'raw' (atómico heredado)",
+        "--mode", choices=["consolidated", "raw", "hierarchical"], default="hierarchical",
+        help="Modo de generación del vault: 'hierarchical' (por defecto, secciones jerárquicas), 'consolidated' (notas temáticas) o 'raw' (atómico heredado)",
     )
     s_build.add_argument(
         "--raw", action="store_true",
@@ -68,8 +68,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_sync.add_argument("--migrate", action="store_true", help="Migrar a nueva versión")
     s_sync.add_argument(
-        "--mode", choices=["consolidated", "raw"], default="consolidated",
-        help="Modo de generación del vault: 'consolidated' (por defecto) o 'raw' (atómico)",
+        "--mode", choices=["consolidated", "raw", "hierarchical"], default="hierarchical",
+        help="Modo de generación del vault: 'hierarchical' (por defecto), 'consolidated' (notas temáticas) o 'raw' (atómico)",
     )
     s_sync.add_argument(
         "--raw", action="store_true",

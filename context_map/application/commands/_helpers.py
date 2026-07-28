@@ -35,7 +35,18 @@ MAPS_DIR: str = os.path.join(CONTEXT_DIR, "maps")
 HISTORY_DIR: str = os.path.join(CONTEXT_DIR, "maps", "HISTORY")
 CHATS_DIR: str = os.path.join(CONTEXT_DIR, "chats")
 RAW_DIR: str = os.path.join(CONTEXT_DIR, "raw")
-VAULT_DIR: str = os.path.join(CONTEXT_DIR, "vault")
+
+
+def vault_dir(project_name: str | None = None) -> str:
+    """Retorna el directorio del vault, incluyendo el nombre del proyecto si existe.
+
+    Ej: vault_dir()         -> ".context-map/vault"
+        vault_dir("MiApp")  -> ".context-map/vault-MiApp"
+    """
+    if project_name:
+        safe = project_name.strip().replace(" ", "-").replace("/", "-").replace("\\", "-")
+        return os.path.join(CONTEXT_DIR, f"vault-{safe}")
+    return os.path.join(CONTEXT_DIR, "vault")
 
 
 # ============================================================
@@ -62,9 +73,12 @@ def project_name(args) -> str:
     return os.path.basename(os.getcwd()) or "Repo"
 
 
-def ensure_dirs() -> None:
-    """Crea el árbol completo de directorios de .context-map/ si no existen."""
-    for path in [STATE_DIR, MAPS_DIR, HISTORY_DIR, CHATS_DIR, RAW_DIR, VAULT_DIR]:
+def ensure_dirs(_proj: str | None = None) -> None:
+    """Crea el árbol de directorios de .context-map/.
+
+    NOTA: el vault se crea bajo demanda en build/sync, no acá.
+    """
+    for path in [STATE_DIR, MAPS_DIR, HISTORY_DIR, CHATS_DIR, RAW_DIR]:
         os.makedirs(path, exist_ok=True)
 
 
@@ -81,15 +95,19 @@ def resolve_vault_mode(args) -> str:
     """
     if getattr(args, "raw", False):
         return "raw"
-    return getattr(args, "mode", "consolidated")
+    return getattr(args, "mode", "hierarchical")
 
 
-def clean_vault_dir() -> None:
-    """Elimina todo el contenido de .context-map/vault/ para una reconstrucción limpia."""
-    if os.path.isdir(VAULT_DIR):
-        shutil.rmtree(VAULT_DIR, ignore_errors=True)
-        os.makedirs(VAULT_DIR, exist_ok=True)
-        print(f"[clean] Vault limpiado: {VAULT_DIR}")
+def clean_vault_dir(project_name: str | None = None) -> None:
+    """Elimina el contenido del vault para una reconstrucción limpia.
+
+    Si se pasa project_name, limpia .context-map/vault-{Nombre}/.
+    """
+    vdir = vault_dir(project_name)
+    if os.path.isdir(vdir):
+        shutil.rmtree(vdir, ignore_errors=True)
+    os.makedirs(vdir, exist_ok=True)
+    print(f"[clean] Vault limpiado: {vdir}")
 
 
 def safe_rmtree(path: str) -> None:

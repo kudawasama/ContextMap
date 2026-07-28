@@ -24,6 +24,7 @@ from context_map.application.commands._helpers import (
     collect_events,
     append_nodes_edges,
     project_name,
+    vault_dir,
 )
 
 
@@ -40,12 +41,13 @@ def cmd_build(args) -> None:
     Args:
         args: Namespace de argparse con flags --mode, --raw, --clean, --brief, etc.
     """
-    ensure_dirs()
+    proj = project_name(args)
+    ensure_dirs(proj)
 
     # Resolver modo del vault y aplicar limpieza si se solicitó
     vault_mode = resolve_vault_mode(args)
     if getattr(args, "clean", False):
-        clean_vault_dir()
+        clean_vault_dir(proj)
 
     extra_events = collect_events()
     if extra_events:
@@ -65,8 +67,8 @@ def cmd_build(args) -> None:
     md = render_active_map(project_name(args), nodes, edges)
     write_map(md)
 
-    vault_dir = os.path.join(CONTEXT_DIR, "vault")
-    render_obsidian_vault(project_name(args), nodes, edges, vault_dir, mode=vault_mode)
+    vault_path = vault_dir(proj)
+    render_obsidian_vault(proj, nodes, edges, vault_path, mode=vault_mode)
 
     # Snapshot
     snapshot_name = getattr(args, "snapshot_name", "") or None
@@ -82,4 +84,4 @@ def cmd_build(args) -> None:
         print(f"brief: {brief_path}")
 
     print("build:ok -> ACTIVE.md")
-    print(f"vault ({vault_mode}):ok -> {vault_dir}")
+    print(f"vault ({vault_mode}):ok -> {vault_path}")

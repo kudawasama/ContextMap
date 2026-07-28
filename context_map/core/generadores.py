@@ -69,45 +69,17 @@ def _summary_base(texto: str, lower: str, es_scanner: bool, es_git: bool) -> str
     """Summary para eventos BASE."""
     if es_scanner:
         if "archivos" in lower and "líneas" in lower:
-            return (
-                f"Este es el estado actual del código fuente. "
-                f"{texto}. "
-                f"Esta métrica te da una idea del tamaño y complejidad del proyecto: "
-                f"más archivos y líneas implican mayor superficie de mantenimiento."
-            )
+            return f"{texto}."
         if "entry point" in lower or "entrypoint" in lower:
             modulo = texto.split(":")[-1].strip() if ":" in texto else texto
-            return (
-                f"El punto de entrada del proyecto es `{modulo}`. "
-                f"Este es el archivo que se ejecuta primero cuando corres el programa. "
-                f"Si necesitas entender cómo funciona el proyecto, empieza por aquí."
-            )
+            return f"Entrypoint del proyecto: `{modulo}`."
         if "config" in lower or "pyproject" in lower:
-            return (
-                f"Configuración del proyecto detectada: {texto}. "
-                f"Este archivo define metadatos, dependencias y puntos de entrada. "
-                f"Los agentes de IA lo usan para entender qué librerías están disponibles."
-            )
+            return f"Configuración: {texto}."
         if "doc" in lower or "readme" in lower or "contributing" in lower:
-            return (
-                f"Documentación encontrada: {texto}. "
-                f"Estos archivos explican cómo usar, contribuir y entender el proyecto. "
-                f"Lee el README primero para una visión general."
-            )
-        if "lenguaje" in lower or "python" in lower:
-            return (
-                f"Tecnología principal: {texto}. "
-                f"Esto define qué herramientas y librerías puedes usar al trabajar en el proyecto."
-            )
+            return f"Documentación: {texto}."
     if es_git:
-        return (
-            f"Estado del repositorio: {texto}. "
-            f"El historial de git muestra la evolución del proyecto y las decisiones tomadas."
-        )
-    return (
-        f"Elemento fundamento del proyecto. {texto}. "
-        f"Entender esto es esencial antes de hacer cambios."
-    )
+        return f"Repositorio: {texto}."
+    return f"{texto}."
 
 
 def _summary_idea(texto: str, lower: str, es_scanner: bool, es_git: bool) -> str:
@@ -116,13 +88,8 @@ def _summary_idea(texto: str, lower: str, es_scanner: bool, es_git: bool) -> str
         if "] " in texto:
             partes = texto.split("] ", 1)
             if len(partes) == 2:
-                commit_hash = partes[0].replace("[", "")
                 commit_msg = partes[1]
-                return (
-                    f"Este commit (`{commit_hash}`) implementa: {commit_msg}. "
-                    f"Los commits son unidades atómicas de cambio que mantienen el historial limpio. "
-                    f"Cada commit debe resolver un solo problema o agregar una funcionalidad."
-                )
+                return f"Feature implementada: {commit_msg}"
     if es_scanner:
         if "clase" in lower or "función" in lower:
             return (
@@ -150,30 +117,11 @@ def _summary_idea(texto: str, lower: str, es_scanner: bool, es_git: bool) -> str
 
 def _summary_riesgo(texto: str, lower: str) -> str:
     """Summary para eventos RIESGO."""
-    if "test" in lower:
-        return (
-            f"⚠️ Riesgo importante: {texto}. "
-            f"Sin tests automatizados, cualquier cambio puede romper funcionalidad "
-            f"existente sin que te des cuenta. Los tests protegen contra regresiones "
-            f"y dan confianza para hacer cambios."
-        )
     if "complejidad" in lower or "complejo" in lower:
-        return (
-            f"⚠️ Zona de alta complejidad: {texto}. "
-            f"Estas áreas son propensas a bugs y difíciles de mantener. "
-            f"Considera refactorizar o agregar documentación extra."
-        )
+        return f"Zona de alta complejidad: {texto}."
     if "dependencia" in lower or "depend" in lower:
-        return (
-            f"⚠️ Dependencia potencial: {texto}. "
-            f"Las dependencias externas pueden cambiar o dejarse de mantener. "
-            f"Verifica que estén activas y sean compatibles."
-        )
-    return (
-        f"⚠️ Riesgo identificado: {texto}. "
-        f"Este problema puede afectar la calidad, mantenibilidad o estabilidad del proyecto. "
-        f"Requiere atención antes de hacer cambios significativos."
-    )
+        return f"Dependencia: {texto}."
+    return f"Riesgo: {texto}."
 
 
 def _summary_cambio(texto: str, lower: str, es_git: bool) -> str:
@@ -181,24 +129,11 @@ def _summary_cambio(texto: str, lower: str, es_git: bool) -> str:
     if es_git and "] " in texto:
         partes = texto.split("] ", 1)
         if len(partes) == 2:
-            commit_hash = partes[0].replace("[", "")
             commit_msg = partes[1]
-            return (
-                f"Cambio registrado en commit `{commit_hash}`: {commit_msg}. "
-                f"Cada cambio en git es rastreable y reversible. "
-                f"Esto te permite entender qué se modificó y por qué."
-            )
+            return f"Cambio: {commit_msg}"
     if "conversación" in lower or "chat" in lower:
-        return (
-            f"Decisión discutida en conversación: {texto}. "
-            f"Las decisiones tomadas en chat definen la dirección del proyecto "
-            f"y son tan importantes como el código mismo."
-        )
-    return (
-        f"Cambio en el proyecto: {texto}. "
-        f"Los cambios deben ser bien documentados para que otros entiendan "
-        f"qué se modificó y cuál fue la razón."
-    )
+        return f"Decisión discutida en conversación: {texto}."
+    return f"Cambio en el proyecto: {texto}."
 
 
 def _summary_prueba(texto: str, lower: str) -> str:
@@ -224,23 +159,13 @@ def _summary_futuro(texto: str, lower: str) -> str:
             partes = texto.split(":")
             if len(partes) >= 2:
                 ubicacion = partes[0].strip()
-        return (
-            f"📝 Tarea pendiente: {texto}. "
-            f"Los TODOs son recordatorios de funcionalidad que falta por implementar. "
-            f"Revisa estos items cuando busques cómo contribuir al proyecto."
-            + (f"\n\nUbicación: `{ubicacion}`" if ubicacion else "")
-        )
+        result = f"Pendiente: {texto}."
+        if ubicacion:
+            result += f"\n\nUbicación: `{ubicacion}`"
+        return result
     if "futuro" in lower or "próximo" in lower or "roadmap" in texto:
-        return (
-            f"🔮 Planificación futura: {texto}. "
-            f"Estos elementos están en la hoja de ruta del proyecto "
-            f"y se implementarán cuando las prioridades lo permitan."
-        )
-    return (
-        f"Elemento futuro o pendiente: {texto}. "
-        f"Esto está planificado pero aún no se ha implementado. "
-        f"Puede ser una buena oportunidad para contribuir."
-    )
+        return f"Plan: {texto}."
+    return f"Tarea: {texto}."
 
 
 def _summary_hito(texto: str, lower: str, es_git: bool) -> str:
@@ -267,15 +192,6 @@ def _summary_correccion(texto: str, es_git: bool) -> str:
     if es_git and "] " in texto:
         partes = texto.split("] ", 1)
         if len(partes) == 2:
-            commit_hash = partes[0].replace("[", "")
             commit_msg = partes[1]
-            return (
-                f"🔧 Corrección aplicada en `{commit_hash}`: {commit_msg}. "
-                f"Los fixes deben ser atómicos y describir claramente "
-                f"qué problema resuelven."
-            )
-    return (
-        f"🔧 Corrección: {texto}. "
-        f"Los bugs deben documentarse para evitar que reaparezcan "
-        f"y para entender qué problemas ha tenido el proyecto."
-    )
+            return f"Corrección: {commit_msg}"
+    return f"Corrección: {texto}."

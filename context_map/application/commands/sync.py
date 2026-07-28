@@ -26,13 +26,14 @@ from context_map.application.commands._helpers import (
     resolve_vault_mode,
     clean_vault_dir,
     project_name,
+    vault_dir,
 )
 
 
 def do_sync(
     args,
     proj_name: Optional[str] = None,
-    mode: str = "consolidated",
+    mode: str = "hierarchical",
 ) -> Tuple[List[Node], List[Edge]]:
     """Ejecuta sincronización incremental y regenera vault.
 
@@ -48,7 +49,7 @@ def do_sync(
     """
     # Limpieza previa si se solicitó
     if getattr(args, "clean", False):
-        clean_vault_dir()
+        clean_vault_dir(proj_name)
 
     stats = sync_incremental(
         chats_dir=CHATS_DIR,
@@ -64,11 +65,11 @@ def do_sync(
     md = render_active_map(proj_name or "Repo", nodes, edges)
     write_map(md)
 
-    vault_dir = os.path.join(CONTEXT_DIR, "vault")
-    render_obsidian_vault(proj_name or "Repo", nodes, edges, vault_dir, mode=mode)
+    vault_path = vault_dir(proj_name)
+    render_obsidian_vault(proj_name or "Repo", nodes, edges, vault_path, mode=mode)
 
     print(f"sync: nodos {stats['nodos_existentes']} -> {stats['nodos_existentes'] + stats['nodos_agregados']}")
-    print(f"vault ({mode}): {vault_dir}")
+    print(f"vault ({mode}): {vault_path}")
     return nodes, edges
 
 
@@ -78,9 +79,10 @@ def cmd_sync(args) -> None:
     Args:
         args: Namespace de argparse con flags --mode, --raw, --clean
     """
-    ensure_dirs()
+    proj = project_name(args)
+    ensure_dirs(proj)
     vault_mode = resolve_vault_mode(args)
-    do_sync(args, project_name(args), mode=vault_mode)
+    do_sync(args, proj, mode=vault_mode)
 
 
 def cmd_sync_migrate(args) -> None:
@@ -91,7 +93,8 @@ def cmd_sync_migrate(args) -> None:
     Args:
         args: Namespace de argparse con atributo opcional ``project``
     """
-    ensure_dirs()
+    proj = getattr(args, "project", None) or "Repo"
+    ensure_dirs(proj)
 
     print("Sincronizando proyecto con nueva version...")
     print()
@@ -132,11 +135,10 @@ def cmd_sync_migrate(args) -> None:
     print()
 
     # 5. Regenerar vault
-    proj = getattr(args, "project", None) or "Repo"
-    vault_dir = os.path.join(CONTEXT_DIR, "vault")
+    vault_path = vault_dir(proj)
 
-    render_obsidian_vault(proj, nodes_estandarizados, edges, vault_dir)
-    print(f"Vault regenerado: {vault_dir}")
+    render_obsidian_vault(proj, nodes_estandarizados, edges, vault_path)
+    print(f"Vault regenerado: {vault_path}")
 
     # 6. Regenerar brief
     brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
@@ -148,7 +150,7 @@ def cmd_sync_migrate(args) -> None:
     print()
     print("Resumen de cambios:")
     print(f"   - Nodos estandarizados: {len(nodes_estandarizados)}")
-    print(f"   - Vault regenerado: {vault_dir}")
+    print(f"   - Vault regenerado: {vault_path}")
     print(f"   - Brief regenerado: {brief_path}")
     print()
     print("Para verificar: ctxmap check .")

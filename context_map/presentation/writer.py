@@ -551,13 +551,92 @@ def _obtener_ruta_nota(node: Node, output_dir: str) -> str:
 # ============================================================
 # RENDER PRINCIPAL
 # ============================================================
+def _extract_project_purpose(cwd: str) -> str:
+    """Extrae el propósito del proyecto desde README.md si existe.
+
+    Busca README.md en cwd, extrae el primer párrafo después del título,
+    saltando badges, TOC y líneas vacías.
+
+    Returns:
+        String con el párrafo extraído, o string vacío si no existe.
+    """
+    readme_path = os.path.join(cwd, "README.md")
+    if not os.path.isfile(readme_path):
+        return ""
+
+    try:
+        with open(readme_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return ""
+
+    # Find first # title line
+    title_idx = None
+    for i, line in enumerate(lines):
+        if line.startswith("# ") or line.startswith("#!"):
+            title_idx = i
+            break
+
+    if title_idx is None:
+        return ""
+
+    # After title, skip empty lines, badges, and TOC lines
+    start_idx = title_idx + 1
+    paragraphs = []
+    current_para = []
+
+    for line in lines[start_idx:]:
+        stripped = line.strip()
+
+        # Skip empty lines between paragraphs, but use as separator
+        if not stripped:
+            if current_para:
+                paragraphs.append(" ".join(current_para))
+                current_para = []
+            continue
+
+        # Skip badge lines like [![...](...)]
+        if stripped.startswith("[!["):
+            continue
+
+        # Skip TOC lines like - [Section](#section)
+        if stripped.startswith("- [") or stripped.startswith("* ["):
+            continue
+
+        # Skip HTML comments
+        if stripped.startswith("<!--"):
+            continue
+
+        # Skip horizontal rules
+        if stripped.startswith("---") or stripped.startswith("___") or stripped.startswith("***"):
+            if current_para:
+                paragraphs.append(" ".join(current_para))
+                current_para = []
+            continue
+
+        # Skip another heading (stop at next heading)
+        if stripped.startswith("#"):
+            if current_para:
+                paragraphs.append(" ".join(current_para))
+                current_para = []
+            break
+
+        # Accumulate paragraph text
+        current_para.append(stripped)
+
+    if current_para:
+        paragraphs.append(" ".join(current_para))
+
+    return paragraphs[0] if paragraphs else ""
+
+
 def _render_consolidated_vault(
     project_name: str,
     nodes: List[Node],
     edges: List[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
-    """Renderiza la bóveda Obsidian en modo consolidado (4-6 notas temáticas sintéticas).
+    """Renderiza la bóveda Obsidian en modo consolidado (8 notas temáticas sintéticas).
 
     Siempre limpia el directorio del vault antes de regenerar para evitar
     mezclar archivos de generaciones anteriores (modo raw, etc.).
@@ -586,7 +665,12 @@ def _render_consolidated_vault(
     futuro_nodes = [n for n in nodes if n.type == "FUTURO"]
     hito_nodes = [n for n in nodes if n.type == "HITO"]
 
+    # Extraer propósito del proyecto
+    proposito_texto = _extract_project_purpose(os.getcwd())
+
+    # ============================================================
     # 1. 00-INDICE.md (Dashboard principal)
+    # ============================================================
     indice_parts = [
         "---",
         "type: moc",
@@ -607,11 +691,11 @@ def _render_consolidated_vault(
         "",
         f"- 📦 Nodos Totales: **{len(nodes)}**",
         f"- 🔗 Conexiones (Edges): **{len(edges)}**",
-        f"- 🧱 Módulos y Estructura (BASE): **{len(base_nodes)}**",
-        f"- 💡 Ideas y Conceptos (IDEA): **{len(idea_nodes)}**",
-        f"- ⚠️ Riesgos y Complejidad (RIESGO): **{len(riesgo_nodes)}**",
-        f"- 🔮 Tareas y Pendientes (FUTURO): **{len(futuro_nodes)}**",
-        f"- 🔄 Cambios e Historial (CAMBIO/CORRECCION): **{len(cambio_nodes)}**",
+        f"- 🧱 Estructura (BASE): **{len(base_nodes)}**",
+        f"- 💡 Ideas (IDEA): **{len(idea_nodes)}**",
+        f"- ⚠️ Riesgos (RIESGO): **{len(riesgo_nodes)}**",
+        f"- 🔮 Tareas (FUTURO): **{len(futuro_nodes)}**",
+        f"- 🔄 Cambios (CAMBIO/CORRECCION): **{len(cambio_nodes)}**",
         f"- 🎯 Hitos (HITO): **{len(hito_nodes)}**",
         f"- 🧪 Pruebas (PRUEBA): **{len(prueba_nodes)}**",
         "",
@@ -619,11 +703,13 @@ def _render_consolidated_vault(
         "",
         "## 📂 Secciones Consolidadas",
         "",
-        "- [[01-ESTRUCTURA_Y_MODULOS|01. Estructura y Módulos del Proyecto]]",
-        "- [[02-RIESGOS_Y_COMPLEJIDAD|02. Riesgos y Complejidad]]",
-        "- [[03-BACKLOG_Y_TODOS|03. Backlog y Tareas Pendientes]]",
-        "- [[04-HISTORIAL_Y_DECISIONES|04. Historial y Decisiones]]",
-        "- [[00-CONEXIONES|05. Grafo Completo de Conexiones]]",
+        "- [[01-PROPOSITO|01. Propósito del Proyecto]]",
+        "- [[02-IDEAS|02. Ideas y Características]]",
+        "- [[03-ESTRUCTURA|03. Estructura del Proyecto]]",
+        "- [[04-RIESGOS_Y_COMPLEJIDAD|04. Riesgos y Complejidad]]",
+        "- [[05-BACKLOG_Y_TODOS|05. Backlog y Tareas Pendientes]]",
+        "- [[06-HISTORIAL_Y_DECISIONES|06. Historial y Decisiones]]",
+        "- [[00-CONEXIONES|07. Grafo Completo de Conexiones]]",
         "",
         "---",
         "",
@@ -640,58 +726,160 @@ def _render_consolidated_vault(
     with open(os.path.join(output_dir, "00-INDICE.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(indice_parts))
 
-    # 2. 01-ESTRUCTURA_Y_MODULOS.md
+    # ============================================================
+    # 2. 01-PROPOSITO.md (NUEVO)
+    # ============================================================
+    proposito_parts = [
+        "---",
+        "type: proposito",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, proposito, proyecto]",
+        "---",
+        "",
+        f"# 🎯 Propósito del Proyecto — {project_name}",
+        "",
+    ]
+    if proposito_texto:
+        proposito_parts.extend([
+            "> " + proposito_texto,
+            "",
+        ])
+
+    # Datos clave: BASE nodes relevantes (identidad del proyecto)
+    proposito_parts.append("## 📋 Datos Clave")
+    proposito_parts.append("")
+    identidad_nodes = [n for n in base_nodes if any(
+        kw in (n.title + " " + (n.summary or "")).lower()
+        for kw in ["proyecto", "identidad", "readme", "package", "setup", "entry"]
+    )]
+    if identidad_nodes:
+        seen_kw = set()
+        for n in identidad_nodes:
+            key = n.title[:80]
+            if key in seen_kw:
+                continue
+            seen_kw.add(key)
+            proposito_parts.append(f"- **{n.title}**: {n.summary or '(sin descripcion)'}")
+    else:
+        proposito_parts.append("_(No se encontraron nodos de identidad del proyecto)_")
+    proposito_parts.append("")
+    proposito_parts.append("---")
+    proposito_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    proposito_parts.append("")
+
+    with open(os.path.join(output_dir, "01-PROPOSITO.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(proposito_parts))
+
+    # ============================================================
+    # 3. 02-IDEAS.md (NUEVO - separado de estructura)
+    # ============================================================
+    ideas_parts = [
+        "---",
+        "type: ideas",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, ideas, caracteristicas]",
+        "---",
+        "",
+        f"# 💡 Ideas y Características — {project_name}",
+        "",
+        "Listado de ideas, features y conceptos registrados en el proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if idea_nodes:
+        # Agrupar por estado
+        completadas = [n for n in idea_nodes if n.status == "completado"]
+        pendientes = [n for n in idea_nodes if n.status == "pendiente"]
+        activas = [n for n in idea_nodes if n.status == "activo"]
+
+        seen_total = set()
+
+        def _render_idea_group(parts, title, icon, nodes_list, emoji_prefix):
+            if not nodes_list:
+                return
+            parts.append(f"## {icon} {title}")
+            parts.append("")
+            seen = set()
+            for n in nodes_list:
+                key = n.title[:80]
+                if key in seen:
+                    continue
+                seen.add(key)
+                seen_total.add(key)
+                if n.source == "git":
+                    parts.append(f"### {emoji_prefix} {n.title}")
+                else:
+                    parts.append(f"### 📝 {n.title}")
+                if n.summary and n.summary != n.title:
+                    parts.append(f"{n.summary}")
+                parts.append("")
+
+        _render_idea_group(ideas_parts, "Completadas", "✅", completadas, "🔧")
+        _render_idea_group(ideas_parts, "Pendientes", "⏳", pendientes, "📋")
+        _render_idea_group(ideas_parts, "Activas", "🔄", activas, "⚡")
+
+        if not seen_total:
+            ideas_parts.append("_(No se registraron ideas o características)_")
+            ideas_parts.append("")
+    else:
+        ideas_parts.append("_(No se registraron ideas o características)_")
+        ideas_parts.append("")
+
+    ideas_parts.append("---")
+    ideas_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    ideas_parts.append("")
+
+    with open(os.path.join(output_dir, "02-IDEAS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(ideas_parts))
+
+    # ============================================================
+    # 4. 03-ESTRUCTURA.md (MODIFICADO - solo BASE)
+    # ============================================================
     est_parts = [
         "---",
         "type: estructura",
         f"created: {fecha_actual}",
         f'project: "{project_name}"',
-        "tags: [context-map, estructura, modulos]",
+        "tags: [context-map, estructura]",
         "---",
         "",
-        f"# 🧱 Estructura y Módulos — {project_name}",
+        f"# 🧱 Estructura del Proyecto — {project_name}",
         "",
-        "Resumen consolidado de paquetes, módulos, carpetas y componentes principales del proyecto.",
+        "Componentes base, entrypoints, documentación e identidad del proyecto.",
         "",
         "---",
-        "",
-        "## 📦 Componentes Base y Carpetas",
         "",
     ]
     if base_nodes:
+        seen_base = set()
         for n in base_nodes:
-            est_parts.append(f"### {n.title}")
+            key = n.title[:80]
+            if key in seen_base:
+                continue
+            seen_base.add(key)
+            est_parts.append(f"- **{n.title}**")
             if n.summary:
-                est_parts.append(f"{n.summary}")
+                est_parts.append(f"  - {n.summary}")
             if n.source:
-                est_parts.append(f"- **Origen**: `{n.source}`")
-            if n.tags:
-                est_parts.append(f"- **Tags**: {' '.join(f'`#{t}`' for t in n.tags)}")
+                est_parts.append(f"  - *Origen*: `{n.source}`")
             est_parts.append("")
     else:
         est_parts.append("_(No se registraron componentes base)_")
-        est_parts.append("")
-
-    if idea_nodes:
-        est_parts.append("## 💡 Conceptos y Clases Relevantes")
-        est_parts.append("")
-        seen_idea = set()
-        for n in idea_nodes[:30]:
-            key = n.title[:80]
-            if key in seen_idea:
-                continue
-            seen_idea.add(key)
-            est_parts.append(f"- **{n.title}**: {n.summary or 'Sin descripción'}")
         est_parts.append("")
 
     est_parts.append("---")
     est_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     est_parts.append("")
 
-    with open(os.path.join(output_dir, "01-ESTRUCTURA_Y_MODULOS.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "03-ESTRUCTURA.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(est_parts))
 
-    # 3. 02-RIESGOS_Y_COMPLEJIDAD.md (con dedup por texto para evitar nodos repetidos)
+    # ============================================================
+    # 5. 04-RIESGOS_Y_COMPLEJIDAD.md (renumerado)
+    # ============================================================
     riesgo_parts = [
         "---",
         "type: riesgos",
@@ -743,10 +931,12 @@ def _render_consolidated_vault(
     riesgo_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     riesgo_parts.append("")
 
-    with open(os.path.join(output_dir, "02-RIESGOS_Y_COMPLEJIDAD.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "04-RIESGOS_Y_COMPLEJIDAD.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(riesgo_parts))
 
-    # 4. 03-BACKLOG_Y_TODOS.md
+    # ============================================================
+    # 6. 05-BACKLOG_Y_TODOS.md (renumerado)
+    # ============================================================
     backlog_parts = [
         "---",
         "type: backlog",
@@ -783,10 +973,12 @@ def _render_consolidated_vault(
     backlog_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     backlog_parts.append("")
 
-    with open(os.path.join(output_dir, "03-BACKLOG_Y_TODOS.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "05-BACKLOG_Y_TODOS.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(backlog_parts))
 
-    # 5. 04-HISTORIAL_Y_DECISIONES.md
+    # ============================================================
+    # 7. 06-HISTORIAL_Y_DECISIONES.md (renumerado)
+    # ============================================================
     historial_parts = [
         "---",
         "type: historial",
@@ -834,10 +1026,649 @@ def _render_consolidated_vault(
     historial_parts.append("[[00-INDICE|⬅ Volver al índice]]")
     historial_parts.append("")
 
-    with open(os.path.join(output_dir, "04-HISTORIAL_Y_DECISIONES.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "06-HISTORIAL_Y_DECISIONES.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(historial_parts))
 
     # Generar tabla de conexiones unificada
+    _render_conexiones(output_dir, nodes, edges)
+
+    return output_dir
+
+
+def _safe_filename(text: str) -> str:
+    """Convierte texto a nombre de archivo seguro (sin espacios, max 60 chars)."""
+    text = re.sub(r'[^a-zA-Z0-9\s-]', '', text).strip()
+    text = re.sub(r'[-\s]+', '-', text)
+    return text[:60] or 'untitled'
+
+
+def _render_hierarchical_vault(
+    project_name: str,
+    nodes: List[Node],
+    edges: List[Edge],
+    output_dir: str = ".context-map/vault",
+) -> str:
+    """Renderiza la bóveda Obsidian en modo jerárquico.
+
+    Estructura generada:
+        vault-{Project}/
+        ├── 00-INDICE.md
+        ├── 1.0-PROPOSITO.md
+        ├── 1.1-Mapa-Mental-Narrativo.md
+        ├── 1.2-Datos-Clave.md
+        ├── 1.3-Proposito.md
+        ├── 2.0-IDEAS.md
+        ├── 2.1-Ideas-Pendientes/  (carpeta con archivos individuales)
+        ├── 2.2-Ideas-Futuras/
+        ├── 2.3-Ideas-Completas-e-Implementadas/
+        ├── 2.4-Ideas-Relevantes.md
+        ├── 3.0-ESTRUCTURA.md
+        ├── 4.0-RIESGOS.md
+        ├── 5.0-BACKLOG.md
+        ├── 6.0-HISTORIAL.md
+        └── 00-CONEXIONES.md  (via _render_conexiones)
+
+    Args:
+        project_name: Nombre del proyecto
+        nodes: Lista de nodos del mapa de contexto (ya deduplicados)
+        edges: Lista de aristas/relaciones
+        output_dir: Directorio de salida del vault
+
+    Returns:
+        Ruta del directorio del vault
+    """
+    # Limpiar vault previo para no mezclar archivos de generaciones anteriores
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir, ignore_errors=True)
+    os.makedirs(output_dir, exist_ok=True)
+    fecha_actual = datetime.now().isoformat(timespec="seconds")
+
+    # Clasificación de nodos por tipo
+    base_nodes = [n for n in nodes if n.type == "BASE"]
+    idea_nodes = [n for n in nodes if n.type == "IDEA"]
+    riesgo_nodes = [n for n in nodes if n.type == "RIESGO"]
+    cambio_nodes = [n for n in nodes if n.type in ("CAMBIO", "CORRECCION")]
+    futuro_nodes = [n for n in nodes if n.type == "FUTURO"]
+    hito_nodes = [n for n in nodes if n.type == "HITO"]
+
+    # Extraer propósito del proyecto desde README
+    proposito_texto = _extract_project_purpose(os.getcwd())
+
+    # Colectar todos los tags para el índice
+    all_tags = set()
+    for n in nodes:
+        all_tags.update(n.tags)
+    tags_badges = " ".join(f"`#{t}`" for t in sorted(all_tags)[:20])
+
+    # ============================================================
+    # 00-INDICE.md (Map of Content principal)
+    # ============================================================
+    indice_parts = [
+        "---",
+        "type: moc",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        f"total_nodes: {len(nodes)}",
+        f"total_edges: {len(edges)}",
+        "tags: [context-map, indice, moc]",
+        "---",
+        "",
+        f"# 🗺️ Indice MOC — {project_name}",
+        "",
+        "> Mapa jerárquico del proyecto. Navegá por secciones temáticas para explorar cada aspecto del contexto.",
+        "",
+        "---",
+        "",
+        "## 📊 Métricas",
+        "",
+        f"- 📦 Nodos Totales: **{len(nodes)}**",
+        f"- 🧱 BASE: **{len(base_nodes)}**",
+        f"- 💡 IDEA: **{len(idea_nodes)}**",
+        f"- ⚠️ RIESGO: **{len(riesgo_nodes)}**",
+        f"- 🔄 CAMBIO/CORRECCION: **{len(cambio_nodes)}**",
+        f"- 🔮 FUTURO: **{len(futuro_nodes)}**",
+        f"- 🎯 HITO: **{len(hito_nodes)}**",
+        f"- 🔗 Conexiones: **{len(edges)}**",
+        "",
+        "---",
+        "",
+        "## 📂 Secciones",
+        "",
+        "- [[1.0-PROPOSITO|1.0 Propósito]]",
+        "- [[2.0-IDEAS|2.0 Ideas]]",
+        "- [[3.0-ESTRUCTURA|3.0 Estructura]]",
+        "- [[4.0-RIESGOS|4.0 Riesgos]]",
+        "- [[5.0-BACKLOG|5.0 Backlog]]",
+        "- [[6.0-HISTORIAL|6.0 Historial]]",
+        "- [[00-CONEXIONES|7.0 Conexiones]]",
+        "",
+        "---",
+        "",
+        "## 🏷️ Tags Principales",
+        "",
+    ]
+    indice_parts.append(tags_badges or "`#context-map`")
+    indice_parts.append("")
+
+    with open(os.path.join(output_dir, "00-INDICE.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(indice_parts))
+
+    # ============================================================
+    # 1.0-PROPOSITO.md (Sección Propósito)
+    # ============================================================
+    proposito_seccion_parts = [
+        "---",
+        "type: seccion",
+        "subtype: proposito",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, proposito]",
+        "---",
+        "",
+        f"# 1.0 Propósito — {project_name}",
+        "",
+        "Sección que define la identidad, el propósito y los datos clave del proyecto.",
+        "",
+        "---",
+        "",
+        "## Sub-secciones",
+        "",
+        "- [[1.1-Mapa-Mental-Narrativo|1.1 Mapa Mental Narrativo]]",
+        "- [[1.2-Datos-Clave|1.2 Datos Clave]]",
+        "- [[1.3-Proposito|1.3 Propósito]]",
+        "",
+        "---",
+        "[[00-INDICE|⬅ Volver al índice]]",
+        "",
+    ]
+
+    with open(os.path.join(output_dir, "1.0-PROPOSITO.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(proposito_seccion_parts))
+
+    # ============================================================
+    # 1.1-Mapa-Mental-Narrativo.md
+    # ============================================================
+    narrativa_parts = [
+        "---",
+        "type: narrativa",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, narrativa, mapa-mental]",
+        "---",
+        "",
+        "# 1.1 Mapa Mental Narrativo",
+        "",
+    ]
+    if proposito_texto:
+        narrativa_parts.extend([
+            "> " + proposito_texto,
+            "",
+        ])
+    narrativa_parts.extend([
+        "## 📖 Dominio del Proyecto",
+        "",
+        "Este proyecto representa el dominio y contexto capturado a través del análisis de código, conversaciones y eventos.",
+        "",
+        "---",
+        "[[00-INDICE|⬅ Volver al índice]]",
+        "",
+    ])
+
+    with open(os.path.join(output_dir, "1.1-Mapa-Mental-Narrativo.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(narrativa_parts))
+
+    # ============================================================
+    # 1.2-Datos-Clave.md (métricas)
+    # ============================================================
+    datos_clave_parts = [
+        "---",
+        "type: datos-clave",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, datos-clave, metricas]",
+        "---",
+        "",
+        "# 1.2 Datos Clave",
+        "",
+        "Métricas y estadísticas del proyecto extraídas del análisis.",
+        "",
+        "---",
+        "",
+        "## 📊 Métricas del Proyecto",
+        "",
+        "| Métrica | Valor |",
+        "|---------|-------|",
+        f"| Nodos totales | {len(nodes)} |",
+        f"| Conexiones | {len(edges)} |",
+        f"| Componentes BASE | {len(base_nodes)} |",
+        f"| Ideas registradas | {len(idea_nodes)} |",
+        f"| Riesgos identificados | {len(riesgo_nodes)} |",
+        f"| Tareas FUTURO | {len(futuro_nodes)} |",
+        f"| Cambios y Correcciones | {len(cambio_nodes)} |",
+        f"| Hitos | {len(hito_nodes)} |",
+        "",
+    ]
+    # Mostrar BASE nodes que contengan métricas (archivos, lineas)
+    metric_nodes = [n for n in base_nodes if any(
+        kw in (n.title + " " + (n.summary or "")).lower()
+        for kw in ["archivo", "linea", "file", "line", "metric", "métrica"]
+    )]
+    if metric_nodes:
+        datos_clave_parts.extend([
+            "## 📁 Métricas de Archivos",
+            "",
+            "| Archivo | Descripción |",
+            "|---------|-------------|",
+        ])
+        for n in metric_nodes[:10]:
+            datos_clave_parts.append(f"| {n.title} | {n.summary or '—'} |")
+        datos_clave_parts.append("")
+
+    datos_clave_parts.append("---")
+    datos_clave_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    datos_clave_parts.append("")
+
+    with open(os.path.join(output_dir, "1.2-Datos-Clave.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(datos_clave_parts))
+
+    # ============================================================
+    # 1.3-Proposito.md (Identidad)
+    # ============================================================
+    identidad_parts = [
+        "---",
+        "type: identidad",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, identidad, proposito]",
+        "---",
+        "",
+        "# 1.3 Propósito",
+        "",
+        "Identidad y configuración fundamental del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    # BASE nodes de identidad (entrypoints, docs, configuracion)
+    identidad_nodes = [n for n in base_nodes if any(
+        kw in (n.title + " " + (n.summary or "")).lower()
+        for kw in ["proyecto", "identidad", "readme", "package", "setup", "entry", "config", "doc"]
+    )]
+    if identidad_nodes:
+        for n in identidad_nodes:
+            identidad_parts.append(f"- **{n.title}**: {n.summary or '(sin descripción)'}")
+        identidad_parts.append("")
+    else:
+        identidad_parts.append("_(No se encontraron nodos de identidad del proyecto)_")
+        identidad_parts.append("")
+
+    identidad_parts.append("---")
+    identidad_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    identidad_parts.append("")
+
+    with open(os.path.join(output_dir, "1.3-Proposito.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(identidad_parts))
+
+    # ============================================================
+    # 2.0-IDEAS.md (Sección Ideas)
+    # ============================================================
+    completadas = [n for n in idea_nodes if n.status == "completado"]
+    pendientes = [n for n in idea_nodes if n.status == "pendiente"]
+    activas = [n for n in idea_nodes if n.status == "activo"]
+
+    ideas_seccion_parts = [
+        "---",
+        "type: seccion",
+        "subtype: ideas",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, ideas]",
+        "---",
+        "",
+        f"# 2.0 Ideas — {project_name}",
+        "",
+        f"Total de ideas registradas: **{len(idea_nodes)}**",
+        "",
+        "### Contadores por Estado",
+        "",
+        f"- ✅ Completadas: **{len(completadas)}**",
+        f"- ⏳ Pendientes: **{len(pendientes)}**",
+        f"- 🔄 Activas/Futuras: **{len(activas)}**",
+        "",
+        "---",
+        "",
+        "## Sub-secciones",
+        "",
+        "- [[2.1-Ideas-Pendientes|2.1 Ideas Pendientes]]",
+        "- [[2.2-Ideas-Futuras|2.2 Ideas Futuras]]",
+        "- [[2.3-Ideas-Completas-e-Implementadas|2.3 Ideas Completas e Implementadas]]",
+        "- [[2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
+        "",
+        "---",
+        "[[00-INDICE|⬅ Volver al índice]]",
+        "",
+    ]
+
+    with open(os.path.join(output_dir, "2.0-IDEAS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(ideas_seccion_parts))
+
+    # ============================================================
+    # 2.1-Ideas-Pendientes/ (carpeta con archivos individuales)
+    # ============================================================
+    if pendientes:
+        pendientes_dir = os.path.join(output_dir, "2.1-Ideas-Pendientes")
+        os.makedirs(pendientes_dir, exist_ok=True)
+        for n in pendientes:
+            filename = _safe_filename(n.title) + ".md"
+            tags_list = _normalize_tags(n.tags, n.type)
+            tags_str = ", ".join(f'"{t}"' for t in tags_list)
+            parts = [
+                "---",
+                "type: idea",
+                "status: pendiente",
+                f"created: {fecha_actual}",
+                f'project: "{project_name}"',
+                f"tags: [{tags_str}]",
+                f'source: "{n.source}"' if n.source else "source: ''",
+                "---",
+                "",
+                f"# 📋 {n.title}",
+                "",
+            ]
+            if n.summary:
+                parts.append(n.summary)
+                parts.append("")
+            if n.evidence:
+                parts.append("## 📋 Evidencia")
+                parts.append("")
+                for ev in n.evidence:
+                    parts.append(f"- {ev}")
+                parts.append("")
+            parts.append("---")
+            parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("")
+
+            with open(os.path.join(pendientes_dir, filename), "w", encoding="utf-8") as f:
+                f.write("\n".join(parts))
+
+    # ============================================================
+    # 2.2-Ideas-Futuras/ (carpeta con archivos individuales)
+    # ============================================================
+    if activas:
+        futuras_dir = os.path.join(output_dir, "2.2-Ideas-Futuras")
+        os.makedirs(futuras_dir, exist_ok=True)
+        for n in activas:
+            filename = _safe_filename(n.title) + ".md"
+            tags_list = _normalize_tags(n.tags, n.type)
+            tags_str = ", ".join(f'"{t}"' for t in tags_list)
+            parts = [
+                "---",
+                "type: idea",
+                "status: activo",
+                f"created: {fecha_actual}",
+                f'project: "{project_name}"',
+                f"tags: [{tags_str}]",
+                f'source: "{n.source}"' if n.source else "source: ''",
+                "---",
+                "",
+                f"# 📋 {n.title}",
+                "",
+            ]
+            if n.summary:
+                parts.append(n.summary)
+                parts.append("")
+            if n.evidence:
+                parts.append("## 📋 Evidencia")
+                parts.append("")
+                for ev in n.evidence:
+                    parts.append(f"- {ev}")
+                parts.append("")
+            parts.append("---")
+            parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("")
+
+            with open(os.path.join(futuras_dir, filename), "w", encoding="utf-8") as f:
+                f.write("\n".join(parts))
+
+    # ============================================================
+    # 2.3-Ideas-Completas-e-Implementadas/ (batches de 10)
+    # ============================================================
+    if completadas:
+        completadas_dir = os.path.join(output_dir, "2.3-Ideas-Completas-e-Implementadas")
+        os.makedirs(completadas_dir, exist_ok=True)
+        batch_size = 10
+        for batch_idx in range(0, len(completadas), batch_size):
+            batch = completadas[batch_idx:batch_idx + batch_size]
+            batch_num = batch_idx // batch_size + 1
+            start_num = batch_idx + 1
+            end_num = min(batch_idx + batch_size, len(completadas))
+            filename = f"{batch_num:02d}-features-{start_num:02d}-{end_num:02d}.md"
+            tags_str = ', '.join(f'"{t}"' for t in ["context-map", "ideas", "completadas"])
+            batch_parts = [
+                "---",
+                "type: ideas-completadas",
+                f"created: {fecha_actual}",
+                f'project: "{project_name}"',
+                f"tags: [{tags_str}]",
+                "---",
+                "",
+                f"# ✅ Ideas Completadas ({start_num}-{end_num} de {len(completadas)})",
+                "",
+            ]
+            for n in batch:
+                batch_parts.append(f"## 🔧 {n.title}")
+                batch_parts.append("")
+                if n.summary:
+                    batch_parts.append(n.summary)
+                    batch_parts.append("")
+            batch_parts.append("---")
+            batch_parts.append("[[2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            batch_parts.append("")
+
+            with open(os.path.join(completadas_dir, filename), "w", encoding="utf-8") as f:
+                f.write("\n".join(batch_parts))
+
+    # ============================================================
+    # 2.4-Ideas-Relevantes.md
+    # ============================================================
+    # Tomar las primeras 20 ideas más cross-cutting
+    top_ideas = idea_nodes[:20]
+
+    ideas_top_parts = [
+        "---",
+        "type: ideas-relevantes",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, ideas, relevantes]",
+        "---",
+        "",
+        "# 2.4 Ideas Relevantes",
+        "",
+        "Las ideas más importantes y transversales del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if top_ideas:
+        for n in top_ideas:
+            status_icon = {"completado": "✅", "pendiente": "⏳", "activo": "🔄"}.get(n.status, "💡")
+            ideas_top_parts.append(f"- {status_icon} **{n.title}** ({n.status})")
+            if n.summary:
+                ideas_top_parts.append(f"  - {n.summary}")
+        ideas_top_parts.append("")
+    else:
+        ideas_top_parts.append("_(No se registraron ideas)_")
+        ideas_top_parts.append("")
+
+    ideas_top_parts.append("---")
+    ideas_top_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    ideas_top_parts.append("")
+
+    with open(os.path.join(output_dir, "2.4-Ideas-Relevantes.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(ideas_top_parts))
+
+    # ============================================================
+    # 3.0-ESTRUCTURA.md
+    # ============================================================
+    est_parts = [
+        "---",
+        "type: estructura",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, estructura]",
+        "---",
+        "",
+        f"# 3.0 Estructura — {project_name}",
+        "",
+        "Componentes base, entrypoints, documentación e identidad del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if base_nodes:
+        seen_base = set()
+        for n in base_nodes:
+            key = n.title[:80]
+            if key in seen_base:
+                continue
+            seen_base.add(key)
+            est_parts.append(f"- **{n.title}**")
+            if n.summary:
+                est_parts.append(f"  - {n.summary}")
+            if n.source:
+                est_parts.append(f"  - *Origen*: `{n.source}`")
+            est_parts.append("")
+    else:
+        est_parts.append("_(No se registraron componentes base)_")
+        est_parts.append("")
+
+    est_parts.append("---")
+    est_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    est_parts.append("")
+
+    with open(os.path.join(output_dir, "3.0-ESTRUCTURA.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(est_parts))
+
+    # ============================================================
+    # 4.0-RIESGOS.md
+    # ============================================================
+    riesgo_parts = [
+        "---",
+        "type: riesgos",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, riesgo, complejidad]",
+        "---",
+        "",
+        f"# 4.0 Riesgos — {project_name}",
+        "",
+        "Identificación de puntos de alta complejidad, alertas y riesgos del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if riesgo_nodes:
+        for n in riesgo_nodes:
+            riesgo_parts.append(f"### ⚠️ {n.title}")
+            riesgo_parts.append(f"{n.summary or 'Punto de atención técnica'}")
+            if n.evidence:
+                riesgo_parts.append("- **Evidencia**:")
+                for ev in n.evidence:
+                    riesgo_parts.append(f"  - {ev}")
+            riesgo_parts.append("")
+    else:
+        riesgo_parts.append("✅ **Sin riesgos o alertas críticas detectadas.**")
+        riesgo_parts.append("")
+
+    riesgo_parts.append("---")
+    riesgo_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    riesgo_parts.append("")
+
+    with open(os.path.join(output_dir, "4.0-RIESGOS.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(riesgo_parts))
+
+    # ============================================================
+    # 5.0-BACKLOG.md
+    # ============================================================
+    backlog_parts = [
+        "---",
+        "type: backlog",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, backlog, todos]",
+        "---",
+        "",
+        f"# 5.0 Backlog — {project_name}",
+        "",
+        "Tareas pendientes, TODOs e iniciativas registradas para el futuro del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if futuro_nodes:
+        for n in futuro_nodes:
+            estado_mark = "[x]" if n.status == "completado" else "[ ]"
+            backlog_parts.append(f"- {estado_mark} **{n.title}**")
+            if n.summary:
+                backlog_parts.append(f"  - _{n.summary}_")
+        backlog_parts.append("")
+    else:
+        backlog_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
+        backlog_parts.append("")
+
+    backlog_parts.append("---")
+    backlog_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    backlog_parts.append("")
+
+    with open(os.path.join(output_dir, "5.0-BACKLOG.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(backlog_parts))
+
+    # ============================================================
+    # 6.0-HISTORIAL.md
+    # ============================================================
+    historial_parts = [
+        "---",
+        "type: historial",
+        f"created: {fecha_actual}",
+        f'project: "{project_name}"',
+        "tags: [context-map, historial, cambios]",
+        "---",
+        "",
+        f"# 6.0 Historial — {project_name}",
+        "",
+        "Registro de cambios, correcciones y decisiones arquitectónicas del proyecto.",
+        "",
+        "---",
+        "",
+    ]
+    if hito_nodes:
+        historial_parts.append("## 🎯 Hitos")
+        historial_parts.append("")
+        for n in hito_nodes:
+            historial_parts.append(f"- 🎯 **{n.title}**: {n.summary or 'Hito alcanzado'}")
+        historial_parts.append("")
+    if cambio_nodes:
+        historial_parts.append("## 🔄 Cambios y Correcciones")
+        historial_parts.append("")
+        for n in cambio_nodes[:50]:
+            icon = "🔧" if n.type == "CORRECCION" else "🔄"
+            historial_parts.append(f"- {icon} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            if n.summary and n.summary != n.title:
+                historial_parts.append(f"  - {n.summary}")
+        historial_parts.append("")
+
+    if not hito_nodes and not cambio_nodes:
+        historial_parts.append("_(Sin registros de cambios o hitos)_")
+        historial_parts.append("")
+
+    historial_parts.append("---")
+    historial_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    historial_parts.append("")
+
+    with open(os.path.join(output_dir, "6.0-HISTORIAL.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(historial_parts))
+
+    # Generar tabla de conexiones
     _render_conexiones(output_dir, nodes, edges)
 
     return output_dir
@@ -848,7 +1679,7 @@ def render_obsidian_vault(
     nodes: List[Node],
     edges: List[Edge],
     output_dir: str = ".context-map/vault",
-    mode: str = "consolidated",
+    mode: str = "hierarchical",
 ) -> str:
     """Genera un vault limpio de Obsidian con grafo jerárquico real.
 
@@ -861,6 +1692,8 @@ def render_obsidian_vault(
     """
     if mode == "consolidated":
         return _render_consolidated_vault(project_name, nodes, edges, output_dir)
+    elif mode == "hierarchical":
+        return _render_hierarchical_vault(project_name, nodes, edges, output_dir)
 
     _crear_estructura_carpetas(output_dir)
     nodos_consolidados, tracking = _consolidar_nodos(nodes, project_name=project_name)

@@ -134,19 +134,32 @@ def check_git_available(report: DoctorReport) -> None:
 
 
 def check_vault_default(report: DoctorReport) -> None:
-    """Revisa si existe el vault por defecto."""
+    """Revisa si existe el vault por defecto o con nombre de proyecto."""
     cwd = os.getcwd()
-    vault_dir = os.path.join(cwd, ".context-map", "vault")
+    context_dir = os.path.join(cwd, ".context-map")
     check = DoctorCheck(name="vault_default")
 
-    if os.path.isdir(vault_dir):
+    # Buscar cualquier vault (vault, vault-Nombre, vault-*)
+    vaults = []
+    if os.path.isdir(context_dir):
+        vaults = [
+            d for d in os.listdir(context_dir)
+            if os.path.isdir(os.path.join(context_dir, d))
+            and d.startswith("vault")
+        ]
+
+    if vaults:
         check.status = "OK"
-        check.message = f"Vault encontrado en {vault_dir}"
+        vaults_str = ", ".join(vaults)
+        check.message = (
+            f"Vault(s) encontrado(s): {vaults_str} "
+            f"en {context_dir}"
+        )
     else:
         check.status = "WARN"
         check.message = (
-            f"No se encontro vault en {vault_dir}. "
-            "Ejecuta 'ctxmap init' o 'ctxmap sync --project ...' para generarlo."
+            f"No se encontro vault en {context_dir}/vault*. "
+            "Ejecuta 'ctxmap build --project ...' para generarlo."
         )
 
     report.add(check)

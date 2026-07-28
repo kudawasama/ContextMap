@@ -153,8 +153,8 @@ def test_consolidated_vault_limita_archivos() -> None:
         with open(indice_path, "r", encoding="utf-8") as f:
             contenido_indice = f.read()
         assert "[[" in contenido_indice, "El índice no contiene Wikilinks"
-        assert "01-ESTRUCTURA_Y_MODULOS" in contenido_indice, (
-            "El índice no enlaza a 01-ESTRUCTURA_Y_MODULOS"
+        assert "03-ESTRUCTURA" in contenido_indice, (
+            "El indice no enlaza a 03-ESTRUCTURA"
         )
 
     finally:
@@ -185,6 +185,84 @@ def test_raw_mode_genera_estructura_carpetas() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_hierarchical_vault_estructura() -> None:
+    """Verifica que el modo 'hierarchical' genere la estructura de archivos correcta."""
+    nodos = _crear_nodos_de_prueba()
+    edges = _crear_edges_de_prueba()
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_vault_hier_")
+
+    try:
+        render_obsidian_vault(
+            project_name="TestProject",
+            nodes=nodos,
+            edges=edges,
+            output_dir=temp_dir,
+            mode="hierarchical",
+        )
+
+        # Verificar archivos raíz del modo hierarchical
+        assert os.path.exists(os.path.join(temp_dir, "00-INDICE.md")), \
+            "No se generó 00-INDICE.md"
+        assert os.path.exists(os.path.join(temp_dir, "1.0-PROPOSITO.md")), \
+            "No se generó 1.0-PROPOSITO.md"
+        assert os.path.exists(os.path.join(temp_dir, "1.1-Mapa-Mental-Narrativo.md")), \
+            "No se generó 1.1-Mapa-Mental-Narrativo.md"
+        assert os.path.exists(os.path.join(temp_dir, "1.2-Datos-Clave.md")), \
+            "No se generó 1.2-Datos-Clave.md"
+        assert os.path.exists(os.path.join(temp_dir, "1.3-Proposito.md")), \
+            "No se generó 1.3-Proposito.md"
+        assert os.path.exists(os.path.join(temp_dir, "2.0-IDEAS.md")), \
+            "No se generó 2.0-IDEAS.md"
+        assert os.path.exists(os.path.join(temp_dir, "2.4-Ideas-Relevantes.md")), \
+            "No se generó 2.4-Ideas-Relevantes.md"
+        assert os.path.exists(os.path.join(temp_dir, "3.0-ESTRUCTURA.md")), \
+            "No se generó 3.0-ESTRUCTURA.md"
+        assert os.path.exists(os.path.join(temp_dir, "4.0-RIESGOS.md")), \
+            "No se generó 4.0-RIESGOS.md"
+        assert os.path.exists(os.path.join(temp_dir, "5.0-BACKLOG.md")), \
+            "No se generó 5.0-BACKLOG.md"
+        assert os.path.exists(os.path.join(temp_dir, "6.0-HISTORIAL.md")), \
+            "No se generó 6.0-HISTORIAL.md"
+
+        # Verificar que NO genera archivos del modo consolidated
+        assert not os.path.exists(os.path.join(temp_dir, "01-PROPOSITO.md")), \
+            "No debería generar 01-PROPOSITO.md (modo consolidated)"
+        assert not os.path.exists(os.path.join(temp_dir, "02-IDEAS.md")), \
+            "No debería generar 02-IDEAS.md (modo consolidated)"
+        assert not os.path.exists(os.path.join(temp_dir, "03-ESTRUCTURA.md")), \
+            "No debería generar 03-ESTRUCTURA.md (modo consolidated)"
+
+        # Verificar que todos los archivos .md (raíz) tienen frontmatter YAML
+        archivos_raiz = [
+            f for f in os.listdir(temp_dir)
+            if f.endswith(".md") and os.path.isfile(os.path.join(temp_dir, f))
+        ]
+        for archivo in archivos_raiz:
+            ruta = os.path.join(temp_dir, archivo)
+            with open(ruta, "r", encoding="utf-8") as f:
+                contenido = f.read()
+            assert contenido.startswith("---"), (
+                f"El archivo {archivo} no comienza con YAML Frontmatter"
+            )
+            assert "---" in contenido[3:], (
+                f"El archivo {archivo} no cierra el bloque YAML Frontmatter"
+            )
+
+        # Verificar que el índice contiene wikilinks a las secciones
+        indice_path = os.path.join(temp_dir, "00-INDICE.md")
+        with open(indice_path, "r", encoding="utf-8") as f:
+            contenido_indice = f.read()
+        assert "[[1.0-PROPOSITO" in contenido_indice, (
+            "El índice no enlaza a 1.0-PROPOSITO"
+        )
+        assert "[[2.0-IDEAS" in contenido_indice, (
+            "El índice no enlaza a 2.0-IDEAS"
+        )
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Vault Consolidado ===")
     test_consolidated_vault_limita_archivos()
@@ -194,6 +272,11 @@ if __name__ == "__main__":
     print("=== Test: Vault Raw ===")
     test_raw_mode_genera_estructura_carpetas()
     print("   OK: test_raw_mode_genera_estructura_carpetas PASO")
+
+    print()
+    print("=== Test: Vault Jerárquico ===")
+    test_hierarchical_vault_estructura()
+    print("   OK: test_hierarchical_vault_estructura PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")
