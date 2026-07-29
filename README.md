@@ -9,277 +9,156 @@
 
 ## ¿Qué es?
 
-Context Map crea un **vault de Obsidian** con el contexto completo de tu proyecto: qué es, por qué existe, qué riesgos tiene, qué ideas hay pendientes, y qué decisiones se tomaron.
+Context Map crea un **Vault de Obsidian** interconectado con el contexto narrativo y técnico completo de tu proyecto: qué es, por qué existe, qué riesgos afronta, qué funcionalidades están implementadas o pendientes, y qué decisiones de arquitectura se han tomado.
 
-No es un escáner de archivos. Es un sistema que captura el **alma** del proyecto.
+No es un simple generador de documentación. Es un sistema que captura el **alma del proyecto** y establece **gobernanza automática para Agentes de IA** (`Antigravity`, `Cursor`, `Claude`, `Hermes`, `Copilot`, etc.).
 
-## ¿Para qué sirve?
+---
 
-Cuando un agente de IA (Hermes, OpenCode, Cursor, Claude) entra a trabajar en tu proyecto, necesita entender:
+## 🚀 ¿Cómo Inicializar ContextMap en un Proyecto Nuevo?
 
-- **Qué es** este proyecto
-- **Por qué** se creó
-- **Qué problemas** resuelve
-- **Qué riesgos** tiene
-- **Qué ideas** están pendientes
-- **Qué decisiones** se tomaron y por qué
+Tienes dos formas de inicializar y poner en contexto un proyecto:
 
-Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al final no entiende el espíritu del proyecto.
+### 🌟 Opción 1: Pedírselo al Agente de IA (RECOMENDADO)
+En cualquier sesión de chat con tu Agente de IA en el IDE, simplemente escríbele:
 
-## 🧠 Metodología: Contexto con Alma (Diferenciado por Dominio)
+> **"Inicializa ContextMap para este proyecto"**
 
-Context Map enriquece cada nota del Vault con un formato narrativo especializado según su tipo semántico:
+**¿Qué hace el Agente automáticamente?**
+1. Ejecuta el escaneo y construcción profunda (`ctxmap scan .` && `ctxmap build --clean --brief`).
+2. Genera las reglas de gobernanza en `AGENTS.md` y el resumen ejecutivo en `.context-map/CONTEXT.md`.
+3. Lee los archivos generados y queda **100% en contexto** de la arquitectura, métricas, riesgos y tareas pendientes del proyecto en esa misma respuesta.
+
+---
+
+### 💻 Opción 2: Desde la Terminal
+
+Si estás trabajando directamente en consola o automatizando un script:
+
+```bash
+# 1. Escanear la estructura y contenido del proyecto
+ctxmap scan .
+
+# 2. Reconstruir el Vault de Obsidian, CONTEXT.md y AGENTS.md
+ctxmap build --clean --brief
+```
+
+---
+
+## 🧠 Metodología: Contexto Narrativo con Alma
+
+Context Map enriquece cada nota del Vault con un formato narrativo polimórfico especializado según su tipo semántico:
 
 - 💡 **IDEAS**: ¿Por qué?, ¿De dónde surgió?, ¿Para qué?, ¿Cómo?, y tabla de **Pros y Contras**.
 - ⚠️ **RIESGOS**: ¿Qué riesgo es?, ¿Dónde se ubica?, Impacto, Mitigación y **Matriz de Gravedad**.
-- 🔧 **CAMBIOS / CORRECCIONES**: ¿Qué se modificó?, ¿Por qué se cambió?, Archivos y **Verificación de No-Regresión**.
+- 🔧 **CAMBIOS / CORRECCIONES**: ¿Qué se modificó?, Razón del cambio, Archivos y **Verificación de No-Regresión**.
 - 📦 **BASE**: Componente estructural, **Rol en la Arquitectura** e integraciones clave.
 - 🧪 **PRUEBAS**: Funcionalidad validada, **Criterios de Aceptación** y comando `pytest`.
 - 📝 **FUTURO**: Tarea pendiente, ubicación en código y **Prioridad de implementación**.
+- 🎯 **HITO**: Versión, hito de lanzamiento o milestone alcanzado.
+
+---
+
+## 🏛️ Gobernanza Automática de Agentes (`AGENTS.md`)
+
+Al ejecutar `ctxmap build --brief` o `ctxmap init`, ContextMap genera automáticamente un archivo `AGENTS.md` en la raíz del proyecto objetivo. Este documento impone las normas obligatorias para cualquier modelo de IA:
+
+* **Español Técnico Profesional**: Todas las interacciones, explicaciones y docstrings.
+* **Documentación Formal**: Google Style / PEP 257 en todas las funciones y clases.
+* **Type Hinting Estricto**: Tipado fuerte en Python.
+* **Arquitectura Limpia**: Separación de capas en `core/`, `domain/`, `application/`, `infrastructure/` y `presentation/`.
+* **Topología Obsidian Limpia**: Grafo en árbol estricto de 3 niveles sin ciclos rotos.
+* **Verificación Mandatoria**: Ejecución previa de `pytest`, `ctxmap scan` y `ctxmap build`.
+
+---
+
+## 📊 Topología Estricta en Estrella para Obsidian (Graph View)
+
+Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar una vista de grafo visualmente deslumbrante en Obsidian:
+
+```
+.context-map/vault/
+├── 00-INDICE.md                          # Nivel 0: Dashboard central MOC
+├── 1.0-PROYECTO/                         # Nivel 1: Identidad y Visión
+├── 2.0-IDEAS/                            # Nivel 1: Sub-clúster por estado
+│   ├── 2.1-Ideas-Pendientes/             # Nivel 2: Tareas y TODOs sin implementar
+│   ├── 2.2-Ideas-Futuras/                # Nivel 2: Roadmap e iniciativas activas
+│   ├── 2.3-Ideas-Completas/              # Nivel 2: Funciones, clases y módulos en código
+│   └── 2.4-Ideas-Relevantes/             # Nivel 2: Propuestas clave
+├── 3.0-ESTRUCTURA/                       # Nivel 1: Componentes BASE y arquitectura
+├── 4.0-RIESGOS/                          # Nivel 1: Alertas y matrices de gravedad
+├── 5.0-BACKLOG/                          # Nivel 1: Tareas y sprint backlog
+└── 6.0-HISTORIAL/                        # Nivel 1: Commits, cambios y correcciones
+```
+
+> **Sincronización Multi-Vault**: Cualquier regeneración con `build` actualiza simultáneamente todas las carpetas `vault*` dentro de `.context-map/` para reflejar cambios en tiempo real en Obsidian.
+
+---
 
 ## Comparativa: Otros vs Context Map
 
 | Característica | Otros | Context Map |
 |----------------|:-----:|:-----------:|
 | Escaneo técnico de archivos | ✅ | ✅ |
-| Briefs para agentes | ✅ | ✅ |
-| Score de readiness | ✅ | ✅ |
-| Mermaid diagrams | ✅ | ✅ |
-| Detección de riesgos técnicos | ✅ | ✅ |
-| **Vault Obsidian con graph view** | ❌ | ✅ |
-| **Wiki-links `[[entre-notas]]`** | ❌ | ✅ |
-| **Tags YAML frontmatter** | ❌ | ✅ |
-| **Captura "por qué" del proyecto** | ❌ | ✅ |
-| **Contexto emocional/decisorio** | ❌ | ✅ |
-| **Sync incremental (sin reescribir)** | ❌ | ✅ |
-| **Lee chats y conversaciones** | ❌ | ✅ |
-| **Evoluciona con el proyecto** | ❌ | ✅ |
-| **Memoria persistente entre sesiones** | ❌ | ✅ |
-| **Genérico (cualquier agente)** | ⚠️ | ✅ |
-| **Importa sesiones de Hermes** | ❌ | ✅ |
-| **Importa chats externos** | ❌ | ✅ |
-| **Reportes semanales** | ❌ | ✅ |
-| **Importa chats de Antigravity IDE** | ❌ | ✅ |
-| **Actualización automática** | ❌ | ✅ |
-| **Estandarización de nodos** | ❌ | ✅ |
+| Briefs para agentes (`CONTEXT.md`) | ✅ | ✅ |
+| Gobernanza automática para Agentes (`AGENTS.md`) | ❌ | ✅ |
+| Score de readiness del proyecto | ✅ | ✅ |
+| Diagramas Mermaid dinámicos | ✅ | ✅ |
+| Vault Obsidian con Graph View limpia de 3 niveles | ❌ | ✅ |
+| Sub-clústeres por estado (Completado/Pendiente/Futuro) | ❌ | ✅ |
+| Sanitización contra caracteres nulos (`NUL \x00`) en Windows | ❌ | ✅ |
+| Wiki-links `[[entre-notas]]` | ❌ | ✅ |
+| Tags YAML Frontmatter estandarizados | ❌ | ✅ |
+| Captura "por qué" y "para qué" del proyecto | ❌ | ✅ |
+| Sync incremental inteligente (sin duplicados) | ❌ | ✅ |
+| Importador de chats de Antigravity IDE / Hermes / Telegram | ❌ | ✅ |
+| Multi-Vault Real-Time Sync | ❌ | ✅ |
 
 ---
 
 ## Instalación
 
 ```bash
-# Instalar con UV (recomendado)
+# Instalar globalmente con pip
+pip install -e .
+
+# O instalar con UV (recomendado)
 uv tool install git+https://github.com/kudawasama/ContextMap.git
-
-# O instalar en modo desarrollo
-git clone https://github.com/kudawasama/ContextMap.git
-cd ContextMap
-uv tool install . // modo desarrollo
 ```
 
-## Uso
-n> **Nota**: Los comandos detectan automáticamente el nombre del proyecto del directorio actual.
-> No es necesario usar `--project` a menos que quieras un nombre diferente.
+---
+
+## Lista Completa de Comandos
 
 ```bash
-# Primera vez: crear estructura
-ctxmap init
+# Escaneo e inicialización
+ctxmap init                           # Inicializa la estructura del proyecto
+ctxmap scan .                         # Escanea el código y genera nodos semánticos
 
-# Escanear proyecto automáticamente
-ctxmap scan .                        # Escanea proyecto actual
+# Construcción del Vault y Briefs
+ctxmap build                          # Reconstruye el Vault consolidado
+ctxmap build --clean                  # Limpia notas previas y regenera desde cero
+ctxmap build --brief                  # Genera CONTEXT.md y AGENTS.md
+ctxmap build --clean --brief          # Construcción limpia completa (Recomendado)
 
-# Importar historial git
-ctxmap import-git .                  # Importa commits recientes
+# Importadores
+ctxmap import-git .                   # Importa historial de commits recientes
+ctxmap import-sessions                # Importa sesiones de Hermes Agent
+ctxmap import-antigravity             # Importa conversaciones de Antigravity IDE
+ctxmap import-chat telegram.txt       # Importa chats de Telegram, Discord o Slack
 
-# Importar sesiones de Hermes
-ctxmap import-sessions               # Importa últimas 5 sesiones
-ctxmap import-sessions --limit 10    # Importar más sesiones
-
-# Importar chats externos
-ctxmap import-chat telegram.txt      # Importa chat de Telegram
-ctxmap import-chat discord.json      # Importa chat de Discord
-
-# Importar chats de Antigravity IDE
-ctxmap import-antigravity            # Importa chats de IDE
-ctxmap import-antigravity --limit 10 # Importar más conversaciones
-
-# Generar el vault completo (modo consolidado por defecto)
-ctxmap build
-
-# Generar vault atómico heredado
-ctxmap build --raw                   # Alias de --mode raw
-ctxmap build --mode raw              # Modo atómico explícito
-
-# Reconstruir limpio (elimina archivos previos del vault)
-ctxmap build --clean                 # Purga vault antes de generar
-
-# Generar con diagrama Mermaid
-ctxmap build --mermaid
-
-# Sync incremental (solo agrega nuevos eventos)
-ctxmap sync
-ctxmap sync --clean                  # Sync con limpieza previa
-
-# Verificar readiness del proyecto
-ctxmap check .                       # Score y sugerencias
-
-# Generar reporte semanal
-ctxmap weekly                        # Últimos 7 días
-ctxmap weekly --days 30              # Últimos 30 días
-
-# Observar cambios y regenerar automáticamente
-ctxmap watch --interval 30
-
-# Actualizar ContextMap a la última versión
-ctxmap update                        # Descarga e instala desde GitHub
-
-# Migrar proyecto existente a nueva versión
-ctxmap sync --migrate                # Estandariza y regenera vault
+# Diagnóstico y Mantenimiento
+ctxmap check .                        # Verifica la preparación (readiness) del sistema
+ctxmap update                         # Actualiza ContextMap a la última versión de GitHub
 ```
 
-## Comandos
-
-| Comando | Descripción |
-|---------|-------------|
-| `ctxmap init` | Crea estructura `.context-map/` |
-| `ctxmap scan [target]` | Escanea proyecto y genera eventos |
-| `ctxmap import-git [target]` | Importa historial de commits |
-| `ctxmap import-sessions` | Importa sesiones de Hermes |
-| `ctxmap import-chat [file]` | Importa chats externos |
-| `ctxmap import-antigravity` | Importa chats de Antigravity IDE |
-| `ctxmap build` | Genera vault consolidado (por defecto) |
-| `ctxmap build --raw` | Genera vault atómico heredado |
-| `ctxmap build --clean` | Limpia vault previo y regenera |
-| `ctxmap build --mermaid` | Genera con diagrama Mermaid |
-| `ctxmap sync` | Sync incremental (solo nuevos) |
-| `ctxmap sync --migrate` | Migrar proyecto a nueva versión |
-| `ctxmap check` | Verifica readiness (0-100) |
-| `ctxmap weekly` | Genera reporte semanal |
-| `ctxmap watch` | Observa cambios automáticamente |
-| `ctxmap update` | Actualiza ContextMap desde GitHub |
-
-## Estructura del Vault
-
-### Modo Consolidado (por defecto)
-
-Genera 5-6 notas temáticas de alto valor semántico:
-
-```
-.context-map/
-├── vault/
-│   ├── 00-INDICE.md                    # Dashboard MOC con métricas y navegación
-│   ├── 00-CONEXIONES.md                # Grafo completo de relaciones
-│   ├── 01-ESTRUCTURA_Y_MODULOS.md      # Paquetes, carpetas, entrypoints
-│   ├── 02-RIESGOS_Y_COMPLEJIDAD.md     # Módulos complejos y alertas
-│   ├── 03-BACKLOG_Y_TODOS.md           # Checklists interactivas (- [ ])
-│   └── 04-HISTORIAL_Y_DECISIONES.md    # Commits, hitos y correcciones
-├── state/
-│   ├── graph.jsonl                     # Grafo de nodos
-│   ├── edges.jsonl                     # Conexiones
-│   ├── processed_events.txt            # Eventos ya procesados
-│   └── REPORTE_ESTANDARIZACION.md      # Reporte de estandarización
-├── maps/                               # Snapshots históricos
-│   └── HISTORY/
-├── chats/                              # Exportaciones de chat
-└── raw/
-    └── events.jsonl                    # Eventos manuales
-```
-
-### Modo Atómico (`--raw`)
-
-Genera notas individuales organizadas en carpetas por tipo y estado:
-
-```
-.context-map/vault/
-├── 00-INDICE.md                        # Map of Content
-├── 00-CONEXIONES.md                    # Grafo de relaciones
-├── 00-CONSOLIDACION.md                 # Tracking de consolidación
-├── 01-PROYECTOS/                       # Qué es cada proyecto
-│   ├── COMPLETADO/
-│   ├── EN_PROGRESO/
-│   └── PENDIENTE/
-├── 02-IDEAS/                           # Ideas y conceptos
-├── 03-RIESGO/                          # Riesgos identificados
-├── 04-CAMBIOS/                         # Cambios en curso
-├── 05-PRUEBAS/                         # Pruebas y validaciones
-├── 06-FUTURO/                          # Lo que viene
-├── 07-HITORIAL/                        # Hitos y changelog
-└── 08-CORRECCIONES/                    # Bugs y fixes
-```
-
-## Fuentes de Eventos
-
-### 1. Escaneo Automático
-```bash
-ctxmap scan .
-```
-Escanea archivos, detecta estructura, entry points, docs, configs, tests, TODOs/FIXMEs.
-
-### 2. Historial Git
-```bash
-ctxmap import-git .
-```
-Importa commits y los clasifica: fix→CORRECCION, feat→IDEA, test→PRUEBA.
-
-### 3. Sesiones de Hermes
-```bash
-ctxmap import-sessions
-```
-Lee la base de datos de sesiones y extrae contexto de conversaciones.
-
-### 4. Chats Externos
-```bash
-ctxmap import-chat archivo.txt
-```
-Soporta Telegram, Discord, Slack, WhatsApp, JSON, texto simple.
-
-### 5. Antigravity IDE
-```bash
-ctxmap import-antigravity
-```
-Lee conversaciones de Antigravity IDE (Gemini) desde `~/.gemini/antigravity-ide/`.
-
-### 6. JSONL Manual
-Crea `.context-map/raw/events.jsonl`:
-```json
-{"type":"IDEA","text":"Agregar soporte multiagente","timestamp":"2026-07-24T14:00:00","source":"manual"}
-```
-
-## Tipos de Eventos
-
-| Tipo | Descripción | Icono |
-|------|-------------|-------|
-| `BASE` | Fundamentos del proyecto | 📦 |
-| `IDEA` | Ideas y conceptos | 💡 |
-| `RIESGO` | Riesgos identificados | ⚠️ |
-| `CAMBIO` | Cambios en curso | 🔄 |
-| `PRUEBA` | Pruebas y validaciones | 🧪 |
-| `FUTURO` | Lo que viene | 🔮 |
-| `HITO` | Hitos y changelog | 🎯 |
-| `CORRECCION` | Bugs y fixes | 🔧 |
-
-## Roadmap
-
-- [x] Escaneo automático de archivos del proyecto
-- [x] Lector de historial git
-- [x] Mermaid diagrams
-- [x] Score de readiness
-- [x] Integración con sesiones de Hermes
-- [x] Exportador de chats externos
-- [x] Generador de resúmenes semanales
-- [x] Integración con Antigravity IDE
-- [x] Actualización automática (ctxmap update)
-- [x] Estandarización de nodos (tags, status, evidence)
-- [x] Carpetas por estado (COMPLETADO, EN_PROGRESO, PENDIENTE, CANCELADO)
-- [x] Consolidación automática de notas relacionadas
-- [x] **Vault consolidado Obsidian Skills (4-6 notas temáticas)**
-- [x] **Filtrado de ruido en scanner (exclusiones inteligentes)**
-- [x] **Flags --mode, --raw, --clean en CLI**
-- [ ] Dashboard web (opcional)
+---
 
 ## Contribuir
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
 
 ## Licencia
 
