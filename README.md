@@ -26,6 +26,17 @@ Cuando un agente de IA (Hermes, OpenCode, Cursor, Claude) entra a trabajar en tu
 
 Sin este contexto, el agente pierde tiempo leyendo archivos uno por uno, y al final no entiende el espíritu del proyecto.
 
+## 🧠 Metodología: Contexto con Alma (Diferenciado por Dominio)
+
+Context Map enriquece cada nota del Vault con un formato narrativo especializado según su tipo semántico:
+
+- 💡 **IDEAS**: ¿Por qué?, ¿De dónde surgió?, ¿Para qué?, ¿Cómo?, y tabla de **Pros y Contras**.
+- ⚠️ **RIESGOS**: ¿Qué riesgo es?, ¿Dónde se ubica?, Impacto, Mitigación y **Matriz de Gravedad**.
+- 🔧 **CAMBIOS / CORRECCIONES**: ¿Qué se modificó?, ¿Por qué se cambió?, Archivos y **Verificación de No-Regresión**.
+- 📦 **BASE**: Componente estructural, **Rol en la Arquitectura** e integraciones clave.
+- 🧪 **PRUEBAS**: Funcionalidad validada, **Criterios de Aceptación** y comando `pytest`.
+- 📝 **FUTURO**: Tarea pendiente, ubicación en código y **Prioridad de implementación**.
+
 ## Comparativa: Otros vs Context Map
 
 | Característica | Otros | Context Map |

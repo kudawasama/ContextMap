@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 
-from context_map.domain.scanner import escanear_y_generar_eventos, guardar_eventos_escaneados
+from context_map.domain.scanning import escanear_y_generar_eventos, guardar_eventos_escaneados
 
 from context_map.application.commands._helpers import (
     RAW_DIR,

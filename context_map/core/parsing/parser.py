@@ -1,24 +1,26 @@
+from __future__ import annotations
+
 """Parser de eventos normalizados desde JSONL agnóstico o chats sueltos.
 
 Responsabilidades:
 - Normalizar entradas heterogéneas.
 - Clasificar heurísticamente eventos no tipados.
 - Desduplicar eventos repetidos.
-- Convertir eventos en grafo: `Node` y `Edge`.
+- Convertir eventos en el grafo conceptual (`Node` y `Edge`).
 """
 
-from __future__ import annotations
-
 import json
+import os
 import re
+from datetime import datetime
 from typing import Any, Dict, List, Tuple, Union
 
 from context_map.core.models import Event, Node, Edge
-from context_map.core.generadores import generar_summary
+from context_map.core.generators import generar_summary
 
-JSONL_TYPES = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
+JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
 
-# Patrones determinísticos para tipo de evento
+# Patrones determinísticos para clasificación heurística del tipo de evento
 _LINE_PATTERNS: List[Tuple[Union[str, re.Pattern[str]], str]] = [
     (re.compile(r"\b(adding|added|feat|feature)\b", re.I), "IDEA"),
     (re.compile(r"\b(fix|fixing|correc|patch)\b", re.I), "CORRECCION"),
@@ -32,26 +34,41 @@ _LINE_PATTERNS: List[Tuple[Union[str, re.Pattern[str]], str]] = [
 
 
 def _safe_jsonl(path: str) -> List[Dict[str, Any]]:
-    """Lee objetos JSON desde un JSONL tolerando errores de parseo."""
+    """Lee objetos JSON desde un archivo JSONL tolerando errores de formato.
+
+    Args:
+        path (str): Ruta al archivo JSONL.
+
+    Returns:
+        List[Dict[str, Any]]: Lista de diccionarios parseados correctamente.
+    """
     out: List[Dict[str, Any]] = []
-    if not path or not isinstance(path, str):
+    if not path or not isinstance(path, str) or not os.path.exists(path):
         return out
-    if not __import__("os").path.exists(path):
-        return out
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                out.append(json.loads(line))
-            except Exception:
-                continue
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line_str = line.strip()
+                if not line_str:
+                    continue
+                try:
+                    out.append(json.loads(line_str))
+                except Exception:
+                    continue
+    except Exception:
+        pass
     return out
 
 
 def load_events_from_jsonl(path: str) -> List[Event]:
-    """Convierte líneas JSON tipadas en `Event`."""
+    """Convierte líneas JSON tipadas en objetos Event.
+
+    Args:
+        path (str): Ruta del archivo JSONL.
+
+    Returns:
+        List[Event]: Lista de eventos normalizados.
+    """
     events: List[Event] = []
     for obj in _safe_jsonl(path):
         t = obj.get("type", "")
@@ -74,7 +91,15 @@ def load_events_from_jsonl(path: str) -> List[Event]:
 
 
 def _heuristic_event(raw: str, source_hint: str) -> Event:
-    """Clasifica texto libre usando reglas léxicas."""
+    """Clasifica texto libre usando patrones heurísticos léxicos.
+
+    Args:
+        raw (str): Texto plano del mensaje o línea.
+        source_hint (str): Origen del evento.
+
+    Returns:
+        Event: Evento clasificado e instanciado.
+    """
     text = raw.strip()
     kind = "IDEA"
     for pat, k in _LINE_PATTERNS:
@@ -85,30 +110,47 @@ def _heuristic_event(raw: str, source_hint: str) -> Event:
 
 
 def load_events_from_chat_folder(folder: str) -> List[Event]:
-    """Lee archivos de chat y produce eventos clasificados."""
+    """Lee archivos de conversaciones de chat y genera eventos clasificados.
+
+    Args:
+        folder (str): Ruta del directorio de chats.
+
+    Returns:
+        List[Event]: Eventos extraídos y clasificados.
+    """
     events: List[Event] = []
-    if not folder or not __import__("os").path.isdir(folder):
+    if not folder or not os.path.isdir(folder):
         return events
-    for name in sorted(__import__("os").listdir(folder)):
-        path = __import__("os").path.join(folder, name)
-        if not __import__("os").path.isfile(path):
-            continue
-        source = f"chat:{name}"
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or len(line) < 8:
-                        continue
-                    events.append(_heuristic_event(line, source))
-        except Exception:
-            continue
+    try:
+        for name in sorted(os.listdir(folder)):
+            path = os.path.join(folder, name)
+            if not os.path.isfile(path):
+                continue
+            source = f"chat:{name}"
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line_str = line.strip()
+                        if not line_str or len(line_str) < 8:
+                            continue
+                        events.append(_heuristic_event(line_str, source))
+            except Exception:
+                continue
+    except Exception:
+        pass
     return events
 
 
 def _dedup_events(events: List[Event]) -> List[Event]:
-    """Elimina duplicados preservando orden cronológico."""
-    seen: set = set()
+    """Elimina eventos duplicados preservando el orden cronológico.
+
+    Args:
+        events (List[Event]): Lista de eventos a desduplicar.
+
+    Returns:
+        List[Event]: Eventos únicos.
+    """
+    seen: set[Tuple[str, str, str]] = set()
     out: List[Event] = []
     for e in sorted(
         events,
@@ -123,14 +165,26 @@ def _dedup_events(events: List[Event]) -> List[Event]:
 
 
 def _now() -> str:
-    from datetime import datetime
+    """Retorna la fecha y hora actual en ISO 8601.
+
+    Returns:
+        str: Timestamp actual.
+    """
     return datetime.now().isoformat(timespec="seconds")
 
 
 def events_to_model(
     events: List[Event], start_id: int = 1
 ) -> Tuple[List[Node], List[Edge]]:
-    """Transforma eventos en nodos y aristas."""
+    """Transforma una lista de eventos normalizados en nodos y aristas del grafo conceptual.
+
+    Args:
+        events (List[Event]): Eventos a transformar.
+        start_id (int): ID de inicio para los nodos generados.
+
+    Returns:
+        Tuple[List[Node], List[Edge]]: Dupla con la lista de nodos y la lista de aristas generadas.
+    """
     nodes: List[Node] = []
     edges: List[Edge] = []
     counters: Dict[str, int] = {}
@@ -145,7 +199,6 @@ def events_to_model(
         pid = f"{prefix}.{counters[prefix]:003d}"
         title = e.text.split("\n")[0][:90]
 
-        # Generar summary con la función externa
         summary = generar_summary(e.type, e.text, e.source, e.tags)
 
         node = Node(

@@ -10,11 +10,11 @@ import os
 import time
 
 from context_map.core.models import Node, Edge
-from context_map.core.store import load_jsonl
-from context_map.presentation.brief import generar_brief
-from context_map.domain.checker import analizar_readiness, formatear_readiness
-from context_map.domain.reporter import guardar_reporte
-from context_map.domain.doctor import run as doctor_run
+from context_map.core.storage import load_jsonl
+from context_map.presentation.briefs import generar_brief
+from context_map.domain.analysis import analizar_readiness, formatear_readiness
+from context_map.domain.reporting import guardar_reporte
+from context_map.domain.health import run_doctor as doctor_run
 
 from context_map.application.commands._helpers import (
     CONTEXT_DIR,

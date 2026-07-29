@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Event
-from context_map.domain.scanner import guardar_eventos_escaneados
+from context_map.domain.scanning import guardar_eventos_escaneados
 from context_map.infrastructure.integrations.git import leer_historial_git
 from context_map.infrastructure.integrations.hermes import importar_sesiones
 from context_map.infrastructure.integrations.chat_export import importar_chat

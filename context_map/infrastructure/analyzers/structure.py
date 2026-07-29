@@ -148,7 +148,7 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
 
             contador += 1
             if contador % 50 == 0:
-                print(f"   📁 Archivos escaneados: {contador}\r", end="", flush=True)
+                print(f"   [escaneando] Archivos escaneados: {contador}\r", end="", flush=True)
 
             # Saltar archivos binarios grandes
             try:
@@ -189,5 +189,5 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
             if archivo.es_doc:
                 estructura.docs.append(ruta_relativa)
     
-    print(f"   ✅ Archivos escaneados: {contador} total    ")
+    print(f"   [OK] Archivos escaneados: {contador} total    ")
     return estructura

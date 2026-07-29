@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
-from context_map.core.store import write_map, snapshot_map
-from context_map.presentation.writer import render_active_map
+from context_map.core.storage import write_map, snapshot_map
+from context_map.presentation.vault import render_active_map
 from context_map.core.models import Node, Edge
 
 

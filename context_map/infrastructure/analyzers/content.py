@@ -188,10 +188,10 @@ def analizar_directorio(ruta: str) -> List[InfoContenido]:
                 continue
             contador += 1
             if contador % 10 == 0:
-                print(f"   📝 Archivos Python analizados: {contador}\r", end="", flush=True)
+                print(f"   [analizando] Archivos Python analizados: {contador}\r", end="", flush=True)
             info = analizar_contenido(ruta_completa)
             if info:
                 resultados.append(info)
     if contador > 0:
-        print(f"   ✅ Archivos Python analizados: {contador} total    ")
+        print(f"   [OK] Archivos Python analizados: {contador} total    ")
     return resultados

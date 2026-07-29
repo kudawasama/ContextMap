@@ -11,11 +11,11 @@ import os
 from typing import List, Optional, Tuple
 
 from context_map.core.models import Node, Edge
-from context_map.core.store import load_jsonl, write_map
-from context_map.presentation.writer import render_active_map, render_obsidian_vault
-from context_map.presentation.brief import generar_brief
-from context_map.domain.sync import sync_incremental
-from context_map.domain.checker import analizar_readiness
+from context_map.core.storage import load_jsonl, write_map
+from context_map.presentation.vault import render_active_map, render_obsidian_vault
+from context_map.presentation.briefs import generar_brief
+from context_map.domain.synchronization import sync_incremental
+from context_map.domain.analysis import analizar_readiness
 
 from context_map.application.commands._helpers import (
     CONTEXT_DIR,

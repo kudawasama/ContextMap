@@ -13,7 +13,7 @@ import tempfile
 from typing import List
 
 from context_map.core.models import Node, Edge
-from context_map.presentation.writer import render_obsidian_vault
+from context_map.presentation.vault import render_obsidian_vault
 
 
 def _crear_nodos_de_prueba() -> List[Node]:
@@ -260,6 +260,89 @@ def test_hierarchical_vault_estructura() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_contexto_narrativo_con_alma() -> None:
+    """Verifica que las notas de idea incluyan las 5 preguntas narrativas y la matriz de Pros/Contras."""
+    nodos = [
+        Node(
+            id="IDEA-PEND-01",
+            type="IDEA",
+            title="Implementar autenticación JWT",
+            summary="Soporte para tokens seguros JWT en endpoints de la API",
+            status="pendiente",
+            source="scanner",
+            tags=["idea", "auth", "pendiente"],
+        )
+    ]
+    edges = _crear_edges_de_prueba()
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_vault_narrativa_")
+
+    try:
+        render_obsidian_vault(
+            project_name="TestProject",
+            nodes=nodos,
+            edges=edges,
+            output_dir=temp_dir,
+            mode="hierarchical",
+        )
+
+        ideas_dir = os.path.join(temp_dir, "2.0-IDEAS", "2.1-Ideas-Pendientes")
+        assert os.path.exists(ideas_dir), "No se creó el directorio de ideas pendientes"
+
+        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md")]
+        assert len(archivos) > 0, "No se generaron notas de ideas pendientes"
+
+        sample_note = os.path.join(ideas_dir, archivos[0])
+        with open(sample_note, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "POR QUÉ" in content, "La nota no contiene la sección ¿POR QUÉ?"
+        assert "DE DÓNDE SURGIÓ" in content, "La nota no contiene la sección ¿DE DÓNDE SURGIÓ?"
+        assert "PARA QUÉ" in content, "La nota no contiene la sección ¿PARA QUÉ?"
+        assert "CÓMO" in content, "La nota no contiene la sección ¿CÓMO?"
+        assert "PROS Y CONTRAS" in content, "La nota no contiene la sección PROS Y CONTRAS"
+        assert "PROS (Ventajas)" in content, "La nota no contiene la tabla de PROS"
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_contexto_narrativo_diferenciado_riesgo() -> None:
+    """Verifica que los nodos RIESGO generen narrativa con matriz de gravedad y mitigación."""
+    nodos = [
+        Node(
+            id="RIESGO-01",
+            type="RIESGO",
+            title="Archivo complejo: writer.py (2300 líneas)",
+            summary="Zona de alta complejidad en el renderizador de notas.",
+            status="activo",
+            source="scanner",
+            tags=["riesgo", "complejidad"],
+        )
+    ]
+    edges = []
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_vault_riesgo_")
+
+    try:
+        render_obsidian_vault(
+            project_name="TestProject",
+            nodes=nodos,
+            edges=edges,
+            output_dir=temp_dir,
+            mode="hierarchical",
+        )
+
+        from context_map.core.generators import generar_contexto_narrativo
+        narrativa = generar_contexto_narrativo(nodos[0])
+
+        assert "RIESGO" in narrativa, "La narrativa no contiene sección de RIESGO"
+        assert "IMPACTO" in narrativa, "La narrativa no contiene sección de IMPACTO"
+        assert "MITIGAR" in narrativa, "La narrativa no contiene sección de MITIGACIÓN"
+        assert "MATRIZ DE GRAVEDAD" in narrativa, "La narrativa no contiene la MATRIZ DE GRAVEDAD"
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Vault Consolidado ===")
     test_consolidated_vault_limita_archivos()
@@ -274,6 +357,11 @@ if __name__ == "__main__":
     print("=== Test: Vault Jerárquico ===")
     test_hierarchical_vault_estructura()
     print("   OK: test_hierarchical_vault_estructura PASO")
+
+    print()
+    print("=== Test: Contexto Narrativo con Alma ===")
+    test_contexto_narrativo_con_alma()
+    print("   OK: test_contexto_narrativo_con_alma PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")

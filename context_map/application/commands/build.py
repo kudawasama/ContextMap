@@ -9,11 +9,11 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node, Edge
-from context_map.core.store import load_jsonl, snapshot_map, write_map
-from context_map.core.parser import events_to_model
-from context_map.presentation.writer import render_active_map, render_obsidian_vault
-from context_map.presentation.brief import generar_brief
-from context_map.domain.checker import analizar_readiness
+from context_map.core.storage import load_jsonl, snapshot_map, write_map
+from context_map.core.parsing import events_to_model
+from context_map.presentation.vault import render_active_map, render_obsidian_vault
+from context_map.presentation.briefs import generar_brief
+from context_map.domain.analysis import analizar_readiness
 
 from context_map.application.commands._helpers import (
     CONTEXT_DIR,
@@ -53,12 +53,11 @@ def cmd_build(args) -> None:
     if extra_events:
         nodes, edges = events_to_model(extra_events)
         # Estandarizar nodos nuevos antes de persistir
-        from context_map.core.standardize import estandarizar_nodos
+        from context_map.core.normalization import estandarizar_nodos, estandarizar_nodo
         nodes = estandarizar_nodos(nodes)
         append_nodes_edges(nodes, edges)
 
     # Cargar nodos y re-estandarizar todo (por si quedaron viejos)
-    from context_map.core.standardize import estandarizar_nodo
     records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
     e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
     nodes = [estandarizar_nodo(Node.from_dict(r)) for r in records]

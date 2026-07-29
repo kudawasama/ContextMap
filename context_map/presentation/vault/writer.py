@@ -23,6 +23,7 @@ from context_map.core.models import Node, Edge
 
 # Mapeo de tipos a carpetas del vault
 TYPE_TO_FOLDER = {
+    
     "BASE": "01-PROYECTOS",
     "IDEA": "02-IDEAS",
     "RIESGO": "03-RIESGO",
@@ -198,9 +199,10 @@ def _frontmatter(node: Node) -> str:
     """Genera YAML frontmatter para una nota Obsidian."""
     tags_str = ", ".join(f'"{t}"' for t in node.tags) if node.tags else ""
     tag_line = f"tags: [{tags_str}]" if tags_str else "tags: []"
+    classif_line = f"\nclassification: {node.classification}" if getattr(node, "classification", "") else ""
 
     return f"""---
-type: {node.type.lower()}
+type: {node.type.lower()}{classif_line}
 status: {node.status}
 version: {node.version}
 created: {node.created_at}
@@ -211,31 +213,21 @@ source: "{node.source}"
 
 
 def _wiki_links(node: Node, all_nodes: List[Node], edges: List[Edge]) -> List[str]:
-    """Encuentra conexiones related basado en aristas y tags compartidos."""
+    """Encuentra conexiones relacionadas basado únicamente en aristas directas (relaciones explícitas)."""
     links = []
 
-    # 1. Links por aristas directas
+    # Links por aristas directas (depends_on, blocks, supersedes)
     for e in edges:
         if e.source == node.id:
             target = next((n for n in all_nodes if n.id == e.target), None)
-            if target:
+            if target and target.id != node.id:
                 slug = _slugificar(target.title)
                 links.append(f"[[{slug}|{target.title[:50]}]]")
         elif e.target == node.id:
             source = next((n for n in all_nodes if n.id == e.source), None)
-            if source:
+            if source and source.id != node.id:
                 slug = _slugificar(source.title)
                 links.append(f"[[{slug}|{source.title[:50]}]]")
-
-    # 2. Links por tags compartidos (excluyendo self)
-    if node.tags:
-        for other in all_nodes:
-            if other.id == node.id:
-                continue
-            shared = set(node.tags) & set(other.tags)
-            if shared and other.id not in [e.source for e in edges if e.target == node.id]:
-                slug = _slugificar(other.title)
-                links.append(f"[[{slug}|{other.title[:50]}]]")
 
     # Eliminar duplicados preservando orden
     seen = set()
@@ -297,6 +289,13 @@ def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
         partes.append("")
         partes.append(node.summary)
         partes.append("")
+
+    # Contexto Narrativo Estructurado (Por qué, De dónde surgió, Para qué, Cómo, Pros y Contras)
+    from context_map.core.generators import generar_contexto_narrativo
+    partes.append("## 🧠 Contexto Narrativo con Alma")
+    partes.append("")
+    partes.append(generar_contexto_narrativo(node))
+    partes.append("")
 
     # Conexiones
     if links:
@@ -369,27 +368,15 @@ total_edges: {len(edges)}
     partes.append("---")
     partes.append("")
 
-    for tipo in ["BASE", "IDEA", "RIESGO", "CAMBIO", "PRUEBA", "FUTURO", "HITO", "CORRECCION"]:
-        items = por_tipo.get(tipo, [])
-        if not items:
-            continue
-        icono = iconos.get(tipo, "📝")
-        partes.append(f"## {icono} {tipo}")
-        partes.append("")
-        for n in items[:40]:
-            slug = _slugificar(n.title)
-            partes.append(f"- [[{slug}|{n.title[:60]}]]")
-        partes.append("")
-
-    partes += [
-        "---",
-        "",
-        "## 🔍 Otros",
-        "",
-        "- [[00-CONEXIONES|Ver todas las conexiones]]",
-        "- [[00-CONSOLIDACION|Ver consolidación]]",
-        "",
-    ]
+    partes.append("## 📂 Secciones Principales")
+    partes.append("")
+    partes.append("- [[1.0-PROPOSITO/1.0-PROPOSITO|🎯 1.0 Propósito]]")
+    partes.append("- [[2.0-IDEAS/2.0-IDEAS|💡 2.0 Ideas]]")
+    partes.append("- [[3.0-ESTRUCTURA/3.0-ESTRUCTURA|📦 3.0 Estructura]]")
+    partes.append("- [[4.0-RIESGOS/4.0-RIESGOS|⚠️ 4.0 Riesgos]]")
+    partes.append("- [[5.0-BACKLOG/5.0-BACKLOG|🔮 5.0 Backlog]]")
+    partes.append("- [[6.0-HISTORIAL/6.0-HISTORIAL|📜 6.0 Historial]]")
+    partes.append("")
 
     return "\n".join(partes)
 
@@ -1141,7 +1128,6 @@ def _render_hierarchical_vault(
         "- [[4.0-RIESGOS/4.0-RIESGOS|4.0 Riesgos]]",
         "- [[5.0-BACKLOG/5.0-BACKLOG|5.0 Backlog]]",
         "- [[6.0-HISTORIAL/6.0-HISTORIAL|6.0 Historial]]",
-        "- [[00-CONEXIONES|7.0 Conexiones]]",
         "",
         "---",
         "",
@@ -1189,9 +1175,16 @@ def _render_hierarchical_vault(
     with open(os.path.join(proposito_dir, "1.0-PROPOSITO.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(proposito_seccion_parts))
 
-    # ============================================================
-    # 1.1-Mapa-Mental-Narrativo.md
-    # ============================================================
+    # Intentar leer README.md del proyecto para poblar la narrativa
+    readme_content = ""
+    readme_path = os.path.join(os.getcwd(), "README.md")
+    if os.path.exists(readme_path):
+        try:
+            with open(readme_path, "r", encoding="utf-8") as rf:
+                readme_content = rf.read().strip()
+        except Exception:
+            readme_content = ""
+
     narrativa_parts = [
         "---",
         "type: narrativa",
@@ -1208,13 +1201,25 @@ def _render_hierarchical_vault(
             "> " + proposito_texto,
             "",
         ])
+
+    if readme_content:
+        narrativa_parts.extend([
+            "## 📖 Documentación Principal (README)",
+            "",
+            readme_content,
+            "",
+        ])
+    else:
+        narrativa_parts.extend([
+            "## 📖 Dominio del Proyecto",
+            "",
+            f"El proyecto **{project_name}** captura el dominio contextual del sistema a través de {len(nodes)} nodos de arquitectura, decisiones y tareas.",
+            "",
+        ])
+
     narrativa_parts.extend([
-        "## 📖 Dominio del Proyecto",
-        "",
-        "Este proyecto representa el dominio y contexto capturado a través del análisis de código, conversaciones y eventos.",
-        "",
         "---",
-        "[[00-INDICE|⬅ Volver al índice]]",
+        "[[1.0-PROPOSITO/1.0-PROPOSITO|⬅ Volver a 1.0 Propósito]]",
         "",
     ])
 
@@ -1269,7 +1274,7 @@ def _render_hierarchical_vault(
         datos_clave_parts.append("")
 
     datos_clave_parts.append("---")
-    datos_clave_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    datos_clave_parts.append("[[1.0-PROPOSITO/1.0-PROPOSITO|⬅ Volver a 1.0 Propósito]]")
     datos_clave_parts.append("")
 
     with open(os.path.join(proposito_dir, "1.2-Datos-Clave.md"), "w", encoding="utf-8") as f:
@@ -1307,7 +1312,7 @@ def _render_hierarchical_vault(
         identidad_parts.append("")
 
     identidad_parts.append("---")
-    identidad_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    identidad_parts.append("[[1.0-PROPOSITO/1.0-PROPOSITO|⬅ Volver a 1.0 Propósito]]")
     identidad_parts.append("")
 
     with open(os.path.join(proposito_dir, "1.3-Proposito.md"), "w", encoding="utf-8") as f:
@@ -1384,6 +1389,13 @@ def _render_hierarchical_vault(
             if n.summary:
                 parts.append(n.summary)
                 parts.append("")
+
+            # Contexto Narrativo Estructurado
+            from context_map.core.generators import generar_contexto_narrativo
+            parts.append("## 🧠 Contexto Narrativo con Alma")
+            parts.append("")
+            parts.append(generar_contexto_narrativo(n))
+            parts.append("")
             if n.evidence:
                 parts.append("## 📋 Evidencia")
                 parts.append("")
@@ -1423,6 +1435,13 @@ def _render_hierarchical_vault(
             if n.summary:
                 parts.append(n.summary)
                 parts.append("")
+
+            # Contexto Narrativo Estructurado
+            from context_map.core.generators import generar_contexto_narrativo
+            parts.append("## 🧠 Contexto Narrativo con Alma")
+            parts.append("")
+            parts.append(generar_contexto_narrativo(n))
+            parts.append("")
             if n.evidence:
                 parts.append("## 📋 Evidencia")
                 parts.append("")
@@ -1507,7 +1526,7 @@ def _render_hierarchical_vault(
         ideas_top_parts.append("")
 
     ideas_top_parts.append("---")
-    ideas_top_parts.append("[[00-INDICE|⬅ Volver al índice]]")
+    ideas_top_parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
     ideas_top_parts.append("")
 
     with open(os.path.join(ideas_dir, "2.4-Ideas-Relevantes.md"), "w", encoding="utf-8") as f:
@@ -1563,17 +1582,19 @@ def _render_hierarchical_vault(
         "",
     ]
     if base_nodes:
+        from context_map.core.generators import generar_contexto_narrativo
         seen_base = set()
         for n in base_nodes:
             key = n.title[:80]
             if key in seen_base:
                 continue
             seen_base.add(key)
-            fund_parts.append(f"- **{n.title}**")
+            fund_parts.append(f"## 📦 {n.title}")
+            fund_parts.append("")
             if n.summary:
-                fund_parts.append(f"  - {n.summary}")
-            if n.source:
-                fund_parts.append(f"  - *Origen*: `{n.source}`")
+                fund_parts.append(n.summary)
+                fund_parts.append("")
+            fund_parts.append(generar_contexto_narrativo(n))
             fund_parts.append("")
     else:
         fund_parts.append("_(No se registraron componentes base)_")
@@ -1649,6 +1670,13 @@ def _render_hierarchical_vault(
             if n.summary:
                 riesgo_item_parts.append(n.summary)
                 riesgo_item_parts.append("")
+
+            # Contexto Narrativo Estructurado
+            from context_map.core.generators import generar_contexto_narrativo
+            riesgo_item_parts.append("## 🧠 Contexto Narrativo con Alma")
+            riesgo_item_parts.append("")
+            riesgo_item_parts.append(generar_contexto_narrativo(n))
+            riesgo_item_parts.append("")
             if n.evidence:
                 riesgo_item_parts.append("## 📋 Evidencia")
                 riesgo_item_parts.append("")
@@ -1712,12 +1740,16 @@ def _render_hierarchical_vault(
         "",
     ]
     if futuro_nodes:
+        from context_map.core.generators import generar_contexto_narrativo
         for n in futuro_nodes:
             estado_mark = "[x]" if n.status == "completado" else "[ ]"
-            tareas_parts.append(f"- {estado_mark} **{n.title}**")
+            tareas_parts.append(f"## {estado_mark} {n.title}")
+            tareas_parts.append("")
             if n.summary:
-                tareas_parts.append(f"  - _{n.summary}_")
-        tareas_parts.append("")
+                tareas_parts.append(n.summary)
+                tareas_parts.append("")
+            tareas_parts.append(generar_contexto_narrativo(n))
+            tareas_parts.append("")
     else:
         tareas_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
         tareas_parts.append("")
@@ -1795,11 +1827,15 @@ def _render_hierarchical_vault(
         "",
     ]
     if cambio_only:
+        from context_map.core.generators import generar_contexto_narrativo
         for n in cambio_only:
-            cambios_parts.append(f"- 🔄 **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            cambios_parts.append(f"## 🔄 {n.title} ({n.created_at or 'Fecha no esp.'})")
+            cambios_parts.append("")
             if n.summary and n.summary != n.title:
-                cambios_parts.append(f"  - {n.summary}")
-        cambios_parts.append("")
+                cambios_parts.append(n.summary)
+                cambios_parts.append("")
+            cambios_parts.append(generar_contexto_narrativo(n))
+            cambios_parts.append("")
     else:
         cambios_parts.append("_(No se registraron cambios)_")
         cambios_parts.append("")
@@ -1828,11 +1864,15 @@ def _render_hierarchical_vault(
         "",
     ]
     if correccion_only:
+        from context_map.core.generators import generar_contexto_narrativo
         for n in correccion_only:
-            correcciones_parts.append(f"- 🔧 **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+            correcciones_parts.append(f"## 🔧 {n.title} ({n.created_at or 'Fecha no esp.'})")
+            correcciones_parts.append("")
             if n.summary and n.summary != n.title:
-                correcciones_parts.append(f"  - {n.summary}")
-        correcciones_parts.append("")
+                correcciones_parts.append(n.summary)
+                correcciones_parts.append("")
+            correcciones_parts.append(generar_contexto_narrativo(n))
+            correcciones_parts.append("")
     else:
         correcciones_parts.append("_(No se registraron correcciones)_")
         correcciones_parts.append("")
@@ -2119,7 +2159,7 @@ def render_obsidian_vault(
 
 def _render_conexiones(output_dir: str, nodes: List[Node], edges: List[Edge]) -> None:
     """Genera un archivo con todas las conexiones para graph view."""
-    from context_map.core.store import _ensure
+    from context_map.core.storage.store import _ensure
 
     path = os.path.join(output_dir, "00-CONEXIONES.md")
     _ensure(path)
