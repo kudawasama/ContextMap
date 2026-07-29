@@ -343,6 +343,40 @@ def test_contexto_narrativo_diferenciado_riesgo() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_null_byte_character_in_filename() -> None:
+    """Verifica que títulos con caracteres nulos (\x00) no provoquen ValueError al abrir archivos."""
+    nodos = [
+        Node(
+            id="IDEA-NUL-01",
+            type="IDEA",
+            title="Idea con caracter\x00 nulo en titulo",
+            summary="Resumen con \x00 nulos",
+            status="pendiente",
+            source="scanner",
+            tags=["idea", "pendiente"],
+        )
+    ]
+    edges = []
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_nul_")
+
+    try:
+        render_obsidian_vault(
+            project_name="TestNulProject",
+            nodes=nodos,
+            edges=edges,
+            output_dir=temp_dir,
+            mode="hierarchical",
+        )
+        ideas_dir = os.path.join(temp_dir, "2.0-IDEAS", "2.1-Ideas-Pendientes")
+        assert os.path.exists(ideas_dir)
+        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md") and f != "2.1-Ideas-Pendientes.md"]
+        assert len(archivos) > 0
+        assert "\x00" not in archivos[0]
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Vault Consolidado ===")
     test_consolidated_vault_limita_archivos()
@@ -362,6 +396,11 @@ if __name__ == "__main__":
     print("=== Test: Contexto Narrativo con Alma ===")
     test_contexto_narrativo_con_alma()
     print("   OK: test_contexto_narrativo_con_alma PASO")
+
+    print()
+    print("=== Test: Caracteres Nulos ===")
+    test_null_byte_character_in_filename()
+    print("   OK: test_null_byte_character_in_filename PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")

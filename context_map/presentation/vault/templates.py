@@ -47,8 +47,16 @@ STANDARD_TAGS_BY_TYPE: Dict[str, List[str]] = {
 STANDARD_TAGS_COMMON: List[str] = ["context-map"]
 
 
+def _clean_null_bytes(text: str) -> str:
+    """Remueve caracteres nulos (NUL / \\x00) y de control del texto."""
+    if not text:
+        return ""
+    return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
+
+
 def _slugificar(texto: str) -> str:
     """Convierte texto a slug seguro para nombres de archivo."""
+    texto = _clean_null_bytes(texto)
     slug = texto.lower().strip()
     slug = re.sub(r"[áàäâ]", "a", slug)
     slug = re.sub(r"[éèëê]", "e", slug)
@@ -69,15 +77,18 @@ def _safe_slug(text: str) -> str:
 
 
 def _safe_filename(text: str) -> str:
-    """Limpia caracteres inválidos en el nombre de un archivo."""
-    safe = re.sub(r'[\\/*?:"<>|]', "", text)
+    """Limpia caracteres inválidos en el nombre de un archivo, incluyendo nulos."""
+    text = _clean_null_bytes(text)
+    safe = re.sub(r'[\\/*?:"<>|\x00-\x1f]', "", text)
     safe = safe.strip(". ")
     return safe[:100] or "nota"
 
 
 def _mermaid_safe_id(text: str) -> str:
     """Convierte texto a un ID seguro para Mermaid."""
+    text = _clean_null_bytes(text)
     safe = re.sub(r"[^a-zA-Z0-9]", "_", text)
+    return safe[:30]
     return safe[:30]
 
 
