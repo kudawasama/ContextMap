@@ -58,14 +58,45 @@ def ahora() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def project_name(args) -> str:
-    """Obtiene el nombre del proyecto: argumento CLI, configuración declarativa o directorio actual.
+def _git_repo_name(target_dir: str = ".") -> str | None:
+    """Extrae el nombre del repositorio de GitHub desde .git/config de forma agnóstica al SO.
 
     Args:
-        args: Namespace de argparse con atributo opcional ``project``
+        target_dir (str): Ruta base del proyecto.
 
     Returns:
-        Nombre descriptivo del proyecto
+        str | None: Nombre del repo remoto (ej. 'ContextMap') o None si no existe.
+    """
+    try:
+        git_config = os.path.join(target_dir, ".git", "config")
+        if os.path.exists(git_config):
+            with open(git_config, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    line_str = line.strip()
+                    if line_str.startswith("url =") or line_str.startswith("url="):
+                        raw_url = line_str.split("=", 1)[1].strip()
+                        repo_name = raw_url.split("/")[-1].split(":")[-1]
+                        if repo_name.endswith(".git"):
+                            repo_name = repo_name[:-4]
+                        if repo_name:
+                            return repo_name
+    except Exception:
+        pass
+    return None
+
+
+def project_name(args) -> str:
+    """Obtiene el nombre del proyecto con la siguiente jerarquía de prioridad:
+    1. Argumento CLI explícito (--project).
+    2. Configuración declarativa (.contextmap.toml / pyproject.toml).
+    3. Nombre del Repositorio de GitHub de primera instancia (vía .git/config).
+    4. Nombre de la Carpeta del Proyecto de segunda instancia.
+
+    Args:
+        args: Namespace de argparse con atributo opcional ``project``.
+
+    Returns:
+        str: Nombre descriptivo del proyecto (ej. 'vault-ContextMap').
     """
     name = getattr(args, "project", None)
     if name and name != "Repo":
@@ -76,11 +107,14 @@ def project_name(args) -> str:
     if cfg.project_name:
         return cfg.project_name
 
-    folder = os.path.basename(os.getcwd())
-    if folder == "PruebaContext":
-        return "Context-Map"
+    # 1ª Instancia: Nombre del Repositorio GitHub
+    repo_name = _git_repo_name(".")
+    if repo_name:
+        return repo_name
 
-    return folder or "Context-Map"
+    # 2ª Instancia: Nombre de la Carpeta del Proyecto
+    folder = os.path.basename(os.getcwd())
+    return folder or "Repo"
 
 
 def ensure_dirs(_proj: str | None = None) -> None:

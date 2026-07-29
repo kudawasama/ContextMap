@@ -74,3 +74,22 @@ def test_calcular_complejidad_archivo() -> None:
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_git_repo_name_detection() -> None:
+    """Verifica que _git_repo_name extraiga el nombre del repositorio de GitHub."""
+    from context_map.application.commands._helpers import _git_repo_name
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_gitname_")
+    git_dir = os.path.join(temp_dir, ".git")
+    os.makedirs(git_dir, exist_ok=True)
+    config_path = os.path.join(git_dir, "config")
+
+    try:
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write('[remote "origin"]\n\turl = https://github.com/usuario/MiRepoGithub.git\n')
+
+        repo_name = _git_repo_name(temp_dir)
+        assert repo_name == "MiRepoGithub"
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
