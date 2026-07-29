@@ -69,6 +69,19 @@ def cmd_build(args) -> None:
     vault_path = vault_dir(proj)
     render_obsidian_vault(proj, nodes, edges, vault_path, mode=vault_mode)
 
+    # Sincronizar en otros directorios vault existentes para actualizar Obsidian en vivo
+    all_vault_dirs = [os.path.join(CONTEXT_DIR, "vault")]
+    if os.path.exists(CONTEXT_DIR):
+        for item in os.listdir(CONTEXT_DIR):
+            if item.startswith("vault-") and os.path.isdir(os.path.join(CONTEXT_DIR, item)):
+                all_vault_dirs.append(os.path.join(CONTEXT_DIR, item))
+
+    for vdir in set(all_vault_dirs):
+        if vdir != vault_path:
+            if getattr(args, "clean", False):
+                clean_vault_dir(os.path.basename(vdir).replace("vault-", ""))
+            render_obsidian_vault(proj, nodes, edges, vdir, mode=vault_mode)
+
     # Snapshot
     snapshot_name = getattr(args, "snapshot_name", "") or None
     snap = snapshot_map(nodes=nodes, edges=edges, name=snapshot_name)
