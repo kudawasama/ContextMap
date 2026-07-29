@@ -1350,10 +1350,10 @@ def _render_hierarchical_vault(
         "",
         "## Sub-secciones",
         "",
-        "- **2.1 Ideas Pendientes** (carpeta de ideas pendientes individuales)",
-        "- **2.2 Ideas Futuras** (carpeta de ideas futuras)",
-        "- **2.3 Ideas Completas e Implementadas** (carpeta de ideas completas, 10 por archivo)",
-        "- [[2.0-IDEAS/2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
+        "- [[2.1-Ideas-Pendientes/2.1-Ideas-Pendientes|2.1 Ideas Pendientes]]",
+        "- [[2.2-Ideas-Futuras/2.2-Ideas-Futuras|2.2 Ideas Futuras]]",
+        "- [[2.3-Ideas-Completas-e-Implementadas/2.3-Ideas-Completas|2.3 Ideas Completas]]",
+        "- [[2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
         "",
         "---",
         "[[00-INDICE|⬅ Volver al índice]]",
@@ -1369,6 +1369,38 @@ def _render_hierarchical_vault(
     if pendientes:
         pendientes_dir = os.path.join(ideas_dir, "2.1-Ideas-Pendientes")
         os.makedirs(pendientes_dir, exist_ok=True)
+
+        # 2.1-Ideas-Pendientes.md — Nota índice de la subcarpeta
+        pend_index_parts = [
+            "---",
+            "type: seccion",
+            "subtype: ideas-pendientes",
+            f"created: {fecha_actual}",
+            f'project: "{project_name}"',
+            "tags: [context-map, ideas, pendientes]",
+            "---",
+            "",
+            f"# 2.1 Ideas Pendientes — {project_name}",
+            "",
+            f"Ideas pendientes por implementar: **{len(pendientes)}**",
+            "",
+            "---",
+            "",
+            "## Lista de Ideas Pendientes",
+            "",
+        ]
+        for n in pendientes:
+            slug = _safe_filename(n.title)
+            pend_index_parts.append(f"- [[{slug}|⏳ {n.title}]]")
+        pend_index_parts.extend([
+            "",
+            "---",
+            "[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]",
+            "",
+        ])
+        with open(os.path.join(pendientes_dir, "2.1-Ideas-Pendientes.md"), "w", encoding="utf-8") as f:
+            f.write("\n".join(pend_index_parts))
+
         for n in pendientes:
             filename = _safe_filename(n.title) + ".md"
             tags_list = _normalize_tags(n.tags, n.type)
@@ -1403,7 +1435,7 @@ def _render_hierarchical_vault(
                     parts.append(f"- {ev}")
                 parts.append("")
             parts.append("---")
-            parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("[[2.1-Ideas-Pendientes/2.1-Ideas-Pendientes|⬅ Volver a 2.1 Ideas Pendientes]]")
             parts.append("")
 
             with open(os.path.join(pendientes_dir, filename), "w", encoding="utf-8") as f:
@@ -1415,6 +1447,38 @@ def _render_hierarchical_vault(
     if activas:
         futuras_dir = os.path.join(output_dir, "2.2-Ideas-Futuras")
         os.makedirs(futuras_dir, exist_ok=True)
+
+        # 2.2-Ideas-Futuras.md — Nota índice de la subcarpeta
+        futuras_index_parts = [
+            "---",
+            "type: seccion",
+            "subtype: ideas-futuras",
+            f"created: {fecha_actual}",
+            f'project: "{project_name}"',
+            "tags: [context-map, ideas, futuras]",
+            "---",
+            "",
+            f"# 2.2 Ideas Futuras — {project_name}",
+            "",
+            f"Ideas futuras registradas: **{len(activas)}**",
+            "",
+            "---",
+            "",
+            "## Lista de Ideas Futuras",
+            "",
+        ]
+        for n in activas:
+            slug = _safe_filename(n.title)
+            futuras_index_parts.append(f"- [[{slug}|🔮 {n.title}]]")
+        futuras_index_parts.extend([
+            "",
+            "---",
+            "[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]",
+            "",
+        ])
+        with open(os.path.join(futuras_dir, "2.2-Ideas-Futuras.md"), "w", encoding="utf-8") as f:
+            f.write("\n".join(futuras_index_parts))
+
         for n in activas:
             filename = _safe_filename(n.title) + ".md"
             tags_list = _normalize_tags(n.tags, n.type)
@@ -1449,7 +1513,7 @@ def _render_hierarchical_vault(
                     parts.append(f"- {ev}")
                 parts.append("")
             parts.append("---")
-            parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            parts.append("[[2.2-Ideas-Futuras/2.2-Ideas-Futuras|⬅ Volver a 2.2 Ideas Futuras]]")
             parts.append("")
 
             with open(os.path.join(futuras_dir, filename), "w", encoding="utf-8") as f:
@@ -1461,6 +1525,27 @@ def _render_hierarchical_vault(
     if completadas:
         completadas_dir = os.path.join(ideas_dir, "2.3-Ideas-Completas-e-Implementadas")
         os.makedirs(completadas_dir, exist_ok=True)
+
+        # 2.3-Ideas-Completas.md — Nota índice de la subcarpeta
+        completas_index_parts = [
+            "---",
+            "type: seccion",
+            "subtype: ideas-completas",
+            f"created: {fecha_actual}",
+            f'project: "{project_name}"',
+            "tags: [context-map, ideas, completadas]",
+            "---",
+            "",
+            f"# 2.3 Ideas Completas e Implementadas — {project_name}",
+            "",
+            f"Ideas completadas acumuladas: **{len(completadas)}**",
+            "",
+            "---",
+            "",
+        ]
+        with open(os.path.join(completadas_dir, "2.3-Ideas-Completas.md"), "w", encoding="utf-8") as f:
+            f.write("\n".join(completas_index_parts))
+
         batch_size = 10
         for batch_idx in range(0, len(completadas), batch_size):
             batch = completadas[batch_idx:batch_idx + batch_size]
@@ -1487,7 +1572,7 @@ def _render_hierarchical_vault(
                     batch_parts.append(n.summary)
                     batch_parts.append("")
             batch_parts.append("---")
-            batch_parts.append("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]")
+            batch_parts.append("[[2.3-Ideas-Completas-e-Implementadas/2.3-Ideas-Completas|⬅ Volver a 2.3 Ideas Completas]]")
             batch_parts.append("")
 
             with open(os.path.join(completadas_dir, filename), "w", encoding="utf-8") as f:

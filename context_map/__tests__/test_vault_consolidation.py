@@ -288,7 +288,7 @@ def test_contexto_narrativo_con_alma() -> None:
         ideas_dir = os.path.join(temp_dir, "2.0-IDEAS", "2.1-Ideas-Pendientes")
         assert os.path.exists(ideas_dir), "No se creó el directorio de ideas pendientes"
 
-        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md")]
+        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md") and f != "2.1-Ideas-Pendientes.md"]
         assert len(archivos) > 0, "No se generaron notas de ideas pendientes"
 
         sample_note = os.path.join(ideas_dir, archivos[0])
