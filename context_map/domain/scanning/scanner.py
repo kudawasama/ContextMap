@@ -28,6 +28,7 @@ def _ahora() -> str:
 _CARPETAS_EXCLUIDAS: Set[str] = {
     ".context-map",
     ".venv",
+    "venv",
     ".git",
     "__pycache__",
     "node_modules",
@@ -41,11 +42,14 @@ _CARPETAS_EXCLUIDAS: Set[str] = {
     ".vscode",
     ".vs",
     "egg-info",
+    "desktop.ini",
+    ".ds_store",
+    "thumbs.db",
 }
 
 
 def _es_ruta_excluida(ruta: str) -> bool:
-    """Verifica si una ruta contiene carpetas ignoradas.
+    """Verifica si una ruta contiene carpetas u archivos ignorados.
 
     Args:
         ruta (str): Ruta a evaluar.
@@ -53,8 +57,12 @@ def _es_ruta_excluida(ruta: str) -> bool:
     Returns:
         bool: True si debe ser ignorada.
     """
+    nombre = os.path.basename(ruta).lower()
+    if nombre in ("desktop.ini", ".ds_store", "thumbs.db") or nombre.endswith((".gdoc", ".gsheet", ".gslides")):
+        return True
+
     partes = ruta.replace("\\", "/").split("/")
-    return any(parte in _CARPETAS_EXCLUIDAS for parte in partes)
+    return any(parte.lower() in _CARPETAS_EXCLUIDAS for parte in partes)
 
 
 def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:

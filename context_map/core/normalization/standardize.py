@@ -175,11 +175,12 @@ def inferir_status(node: Node) -> str:
     if any(kw in text for kw in pendiente_kw) or "todo" in node.tags or "pendiente" in node.tags:
         return "pendiente"
 
+    # Elementos de estructura, documentación o código existente son completados
+    if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
+        return "completado"
+
     if node.source in ("git", "scanner"):
-        # Elementos estructurales escaneados del código (funciones, clases, módulos, docstrings)
-        if any(prefix in node.title for prefix in ["Función:", "Módulo:", "Clase:", "Documentación:", "Entrypoint:", "Proyecto", "Archivo:"]):
-            return "completado"
-        if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
+        if any(prefix in node.title for prefix in ["Función:", "Módulo:", "Clase:", "Documentación", "Entrypoint:", "Proyecto", "Archivo:", "Carpeta", "capa", "__init__"]):
             return "completado"
 
     # Patrones explícitos de completado en texto
@@ -192,7 +193,7 @@ def inferir_status(node: Node) -> str:
     if any(kw in text for kw in activo_kw) or node.type == "RIESGO":
         return "activo"
 
-    return "pendiente"
+    return "completado"
 
 
 def inferir_evidence(node: Node) -> List[str]:
@@ -259,13 +260,13 @@ def corregir_tipo(node: Node) -> str:
     if any(kw in text for kw in ["test:", "testing", "pytest", "unit test", "prueba unitaria", "cobertura", "conftest"]):
         return "PRUEBA"
 
-    if any(kw in text for kw in ["todo:", "fixme:", "futuro", "pendiente", "roadmap", "proxima version", "tarea pendiente"]):
+    if any(kw in text for kw in ["todo:", "fixme:", "futuro", "roadmap", "proxima version", "tarea pendiente"]):
         return "FUTURO"
 
     if any(kw in text for kw in ["hito", "milestone", "release", "version", "v1.", "v2.", "v0."]):
         return "HITO"
 
-    if any(kw in text for kw in ["proyecto", "estructura", "entrypoint", "readme", "configuracion", "paquete", "modulo", "base de datos", "fundamento", "archivos"]):
+    if any(kw in text for kw in ["proyecto", "estructura", "entrypoint", "readme", "configuracion", "paquete", "modulo", "base de datos", "fundamento", "archivos", "carpeta", "documentación", "capa", "__init__", "db_schema"]):
         return "BASE"
 
     if any(kw in text for kw in ["refactor", "chore", "cambio", "actualizacion", "modificacion", "update"]):
