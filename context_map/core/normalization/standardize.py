@@ -168,33 +168,28 @@ def inferir_status(node: Node) -> str:
     Returns:
         str: Estado del nodo ('completado', 'pendiente', 'activo').
     """
-    # Si ya tiene un estado explícito válido, respetarlo
-    if node.status in ("completado", "pendiente", "activo", "en_progreso", "cancelado"):
-        return node.status
-
-    if node.source == "git":
-        return "completado"
-
     text = f"{node.title} {node.summary or ''}".lower()
 
-    # Patrones de completado
+    # Si es un TODO / FIXME o contiene marcas de pendiente explícitas
+    pendiente_kw = ["todo:", "fixme:", "por hacer", "[ ]", "pendiente", "proxima version", "futura"]
+    if any(kw in text for kw in pendiente_kw) or "todo" in node.tags or "pendiente" in node.tags:
+        return "pendiente"
+
+    if node.source in ("git", "scanner"):
+        # Elementos estructurales escaneados del código (funciones, clases, módulos, docstrings)
+        if any(prefix in node.title for prefix in ["Función:", "Módulo:", "Clase:", "Documentación:", "Entrypoint:", "Proyecto", "Archivo:"]):
+            return "completado"
+        if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
+            return "completado"
+
+    # Patrones explícitos de completado en texto
     completado_kw = ["completad", "implementad", "hecho", "terminad", "listo", "resuelt", "aprobad", "finalizad", "[x]", "done", "fixed", "resolved"]
     if any(kw in text for kw in completado_kw):
         return "completado"
 
     # Patrones de en progreso / activo
     activo_kw = ["en_progreso", "en progreso", "haciendo", "wip", "working", "desarrollo", "activo"]
-    if any(kw in text for kw in activo_kw):
-        return "activo"
-
-    # Patrones de pendiente
-    pendiente_kw = ["pendiente", "todo", "fixme", "por hacer", "[ ]", "futuro", "proxima version"]
-    if any(kw in text for kw in pendiente_kw) or "pendiente" in node.tags:
-        return "pendiente"
-
-    if node.type in ("CORRECCION", "HITO"):
-        return "completado"
-    if node.type == "RIESGO":
+    if any(kw in text for kw in activo_kw) or node.type == "RIESGO":
         return "activo"
 
     return "pendiente"
