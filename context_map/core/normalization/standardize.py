@@ -160,7 +160,7 @@ def estandarizar_tags(tags: List[str]) -> List[str]:
 
 
 def inferir_status(node: Node) -> str:
-    """Infiere el estado del nodo según su origen, tipo y etiquetas.
+    """Infiere el estado del nodo según su origen, tipo, etiquetas y contenido.
 
     Args:
         node (Node): Nodo a procesar.
@@ -168,14 +168,35 @@ def inferir_status(node: Node) -> str:
     Returns:
         str: Estado del nodo ('completado', 'pendiente', 'activo').
     """
+    # Si ya tiene un estado explícito válido, respetarlo
+    if node.status in ("completado", "pendiente", "activo", "en_progreso", "cancelado"):
+        return node.status
+
     if node.source == "git":
         return "completado"
-    if "pendiente" in node.tags or "todo" in node.tags:
+
+    text = f"{node.title} {node.summary or ''}".lower()
+
+    # Patrones de completado
+    completado_kw = ["completad", "implementad", "hecho", "terminad", "listo", "resuelt", "aprobad", "finalizad", "[x]", "done", "fixed", "resolved"]
+    if any(kw in text for kw in completado_kw):
+        return "completado"
+
+    # Patrones de en progreso / activo
+    activo_kw = ["en_progreso", "en progreso", "haciendo", "wip", "working", "desarrollo", "activo"]
+    if any(kw in text for kw in activo_kw):
+        return "activo"
+
+    # Patrones de pendiente
+    pendiente_kw = ["pendiente", "todo", "fixme", "por hacer", "[ ]", "futuro", "proxima version"]
+    if any(kw in text for kw in pendiente_kw) or "pendiente" in node.tags:
         return "pendiente"
+
+    if node.type in ("CORRECCION", "HITO"):
+        return "completado"
     if node.type == "RIESGO":
         return "activo"
-    if node.type == "CORRECCION":
-        return "completado"
+
     return "pendiente"
 
 
@@ -216,29 +237,44 @@ def corregir_tipo(node: Node) -> str:
         node (Node): Nodo original.
 
     Returns:
-        str: Tipo de nodo corregido.
+        str: Tipo de nodo corregido (BASE, IDEA, RIESGO, CAMBIO, CORRECCION, PRUEBA, FUTURO, HITO).
     """
     title_lower = node.title.lower()
     summary_lower = node.summary.lower() if node.summary else ""
+    text = f"{title_lower} {summary_lower}"
 
     if node.source == "git":
-        if "feat:" in title_lower or "feat:" in summary_lower:
+        if "feat:" in text or "feature:" in text:
             return "IDEA"
-        elif "fix:" in title_lower or "fix:" in summary_lower:
+        elif "fix:" in text or "bug:" in text:
             return "CORRECCION"
-        elif "docs:" in title_lower or "chore:" in title_lower:
+        elif "docs:" in text or "chore:" in text:
             return "CAMBIO"
+        elif "test:" in text:
+            return "PRUEBA"
         else:
             return "CAMBIO"
 
-    if "riesgo" in title_lower or "complejidad" in title_lower or "complejo" in title_lower:
+    if any(kw in text for kw in ["riesgo", "complejidad", "complejo", "alerta", "vulnerabilidad", "sin test"]):
         return "RIESGO"
 
-    if "pendiente" in title_lower or "todo" in title_lower:
+    if any(kw in text for kw in ["fix:", "corregir", "arreglar", "solucionar", "parche", "bug", "fallo"]):
+        return "CORRECCION"
+
+    if any(kw in text for kw in ["test:", "testing", "pytest", "unit test", "prueba unitaria", "cobertura", "conftest"]):
+        return "PRUEBA"
+
+    if any(kw in text for kw in ["todo:", "fixme:", "futuro", "pendiente", "roadmap", "proxima version", "tarea pendiente"]):
         return "FUTURO"
 
-    if "proyecto" in title_lower and ("contiene" in title_lower or "archivos" in title_lower):
+    if any(kw in text for kw in ["hito", "milestone", "release", "version", "v1.", "v2.", "v0."]):
+        return "HITO"
+
+    if any(kw in text for kw in ["proyecto", "estructura", "entrypoint", "readme", "configuracion", "paquete", "modulo", "base de datos", "fundamento", "archivos"]):
         return "BASE"
+
+    if any(kw in text for kw in ["refactor", "chore", "cambio", "actualizacion", "modificacion", "update"]):
+        return "CAMBIO"
 
     return "IDEA"
 
