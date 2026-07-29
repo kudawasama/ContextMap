@@ -73,7 +73,7 @@ def cmd_build(args) -> None:
     all_vault_dirs = [os.path.join(CONTEXT_DIR, "vault")]
     if os.path.exists(CONTEXT_DIR):
         for item in os.listdir(CONTEXT_DIR):
-            if item.startswith("vault-") and os.path.isdir(os.path.join(CONTEXT_DIR, item)):
+            if item.startswith("vault-") and item != "vault-vault" and os.path.isdir(os.path.join(CONTEXT_DIR, item)):
                 all_vault_dirs.append(os.path.join(CONTEXT_DIR, item))
 
     for vdir in set(all_vault_dirs):
