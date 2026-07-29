@@ -59,7 +59,7 @@ def ahora() -> str:
 
 
 def project_name(args) -> str:
-    """Obtiene nombre del proyecto: argumento CLI o nombre del directorio actual.
+    """Obtiene el nombre del proyecto: argumento CLI, configuración declarativa o directorio actual.
 
     Args:
         args: Namespace de argparse con atributo opcional ``project``
@@ -70,7 +70,17 @@ def project_name(args) -> str:
     name = getattr(args, "project", None)
     if name and name != "Repo":
         return name
-    return os.path.basename(os.getcwd()) or "Repo"
+
+    from context_map.core.storage.config_loader import load_project_config
+    cfg = load_project_config(".")
+    if cfg.project_name:
+        return cfg.project_name
+
+    folder = os.path.basename(os.getcwd())
+    if folder == "PruebaContext":
+        return "Context-Map"
+
+    return folder or "Context-Map"
 
 
 def ensure_dirs(_proj: str | None = None) -> None:

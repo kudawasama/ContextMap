@@ -7,6 +7,7 @@ a partir de eventos recopilados y nodos existentes.
 from __future__ import annotations
 
 import os
+import shutil
 
 from context_map.core.models import Node, Edge
 from context_map.core.storage import load_jsonl, snapshot_map, write_map
@@ -79,7 +80,12 @@ def cmd_build(args) -> None:
     for vdir in set(all_vault_dirs):
         if vdir != vault_path:
             if getattr(args, "clean", False):
-                clean_vault_dir(os.path.basename(vdir).replace("vault-", ""))
+                if vdir == os.path.join(CONTEXT_DIR, "vault"):
+                    shutil.rmtree(vdir, ignore_errors=True)
+                    os.makedirs(vdir, exist_ok=True)
+                else:
+                    target_proj = os.path.basename(vdir).replace("vault-", "")
+                    clean_vault_dir(target_proj)
             render_obsidian_vault(proj, nodes, edges, vdir, mode=vault_mode)
 
     # Snapshot
