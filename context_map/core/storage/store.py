@@ -55,7 +55,7 @@ def load_jsonl(path: str) -> List[dict]:
         return []
     out: List[dict] = []
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
                 line_str = line.strip()
                 if line_str:
