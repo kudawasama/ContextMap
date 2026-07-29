@@ -19,12 +19,12 @@ No es un simple generador de documentación. Es un sistema que captura el **alma
 
 Tienes dos formas de inicializar y poner en contexto un proyecto:
 
-### 🌟 Opción 1: Pedírselo al Agente de IA (RECOMENDADO)
 En cualquier sesión de chat con tu Agente de IA en el IDE, simplemente escríbele:
 
 > **"Inicializa ContextMap para este proyecto"**
 
 **¿Qué hace el Agente automáticamente?**
+
 1. Ejecuta el escaneo y construcción profunda (`ctxmap scan .` && `ctxmap build --clean --brief`).
 2. Genera las reglas de gobernanza en `AGENTS.md` y el resumen ejecutivo en `.context-map/CONTEXT.md`.
 3. Lee los archivos generados y queda **100% en contexto** de la arquitectura, métricas, riesgos y tareas pendientes del proyecto en esa misma respuesta.
@@ -63,12 +63,12 @@ Context Map enriquece cada nota del Vault con un formato narrativo polimórfico 
 
 Al ejecutar `ctxmap build --brief` o `ctxmap init`, ContextMap genera automáticamente un archivo `AGENTS.md` en la raíz del proyecto objetivo. Este documento impone las normas obligatorias para cualquier modelo de IA:
 
-* **Español Técnico Profesional**: Todas las interacciones, explicaciones y docstrings.
-* **Documentación Formal**: Google Style / PEP 257 en todas las funciones y clases.
-* **Type Hinting Estricto**: Tipado fuerte en Python.
-* **Arquitectura Limpia**: Separación de capas en `core/`, `domain/`, `application/`, `infrastructure/` y `presentation/`.
-* **Topología Obsidian Limpia**: Grafo en árbol estricto de 3 niveles sin ciclos rotos.
-* **Verificación Mandatoria**: Ejecución previa de `pytest`, `ctxmap scan` y `ctxmap build`.
+- **Español Técnico Profesional**: Todas las interacciones, explicaciones y docstrings.
+- **Documentación Formal**: Google Style / PEP 257 en todas las funciones y clases.
+- **Type Hinting Estricto**: Tipado fuerte en Python.
+- **Arquitectura Limpia**: Separación de capas en `core/`, `domain/`, `application/`, `infrastructure/` y `presentation/`.
+- **Topología Obsidian Limpia**: Grafo en árbol estricto de 3 niveles sin ciclos rotos.
+- **Verificación Mandatoria**: Ejecución previa de `pytest`, `ctxmap scan` y `ctxmap build`.
 
 ---
 
@@ -98,7 +98,7 @@ Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar 
 ## Comparativa: Otros vs Context Map
 
 | Característica | Otros | Context Map |
-|----------------|:-----:|:-----------:|
+| ---------------- | :-----: | :-----------: |
 | Escaneo técnico de archivos | ✅ | ✅ |
 | Briefs para agentes (`CONTEXT.md`) | ✅ | ✅ |
 | Gobernanza automática para Agentes (`AGENTS.md`) | ❌ | ✅ |

@@ -118,9 +118,9 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
             detalle="Configuración de paquete Python",
         ),
         SenalReadiness(
-            nombre="requirements.txt",
+            nombre="requirements.txt/pyproject",
             peso=6,
-            presente=_verificar_archivo(ruta_raiz, ["requirements.txt", "requirements-dev.txt"]),
+            presente=_verificar_archivo(ruta_raiz, ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "uv.lock"]),
             detalle="Dependencias del proyecto",
         ),
         SenalReadiness(
@@ -132,13 +132,13 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
         SenalReadiness(
             nombre="Tests",
             peso=9,
-            presente=_verificar_directorio(ruta_raiz, ["tests", "test", "__tests__"]),
+            presente=_verificar_directorio(ruta_raiz, ["tests", "test", "__tests__", "context_map/__tests__"]) or _verificar_archivo(ruta_raiz, ["pytest.ini"]),
             detalle="Directorio de pruebas",
         ),
         SenalReadiness(
             nombre="pytest.ini/conftest",
             peso=5,
-            presente=_verificar_archivo(ruta_raiz, ["pytest.ini", "conftest.py", "tox.ini"]),
+            presente=_verificar_archivo(ruta_raiz, ["pytest.ini", "conftest.py", "tox.ini", "pyproject.toml"]),
             detalle="Configuración de testing",
         ),
         SenalReadiness(
@@ -156,7 +156,7 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
         SenalReadiness(
             nombre="Makefile/Justfile",
             peso=4,
-            presente=_verificar_archivo(ruta_raiz, ["Makefile", "Justfile"]),
+            presente=_verificar_archivo(ruta_raiz, ["Makefile", "Justfile", "pyproject.toml"]),
             detalle="Comandos comunes del proyecto",
         ),
     ]
