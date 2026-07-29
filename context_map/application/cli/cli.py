@@ -26,6 +26,7 @@ from context_map.application.commands import (
     cmd_doctor,
     cmd_sync_migrate,
 )
+from context_map.application.commands.hook import cmd_hook_install
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -55,10 +56,16 @@ def create_parser() -> argparse.ArgumentParser:
     )
     s_build.add_argument("--raw", action="store_true", help="Alias para --mode raw")
     s_build.add_argument("--clean", action="store_true", help="Eliminar contenido previo antes de reconstruir")
+    s_build.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
     s_scan = sub.add_parser("scan", help="Escanea proyecto y genera eventos")
     s_scan.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_scan.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_scan.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
+
+    s_hook = sub.add_parser("hook", help="Gestión e instalación de Git pre-commit hooks")
+    s_hook.add_argument("action", nargs="?", default="install", help="Acción a realizar ('install')")
+    s_hook.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
 
     s_sync = sub.add_parser("sync", help="Sync incremental (use --migrate para migración)")
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")
@@ -137,6 +144,7 @@ def main() -> None:
         "brief": cmd_brief,
         "update": cmd_update,
         "doctor": cmd_doctor,
+        "hook": cmd_hook_install,
     }
 
     if args.cmd == "sync":
