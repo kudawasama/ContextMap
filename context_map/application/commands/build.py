@@ -12,7 +12,7 @@ from context_map.core.models import Node, Edge
 from context_map.core.storage import load_jsonl, snapshot_map, write_map
 from context_map.core.parsing import events_to_model
 from context_map.presentation.vault import render_active_map, render_obsidian_vault
-from context_map.presentation.briefs import generar_brief
+from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
 from context_map.domain.analysis import analizar_readiness
 
 from context_map.application.commands._helpers import (
@@ -88,12 +88,14 @@ def cmd_build(args) -> None:
     if snap:
         print(f"snapshot: {snap}")
 
-    # Brief si se pide
+    # Brief y AGENTS.md si se pide
     if getattr(args, "brief", False):
         brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
         readiness = analizar_readiness(".")
-        generar_brief(project_name(args), nodes, edges, readiness.score, brief_path)
+        generar_brief(proj, nodes, edges, readiness.score, brief_path)
+        agents_path = generar_instrucciones_agentes(proj, target_dir=".", overwrite_if_exists=False)
         print(f"brief: {brief_path}")
+        print(f"agents: {agents_path}")
 
     print("build:ok -> ACTIVE.md")
     print(f"vault ({vault_mode}):ok -> {vault_path}")
