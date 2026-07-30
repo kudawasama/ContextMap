@@ -44,6 +44,7 @@ def create_parser() -> argparse.ArgumentParser:
     sub.add_parser("init", help="Crea estructura .context-map/")
 
     s_build = sub.add_parser("build", help="Genera vault completo")
+    s_build.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_build.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_build.add_argument("--snapshot-name", default="", help="Nombre del snapshot")
     s_build.add_argument("--mermaid", action="store_true", help="Generar diagrama Mermaid")

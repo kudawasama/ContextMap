@@ -93,3 +93,19 @@ def test_git_repo_name_detection() -> None:
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_complexity_cross_drive_handling() -> None:
+    """Verifica la tolerancia a diferentes unidades de disco en calcular_complejidad_archivo."""
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_crossdrive_")
+    py_path = os.path.join(temp_dir, "sample.py")
+
+    try:
+        with open(py_path, "w", encoding="utf-8") as f:
+            f.write("def foo(): pass\n")
+
+        res = calcular_complejidad_archivo(py_path, ruta_base="Z:\\DiferenteUnidad")
+        assert res is not None
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)

@@ -84,7 +84,10 @@ def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> Opt
     except Exception:
         return None
 
-    ruta_rel = os.path.relpath(ruta_archivo, ruta_base) if os.path.isabs(ruta_archivo) else ruta_archivo
+    try:
+        ruta_rel = os.path.relpath(ruta_archivo, ruta_base) if os.path.isabs(ruta_archivo) else ruta_archivo
+    except ValueError:
+        ruta_rel = ruta_archivo
     funciones: List[MetricaComplejidadFuncion] = []
 
     for node in ast.walk(tree):

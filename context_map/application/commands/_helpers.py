@@ -88,12 +88,12 @@ def _git_repo_name(target_dir: str = ".") -> str | None:
 def project_name(args) -> str:
     """Obtiene el nombre del proyecto con la siguiente jerarquía de prioridad:
     1. Argumento CLI explícito (--project).
-    2. Configuración declarativa (.contextmap.toml / pyproject.toml).
-    3. Nombre del Repositorio de GitHub de primera instancia (vía .git/config).
-    4. Nombre de la Carpeta del Proyecto de segunda instancia.
+    2. Configuración declarativa (.contextmap.toml / pyproject.toml en target_dir).
+    3. Nombre del Repositorio de GitHub de primera instancia (vía .git/config en target_dir).
+    4. Nombre de la Carpeta del Proyecto de segunda instancia (target_dir).
 
     Args:
-        args: Namespace de argparse con atributo opcional ``project``.
+        args: Namespace de argparse con atributo opcional ``project`` o ``target``.
 
     Returns:
         str: Nombre descriptivo del proyecto (ej. 'vault-ContextMap').
@@ -102,18 +102,20 @@ def project_name(args) -> str:
     if name and name != "Repo":
         return name
 
+    target_dir = getattr(args, "target", ".") or "."
+
     from context_map.core.storage.config_loader import load_project_config
-    cfg = load_project_config(".")
+    cfg = load_project_config(target_dir)
     if cfg.project_name:
         return cfg.project_name
 
     # 1ª Instancia: Nombre del Repositorio GitHub
-    repo_name = _git_repo_name(".")
+    repo_name = _git_repo_name(target_dir)
     if repo_name:
         return repo_name
 
     # 2ª Instancia: Nombre de la Carpeta del Proyecto
-    folder = os.path.basename(os.getcwd())
+    folder = os.path.basename(os.path.abspath(target_dir))
     return folder or "Repo"
 
 
