@@ -197,7 +197,7 @@ def events_to_model(
         prefix = _prefix(e.type)
         counters[prefix] = counters.get(prefix, 0) + 1
         pid = f"{prefix}.{counters[prefix]:003d}"
-        title = e.text.split("\n")[0][:90]
+        title = e.text.split("\n")[0][:200]
 
         summary = generar_summary(e.type, e.text, e.source, e.tags)
 

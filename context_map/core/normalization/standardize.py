@@ -300,11 +300,25 @@ def estandarizar_nodo(node: Node) -> Node:
     if class_tag not in tags:
         tags.append(class_tag)
 
+    # Normalizar título para eliminar volátiles numéricos
+    # Ej: "Archivo complejo: writer.py (2346 líneas)" → "Archivo complejo: writer.py"
+    #     "Archivos de alta complejidad (24 total) consolidated.py (1441 líneas); parser.py (426 lín"
+    #         → "Archivos de alta complejidad: consolidated.py, parser.py"
+    title = node.title
+    if node.type == "RIESGO":
+        # Eliminar (N líneas), (N total), (N lín), (N l truncado) — con o sin cierre
+        title = re.sub(r'\s*\(\d+\s*(?:l[ií]neas?|l[ií]n|total|l(?!\w))\)?', '', title)
+        # Eliminar resto de ; file(N líneas) truncado
+        title = re.sub(r';\s*[^;]+\(\d+\s*l[ií]neas?\)?', '', title)
+        # Limpiar separadores residuales y espacios
+        title = re.sub(r'\s*;\s*', ', ', title)
+        title = title.rstrip(';,').strip()
+
     nuevo_tipo = corregir_tipo(node)
     nodo_temp = Node(
         id=node.id,
         type=nuevo_tipo,
-        title=node.title,
+        title=title,
         summary=node.summary,
         tags=tags,
         source=node.source,
@@ -319,7 +333,7 @@ def estandarizar_nodo(node: Node) -> Node:
     return Node(
         id=node.id,
         type=nuevo_tipo,
-        title=node.title,
+        title=title,
         summary=node.summary,
         tags=tags,
         source=node.source,
