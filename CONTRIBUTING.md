@@ -1,79 +1,69 @@
 # Contribuir a Context Map
 
-Gracias por tu interés en contribuir.
+Gracias por tu interés en contribuir a **ContextMap**.
 
-## Desarrollo
+## Desarrollo Local
 
 ```bash
 # Clonar el repositorio
 git clone https://github.com/kudawasama/ContextMap.git
 cd ContextMap
 
-# Instalar en modo desarrollo con UV
-uv tool install . // modo desarrollo
+# Instalar en modo desarrollo editable
+pip install -e .
 
-# Ejecutar tests
-python -m pytest context_map/__tests__
+# Ejecutar tests unitarios (deben pasar 100%)
+python -m pytest
 
-# Verificar lint
-python -m mypy context_map
-python -m ruff check context_map
+# Verificar readiness
+python -m context_map.cli check .
 ```
 
-## Estructura del Proyecto
+## Arquitectura del Proyecto (Clean Architecture Jerárquica)
 
 ```
 context_map/
-├── cli.py                          # Punto de entrada
-├── core/                           # Lógica fundamental
-│   ├── models.py                   # Node, Edge, Event
-│   ├── parser.py                   # Clasificación de eventos
-│   ├── store.py                    # Persistencia JSONL
-│   ├── standardize.py              # Estandarización de nodos
-│   └── generadores.py              # Generación de resúmenes
+├── cli.py                          # Punto de entrada CLI
+├── core/                           # Fundamentos del dominio
+│   ├── models/                     # Dataclasses (Node, Edge, Event, Config)
+│   ├── parsing/                    # Parser de eventos y deserialización JSONL
+│   ├── storage/                    # Persistencia JSONL, config y snapshots
+│   ├── normalization/              # Estandarización y clasificación semántica
+│   └── generators/                 # Contexto Narrativo con Alma
 ├── domain/                         # Lógica de negocio
-│   ├── scanner.py                  # Escáner de proyecto
-│   ├── sync.py                     # Sincronización incremental
-│   ├── checker.py                  # Análisis de readiness
-│   └── reporter.py                 # Reportes semanales
-├── application/                    # CLI y comandos
-│   ├── cli.py                      # Parser principal (argparse)
-│   └── commands/
-│       └── __init__.py             # 16 comandos unificados
+│   ├── scanning/                   # Escáner estático del proyecto
+│   ├── synchronization/            # Sincronización incremental del grafo
+│   ├── analysis/                   # Readiness (checker) y Complejidad (McCabe)
+│   ├── health/                     # Diagnóstico y mantenimiento (doctor)
+│   └── reporting/                  # Reportes semanales de avance
+├── application/                    # CLI y orquestación
+│   ├── cli/                        # Parser principal de argumentos CLI
+│   └── commands/                   # Comandos unificados (build, scan, sync, hook)
 ├── infrastructure/                 # Integraciones externas
-│   ├── integrations/
-│   │   ├── git.py                  # Historial git
-│   │   ├── hermes.py               # Sesiones de Hermes
-│   │   ├── chat_export.py          # Chats multi-plataforma
-│   │   └── antigravity.py          # Antigravity IDE
-│   └── analyzers/
-│       ├── structure.py            # Análisis de estructura
-│       └── content.py              # Análisis de contenido
-├── presentation/                   # Generación de salida
-│   ├── writer.py                   # Vault Obsidian
-│   └── brief.py                    # CONTEXT.md
-├── scripts/                        # Scripts auxiliares
-│   └── standardize.py              # CLI de estandarización
-└── __tests__/                      # Tests
-    └── smoke.py
+│   ├── integrations/               # Git, Hermes, Antigravity, Chat exports
+│   └── analyzers/                  # Analizadores AST de estructura y contenido
+├── presentation/                   # Generación de salidas visuales
+│   ├── vault/                      # Generador Obsidian Vault (atomic, consolidated, templates)
+│   └── briefs/                     # Generador de CONTEXT.md y AGENTS.md
+└── __tests__/                      # Suite de tests unitarios
 ```
 
 ## Comandos del CLI
 
 | Comando | Descripción |
 |---------|-------------|
-| `ctxmap init` | Crea estructura `.context-map/` |
-| `ctxmap scan [target]` | Escanea proyecto y genera eventos |
-| `ctxmap import-git [target]` | Importa historial de commits |
-| `ctxmap import-sessions` | Importa sesiones de Hermes |
-| `ctxmap import-chat [file]` | Importa chats externos |
-| `ctxmap import-antigravity` | Importa chats de Antigravity IDE |
-| `ctxmap build` | Genera vault completo |
-| `ctxmap sync` | Sync incremental (solo nuevos) |
-| `ctxmap sync --migrate` | Migrar proyecto a nueva versión |
-| `ctxmap check` | Verifica readiness (0-100) |
-| `ctxmap weekly` | Genera reporte semanal |
-| `ctxmap update` | Actualiza ContextMap desde GitHub |
+| `ctxmap init` | Inicializa estructura `.context-map/` y `AGENTS.md` |
+| `ctxmap scan [target]` | Escanea proyecto y genera eventos sintácticos |
+| `ctxmap build` | Genera Vault Obsidian completo y briefs |
+| `ctxmap build --clean --brief` | Reconstrucción limpia con brief para Agentes |
+| `ctxmap sync` | Sincronización incremental de nodos |
+| `ctxmap hook install [target]` | Instala el Git Pre-Commit Hook automático |
+| `ctxmap check [target]` | Analiza el score de readiness del proyecto (0-100) |
+| `ctxmap import-git [target]` | Importa historial de commits y tags de Git |
+| `ctxmap import-antigravity` | Importa sesiones de chat de Antigravity IDE |
+| `ctxmap import-sessions` | Importa sesiones de Hermes Agent |
+| `ctxmap weekly` | Genera reporte semanal de avances |
+| `ctxmap doctor` | Diagnóstico de salud y reparación de estado |
 
 ## Convención de Commits
 
