@@ -73,7 +73,7 @@ Al ejecutar `ctxmap build --brief` o `ctxmap init`, ContextMap genera automátic
 
 Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar una vista de grafo visualmente deslumbrante en Obsidian:
 
-```
+```Architecture
 .context-map/vault/
 ├── 00-INDICE.md                          # Nivel 0: Dashboard central MOC
 ├── 1.0-PROYECTO/                         # Nivel 1: Identidad y Visión

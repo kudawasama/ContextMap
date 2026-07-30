@@ -21,7 +21,7 @@ python -m context_map.cli check .
 
 ## Arquitectura del Proyecto (Clean Architecture Jerárquica)
 
-```
+```Arquitectura del Proyecto (Clean Architecture Jerárquica)
 context_map/
 ├── cli.py                          # Punto de entrada CLI
 ├── core/                           # Fundamentos del dominio
@@ -51,7 +51,7 @@ context_map/
 ## Comandos del CLI
 
 | Comando | Descripción |
-|---------|-------------|
+| --------- | ------------- |
 | `ctxmap auto [target]` | Automatización All-in-One completa (scan + git + build --clean --brief) |
 | `ctxmap init` | Inicializa estructura `.context-map/` y `AGENTS.md` |
 | `ctxmap scan [target]` | Escanea proyecto y genera eventos sintácticos |
@@ -69,6 +69,7 @@ context_map/
 ## Convención de Commits
 
 Usa convención de commits:
+
 - `feat:` nueva funcionalidad
 - `fix:` corrección de bug
 - `docs:` documentación
