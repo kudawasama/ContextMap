@@ -105,33 +105,15 @@ def extraer_todos(ruta: str) -> List[str]:
 
 
 def calcular_complejidad(ruta: str) -> str:
-    """Estima la complejidad de un archivo Python."""
-    try:
-        with open(ruta, "r", encoding="utf-8", errors="ignore") as f:
-            lineas = f.readlines()
-
-        total = len(lineas)
-        if total == 0:
-            return "baja"
-
-        # Contar estructuras de control
-        estructuras = 0
-        for linea in lineas:
-            linea = linea.strip()
-            if any(linea.startswith(kw) for kw in ["if ", "elif ", "for ", "while ", "try:", "except"]):
-                estructuras += 1
-
-        ratio = estructuras / total if total > 0 else 0
-
-        if ratio > 0.3 or total > 500:
+    """Calcula el nivel de complejidad ciclomática de un archivo Python."""
+    from context_map.domain.analysis.complexity import calcular_complejidad_archivo
+    res = calcular_complejidad_archivo(ruta)
+    if res:
+        if res.max_complejidad_funcion > 10 or res.complejidad_total > 40:
             return "alta"
-        elif ratio > 0.15 or total > 200:
+        elif res.max_complejidad_funcion > 5 or res.complejidad_total > 20:
             return "media"
-        else:
-            return "baja"
-
-    except Exception:
-        return "baja"
+    return "baja"
 
 
 def analizar_contenido(ruta: str) -> Optional[InfoContenido]:
