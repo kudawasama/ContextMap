@@ -168,18 +168,21 @@ def inferir_status(node: Node) -> str:
     Returns:
         str: Estado del nodo ('completado', 'pendiente', 'activo').
     """
+    if node.source in ("git", "import-git") or node.title.startswith("[") or re.match(r"^\[[0-9a-f]{7}\]", node.title):
+        return "completado"
+
     text = f"{node.title} {node.summary or ''}".lower()
 
     # Si es un TODO / FIXME o contiene marcas de pendiente explícitas
-    pendiente_kw = ["todo:", "fixme:", "por hacer", "[ ]", "pendiente", "proxima version", "futura"]
-    if any(kw in text for kw in pendiente_kw) or "todo" in node.tags or "pendiente" in node.tags:
+    pendiente_kw = ["todo:", "fixme:", "por hacer", "[ ]", "proxima version", "futura"]
+    if any(kw in text for kw in pendiente_kw) or "todo" in node.tags:
         return "pendiente"
 
     # Elementos de estructura, documentación o código existente son completados
     if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
         return "completado"
 
-    if node.source in ("git", "scanner"):
+    if node.source == "scanner":
         if any(prefix in node.title for prefix in ["Función:", "Módulo:", "Clase:", "Documentación", "Entrypoint:", "Proyecto", "Archivo:", "Carpeta", "capa", "__init__"]):
             return "completado"
 
@@ -290,14 +293,30 @@ def estandarizar_nodo(node: Node) -> Node:
     if class_tag not in tags:
         tags.append(class_tag)
 
-    return Node(
+    nuevo_tipo = corregir_tipo(node)
+    nodo_temp = Node(
         id=node.id,
-        type=corregir_tipo(node),
+        type=nuevo_tipo,
         title=node.title,
         summary=node.summary,
         tags=tags,
         source=node.source,
-        status=inferir_status(node),
+        status=node.status,
+        version=node.version,
+        evidence=node.evidence,
+        created_at=node.created_at,
+        updated_at=node.updated_at,
+        classification=classif_id,
+    )
+
+    return Node(
+        id=node.id,
+        type=nuevo_tipo,
+        title=node.title,
+        summary=node.summary,
+        tags=tags,
+        source=node.source,
+        status=inferir_status(nodo_temp),
         version=node.version,
         evidence=inferir_evidence(node) or node.evidence,
         created_at=node.created_at,
