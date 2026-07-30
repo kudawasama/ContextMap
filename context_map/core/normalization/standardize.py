@@ -8,10 +8,11 @@ Proporciona funciones para:
 - Inferencia de estado del nodo (completado, pendiente, activo).
 - Corrección de tipo según contenido real.
 - Inferencia de evidencias (rutas de archivo, líneas, clases).
+- Deduplicación de nodos por (tipo, título) para mantener el grafo limpio.
 """
 
 import re
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Set
 
 from context_map.core.models import Node
 
@@ -151,7 +152,7 @@ def estandarizar_tags(tags: List[str]) -> List[str]:
             tag = TAG_MERGE[tag]
 
         tag = tag.lower().strip()
-        tag = re.sub(r"[^a-z0-9]", "", tag)
+        tag = re.sub(r"[^a-z0-9:]", "", tag)
 
         if tag and tag not in tags_estandarizados:
             tags_estandarizados.append(tag)
@@ -289,6 +290,12 @@ def estandarizar_nodo(node: Node) -> Node:
     """
     classif_id, _ = inferir_classification(node)
     tags = estandarizar_tags(node.tags)
+    
+    # Limpiar tags legacy "class{X}" sin colon (ej: "classchore", "classfeature")
+    # que se generaron antes de que estandarizar_tags preservara ":"
+    tags = [t for t in tags if not re.match(r'^class[a-z]+$', t)]
+    
+    # Agregar class_tag solo si no existe ya en formato limpio
     class_tag = classification_tag(classif_id)
     if class_tag not in tags:
         tags.append(class_tag)
@@ -335,3 +342,23 @@ def estandarizar_nodos(nodes: List[Node]) -> List[Node]:
         List[Node]: Lista de nodos procesados.
     """
     return [estandarizar_nodo(n) for n in nodes]
+
+
+def dedup_nodes(nodes: List[Node]) -> List[Node]:
+    """Elimina nodos duplicados conservando la última ocurrencia por (type, title[:80]).
+
+    Previene la acumulación de nodos duplicados en graph.jsonl después de
+    múltiples ciclos de scan/build. Mantiene el nodo más reciente (último
+    en aparecer) como representante de cada clave única.
+
+    Args:
+        nodes (List[Node]): Lista de nodos con posibles duplicados.
+
+    Returns:
+        List[Node]: Lista desduplicada, último nodo por clave gana.
+    """
+    seen: Dict[Tuple[str, str], Node] = {}
+    for n in nodes:
+        key = (n.type, n.title[:80].lower())
+        seen[key] = n  # última ocurrencia gana
+    return list(seen.values())

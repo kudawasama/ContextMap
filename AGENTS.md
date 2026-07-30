@@ -51,7 +51,7 @@ Cualquier agente que tome una tarea en este proyecto **DEBE** seguir estos pasos
 1. **Leer el Brief Ejecutivo**:
    Consultar [.context-map/CONTEXT.md](file:///c:/Users/jose.cespedes/Desktop/PruebaContext/.context-map/CONTEXT.md) para conocer las métricas, riesgos críticos y tareas pendientes.
 2. **Revisar el Backlog y Vault**:
-   Inspeccionar `.context-map/vault-Context-Map/2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
+   Inspeccionar `.context-map/vault-ContextMap/2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
 3. **No Suponer Rutas o Lógica**:
    Inspeccionar el código fuente antes de formular hipótesis de cambio.
 

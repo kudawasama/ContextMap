@@ -6,6 +6,7 @@ a partir de eventos recopilados y nodos existentes.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 
@@ -63,6 +64,17 @@ def cmd_build(args) -> None:
     e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))
     nodes = [estandarizar_nodo(Node.from_dict(r)) for r in records]
     edges = [Edge.from_dict(r) for r in e_records]
+
+    # Deduplicar y re-persistir el estado limpio
+    from context_map.core.normalization import dedup_nodes
+    nodos_dedup = dedup_nodes(nodes)
+    if len(nodos_dedup) < len(nodes):
+        graph_file = os.path.join(STATE_DIR, "graph.jsonl")
+        with open(graph_file, "w", encoding="utf-8") as f:
+            for n in nodos_dedup:
+                f.write(json.dumps(n.to_dict(), ensure_ascii=False) + "\n")
+        print(f"dedup: {len(nodes)} -> {len(nodos_dedup)} nodos (eliminados {len(nodes) - len(nodos_dedup)})")
+        nodes = nodos_dedup
 
     md = render_active_map(project_name(args), nodes, edges)
     write_map(md)

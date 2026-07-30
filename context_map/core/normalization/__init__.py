@@ -9,6 +9,7 @@ from context_map.core.normalization.standardize import (
     corregir_tipo,
     estandarizar_nodo,
     estandarizar_nodos,
+    dedup_nodes,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "corregir_tipo",
     "estandarizar_nodo",
     "estandarizar_nodos",
+    "dedup_nodes",
 ]

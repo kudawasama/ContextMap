@@ -123,8 +123,14 @@ def cmd_sync_migrate(args) -> None:
     print()
 
     # 3. Aplicar estandarización
-    from context_map.core.standardize import estandarizar_nodos
+    from context_map.core.normalization import estandarizar_nodos, dedup_nodes
     nodes_estandarizados = estandarizar_nodos(nodes)
+    
+    # 3b. Deduplicar nodos duplicados históricos
+    nodos_dedup = dedup_nodes(nodes_estandarizados)
+    if len(nodos_dedup) < len(nodes_estandarizados):
+        print(f"dedup: {len(nodes_estandarizados)} -> {len(nodos_dedup)} nodos (eliminados {len(nodes_estandarizados) - len(nodos_dedup)})")
+        nodes_estandarizados = nodos_dedup
 
     # 4. Guardar cambios
     with open(graph_file, "w", encoding="utf-8") as f:

@@ -17,7 +17,7 @@ from context_map.core.parsing import (
     events_to_model,
 )
 from context_map.core.storage import append_jsonl, load_jsonl
-from context_map.core.normalization import estandarizar_nodo
+from context_map.core.normalization import estandarizar_nodo, dedup_nodes
 
 
 def _hash_evento(e: Event) -> str:
@@ -173,6 +173,10 @@ def sync_incremental(
 
     graph_file = os.path.join(state_dir, "graph.jsonl")
     todos_nodos = nodos_existentes + (nodos_nuevos if nodos_nuevos else [])
+
+    # Deduplicar antes de persistir para eliminar acumulaciones históricas
+    todos_nodos = dedup_nodes(todos_nodos)
+
     try:
         with open(graph_file, "w", encoding="utf-8") as f:
             for n in todos_nodos:

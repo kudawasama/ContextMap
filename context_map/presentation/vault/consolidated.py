@@ -952,8 +952,14 @@ def _render_hierarchical_vault(
             with open(os.path.join(completadas_dir, filename), "w", encoding="utf-8") as f:
                 f.write("\n".join(batch_parts))
 
-    # 2.4-Ideas-Relevantes.md
-    top_ideas = idea_nodes[:20]
+    # 2.4-Ideas-Relevantes.md — deduplicado para evitar items repetidos
+    seen_ideas_top: Set[str] = set()
+    top_ideas: List[Node] = []
+    for n in idea_nodes:
+        key = n.title[:80]
+        if key not in seen_ideas_top and len(top_ideas) < 20:
+            seen_ideas_top.add(key)
+            top_ideas.append(n)
 
     ideas_top_parts = [
         "---",
@@ -1082,7 +1088,12 @@ def _render_hierarchical_vault(
     if riesgo_nodes:
         riesgo_seccion_parts.append("## Riesgos Identificados")
         riesgo_seccion_parts.append("")
+        seen_riesgo_idx: Set[str] = set()
         for n in riesgo_nodes:
+            key = n.title[:80]
+            if key in seen_riesgo_idx:
+                continue
+            seen_riesgo_idx.add(key)
             slug = _safe_filename(n.title)
             riesgo_seccion_parts.append(f"- [[{slug}|⚠️ {n.title}]]")
         riesgo_seccion_parts.append("")
@@ -1098,7 +1109,12 @@ def _render_hierarchical_vault(
         f.write("\n".join(riesgo_seccion_parts))
 
     if riesgo_nodes:
+        seen_riesgo_file: Set[str] = set()
         for n in riesgo_nodes:
+            key_file = n.title[:80]
+            if key_file in seen_riesgo_file:
+                continue
+            seen_riesgo_file.add(key_file)
             filename = _safe_filename(n.title) + ".md"
             tags_list = _normalize_tags(n.tags, n.type)
             tags_str = ", ".join(f'"{t}"' for t in tags_list)
