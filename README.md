@@ -36,11 +36,8 @@ En cualquier sesión de chat con tu Agente de IA en el IDE, simplemente escríbe
 Si estás trabajando directamente en consola o automatizando un script:
 
 ```bash
-# 1. Escanear la estructura y contenido del proyecto
-ctxmap scan .
-
-# 2. Reconstruir el Vault de Obsidian, CONTEXT.md y AGENTS.md
-ctxmap build --clean --brief
+# Modo All-in-One: Escaneo + Ingesta Git + Reconstrucción limpia en 1 solo paso
+ctxmap auto .
 ```
 
 ---

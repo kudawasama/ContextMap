@@ -52,6 +52,7 @@ context_map/
 
 | Comando | Descripción |
 |---------|-------------|
+| `ctxmap auto [target]` | Automatización All-in-One completa (scan + git + build --clean --brief) |
 | `ctxmap init` | Inicializa estructura `.context-map/` y `AGENTS.md` |
 | `ctxmap scan [target]` | Escanea proyecto y genera eventos sintácticos |
 | `ctxmap build` | Genera Vault Obsidian completo y briefs |

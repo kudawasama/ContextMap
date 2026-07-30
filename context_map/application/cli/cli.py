@@ -9,6 +9,7 @@ import argparse
 import sys
 
 from context_map.application.commands import (
+    cmd_auto,
     cmd_init,
     cmd_build,
     cmd_scan,
@@ -40,6 +41,11 @@ def create_parser() -> argparse.ArgumentParser:
         description="Mapa mental narrativo de proyectos para agentes de IA",
     )
     sub = p.add_subparsers(dest="cmd", help="Comandos disponibles")
+
+    s_auto = sub.add_parser("auto", help="Automatización completa en 1 paso (scan + git + build)")
+    s_auto.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_auto.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_auto.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
     sub.add_parser("init", help="Crea estructura .context-map/")
 
@@ -101,19 +107,12 @@ def create_parser() -> argparse.ArgumentParser:
     s_weekly = sub.add_parser("weekly", help="Genera reporte semanal")
     s_weekly.add_argument("--days", type=int, default=7, help="Días a reportar")
 
-    s_watch = sub.add_parser("watch", help="Observa cambios automáticamente")
-    s_watch.add_argument("--interval", type=int, default=10, help="Segundos entre checks")
-
     s_brief = sub.add_parser("brief", help="Genera brief para agentes de IA")
     s_brief.add_argument("--project", default="Repo", help="Nombre del proyecto")
 
     s_antigravity = sub.add_parser("import-antigravity", help="Importa chats de Antigravity IDE")
     s_antigravity.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_antigravity.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
-
-    s_antigravity2 = sub.add_parser("import-antigravity2", help="Importa chats de Antigravity 2.0")
-    s_antigravity2.add_argument("--project", default="Repo", help="Nombre del proyecto")
-    s_antigravity2.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
 
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
     sub.add_parser("doctor", help="Diagnostica el entorno y repara problemas conocidos")
@@ -131,6 +130,7 @@ def main() -> None:
         return
 
     commands = {
+        "auto": cmd_auto,
         "init": cmd_init,
         "build": cmd_build,
         "scan": cmd_scan,
@@ -139,9 +139,8 @@ def main() -> None:
         "import-sessions": cmd_import_sessions,
         "import-chat": cmd_import_chat,
         "import-antigravity": cmd_import_antigravity,
-        "import-antigravity2": cmd_import_antigravity2,
+        "import-antigravity2": cmd_import_antigravity,
         "weekly": cmd_weekly,
-        "watch": cmd_watch,
         "brief": cmd_brief,
         "update": cmd_update,
         "doctor": cmd_doctor,

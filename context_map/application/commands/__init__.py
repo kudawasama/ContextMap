@@ -5,6 +5,7 @@ y enfocado. Este paquete solo existe como punto de entrada y como
 historial de cambios.
 """
 
+from context_map.application.commands.auto import cmd_auto
 from context_map.application.commands.build import cmd_build
 from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do_sync
 from context_map.application.commands.scan import cmd_scan
@@ -26,6 +27,7 @@ from context_map.application.commands.tools import (
 from context_map.application.commands.update import cmd_update
 
 __all__ = [
+    "cmd_auto",
     "cmd_build",
     "cmd_sync",
     "cmd_sync_migrate",

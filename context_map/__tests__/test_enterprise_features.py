@@ -109,3 +109,32 @@ def test_complexity_cross_drive_handling() -> None:
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_auto_command_orchestrates_full_workflow() -> None:
+    """Verifica que cmd_auto ejecute el flujo de escaneo y generación en 1 solo paso."""
+    from context_map.application.commands.auto import cmd_auto
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_auto_")
+    py_path = os.path.join(temp_dir, "app.py")
+
+    try:
+        with open(py_path, "w", encoding="utf-8") as f:
+            f.write("# TODO: test auto command\ndef main(): pass\n")
+
+        class Args:
+            target = temp_dir
+            project = "TestAuto"
+            quiet = True
+            mode = "hierarchical"
+            raw = False
+
+        cmd_auto(Args())
+
+        context_dir = os.path.join(temp_dir, ".context-map")
+        assert os.path.exists(context_dir)
+        brief_path = os.path.join(context_dir, "CONTEXT.md")
+        assert os.path.exists(brief_path)
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
