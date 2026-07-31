@@ -93,12 +93,24 @@ def _mermaid_safe_id(text: str) -> str:
 
 
 def _normalize_tags(tags: List[str], type_name: str) -> List[str]:
-    """Normaliza y limita las etiquetas asociadas a un nodo."""
+    """Normaliza y limita las etiquetas asociadas a un nodo.
+
+    Aplica tres transformaciones:
+    1. Conserva los tags del nodo que NO están en ``STANDARD_TAGS_COMMON``
+       (p. ej. evita duplicar ``context-map``).
+    2. Deduplica y limita a los primeros 5 ``topic_tags`` para que el
+       ``frontmatter`` de Obsidian no se vuelva ruidoso.
+    3. Antepone los tags semánticos derivados del tipo de nodo desde
+       ``STANDARD_TAGS_BY_TYPE`` y vuelve a deduplicar para evitar
+       repeticiones entre el prefijo y los topic_tags.
+    """
     base_tags = STANDARD_TAGS_COMMON[:]
     topic_tags = [t for t in tags if t not in base_tags]
     topic_tags = list(dict.fromkeys(topic_tags))[:5]
     prefix = STANDARD_TAGS_BY_TYPE.get(type_name, [])
-    return prefix + topic_tags
+    combined = prefix + topic_tags
+    # Deduplicar preservando orden: evita p. ej. ["riesgo", "class:other", "riesgo"].
+    return list(dict.fromkeys(combined))
 
 
 def _frontmatter(node: Node) -> str:
