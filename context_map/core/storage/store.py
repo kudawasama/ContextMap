@@ -7,9 +7,9 @@ para prevenir pérdida de eventos, generación de vistas legibles y creación de
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
@@ -17,6 +17,8 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from context_map.core.models import Edge, Node
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure(path: str) -> None:
@@ -61,10 +63,12 @@ def load_jsonl(path: str) -> list[dict]:
             for line in f:
                 line_str = line.strip()
                 if line_str:
-                    with contextlib.suppress(json.JSONDecodeError):
+                    try:
                         out.append(json.loads(line_str))
-    except Exception:
-        pass
+                    except json.JSONDecodeError as err:
+                        logger.debug("Línea JSON inválida ignorada en %s: %s", path, err)
+    except Exception as err:
+        logger.warning("No se pudo leer el archivo JSONL %s: %s", path, err)
     return out
 
 
@@ -150,7 +154,8 @@ def snapshot_map(
         try:
             with open(src, "rb") as f:
                 h = hashlib.md5(f.read()).hexdigest()[:8]
-        except Exception:
+        except Exception as err:
+            logger.warning("No se pudo calcular hash del snapshot %s: %s", src, err)
             h = "00000000"
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         out_name = f"{ts}-{h}.md"
@@ -169,7 +174,8 @@ def snapshot_map(
     try:
         shutil.copy2(src, dst)
         return dst
-    except Exception:
+    except Exception as err:
+        logger.warning("No se pudo crear snapshot %s: %s", dst, err)
         return None
 
 

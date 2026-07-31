@@ -6,9 +6,12 @@ Importa conversaciones de Telegram, Discord, Slack, WhatsApp, etc.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -58,8 +61,8 @@ def _parsear_telegram_html(ruta: str) -> list[MensajeChat]:
                     contenido=texto_limpio[:500],
                     plataforma="telegram",
                 ))
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo parsear chat Telegram %s: %s", ruta, err)
 
     return mensajes
 
@@ -82,8 +85,8 @@ def _parsear_texto_simple(ruta: str) -> list[MensajeChat]:
                         contenido=match.group(2).strip()[:500],
                         plataforma="text",
                     ))
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo parsear chat de texto %s: %s", ruta, err)
 
     return mensajes
 
@@ -114,8 +117,8 @@ def _parsear_json(ruta: str) -> list[MensajeChat]:
                         timestamp=str(item.get("timestamp", item.get("date", "")) or ""),
                         plataforma="json",
                     ))
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo parsear chat JSON %s: %s", ruta, err)
 
     return mensajes
 
@@ -197,8 +200,8 @@ def importar_chat(
                     try:
                         obj = json.loads(linea)
                         existentes.add(obj.get("text", "")[:80])
-                    except Exception:
-                        pass
+                    except Exception as err:
+                        logger.debug("Línea no JSON en %s: %s", output_path, err)
 
     # Filtrar nuevos
     nuevos = []

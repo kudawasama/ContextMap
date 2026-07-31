@@ -11,6 +11,7 @@ Responsabilidades:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from datetime import datetime
@@ -18,6 +19,8 @@ from typing import Any
 
 from context_map.core.generators import generar_summary
 from context_map.core.models import Edge, Event, Node
+
+logger = logging.getLogger(__name__)
 
 JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
 
@@ -54,10 +57,11 @@ def _safe_jsonl(path: str) -> list[dict[str, Any]]:
                     continue
                 try:
                     out.append(json.loads(line_str))
-                except Exception:
+                except Exception as err:
+                    logger.debug("Línea no JSON ignorada en %s: %s", path, err)
                     continue
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo parsear JSONL %s: %s", path, err)
     return out
 
 
@@ -135,10 +139,11 @@ def load_events_from_chat_folder(folder: str) -> list[Event]:
                         if not line_str or len(line_str) < 8:
                             continue
                         events.append(_heuristic_event(line_str, source))
-            except Exception:
+            except Exception as err:
+                logger.debug("No se pudo leer archivo de chat %s: %s", path, err)
                 continue
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo leer carpeta de chats %s: %s", folder, err)
     return events
 
 

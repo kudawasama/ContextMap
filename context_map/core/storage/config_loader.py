@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 try:
@@ -10,6 +11,8 @@ except ModuleNotFoundError:  # Python 3.10 o anterior
     import tomli as tomllib
 
 from context_map.core.models.config import ContextMapConfig
+
+logger = logging.getLogger(__name__)
 
 
 def load_project_config(target_dir: str = ".") -> ContextMapConfig:
@@ -36,8 +39,8 @@ def load_project_config(target_dir: str = ".") -> ContextMapConfig:
                 config.brief_enabled = data.get("brief_enabled", True)
                 config.quiet = data.get("quiet", False)
                 return config
-        except Exception:
-            pass
+        except Exception as err:
+            logger.warning("No se pudo cargar %s: %s", custom_toml, err)
 
     # 2. Intentar cargar pyproject.toml [tool.contextmap]
     pyproject_path = os.path.join(target_dir, "pyproject.toml")
@@ -53,7 +56,7 @@ def load_project_config(target_dir: str = ".") -> ContextMapConfig:
                     config.mode = tool_cfg.get("mode", "hierarchical")
                     config.brief_enabled = tool_cfg.get("brief_enabled", True)
                     config.quiet = tool_cfg.get("quiet", False)
-        except Exception:
-            pass
+        except Exception as err:
+            logger.warning("No se pudo cargar %s: %s", pyproject_path, err)
 
     return config

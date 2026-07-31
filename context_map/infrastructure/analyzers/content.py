@@ -5,9 +5,12 @@ Extrae información útil del código fuente.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,8 +41,8 @@ def extraer_docstring(ruta: str) -> str:
         if match:
             return match.group(1).strip()[:200]
 
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudo extraer docstring de %s: %s", ruta, err)
     return ""
 
 
@@ -54,8 +57,8 @@ def extraer_imports(ruta: str) -> list[str]:
                     imports.append(linea[:100])
                 if len(imports) >= 20:  # Límite
                     break
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudieron extraer imports de %s: %s", ruta, err)
     return imports
 
 
@@ -68,8 +71,8 @@ def extraer_clases(ruta: str) -> list[str]:
                 match = re.match(r"class\s+(\w+)", linea)
                 if match:
                     clases.append(match.group(1))
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudieron extraer clases de %s: %s", ruta, err)
     return clases
 
 
@@ -82,8 +85,8 @@ def extraer_funciones(ruta: str) -> list[str]:
                 match = re.match(r"def\s+(\w+)", linea)
                 if match:
                     funciones.append(match.group(1))
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudieron extraer funciones de %s: %s", ruta, err)
     return funciones
 
 
@@ -98,8 +101,8 @@ def extraer_todos(ruta: str) -> list[str]:
                     todos.append(f"L{i}: {linea.strip()[:100]}")
                 if len(todos) >= 10:
                     break
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudieron extraer TODOs de %s: %s", ruta, err)
     return todos
 
 
@@ -135,8 +138,8 @@ def analizar_contenido(ruta: str) -> InfoContenido | None:
     try:
         with open(ruta, encoding="utf-8", errors="ignore") as f:
             info.lineas_codigo = sum(1 for _ in f)
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudo contar líneas de %s: %s", ruta, err)
 
     return info
 
@@ -165,7 +168,8 @@ def analizar_directorio(ruta: str) -> list[InfoContenido]:
             try:
                 if os.path.getsize(ruta_completa) > 1_000_000:
                     continue
-            except OSError:
+            except OSError as err:
+                logger.debug("No se pudo obtener tamaño de %s: %s", ruta_completa, err)
                 continue
             contador += 1
             if contador % 10 == 0:

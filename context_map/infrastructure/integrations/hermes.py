@@ -6,9 +6,12 @@ Lee el historial de conversaciones y extrae contexto automáticamente.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -108,7 +111,7 @@ def leer_sesiones(
         conn.close()
 
     except Exception as e:
-        print(f"Error leyendo sesiones: {e}")
+        logger.warning("Error leyendo sesiones de Hermes: %s", e)
 
     return sesiones
 
@@ -194,8 +197,8 @@ def importar_sesiones(
                     try:
                         obj = json.loads(linea)
                         existentes.add(obj.get("text", "")[:80])
-                    except Exception:
-                        pass
+                    except Exception as err:
+                        logger.debug("Línea no JSON en %s: %s", output_path, err)
 
     # Filtrar nuevos
     nuevos = []

@@ -6,7 +6,7 @@ operaciones comunes que varios comandos necesitan reutilizar.
 
 from __future__ import annotations
 
-import contextlib
+import logging
 import os
 import shutil
 from datetime import datetime
@@ -20,6 +20,8 @@ from context_map.core.parsing import (
 from context_map.core.storage import (
     append_jsonl,
 )
+
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # Constantes de directorios
@@ -76,8 +78,8 @@ def _git_repo_name(target_dir: str = ".") -> str | None:
                             repo_name = repo_name[:-4]
                         if repo_name:
                             return repo_name
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("No se pudo leer configuración remota de git: %s", err)
     return None
 
 
@@ -172,11 +174,13 @@ def safe_rmtree(path: str) -> None:
             shutil.rmtree(path, ignore_errors=True)
             if not os.path.isdir(path):
                 break
-            with contextlib.suppress(Exception):
+            try:
                 subprocess.run(
                     ["cmd", "/c", "rd", "/s", "/q", path],
                     capture_output=True, timeout=10,
                 )
+            except Exception as err:
+                logger.debug("No se pudo forzar borrado de %s: %s", path, err)
 
 
 def append_nodes_edges(nodes: list[Node], edges: list[Edge]) -> None:

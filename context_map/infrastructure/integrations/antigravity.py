@@ -10,13 +10,15 @@ Y de Antigravity 2.0 desde:
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
 import os
 import sqlite3
 from dataclasses import dataclass
 
 from context_map.core.models import Event
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -106,7 +108,8 @@ def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> list[MensajeAn
             if msg.content or msg.title:
                 mensajes.append(msg)
 
-        except (json.JSONDecodeError, Exception):
+        except Exception as err:
+            logger.debug("Mensaje Antigravity no procesable: %s", err)
             continue
 
     return sorted(mensajes, key=lambda m: m.timestamp)
@@ -144,13 +147,16 @@ def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
             # Los datos están en formato BLOB (protobuf), intentar extraer texto
             content = ""
             if task_details:
-                # Intentar decodificar como UTF-8
-                with contextlib.suppress(BaseException):
+                try:
                     content = task_details.decode("utf-8", errors="ignore")
+                except Exception as err:
+                    logger.debug("No se pudo decodificar task_details: %s", err)
 
             if step_payload:
-                with contextlib.suppress(BaseException):
+                try:
                     content += step_payload.decode("utf-8", errors="ignore")
+                except Exception as err:
+                    logger.debug("No se pudo decodificar step_payload: %s", err)
 
             if content:
                 msg = MensajeAntigravity(
@@ -165,8 +171,8 @@ def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
 
         conn.close()
 
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo leer la base SQLite %s: %s", db_path, err)
 
     return mensajes
 
@@ -240,8 +246,8 @@ def _detectar_proyecto(mensajes: list[MensajeAntigravity]) -> str:
                     parts = cwd.replace("\\", "/").split("/")
                     if len(parts) >= 2:
                         return str(parts[-1])
-            except (json.JSONDecodeError, ValueError, TypeError):
-                pass
+            except (json.JSONDecodeError, ValueError, TypeError) as err:
+                logger.debug("Tool args no parseables: %s", err)
 
         # Buscar en el contenido
         if "CotanoPet" in msg.content:

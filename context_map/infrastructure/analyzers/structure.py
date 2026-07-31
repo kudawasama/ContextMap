@@ -5,9 +5,12 @@ Escanea archivos, clasifica por tipo, y genera contexto estructural.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -106,7 +109,8 @@ def _contar_lineas(ruta: str) -> int:
     try:
         with open(ruta, encoding="utf-8", errors="ignore") as f:
             return sum(1 for _ in f)
-    except Exception:
+    except Exception as err:
+        logger.debug("No se pudo contar líneas de %s: %s", ruta, err)
         return 0
 
 
@@ -149,7 +153,8 @@ def escanear_proyecto(ruta_raiz: str, ignorar: list[str] | None = None) -> Estru
             # Saltar archivos binarios grandes
             try:
                 tamano = os.path.getsize(ruta_completa)
-            except OSError:
+            except OSError as err:
+                logger.debug("No se pudo obtener tamaño de %s: %s", ruta_completa, err)
                 continue
 
             if tamano > 1_000_000:  # > 1MB

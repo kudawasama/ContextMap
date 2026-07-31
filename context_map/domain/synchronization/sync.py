@@ -8,6 +8,7 @@ duplicaciones o reescritura innecesaria del estado guardado.
 from __future__ import annotations
 
 import json
+import logging
 import os
 
 from context_map.core.models import Edge, Event, Node
@@ -18,6 +19,8 @@ from context_map.core.parsing import (
     load_events_from_jsonl,
 )
 from context_map.core.storage import append_jsonl, load_jsonl
+
+logger = logging.getLogger(__name__)
 
 
 def _hash_evento(e: Event) -> str:
@@ -47,7 +50,8 @@ def _eventos_procesados(state_dir: str) -> set[str]:
     try:
         with open(hash_file, encoding="utf-8") as f:
             return set(line.strip() for line in f if line.strip())
-    except Exception:
+    except Exception as err:
+        logger.debug("No se pudo leer %s: %s", hash_file, err)
         return set()
 
 
@@ -63,8 +67,8 @@ def _guardar_evento_procesado(state_dir: str, evento_hash: str) -> None:
     try:
         with open(hash_file, "a", encoding="utf-8") as f:
             f.write(evento_hash + "\n")
-    except Exception:
-        pass
+    except Exception as err:
+        logger.warning("No se pudo marcar evento como procesado en %s: %s", hash_file, err)
 
 
 def _cargar_estado_existente(state_dir: str) -> tuple[list[Node], list[Edge]]:
@@ -181,8 +185,8 @@ def sync_incremental(
         with open(graph_file, "w", encoding="utf-8") as f:
             for n in todos_nodos:
                 f.write(json.dumps(n.to_dict(), ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    except Exception as err:
+        logger.error("No se pudo persistir el grafo en %s: %s", graph_file, err)
 
     return {
         "nodos_existentes": len(nodos_existentes),

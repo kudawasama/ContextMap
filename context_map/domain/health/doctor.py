@@ -7,11 +7,13 @@ directorios temporales de actualización y estado de vaults generados.
 
 from __future__ import annotations
 
-import contextlib
+import logging
 import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -92,12 +94,14 @@ def _safe_rmtree(path: str) -> None:
                 shutil.rmtree(path, ignore_errors=True)
                 if not os.path.isdir(path):
                     break
-                with contextlib.suppress(Exception):
+                try:
                     subprocess.run(
                         ["cmd", "/c", "rd", "/s", "/q", path],
                         capture_output=True,
                         timeout=10,
                     )
+                except Exception as err:
+                    logger.debug("No se pudo forzar borrado de %s: %s", path, err)
                 if not os.path.isdir(path):
                     break
 
@@ -146,6 +150,7 @@ def check_update_dir(report: DoctorReport) -> None:
         check.fix_applied = True
         check.fix_message = "Se eliminó ~/.context-map-update para reparar."
     except Exception as exc:
+        logger.warning("No se pudo eliminar ~/.context-map-update: %s", exc)
         check.fix_message = f"No se pudo eliminar el directorio: {exc}"
 
     report.add(check)

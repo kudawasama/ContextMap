@@ -26,6 +26,7 @@ from context_map.application.commands import (
     cmd_weekly,
 )
 from context_map.application.commands.hook import cmd_hook_install
+from context_map.core.logging_setup import setup_logging
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -38,6 +39,7 @@ def create_parser() -> argparse.ArgumentParser:
         prog="ctxmap",
         description="Mapa mental narrativo de proyectos para agentes de IA",
     )
+    p.add_argument("-v", "--verbose", action="store_true", help="Logs detallados (nivel DEBUG)")
     sub = p.add_subparsers(dest="cmd", help="Comandos disponibles")
 
     s_auto = sub.add_parser("auto", help="Automatización completa en 1 paso (scan + git + build)")
@@ -125,6 +127,9 @@ def main() -> None:
     if not args.cmd:
         p.print_help()
         return
+
+    quiet = bool(getattr(args, "quiet", False))
+    setup_logging(quiet=quiet, verbose=bool(args.verbose))
 
     commands = {
         "auto": cmd_auto,

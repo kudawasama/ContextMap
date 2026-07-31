@@ -6,6 +6,7 @@ y jerárquica del vault de Obsidian para consumo óptimo por agentes de IA.
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -15,6 +16,8 @@ from datetime import datetime
 from context_map.core.models import Edge, Node
 from context_map.presentation.vault.atomic import _render_conexiones
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_project_purpose(cwd: str) -> str:
@@ -33,7 +36,8 @@ def _extract_project_purpose(cwd: str) -> str:
     try:
         with open(readme_path, encoding="utf-8") as f:
             lines = f.readlines()
-    except Exception:
+    except Exception as err:
+        logger.warning("No se pudo leer README.md: %s", err)
         return ""
 
     title_idx = None
@@ -574,7 +578,8 @@ def _render_hierarchical_vault(
         try:
             with open(readme_path, encoding="utf-8") as rf:
                 readme_content = rf.read().strip()
-        except Exception:
+        except Exception as err:
+            logger.warning("No se pudo leer README.md: %s", err)
             readme_content = ""
 
     narrativa_parts = [
@@ -1440,7 +1445,8 @@ def _render_hierarchical_vault(
                     versiones_parts.append(f"- ... y {len(items) - 15} commits más")
                 versiones_parts.append("")
 
-    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as err:
+        logger.warning("No se pudo obtener el historial de versiones: %s", err)
         versiones_parts.append("_(No se pudo obtener el historial de versiones)_")
         versiones_parts.append("")
 

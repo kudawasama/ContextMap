@@ -8,8 +8,11 @@ ramificaciones `if`, `for`, `while`, `try`, `except`) en funciones y clases.
 from __future__ import annotations
 
 import ast
+import logging
 import os
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -81,7 +84,8 @@ def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> Met
             code = f.read()
 
         tree = ast.parse(code, filename=ruta_archivo)
-    except Exception:
+    except Exception as err:
+        logger.debug("No se pudo analizar AST de %s: %s", ruta_archivo, err)
         return None
 
     try:

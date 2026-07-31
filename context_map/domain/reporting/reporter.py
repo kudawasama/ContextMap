@@ -9,11 +9,13 @@ Responsabilidades:
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
 import os
 from collections import Counter
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 
 def _cargar_eventos(state_dir: str) -> list[dict]:
@@ -34,10 +36,12 @@ def _cargar_eventos(state_dir: str) -> list[dict]:
                 for linea in f:
                     linea_str = linea.strip()
                     if linea_str:
-                        with contextlib.suppress(Exception):
+                        try:
                             eventos.append(json.loads(linea_str))
-        except Exception:
-            pass
+                        except Exception as err:
+                            logger.debug("Evento no JSON ignorado: %s", err)
+        except Exception as err:
+            logger.warning("No se pudo leer el grafo %s: %s", graph_path, err)
 
     return eventos
 
@@ -63,7 +67,8 @@ def _filtrar_por_fecha(eventos: list[dict], dias: int = 7) -> list[dict]:
                 fecha = datetime.fromisoformat(ts.replace("Z", "+00:00"))
                 if fecha >= desde:
                     filtrados.append(e)
-            except Exception:
+            except Exception as err:
+                logger.debug("Timestamp no parseable %r: %s", ts, err)
                 filtrados.append(e)
         else:
             filtrados.append(e)

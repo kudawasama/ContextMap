@@ -5,10 +5,13 @@ Extrae contexto de commits, tags, y ramas.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import subprocess
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -44,8 +47,8 @@ def _ejecutar_git(ruta: str, args: list[str]) -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-    except Exception:
-        pass
+    except Exception as err:
+        logger.debug("Fallo al ejecutar git %s en %s: %s", args, ruta, err)
     return ""
 
 
