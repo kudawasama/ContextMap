@@ -10,12 +10,11 @@ Y de Antigravity 2.0 desde:
 
 from __future__ import annotations
 
-import os
+import contextlib
 import json
+import os
 import sqlite3
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from datetime import datetime
 
 from context_map.core.models import Event
 
@@ -37,7 +36,7 @@ class MensajeAntigravity:
 class ConversacionAntigravity:
     """Representa una conversación completa."""
     id: str
-    mensajes: List[MensajeAntigravity]
+    mensajes: list[MensajeAntigravity]
     fecha_inicio: str = ""
     fecha_fin: str = ""
     proyecto: str = ""
@@ -52,7 +51,7 @@ def _obtener_ruta_antigravity(ide: bool = True) -> str:
         return os.path.join(home, ".gemini", "antigravity")
 
 
-def _listar_conversaciones(ruta_base: str) -> List[str]:
+def _listar_conversaciones(ruta_base: str) -> list[str]:
     """Lista los IDs de conversaciones disponibles."""
     brain_dir = os.path.join(ruta_base, "brain")
     if not os.path.exists(brain_dir):
@@ -70,9 +69,9 @@ def _listar_conversaciones(ruta_base: str) -> List[str]:
     return conversaciones
 
 
-def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> List[MensajeAntigravity]:
+def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> list[MensajeAntigravity]:
     """Lee mensajes desde archivos JSON."""
-    mensajes = []
+    mensajes: list[MensajeAntigravity] = []
     msgs_dir = os.path.join(ruta_brain, conversation_id, ".system_generated", "messages")
 
     if not os.path.exists(msgs_dir):
@@ -84,7 +83,7 @@ def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> List[MensajeAn
 
         filepath = os.path.join(msgs_dir, filename)
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Extraer información del mensaje
@@ -107,15 +106,15 @@ def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> List[MensajeAn
             if msg.content or msg.title:
                 mensajes.append(msg)
 
-        except (json.JSONDecodeError, Exception) as e:
+        except (json.JSONDecodeError, Exception):
             continue
 
     return sorted(mensajes, key=lambda m: m.timestamp)
 
 
-def _leer_conversacion_sqlite(db_path: str) -> List[MensajeAntigravity]:
+def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
     """Lee mensajes desde una base de datos SQLite."""
-    mensajes = []
+    mensajes: list[MensajeAntigravity] = []
 
     if not os.path.exists(db_path):
         return mensajes
@@ -145,17 +144,13 @@ def _leer_conversacion_sqlite(db_path: str) -> List[MensajeAntigravity]:
             # Los datos están en formato BLOB (protobuf), intentar extraer texto
             content = ""
             if task_details:
-                try:
-                    # Intentar decodificar como UTF-8
+                # Intentar decodificar como UTF-8
+                with contextlib.suppress(BaseException):
                     content = task_details.decode("utf-8", errors="ignore")
-                except:
-                    pass
 
             if step_payload:
-                try:
+                with contextlib.suppress(BaseException):
                     content += step_payload.decode("utf-8", errors="ignore")
-                except:
-                    pass
 
             if content:
                 msg = MensajeAntigravity(
@@ -170,7 +165,7 @@ def _leer_conversacion_sqlite(db_path: str) -> List[MensajeAntigravity]:
 
         conn.close()
 
-    except Exception as e:
+    except Exception:
         pass
 
     return mensajes
@@ -179,7 +174,7 @@ def _leer_conversacion_sqlite(db_path: str) -> List[MensajeAntigravity]:
 def leer_conversaciones_antigravity(
     ide: bool = True,
     limite: int = 10
-) -> List[ConversacionAntigravity]:
+) -> list[ConversacionAntigravity]:
     """Lee conversaciones de Antigravity IDE o 2.0.
 
     Args:
@@ -232,7 +227,7 @@ def leer_conversaciones_antigravity(
     return conversaciones
 
 
-def _detectar_proyecto(mensajes: List[MensajeAntigravity]) -> str:
+def _detectar_proyecto(mensajes: list[MensajeAntigravity]) -> str:
     """Detecta el proyecto del contexto de la conversación."""
     for msg in mensajes:
         # Buscar rutas de proyecto en los argumentos de herramientas
@@ -244,8 +239,8 @@ def _detectar_proyecto(mensajes: List[MensajeAntigravity]) -> str:
                     # Extraer nombre del proyecto
                     parts = cwd.replace("\\", "/").split("/")
                     if len(parts) >= 2:
-                        return parts[-1]
-            except:
+                        return str(parts[-1])
+            except (json.JSONDecodeError, ValueError, TypeError):
                 pass
 
         # Buscar en el contenido
@@ -264,7 +259,6 @@ def _detectar_proyecto(mensajes: List[MensajeAntigravity]) -> str:
 def clasificar_mensaje(msg: MensajeAntigravity) -> str:
     """Clasifica un mensaje de Antigravity."""
     content_lower = msg.content.lower()
-    title_lower = msg.title.lower()
 
     # Clasificar por tipo de acción
     if msg.tool_name == "run_command":
@@ -322,16 +316,13 @@ def es_mensaje_ruido(msg: MensajeAntigravity) -> bool:
             return True
 
     # Títulos vacíos o con solo espacios
-    if not msg.title or not msg.title.strip():
-        return True
-
-    return False
+    return bool(not msg.title or not msg.title.strip())
 
 
 def importar_antigravity(
     ide: bool = True,
     limite: int = 5,
-    output_path: str = None,
+    output_path: str | None = None,
 ) -> int:
     """Importa conversaciones de Antigravity como eventos.
 

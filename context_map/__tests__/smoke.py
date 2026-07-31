@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import os
-from context_map.core.storage import write_map, snapshot_map
+from context_map.core.models import Edge, Node
 from context_map.presentation.vault import render_active_map
-from context_map.core.models import Node, Edge
 
 
 def test_smoke_render() -> None:

@@ -8,21 +8,20 @@ from __future__ import annotations
 
 import os
 import re
-from typing import List, Dict, Optional, Set, Tuple
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 
-from context_map.core.models import Node, Edge
+from context_map.core.models import Edge, Node
 from context_map.presentation.vault.templates import (
-    TYPE_TO_FOLDER,
     STATUS_FOLDERS,
-    _slugificar,
+    TYPE_TO_FOLDER,
     _frontmatter,
+    _slugificar,
     _wiki_links,
 )
 
 
-def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
+def _render_nota(node: Node, all_nodes: list[Node], edges: list[Edge]) -> str:
     """Renderiza una nota individual del vault Obsidian."""
     frontmatter = _frontmatter(node)
     links = _wiki_links(node, all_nodes, edges)
@@ -97,7 +96,7 @@ def _render_nota(node: Node, all_nodes: List[Node], edges: List[Edge]) -> str:
     return "\n".join(partes)
 
 
-def _render_moc(project_name: str, nodes: List[Node], edges: List[Edge]) -> str:
+def _render_moc(project_name: str, nodes: list[Node], edges: list[Edge]) -> str:
     """Renderiza el Map of Content (índice principal) para modo atómico."""
     frontmatter = f"""---
 type: moc
@@ -107,7 +106,7 @@ total_nodes: {len(nodes)}
 total_edges: {len(edges)}
 ---"""
 
-    por_tipo: Dict[str, List[Node]] = {}
+    por_tipo: dict[str, list[Node]] = {}
     for n in nodes:
         por_tipo.setdefault(n.type, []).append(n)
 
@@ -150,7 +149,7 @@ total_edges: {len(edges)}
     return "\n".join(partes)
 
 
-def _detectar_grupo(nodo: Node) -> Optional[str]:
+def _detectar_grupo(nodo: Node) -> str | None:
     """Detecta si un nodo pertenece a un grupo que puede consolidarse."""
     title_lower = nodo.title.lower()
     text = nodo.summary.lower() if nodo.summary else ""
@@ -184,20 +183,13 @@ def _detectar_grupo(nodo: Node) -> Optional[str]:
     return None
 
 
-def _consolidar_grupo(nombre: str, nodos: List[Node], proyecto: str = "") -> Optional[Node]:
+def _consolidar_grupo(nombre: str, nodos: list[Node], proyecto: str = "") -> Node | None:
     """Consolida un grupo de nodos relacionados en uno solo."""
     if not nodos:
         return None
 
     base = nodos[0]
-    candidatos = sorted(
-        [n for n in nodos if n.summary and len(n.summary) > 20],
-        key=lambda n: len(n.summary or ""),
-        reverse=True,
-    )
-    resumen_principal = candidatos[0].summary if candidatos else (base.summary or "(sin descripción)")
-
-    tag_counts: Dict[str, int] = {}
+    tag_counts: dict[str, int] = {}
     for n in nodos:
         for t in n.tags:
             tag_counts[t] = tag_counts.get(t, 0) + 1
@@ -208,7 +200,7 @@ def _consolidar_grupo(nombre: str, nodos: List[Node], proyecto: str = "") -> Opt
     titulo = f"{proyecto_slug} {nombre}" if proyecto_slug else nombre
     titulo = titulo.replace("-", " ").title()
 
-    contenido_parts: List[str] = []
+    contenido_parts: list[str] = []
     for n in nodos[:20]:
         tit = n.title.replace("**", "")
         contenido_parts.append(f"### {tit}\n\n{n.summary or '(sin descripción)'}")
@@ -227,10 +219,10 @@ def _consolidar_grupo(nombre: str, nodos: List[Node], proyecto: str = "") -> Opt
     )
 
 
-def _consolidar_nodos(nodes: List[Node], project_name: str = "") -> Tuple[List[Node], Dict[str, List[str]]]:
+def _consolidar_nodos(nodes: list[Node], project_name: str = "") -> tuple[list[Node], dict[str, list[str]]]:
     """Consolida notas relacionadas en grupos."""
-    grupos: Dict[Tuple[str, str], List[Node]] = defaultdict(list)
-    sin_grupo: List[Node] = []
+    grupos: dict[tuple[str, str], list[Node]] = defaultdict(list)
+    sin_grupo: list[Node] = []
 
     for n in nodes:
         grupo = _detectar_grupo(n)
@@ -241,7 +233,7 @@ def _consolidar_nodos(nodes: List[Node], project_name: str = "") -> Tuple[List[N
             sin_grupo.append(n)
 
     resultado = list(sin_grupo)
-    tracking: Dict[str, List[str]] = {}
+    tracking: dict[str, list[str]] = {}
 
     for (nombre, tipo), nodos_grupo in grupos.items():
         if len(nodos_grupo) >= 5:
@@ -274,7 +266,7 @@ def _obtener_ruta_nota(node: Node, output_dir: str) -> str:
     return os.path.join(output_dir, folder, f"{slug}.md")
 
 
-def _render_conexiones(output_dir: str, nodes: List[Node], edges: List[Edge]) -> None:
+def _render_conexiones(output_dir: str, nodes: list[Node], edges: list[Edge]) -> None:
     """Genera un archivo con todas las conexiones para graph view."""
     from context_map.core.storage.store import _ensure
 
@@ -311,7 +303,7 @@ def _render_conexiones(output_dir: str, nodes: List[Node], edges: List[Edge]) ->
         f.write("\n".join(partes))
 
 
-def _render_tracking_consolidacion(output_dir: str, tracking: Dict[str, List[str]]) -> None:
+def _render_tracking_consolidacion(output_dir: str, tracking: dict[str, list[str]]) -> None:
     """Genera archivo de tracking de consolidación."""
     path = os.path.join(output_dir, "00-CONSOLIDACION.md")
 

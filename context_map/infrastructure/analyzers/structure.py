@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import os
 import re
-from typing import List, Dict, Set
 from dataclasses import dataclass, field
 
 
@@ -29,12 +28,12 @@ class EstructuraProyecto:
     """Resultado del análisis de estructura."""
     nombre: str
     ruta_raiz: str
-    archivos: List[ArchivoInfo] = field(default_factory=list)
-    por_tipo: Dict[str, int] = field(default_factory=dict)
-    entrypoints: List[str] = field(default_factory=list)
-    configs: List[str] = field(default_factory=list)
-    tests: List[str] = field(default_factory=list)
-    docs: List[str] = field(default_factory=list)
+    archivos: list[ArchivoInfo] = field(default_factory=list)
+    por_tipo: dict[str, int] = field(default_factory=dict)
+    entrypoints: list[str] = field(default_factory=list)
+    configs: list[str] = field(default_factory=list)
+    tests: list[str] = field(default_factory=list)
+    docs: list[str] = field(default_factory=list)
     total_lineas: int = 0
 
 
@@ -80,10 +79,7 @@ PATRONES_ENTRYPOINT = [
 def _es_entrypoint(ruta: str) -> bool:
     """Determina si un archivo es un entrypoint."""
     nombre = os.path.basename(ruta)
-    for patron in PATRONES_ENTRYPOINT:
-        if re.match(patron, nombre):
-            return True
-    return False
+    return any(re.match(patron, nombre) for patron in PATRONES_ENTRYPOINT)
 
 
 def _clasificar_archivo(ruta: str) -> str:
@@ -108,13 +104,13 @@ def _clasificar_archivo(ruta: str) -> str:
 def _contar_lineas(ruta: str) -> int:
     """Cuenta líneas de un archivo de texto."""
     try:
-        with open(ruta, "r", encoding="utf-8", errors="ignore") as f:
+        with open(ruta, encoding="utf-8", errors="ignore") as f:
             return sum(1 for _ in f)
     except Exception:
         return 0
 
 
-def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraProyecto:
+def escanear_proyecto(ruta_raiz: str, ignorar: list[str] | None = None) -> EstructuraProyecto:
     """Escanea un proyecto y retorna su estructura.
 
     Args:
@@ -125,11 +121,11 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
         EstructuraProyecto con toda la información
     """
     if ignorar is None:
-        ignorar = {
+        ignorar = [
             "__pycache__", ".git", ".venv", "venv", "env",
             "node_modules", ".mypy_cache", ".pytest_cache",
             ".tox", "dist", "build", "*.egg-info",
-        }
+        ]
 
     nombre = os.path.basename(os.path.abspath(ruta_raiz))
     estructura = EstructuraProyecto(nombre=nombre, ruta_raiz=ruta_raiz)
@@ -188,6 +184,6 @@ def escanear_proyecto(ruta_raiz: str, ignorar: List[str] = None) -> EstructuraPr
                 estructura.tests.append(ruta_relativa)
             if archivo.es_doc:
                 estructura.docs.append(ruta_relativa)
-    
+
     print(f"   [OK] Archivos escaneados: {contador} total    ")
     return estructura

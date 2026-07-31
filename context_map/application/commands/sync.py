@@ -8,33 +8,31 @@ from __future__ import annotations
 
 import json
 import os
-from typing import List, Optional, Tuple
-
-from context_map.core.models import Node, Edge
-from context_map.core.storage import load_jsonl, write_map
-from context_map.presentation.vault import render_active_map, render_obsidian_vault
-from context_map.presentation.briefs import generar_brief
-from context_map.domain.synchronization import sync_incremental
-from context_map.domain.analysis import analizar_readiness
 
 from context_map.application.commands._helpers import (
-    CONTEXT_DIR,
-    STATE_DIR,
     CHATS_DIR,
+    CONTEXT_DIR,
     RAW_DIR,
-    ensure_dirs,
-    resolve_vault_mode,
+    STATE_DIR,
     clean_vault_dir,
+    ensure_dirs,
     project_name,
+    resolve_vault_mode,
     vault_dir,
 )
+from context_map.core.models import Edge, Node
+from context_map.core.storage import load_jsonl, write_map
+from context_map.domain.analysis import analizar_readiness
+from context_map.domain.synchronization import sync_incremental
+from context_map.presentation.briefs import generar_brief
+from context_map.presentation.vault import render_active_map, render_obsidian_vault
 
 
 def do_sync(
     args,
-    proj_name: Optional[str] = None,
+    proj_name: str | None = None,
     mode: str = "hierarchical",
-) -> Tuple[List[Node], List[Edge]]:
+) -> tuple[list[Node], list[Edge]]:
     """Ejecuta sincronización incremental y regenera vault.
 
     Función compartida utilizada por cmd_sync, cmd_scan y los importers.
@@ -123,9 +121,9 @@ def cmd_sync_migrate(args) -> None:
     print()
 
     # 3. Aplicar estandarización
-    from context_map.core.normalization import estandarizar_nodos, dedup_nodes
+    from context_map.core.normalization import dedup_nodes, estandarizar_nodos
     nodes_estandarizados = estandarizar_nodos(nodes)
-    
+
     # 3b. Deduplicar nodos duplicados históricos
     nodos_dedup = dedup_nodes(nodes_estandarizados)
     if len(nodos_dedup) < len(nodes_estandarizados):

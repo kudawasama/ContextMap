@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """Parser de eventos normalizados desde JSONL agnóstico o chats sueltos.
+
 
 Responsabilidades:
 - Normalizar entradas heterogéneas.
@@ -9,19 +8,21 @@ Responsabilidades:
 - Convertir eventos en el grafo conceptual (`Node` y `Edge`).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
-from context_map.core.models import Event, Node, Edge
 from context_map.core.generators import generar_summary
+from context_map.core.models import Edge, Event, Node
 
 JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
 
 # Patrones determinísticos para clasificación heurística del tipo de evento
-_LINE_PATTERNS: List[Tuple[Union[str, re.Pattern[str]], str]] = [
+_LINE_PATTERNS: list[tuple[str | re.Pattern[str], str]] = [
     (re.compile(r"\b(adding|added|feat|feature)\b", re.I), "IDEA"),
     (re.compile(r"\b(fix|fixing|correc|patch)\b", re.I), "CORRECCION"),
     (re.compile(r"\b(test|tested|pytest|spec|qa)\b", re.I), "PRUEBA"),
@@ -33,7 +34,7 @@ _LINE_PATTERNS: List[Tuple[Union[str, re.Pattern[str]], str]] = [
 ]
 
 
-def _safe_jsonl(path: str) -> List[Dict[str, Any]]:
+def _safe_jsonl(path: str) -> list[dict[str, Any]]:
     """Lee objetos JSON desde un archivo JSONL tolerando errores de formato.
 
     Args:
@@ -42,11 +43,11 @@ def _safe_jsonl(path: str) -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: Lista de diccionarios parseados correctamente.
     """
-    out: List[Dict[str, Any]] = []
+    out: list[dict[str, Any]] = []
     if not path or not isinstance(path, str) or not os.path.exists(path):
         return out
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 line_str = line.strip()
                 if not line_str:
@@ -60,7 +61,7 @@ def _safe_jsonl(path: str) -> List[Dict[str, Any]]:
     return out
 
 
-def load_events_from_jsonl(path: str) -> List[Event]:
+def load_events_from_jsonl(path: str) -> list[Event]:
     """Convierte líneas JSON tipadas en objetos Event.
 
     Args:
@@ -69,7 +70,7 @@ def load_events_from_jsonl(path: str) -> List[Event]:
     Returns:
         List[Event]: Lista de eventos normalizados.
     """
-    events: List[Event] = []
+    events: list[Event] = []
     for obj in _safe_jsonl(path):
         t = obj.get("type", "")
         if not isinstance(t, str):
@@ -109,7 +110,7 @@ def _heuristic_event(raw: str, source_hint: str) -> Event:
     return Event(type=kind, text=text, timestamp="", source=source_hint)
 
 
-def load_events_from_chat_folder(folder: str) -> List[Event]:
+def load_events_from_chat_folder(folder: str) -> list[Event]:
     """Lee archivos de conversaciones de chat y genera eventos clasificados.
 
     Args:
@@ -118,7 +119,7 @@ def load_events_from_chat_folder(folder: str) -> List[Event]:
     Returns:
         List[Event]: Eventos extraídos y clasificados.
     """
-    events: List[Event] = []
+    events: list[Event] = []
     if not folder or not os.path.isdir(folder):
         return events
     try:
@@ -128,7 +129,7 @@ def load_events_from_chat_folder(folder: str) -> List[Event]:
                 continue
             source = f"chat:{name}"
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     for line in f:
                         line_str = line.strip()
                         if not line_str or len(line_str) < 8:
@@ -141,7 +142,7 @@ def load_events_from_chat_folder(folder: str) -> List[Event]:
     return events
 
 
-def _dedup_events(events: List[Event]) -> List[Event]:
+def _dedup_events(events: list[Event]) -> list[Event]:
     """Elimina eventos duplicados preservando el orden cronológico.
 
     Args:
@@ -150,8 +151,8 @@ def _dedup_events(events: List[Event]) -> List[Event]:
     Returns:
         List[Event]: Eventos únicos.
     """
-    seen: set[Tuple[str, str, str]] = set()
-    out: List[Event] = []
+    seen: set[tuple[str, str, str]] = set()
+    out: list[Event] = []
     for e in sorted(
         events,
         key=lambda x: (x.timestamp or "", x.source, x.text[:40]),
@@ -174,8 +175,8 @@ def _now() -> str:
 
 
 def events_to_model(
-    events: List[Event], start_id: int = 1
-) -> Tuple[List[Node], List[Edge]]:
+    events: list[Event], start_id: int = 1
+) -> tuple[list[Node], list[Edge]]:
     """Transforma una lista de eventos normalizados en nodos y aristas del grafo conceptual.
 
     Args:
@@ -185,10 +186,10 @@ def events_to_model(
     Returns:
         Tuple[List[Node], List[Edge]]: Dupla con la lista de nodos y la lista de aristas generadas.
     """
-    nodes: List[Node] = []
-    edges: List[Edge] = []
-    counters: Dict[str, int] = {}
-    id_by_key: Dict[Tuple[str, str, str], str] = {}
+    nodes: list[Node] = []
+    edges: list[Edge] = []
+    counters: dict[str, int] = {}
+    id_by_key: dict[tuple[str, str, str], str] = {}
 
     def _prefix(t: str) -> str:
         return t if t in JSONL_TYPES else "IDEA"

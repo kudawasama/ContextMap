@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+
 from context_map.application.commands.hook import cmd_hook_install
 from context_map.core.storage.config_loader import load_project_config
 from context_map.domain.analysis.complexity import calcular_complejidad_archivo
@@ -20,7 +21,7 @@ def test_hook_install_creates_pre_commit_script() -> None:
         hook_path = os.path.join(git_dir, "hooks", "pre-commit")
         assert os.path.exists(hook_path)
 
-        with open(hook_path, "r", encoding="utf-8") as f:
+        with open(hook_path, encoding="utf-8") as f:
             content = f.read()
 
         assert "ContextMap Auto-Sync Pre-Commit Hook" in content

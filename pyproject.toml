@@ -9,6 +9,9 @@ description = "Mapa mental narrativo de proyectos para agentes de IA"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
+dependencies = [
+    "tomli>=2.0.0; python_version < '3.11'",
+]
 authors = [
     {name = "kudawasama", email = "cespedes.jac@gmail.com"}
 ]
@@ -29,6 +32,14 @@ Homepage = "https://github.com/kudawasama/ContextMap"
 Repository = "https://github.com/kudawasama/ContextMap"
 Issues = "https://github.com/kudawasama/ContextMap/issues"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "isort>=5.13.0",
+]
+
 [project.scripts]
 ctxmap = "context_map.cli:main"
 
@@ -37,3 +48,35 @@ packages = ["context_map"]
 
 [tool.pytest.ini_options]
 testpaths = ["context_map/__tests__"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["context_map"]
+known-third-party = ["tomllib"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["context_map"]
+known_third_party = ["tomllib"]
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+disallow_untyped_defs = false
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["tomllib", "tomli"]
+ignore_missing_imports = true
+

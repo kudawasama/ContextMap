@@ -1,16 +1,17 @@
-from __future__ import annotations
-
 """Diagnóstico y salud del entorno de ContextMap.
+
 
 Proporciona chequeos determinísticos sobre dependencias de sistema (Git),
 directorios temporales de actualización y estado de vaults generados.
 """
 
+from __future__ import annotations
+
+import contextlib
 import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -40,7 +41,7 @@ class DoctorReport:
         checks (List[DoctorCheck]): Lista de chequeos ejecutados.
     """
 
-    checks: List[DoctorCheck] = field(default_factory=list)
+    checks: list[DoctorCheck] = field(default_factory=list)
 
     def add(self, check: DoctorCheck) -> None:
         """Agrega un resultado de chequeo al reporte.
@@ -51,7 +52,7 @@ class DoctorReport:
         self.checks.append(check)
 
     @property
-    def failed(self) -> List[DoctorCheck]:
+    def failed(self) -> list[DoctorCheck]:
         """Obtiene los chequeos con estado FAIL.
 
         Returns:
@@ -60,7 +61,7 @@ class DoctorReport:
         return [c for c in self.checks if c.status == "FAIL"]
 
     @property
-    def warnings(self) -> List[DoctorCheck]:
+    def warnings(self) -> list[DoctorCheck]:
         """Obtiene los chequeos con estado WARN.
 
         Returns:
@@ -91,14 +92,12 @@ def _safe_rmtree(path: str) -> None:
                 shutil.rmtree(path, ignore_errors=True)
                 if not os.path.isdir(path):
                     break
-                try:
+                with contextlib.suppress(Exception):
                     subprocess.run(
                         ["cmd", "/c", "rd", "/s", "/q", path],
                         capture_output=True,
                         timeout=10,
                     )
-                except Exception:
-                    pass
                 if not os.path.isdir(path):
                     break
 

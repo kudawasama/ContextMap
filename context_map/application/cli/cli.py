@@ -1,31 +1,29 @@
-from __future__ import annotations
-
 """CLI principal de Context Map.
+
 
 Punto de entrada de línea de comandos que registra y despacha todos los comandos disponibles.
 """
 
+from __future__ import annotations
+
 import argparse
-import sys
 
 from context_map.application.commands import (
     cmd_auto,
-    cmd_init,
+    cmd_brief,
     cmd_build,
-    cmd_scan,
-    cmd_sync,
     cmd_check,
+    cmd_doctor,
+    cmd_import_antigravity,
+    cmd_import_chat,
     cmd_import_git,
     cmd_import_sessions,
-    cmd_import_chat,
-    cmd_import_antigravity,
-    cmd_import_antigravity2,
-    cmd_weekly,
-    cmd_watch,
-    cmd_brief,
-    cmd_update,
-    cmd_doctor,
+    cmd_init,
+    cmd_scan,
+    cmd_sync,
     cmd_sync_migrate,
+    cmd_update,
+    cmd_weekly,
 )
 from context_map.application.commands.hook import cmd_hook_install
 
@@ -53,7 +51,6 @@ def create_parser() -> argparse.ArgumentParser:
     s_build.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_build.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_build.add_argument("--snapshot-name", default="", help="Nombre del snapshot")
-    s_build.add_argument("--mermaid", action="store_true", help="Generar diagrama Mermaid")
     s_build.add_argument("--brief", action="store_true", help="Generar brief para agentes")
     s_build.add_argument(
         "--mode",
@@ -139,7 +136,6 @@ def main() -> None:
         "import-sessions": cmd_import_sessions,
         "import-chat": cmd_import_chat,
         "import-antigravity": cmd_import_antigravity,
-        "import-antigravity2": cmd_import_antigravity,
         "weekly": cmd_weekly,
         "brief": cmd_brief,
         "update": cmd_update,

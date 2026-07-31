@@ -1,22 +1,23 @@
-from __future__ import annotations
-
 """Generador de briefs para agentes de IA.
+
 
 Construye un resumen ejecutivo en formato Markdown (`CONTEXT.md`) diseñado para que un agente
 pueda comprender los objetivos, riesgos y estado del proyecto en menos de 30 segundos.
 """
 
+from __future__ import annotations
+
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
-from context_map.core.models import Node, Edge
+from context_map.core.models import Edge, Node
 
 
 def generar_brief(
     project_name: str,
-    nodes: List[Node],
-    edges: List[Edge],
+    nodes: list[Node],
+    edges: list[Edge],
     readiness_score: int = 0,
     output_path: str = ".context-map/CONTEXT.md",
 ) -> str:
@@ -70,7 +71,7 @@ def _header(project_name: str) -> str:
 """
 
 
-def _resumen_ejecutivo(name: str, stats: Dict[str, Any], score: int) -> str:
+def _resumen_ejecutivo(name: str, stats: dict[str, Any], score: int) -> str:
     """Resumen ejecutivo principal.
 
     Args:
@@ -93,7 +94,7 @@ def _resumen_ejecutivo(name: str, stats: Dict[str, Any], score: int) -> str:
 """
 
 
-def _estado_proyecto(stats: Dict[str, Any]) -> str:
+def _estado_proyecto(stats: dict[str, Any]) -> str:
     """Sección de estado detallado del proyecto."""
     return f"""## Estado del Proyecto
 
@@ -106,7 +107,7 @@ def _estado_proyecto(stats: Dict[str, Any]) -> str:
 """
 
 
-def _riesgos_criticos(nodes: List[Node]) -> str:
+def _riesgos_criticos(nodes: list[Node]) -> str:
     """Sección de riesgos identificados."""
     riesgos = [n for n in nodes if n.type == "RIESGO"]
 
@@ -121,7 +122,7 @@ def _riesgos_criticos(nodes: List[Node]) -> str:
     return "\n".join(lines)
 
 
-def _tareas_pendientes(nodes: List[Node]) -> str:
+def _tareas_pendientes(nodes: list[Node]) -> str:
     """Sección de tareas y elementos futuros."""
     futuros = [n for n in nodes if n.type == "FUTURO"]
 
@@ -134,7 +135,7 @@ def _tareas_pendientes(nodes: List[Node]) -> str:
     return "\n".join(lines)
 
 
-def _estructura_recomendada(nodes: List[Node]) -> str:
+def _estructura_recomendada(nodes: list[Node]) -> str:
     """Sección de recomendaciones para agentes."""
     return """## Estructura Recomendada
 
@@ -172,7 +173,7 @@ def _footer() -> str:
 """
 
 
-def _calcular_stats(nodes: List[Node]) -> Dict[str, Any]:
+def _calcular_stats(nodes: list[Node]) -> dict[str, Any]:
     """Calcula estadísticas generales sobre los nodos.
 
     Args:
@@ -181,7 +182,7 @@ def _calcular_stats(nodes: List[Node]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Estadísticas de conteo por tipo.
     """
-    stats: Dict[str, Any] = {"total": len(nodes), "por_tipo": {}}
+    stats: dict[str, Any] = {"total": len(nodes), "por_tipo": {}}
     for n in nodes:
         stats["por_tipo"][n.type] = stats["por_tipo"].get(n.type, 0) + 1
     return stats

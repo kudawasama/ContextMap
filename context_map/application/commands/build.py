@@ -8,26 +8,24 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
-
-from context_map.core.models import Node, Edge
-from context_map.core.storage import load_jsonl, snapshot_map, write_map
-from context_map.core.parsing import events_to_model
-from context_map.presentation.vault import render_active_map, render_obsidian_vault
-from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
-from context_map.domain.analysis import analizar_readiness
 
 from context_map.application.commands._helpers import (
     CONTEXT_DIR,
     STATE_DIR,
-    ensure_dirs,
-    resolve_vault_mode,
+    append_nodes_edges,
     clean_vault_dir,
     collect_events,
-    append_nodes_edges,
+    ensure_dirs,
     project_name,
+    resolve_vault_mode,
     vault_dir,
 )
+from context_map.core.models import Edge, Node
+from context_map.core.parsing import events_to_model
+from context_map.core.storage import load_jsonl, snapshot_map, write_map
+from context_map.domain.analysis import analizar_readiness
+from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
+from context_map.presentation.vault import render_active_map, render_obsidian_vault
 
 
 def cmd_build(args) -> None:
@@ -55,7 +53,7 @@ def cmd_build(args) -> None:
     if extra_events:
         nodes, edges = events_to_model(extra_events)
         # Estandarizar nodos nuevos antes de persistir
-        from context_map.core.normalization import estandarizar_nodos, estandarizar_nodo
+        from context_map.core.normalization import estandarizar_nodo, estandarizar_nodos
         nodes = estandarizar_nodos(nodes)
         append_nodes_edges(nodes, edges)
 

@@ -5,8 +5,9 @@ Este archivo es el punto de entrada principal. Toda la lógica reside en:
 - context_map/application/commands/ (comandos)
 """
 
-from context_map.application.cli import main
+from __future__ import annotations
 
+from context_map.application.cli import main
 
 """
 # --- Generar agentes ---

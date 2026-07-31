@@ -8,9 +8,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-from typing import List, Dict, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
 
 
 @dataclass
@@ -29,10 +27,10 @@ class Sesion:
     id: str
     titulo: str
     fecha_inicio: str
-    mensajes: List[Mensaje] = field(default_factory=list)
+    mensajes: list[Mensaje] = field(default_factory=list)
 
 
-def _encontrar_db_sessions() -> Optional[str]:
+def _encontrar_db_sessions() -> str | None:
     """Busca la base de datos de sesiones de Hermes."""
     # Rutas comunes donde Hermes guarda sesiones
     rutas_posibles = [
@@ -49,10 +47,10 @@ def _encontrar_db_sessions() -> Optional[str]:
 
 
 def leer_sesiones(
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
     limite: int = 10,
-    desde: Optional[str] = None,
-) -> List[Sesion]:
+    desde: str | None = None,
+) -> list[Sesion]:
     """Lee sesiones de la base de datos de Hermes.
 
     Args:
@@ -115,7 +113,7 @@ def leer_sesiones(
     return sesiones
 
 
-def extraer_contexto_sesion(sesion: Sesion) -> List[Dict]:
+def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
     """Extrae contexto relevante de una sesión.
 
     Returns:
@@ -167,7 +165,7 @@ def extraer_contexto_sesion(sesion: Sesion) -> List[Dict]:
 
 
 def importar_sesiones(
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
     limite: int = 5,
     output_path: str = ".context-map/raw/events.jsonl",
 ) -> int:
@@ -189,7 +187,7 @@ def importar_sesiones(
     # Leer existentes para evitar duplicados
     existentes = set()
     if os.path.exists(output_path):
-        with open(output_path, "r", encoding="utf-8") as f:
+        with open(output_path, encoding="utf-8") as f:
             for linea in f:
                 linea = linea.strip()
                 if linea:

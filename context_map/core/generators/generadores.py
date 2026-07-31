@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """Generadores de contenido sintético y narrativa rica para el mapa conceptual.
+
 
 Responsabilidades:
 - Generar resúmenes educativos, profesionales e intuitivos para los nodos.
@@ -8,13 +7,15 @@ Responsabilidades:
 - Clasificar eventos por contexto de origen (Git, scanner, chats sueltos).
 """
 
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from context_map.core.models import Node
 
 
-def generar_summary(tipo: str, texto: str, source: str, tags: List[str]) -> str:
+def generar_summary(tipo: str, texto: str, source: str, tags: list[str]) -> str:
     """Genera un resumen explicativo adaptado al tipo y contexto del evento.
 
     Args:

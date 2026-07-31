@@ -1,23 +1,23 @@
-from __future__ import annotations
-
 """Sincronización incremental del grafo de contexto del dominio.
+
 
 Responsable de procesar eventos entrantes preservando la idempotencia y evitando
 duplicaciones o reescritura innecesaria del estado guardado.
 """
 
+from __future__ import annotations
+
 import json
 import os
-from typing import Dict, List, Set, Tuple
 
-from context_map.core.models import Event, Node, Edge
+from context_map.core.models import Edge, Event, Node
+from context_map.core.normalization import dedup_nodes, estandarizar_nodo
 from context_map.core.parsing import (
+    events_to_model,
     load_events_from_chat_folder,
     load_events_from_jsonl,
-    events_to_model,
 )
 from context_map.core.storage import append_jsonl, load_jsonl
-from context_map.core.normalization import estandarizar_nodo, dedup_nodes
 
 
 def _hash_evento(e: Event) -> str:
@@ -32,7 +32,7 @@ def _hash_evento(e: Event) -> str:
     return f"{e.type}|{e.text[:80]}|{e.source}"
 
 
-def _eventos_procesados(state_dir: str) -> Set[str]:
+def _eventos_procesados(state_dir: str) -> set[str]:
     """Carga los hashes de eventos previamente procesados.
 
     Args:
@@ -45,7 +45,7 @@ def _eventos_procesados(state_dir: str) -> Set[str]:
     if not os.path.exists(hash_file):
         return set()
     try:
-        with open(hash_file, "r", encoding="utf-8") as f:
+        with open(hash_file, encoding="utf-8") as f:
             return set(line.strip() for line in f if line.strip())
     except Exception:
         return set()
@@ -67,7 +67,7 @@ def _guardar_evento_procesado(state_dir: str, evento_hash: str) -> None:
         pass
 
 
-def _cargar_estado_existente(state_dir: str) -> Tuple[List[Node], List[Edge]]:
+def _cargar_estado_existente(state_dir: str) -> tuple[list[Node], list[Edge]]:
     """Carga y estandariza los nodos y aristas existentes en el estado.
 
     Args:
@@ -87,9 +87,9 @@ def _cargar_estado_existente(state_dir: str) -> Tuple[List[Node], List[Edge]]:
 
 
 def _encontrar_nodos_nuevos(
-    eventos_nuevos: List[Event],
-    nodos_existentes: List[Node],
-) -> List[Event]:
+    eventos_nuevos: list[Event],
+    nodos_existentes: list[Node],
+) -> list[Event]:
     """Identifica eventos que aún no cuentan con un nodo en el grafo.
 
     Args:
@@ -101,7 +101,7 @@ def _encontrar_nodos_nuevos(
     """
     existentes = {(n.type, n.title[:60].lower()) for n in nodos_existentes}
 
-    nuevos: List[Event] = []
+    nuevos: list[Event] = []
     for e in eventos_nuevos:
         titulo = e.text.split("\n")[0][:60].lower()
         if (e.type, titulo) not in existentes:
@@ -128,11 +128,11 @@ def sync_incremental(
     nodos_existentes, aristas_existentes = _cargar_estado_existente(state_dir)
     hashes_procesados = _eventos_procesados(state_dir)
 
-    todos_eventos: List[Event] = []
+    todos_eventos: list[Event] = []
     todos_eventos.extend(load_events_from_chat_folder(chats_dir))
     todos_eventos.extend(load_events_from_jsonl(os.path.join(raw_dir, "events.jsonl")))
 
-    eventos_nuevos: List[Event] = []
+    eventos_nuevos: list[Event] = []
     for e in todos_eventos:
         h = _hash_evento(e)
         if h not in hashes_procesados:

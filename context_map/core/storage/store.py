@@ -1,20 +1,22 @@
-from __future__ import annotations
-
 """Persistencia de `Node` y `Edge` en la carpeta `.context-map/`.
+
 
 Maneja operaciones de lectura y escritura en formato JSONL con append atómico
 para prevenir pérdida de eventos, generación de vistas legibles y creación de snapshots históricos.
 """
 
+from __future__ import annotations
+
+import contextlib
 import hashlib
 import json
 import os
 import re
 import shutil
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable, List, Optional, Set, Tuple
 
-from context_map.core.models import Node, Edge
+from context_map.core.models import Edge, Node
 
 
 def _ensure(path: str) -> None:
@@ -42,7 +44,7 @@ def append_jsonl(path: str, records: Iterable[dict]) -> None:
         raise OSError(f"Error al escribir en {path}: {err}") from err
 
 
-def load_jsonl(path: str) -> List[dict]:
+def load_jsonl(path: str) -> list[dict]:
     """Lee un archivo JSONL y devuelve una lista de diccionarios, ignorando líneas corruptas.
 
     Args:
@@ -53,16 +55,14 @@ def load_jsonl(path: str) -> List[dict]:
     """
     if not os.path.exists(path):
         return []
-    out: List[dict] = []
+    out: list[dict] = []
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             for line in f:
                 line_str = line.strip()
                 if line_str:
-                    try:
+                    with contextlib.suppress(json.JSONDecodeError):
                         out.append(json.loads(line_str))
-                    except json.JSONDecodeError:
-                        pass
     except Exception:
         pass
     return out
@@ -81,7 +81,7 @@ def write_map(md: str, rel: str = "maps/ACTIVE.md") -> None:
         f.write(md)
 
 
-def _generar_nombre_descriptivo(nodes: List[Node], edges: List[Edge]) -> str:
+def _generar_nombre_descriptivo(nodes: list[Node], edges: list[Edge]) -> str:
     """Genera un nombre descriptivo para los archivos de snapshot basado en su contenido.
 
     Args:
@@ -123,10 +123,10 @@ def _generar_nombre_descriptivo(nodes: List[Node], edges: List[Edge]) -> str:
 
 def snapshot_map(
     from_rel: str = "maps/ACTIVE.md",
-    name: Optional[str] = None,
-    nodes: Optional[List[Node]] = None,
-    edges: Optional[List[Edge]] = None,
-) -> Optional[str]:
+    name: str | None = None,
+    nodes: list[Node] | None = None,
+    edges: list[Edge] | None = None,
+) -> str | None:
     """Guarda una copia de respaldo (snapshot) del mapa en `.context-map/maps/HISTORY/`.
 
     Args:
@@ -173,7 +173,7 @@ def snapshot_map(
         return None
 
 
-def nodes_to_digest(nodes: List[Node]) -> str:
+def nodes_to_digest(nodes: list[Node]) -> str:
     """Genera un md5 digest único para auditar cambios en el conjunto de nodos.
 
     Args:
@@ -188,7 +188,7 @@ def nodes_to_digest(nodes: List[Node]) -> str:
     return hashlib.md5(payload.encode("utf-8")).hexdigest()[:12]
 
 
-def edges_dedup(edges: List[Edge]) -> List[Edge]:
+def edges_dedup(edges: list[Edge]) -> list[Edge]:
     """Elimina aristas duplicadas preservando relaciones únicas.
 
     Args:
@@ -197,8 +197,8 @@ def edges_dedup(edges: List[Edge]) -> List[Edge]:
     Returns:
         List[Edge]: Lista de aristas desduplicadas.
     """
-    seen: Set[Tuple[str, str, str, str]] = set()
-    out: List[Edge] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    out: list[Edge] = []
     for e in edges:
         k = (e.source, e.target, e.kind, e.note)
         if k in seen:

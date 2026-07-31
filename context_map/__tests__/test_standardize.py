@@ -1,12 +1,12 @@
-from __future__ import annotations
-
 """Pruebas unitarias para el submódulo de estandarización y clasificación semántica."""
+
+from __future__ import annotations
 
 from context_map.core.models import Node
 from context_map.core.normalization import (
-    inferir_classification,
     classification_tag,
     estandarizar_nodo,
+    inferir_classification,
 )
 
 

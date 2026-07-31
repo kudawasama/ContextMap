@@ -9,13 +9,12 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
-from typing import List, Dict, Optional, Set, Tuple
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 
-from context_map.core.models import Node, Edge
-from context_map.presentation.vault.templates import _safe_filename, _normalize_tags
+from context_map.core.models import Edge, Node
 from context_map.presentation.vault.atomic import _render_conexiones
+from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
 
 
 def _extract_project_purpose(cwd: str) -> str:
@@ -32,7 +31,7 @@ def _extract_project_purpose(cwd: str) -> str:
         return ""
 
     try:
-        with open(readme_path, "r", encoding="utf-8") as f:
+        with open(readme_path, encoding="utf-8") as f:
             lines = f.readlines()
     except Exception:
         return ""
@@ -47,8 +46,8 @@ def _extract_project_purpose(cwd: str) -> str:
         return ""
 
     start_idx = title_idx + 1
-    paragraphs: List[str] = []
-    current_para: List[str] = []
+    paragraphs: list[str] = []
+    current_para: list[str] = []
 
     for line in lines[start_idx:]:
         stripped = line.strip()
@@ -90,8 +89,8 @@ def _extract_project_purpose(cwd: str) -> str:
 
 def _render_consolidated_vault(
     project_name: str,
-    nodes: List[Node],
-    edges: List[Edge],
+    nodes: list[Node],
+    edges: list[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
     """Renderiza la bóveda Obsidian en modo consolidado (8 notas temáticas sintéticas)."""
@@ -229,14 +228,14 @@ def _render_consolidated_vault(
         pendientes = [n for n in idea_nodes if n.status == "pendiente"]
         activas = [n for n in idea_nodes if n.status == "activo"]
 
-        seen_total: Set[str] = set()
+        seen_total: set[str] = set()
 
-        def _render_idea_group(parts: List[str], title: str, icon: str, nodes_list: List[Node], emoji_prefix: str) -> None:
+        def _render_idea_group(parts: list[str], title: str, icon: str, nodes_list: list[Node], emoji_prefix: str) -> None:
             if not nodes_list:
                 return
             parts.append(f"## {icon} {title}")
             parts.append("")
-            seen: Set[str] = set()
+            seen: set[str] = set()
             for n in nodes_list:
                 key = n.title[:80]
                 if key in seen:
@@ -286,7 +285,7 @@ def _render_consolidated_vault(
         "",
     ]
     if base_nodes:
-        seen_base: Set[str] = set()
+        seen_base: set[str] = set()
         for n in base_nodes:
             key = n.title[:80]
             if key in seen_base:
@@ -328,7 +327,7 @@ def _render_consolidated_vault(
         "",
     ]
     if riesgo_nodes:
-        seen_riesgo: Set[str] = set()
+        seen_riesgo: set[str] = set()
         for n in riesgo_nodes:
             key = n.title[:80]
             if key in seen_riesgo:
@@ -348,7 +347,7 @@ def _render_consolidated_vault(
     if prueba_nodes:
         riesgo_parts.append("## 🧪 Cobertura de Pruebas Detectadas")
         riesgo_parts.append("")
-        seen_prueba: Set[str] = set()
+        seen_prueba: set[str] = set()
         for n in prueba_nodes:
             key = n.title[:80]
             if key in seen_prueba:
@@ -383,7 +382,7 @@ def _render_consolidated_vault(
         "",
     ]
     if futuro_nodes:
-        seen_futuro: Set[str] = set()
+        seen_futuro: set[str] = set()
         for n in futuro_nodes:
             key = n.title[:80]
             if key in seen_futuro:
@@ -433,7 +432,7 @@ def _render_consolidated_vault(
     historial_parts.append("## 🔄 Registro de Cambios y Correcciones")
     historial_parts.append("")
     if cambio_nodes:
-        seen_cambio: Set[str] = set()
+        seen_cambio: set[str] = set()
         for n in cambio_nodes[:50]:
             key = n.title[:80]
             if key in seen_cambio:
@@ -462,8 +461,8 @@ def _render_consolidated_vault(
 
 def _render_hierarchical_vault(
     project_name: str,
-    nodes: List[Node],
-    edges: List[Edge],
+    nodes: list[Node],
+    edges: list[Edge],
     output_dir: str = ".context-map/vault",
 ) -> str:
     """Renderiza la bóveda Obsidian en modo jerárquico en árbol."""
@@ -573,7 +572,7 @@ def _render_hierarchical_vault(
     readme_path = os.path.join(os.getcwd(), "README.md")
     if os.path.exists(readme_path):
         try:
-            with open(readme_path, "r", encoding="utf-8") as rf:
+            with open(readme_path, encoding="utf-8") as rf:
                 readme_content = rf.read().strip()
         except Exception:
             readme_content = ""
@@ -953,8 +952,8 @@ def _render_hierarchical_vault(
                 f.write("\n".join(batch_parts))
 
     # 2.4-Ideas-Relevantes.md — deduplicado para evitar items repetidos
-    seen_ideas_top: Set[str] = set()
-    top_ideas: List[Node] = []
+    seen_ideas_top: set[str] = set()
+    top_ideas: list[Node] = []
     for n in idea_nodes:
         key = n.title[:80]
         if key not in seen_ideas_top and len(top_ideas) < 20:
@@ -1041,7 +1040,7 @@ def _render_hierarchical_vault(
     ]
     if base_nodes:
         from context_map.core.generators import generar_contexto_narrativo
-        seen_base: Set[str] = set()
+        seen_base: set[str] = set()
         for n in base_nodes:
             key = n.title[:80]
             if key in seen_base:
@@ -1088,7 +1087,7 @@ def _render_hierarchical_vault(
     if riesgo_nodes:
         riesgo_seccion_parts.append("## Riesgos Identificados")
         riesgo_seccion_parts.append("")
-        seen_riesgo_idx: Set[str] = set()
+        seen_riesgo_idx: set[str] = set()
         for n in riesgo_nodes:
             key = n.title[:80]
             if key in seen_riesgo_idx:
@@ -1109,7 +1108,7 @@ def _render_hierarchical_vault(
         f.write("\n".join(riesgo_seccion_parts))
 
     if riesgo_nodes:
-        seen_riesgo_file: Set[str] = set()
+        seen_riesgo_file: set[str] = set()
         for n in riesgo_nodes:
             key_file = n.title[:80]
             if key_file in seen_riesgo_file:
@@ -1424,7 +1423,7 @@ def _render_hierarchical_vault(
             )
             all_commits = log_result.stdout.strip().split("\n")
 
-            meses: Dict[str, List[str]] = defaultdict(list)
+            meses: dict[str, list[str]] = defaultdict(list)
             for line in all_commits:
                 if " | " in line:
                     date_part, msg = line.split(" | ", 1)

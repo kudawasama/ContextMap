@@ -1,12 +1,13 @@
-from __future__ import annotations
-
 """Generador de instrucciones estandarizadas para agentes de IA (AGENTS.md).
+
 
 Permite que cualquier proyecto inicializado o procesado por ContextMap disponga
 de un archivo `AGENTS.md` estandarizado que fuerza a cualquier Agente de IA
 (Antigravity, Cursor, Claude, Hermes, Copilot, etc.) a priorizar el contexto y
 las reglas del repositorio automáticamente.
 """
+
+from __future__ import annotations
 
 import os
 from datetime import datetime

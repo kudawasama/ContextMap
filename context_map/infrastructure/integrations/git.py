@@ -5,12 +5,10 @@ Extrae contexto de commits, tags, y ramas.
 
 from __future__ import annotations
 
-import subprocess
 import os
 import re
-from typing import List, Dict, Optional
+import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime
 
 
 @dataclass
@@ -20,7 +18,7 @@ class CommitInfo:
     mensaje: str
     autor: str
     fecha: str
-    archivos_modificados: List[str] = field(default_factory=list)
+    archivos_modificados: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -28,12 +26,12 @@ class GitHistory:
     """Historial git de un proyecto."""
     ruta_raiz: str
     branch_actual: str = ""
-    commits: List[CommitInfo] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    commits: list[CommitInfo] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     total_commits: int = 0
 
 
-def _ejecutar_git(ruta: str, args: List[str]) -> str:
+def _ejecutar_git(ruta: str, args: list[str]) -> str:
     """Ejecuta un comando git y retorna la salida."""
     try:
         result = subprocess.run(
@@ -51,9 +49,9 @@ def _ejecutar_git(ruta: str, args: List[str]) -> str:
     return ""
 
 
-def _parsear_commits(salida: str) -> List[CommitInfo]:
+def _parsear_commits(salida: str) -> list[CommitInfo]:
     """Parsea la salida de git log."""
-    commits = []
+    commits: list[CommitInfo] = []
     if not salida:
         return commits
 
@@ -97,7 +95,7 @@ def _parsear_commits(salida: str) -> List[CommitInfo]:
 def leer_historial_git(
     ruta_raiz: str,
     limite: int = 50,
-    desde: Optional[str] = None,
+    desde: str | None = None,
 ) -> GitHistory:
     """Lee el historial git de un proyecto.
 

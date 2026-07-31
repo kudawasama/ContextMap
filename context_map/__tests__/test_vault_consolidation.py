@@ -10,15 +10,14 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
-from typing import List
 
-from context_map.core.models import Node, Edge
+from context_map.core.models import Edge, Node
 from context_map.presentation.vault import render_obsidian_vault
 
 
-def _crear_nodos_de_prueba() -> List[Node]:
+def _crear_nodos_de_prueba() -> list[Node]:
     """Genera un conjunto representativo de nodos para validar la consolidación."""
-    nodos: List[Node] = []
+    nodos: list[Node] = []
 
     # Nodos BASE (estructura)
     for i in range(5):
@@ -97,7 +96,7 @@ def _crear_nodos_de_prueba() -> List[Node]:
     return nodos
 
 
-def _crear_edges_de_prueba() -> List[Edge]:
+def _crear_edges_de_prueba() -> list[Edge]:
     """Genera aristas de prueba."""
     return [
         Edge(source="BASE-00", target="IDEA-00", kind="depends_on"),
@@ -138,7 +137,7 @@ def test_consolidated_vault_limita_archivos() -> None:
         # Verificar que todos tienen Frontmatter YAML
         for archivo in archivos_md:
             ruta = os.path.join(temp_dir, archivo)
-            with open(ruta, "r", encoding="utf-8") as f:
+            with open(ruta, encoding="utf-8") as f:
                 contenido = f.read()
             assert contenido.startswith("---"), (
                 f"El archivo {archivo} no comienza con YAML Frontmatter"
@@ -150,7 +149,7 @@ def test_consolidated_vault_limita_archivos() -> None:
         # Verificar que el índice contiene Wikilinks
         indice_path = os.path.join(temp_dir, "00-INDICE.md")
         assert os.path.exists(indice_path), "No se generó 00-INDICE.md"
-        with open(indice_path, "r", encoding="utf-8") as f:
+        with open(indice_path, encoding="utf-8") as f:
             contenido_indice = f.read()
         assert "[[" in contenido_indice, "El índice no contiene Wikilinks"
         assert "03-ESTRUCTURA" in contenido_indice, (
@@ -236,8 +235,8 @@ def test_hierarchical_vault_estructura() -> None:
                 if f.endswith(".md"):
                     todos_md.append(os.path.join(root, f))
         for ruta in todos_md:
-            with open(ruta, "r", encoding="utf-8") as f:
-                contenido = f.read()
+            with open(ruta, encoding="utf-8") as fh:
+                contenido = fh.read()
             assert contenido.startswith("---"), (
                 f"El archivo {ruta} no comienza con YAML Frontmatter"
             )
@@ -247,8 +246,8 @@ def test_hierarchical_vault_estructura() -> None:
 
         # Verificar que el índice contiene wikilinks a las secciones
         indice_path = os.path.join(temp_dir, "00-INDICE.md")
-        with open(indice_path, "r", encoding="utf-8") as f:
-            contenido_indice = f.read()
+        with open(indice_path, encoding="utf-8") as fh:
+            contenido_indice = fh.read()
         assert "[[1.0-PROPOSITO" in contenido_indice, (
             "El índice no enlaza a 1.0-PROPOSITO"
         )
@@ -292,7 +291,7 @@ def test_contexto_narrativo_con_alma() -> None:
         assert len(archivos) > 0, "No se generaron notas de ideas pendientes"
 
         sample_note = os.path.join(ideas_dir, archivos[0])
-        with open(sample_note, "r", encoding="utf-8") as f:
+        with open(sample_note, encoding="utf-8") as f:
             content = f.read()
 
         assert "POR QUÉ" in content, "La nota no contiene la sección ¿POR QUÉ?"
@@ -319,7 +318,7 @@ def test_contexto_narrativo_diferenciado_riesgo() -> None:
             tags=["riesgo", "complejidad"],
         )
     ]
-    edges = []
+    edges: list[Edge] = []
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_vault_riesgo_")
 
     try:
@@ -356,7 +355,7 @@ def test_null_byte_character_in_filename() -> None:
             tags=["idea", "pendiente"],
         )
     ]
-    edges = []
+    edges: list[Edge] = []
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_nul_")
 
     try:

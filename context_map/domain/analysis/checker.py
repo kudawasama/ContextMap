@@ -1,14 +1,14 @@
-from __future__ import annotations
-
 """Analizador de readiness para Context Map.
+
 
 Evalúa qué tan preparado está un proyecto para que un agente de IA trabaje en él,
 analizando indicadores de documentación, tests, configuración y CI/CD.
 """
 
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -42,14 +42,14 @@ class ResultadoReadiness:
     """
 
     ruta_raiz: str
-    senales: List[SenalReadiness] = field(default_factory=list)
+    senales: list[SenalReadiness] = field(default_factory=list)
     score: int = 0
     veredicto: str = "unknown"
-    gaps: List[str] = field(default_factory=list)
-    sugerencias: List[str] = field(default_factory=list)
+    gaps: list[str] = field(default_factory=list)
+    sugerencias: list[str] = field(default_factory=list)
 
 
-def _verificar_archivo(ruta: str, nombres: List[str]) -> bool:
+def _verificar_archivo(ruta: str, nombres: list[str]) -> bool:
     """Verifica si existe al menos uno de los archivos indicados en la ruta raíz.
 
     Args:
@@ -59,13 +59,10 @@ def _verificar_archivo(ruta: str, nombres: List[str]) -> bool:
     Returns:
         bool: True si existe al menos un archivo, False de lo contrario.
     """
-    for nombre in nombres:
-        if os.path.exists(os.path.join(ruta, nombre)):
-            return True
-    return False
+    return any(os.path.exists(os.path.join(ruta, nombre)) for nombre in nombres)
 
 
-def _verificar_directorio(ruta: str, nombres: List[str]) -> bool:
+def _verificar_directorio(ruta: str, nombres: list[str]) -> bool:
     """Verifica si existe al menos uno de los directorios indicados.
 
     Args:
@@ -75,10 +72,7 @@ def _verificar_directorio(ruta: str, nombres: List[str]) -> bool:
     Returns:
         bool: True si existe alguna carpeta, False de lo contrario.
     """
-    for nombre in nombres:
-        if os.path.isdir(os.path.join(ruta, nombre)):
-            return True
-    return False
+    return any(os.path.isdir(os.path.join(ruta, nombre)) for nombre in nombres)
 
 
 def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:

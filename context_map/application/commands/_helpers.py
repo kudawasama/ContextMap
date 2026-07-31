@@ -6,23 +6,19 @@ operaciones comunes que varios comandos necesitan reutilizar.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil
 from datetime import datetime
-from typing import List
 
-from context_map.core.models import Event, Node, Edge
+from context_map.core.models import Edge, Event, Node
 from context_map.core.parsing import (
     _dedup_events,
     load_events_from_chat_folder,
     load_events_from_jsonl,
-    events_to_model,
 )
 from context_map.core.storage import (
     append_jsonl,
-    load_jsonl,
-    snapshot_map,
-    write_map,
 )
 
 # ============================================================
@@ -70,7 +66,7 @@ def _git_repo_name(target_dir: str = ".") -> str | None:
     try:
         git_config = os.path.join(target_dir, ".git", "config")
         if os.path.exists(git_config):
-            with open(git_config, "r", encoding="utf-8", errors="ignore") as f:
+            with open(git_config, encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line_str = line.strip()
                     if line_str.startswith("url =") or line_str.startswith("url="):
@@ -100,7 +96,7 @@ def project_name(args) -> str:
     """
     name = getattr(args, "project", None)
     if name and name != "Repo":
-        return name
+        return str(name)
 
     target_dir = getattr(args, "target", ".") or "."
 
@@ -176,16 +172,14 @@ def safe_rmtree(path: str) -> None:
             shutil.rmtree(path, ignore_errors=True)
             if not os.path.isdir(path):
                 break
-            try:
+            with contextlib.suppress(Exception):
                 subprocess.run(
                     ["cmd", "/c", "rd", "/s", "/q", path],
                     capture_output=True, timeout=10,
                 )
-            except Exception:
-                pass
 
 
-def append_nodes_edges(nodes: List[Node], edges: List[Edge]) -> None:
+def append_nodes_edges(nodes: list[Node], edges: list[Edge]) -> None:
     """Persiste nodos y aristas en archivos JSONL incrementales.
 
     Args:
@@ -196,13 +190,13 @@ def append_nodes_edges(nodes: List[Node], edges: List[Edge]) -> None:
     append_jsonl(os.path.join(STATE_DIR, "edges.jsonl"), [e.to_dict() for e in edges])
 
 
-def collect_events() -> List[Event]:
+def collect_events() -> list[Event]:
     """Reúne y deduplica eventos desde las carpetas de chats y raw.
 
     Returns:
         Lista de eventos deduplicados
     """
-    events: List[Event] = []
+    events: list[Event] = []
     events.extend(load_events_from_chat_folder(CHATS_DIR))
     events.extend(load_events_from_jsonl(os.path.join(RAW_DIR, "events.jsonl")))
     return _dedup_events(events)

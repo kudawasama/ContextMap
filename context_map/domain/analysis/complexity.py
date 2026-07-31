@@ -1,15 +1,15 @@
-from __future__ import annotations
-
 """Analizador de complejidad ciclomática avanzada para ContextMap.
+
 
 Estima métricas de complejidad ciclomática de McCabe (puntos de decisión,
 ramificaciones `if`, `for`, `while`, `try`, `except`) en funciones y clases.
 """
 
+from __future__ import annotations
+
 import ast
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional
 
 
 @dataclass
@@ -29,7 +29,7 @@ class MetricaComplejidadArchivo:
     ruta_relativa: str
     complejidad_total: int
     max_complejidad_funcion: int
-    funciones_complejas: List[MetricaComplejidadFuncion] = field(default_factory=list)
+    funciones_complejas: list[MetricaComplejidadFuncion] = field(default_factory=list)
 
 
 class _McCabeVisitor(ast.NodeVisitor):
@@ -63,7 +63,7 @@ class _McCabeVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> Optional[MetricaComplejidadArchivo]:
+def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> MetricaComplejidadArchivo | None:
     """Calcula la complejidad ciclomática de las funciones en un archivo Python.
 
     Args:
@@ -77,7 +77,7 @@ def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> Opt
         return None
 
     try:
-        with open(ruta_archivo, "r", encoding="utf-8", errors="ignore") as f:
+        with open(ruta_archivo, encoding="utf-8", errors="ignore") as f:
             code = f.read()
 
         tree = ast.parse(code, filename=ruta_archivo)
@@ -88,7 +88,7 @@ def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> Opt
         ruta_rel = os.path.relpath(ruta_archivo, ruta_base) if os.path.isabs(ruta_archivo) else ruta_archivo
     except ValueError:
         ruta_rel = ruta_archivo
-    funciones: List[MetricaComplejidadFuncion] = []
+    funciones: list[MetricaComplejidadFuncion] = []
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

@@ -3,6 +3,8 @@
 Re-exporta la interfaz CLI y los comandos integrados.
 """
 
-from context_map.application.cli import main, create_parser
+from __future__ import annotations
+
+from context_map.application.cli import create_parser, main
 
 __all__ = ["main", "create_parser"]

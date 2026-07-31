@@ -1,14 +1,14 @@
-from __future__ import annotations
-
 """Comando de instalación de Git Pre-Commit Hook.
+
 
 Inyecta un script pre-commit ejecutable en .git/hooks/ para sincronizar
 automáticamente la bóveda de Obsidian y briefs antes de cada commit.
 """
 
+from __future__ import annotations
+
 import os
 import stat
-import sys
 
 
 def cmd_hook_install(args=None) -> None:

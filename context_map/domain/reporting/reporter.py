@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """Generador de reportes periódicos y semanales.
+
 
 Responsabilidades:
 - Consolidar eventos registrados en los grafos de contexto.
@@ -8,14 +7,16 @@ Responsabilidades:
 - Construir reportes estadísticos formateados en Markdown.
 """
 
+from __future__ import annotations
+
+import contextlib
 import json
 import os
 from collections import Counter
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 
-def _cargar_eventos(state_dir: str) -> List[Dict]:
+def _cargar_eventos(state_dir: str) -> list[dict]:
     """Carga los eventos JSONL almacenados en el directorio de estado.
 
     Args:
@@ -24,26 +25,24 @@ def _cargar_eventos(state_dir: str) -> List[Dict]:
     Returns:
         List[Dict]: Lista de diccionarios de eventos.
     """
-    eventos: List[Dict] = []
+    eventos: list[dict] = []
     graph_path = os.path.join(state_dir, "graph.jsonl")
 
     if os.path.exists(graph_path):
         try:
-            with open(graph_path, "r", encoding="utf-8") as f:
+            with open(graph_path, encoding="utf-8") as f:
                 for linea in f:
                     linea_str = linea.strip()
                     if linea_str:
-                        try:
+                        with contextlib.suppress(Exception):
                             eventos.append(json.loads(linea_str))
-                        except Exception:
-                            pass
         except Exception:
             pass
 
     return eventos
 
 
-def _filtrar_por_fecha(eventos: List[Dict], dias: int = 7) -> List[Dict]:
+def _filtrar_por_fecha(eventos: list[dict], dias: int = 7) -> list[dict]:
     """Filtra la lista de eventos por antigüedad relativa en días.
 
     Args:
@@ -56,7 +55,7 @@ def _filtrar_por_fecha(eventos: List[Dict], dias: int = 7) -> List[Dict]:
     ahora = datetime.now()
     desde = ahora - timedelta(days=dias)
 
-    filtrados: List[Dict] = []
+    filtrados: list[dict] = []
     for e in eventos:
         ts = e.get("timestamp", "")
         if ts:
@@ -72,7 +71,7 @@ def _filtrar_por_fecha(eventos: List[Dict], dias: int = 7) -> List[Dict]:
     return filtrados
 
 
-def _contar_por_tipo(eventos: List[Dict]) -> Dict[str, int]:
+def _contar_por_tipo(eventos: list[dict]) -> dict[str, int]:
     """Cuenta el número de eventos acumulados por cada tipo.
 
     Args:
@@ -88,7 +87,7 @@ def _contar_por_tipo(eventos: List[Dict]) -> Dict[str, int]:
     return dict(counter)
 
 
-def _top_eventos(eventos: List[Dict], n: int = 5) -> List[str]:
+def _top_eventos(eventos: list[dict], n: int = 5) -> list[str]:
     """Obtiene los títulos/textos de los N eventos más recientes.
 
     Args:

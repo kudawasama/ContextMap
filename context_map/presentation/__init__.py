@@ -5,10 +5,12 @@ Re-exporta símbolos principales de los submódulos:
 - `vault`: Generación del Vault Obsidian (render_obsidian_vault).
 """
 
+from __future__ import annotations
+
 from context_map.presentation.briefs import generar_brief
 from context_map.presentation.vault import (
-    render_obsidian_vault,
     generar_vault_obsidian,
+    render_obsidian_vault,
 )
 
 __all__ = [

@@ -43,6 +43,7 @@ htmlcov/
 # Type checking
 .mypy_cache/
 .pytype/
+.ruff_cache/
 
 # OS
 .DS_Store

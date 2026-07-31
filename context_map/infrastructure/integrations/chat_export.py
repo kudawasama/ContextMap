@@ -8,8 +8,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import List, Dict, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -39,11 +38,11 @@ def _detectar_plataforma(ruta: str) -> str:
         return "text"
 
 
-def _parsear_telegram_html(ruta: str) -> List[MensajeChat]:
+def _parsear_telegram_html(ruta: str) -> list[MensajeChat]:
     """Parsea exportación de Telegram en HTML."""
     mensajes = []
     try:
-        with open(ruta, "r", encoding="utf-8") as f:
+        with open(ruta, encoding="utf-8") as f:
             contenido = f.read()
 
         # Patrón simple para Telegram HTML
@@ -65,11 +64,11 @@ def _parsear_telegram_html(ruta: str) -> List[MensajeChat]:
     return mensajes
 
 
-def _parsear_texto_simple(ruta: str) -> List[MensajeChat]:
+def _parsear_texto_simple(ruta: str) -> list[MensajeChat]:
     """Parsea archivos de texto simples con formato 'Autor: mensaje'."""
     mensajes = []
     try:
-        with open(ruta, "r", encoding="utf-8") as f:
+        with open(ruta, encoding="utf-8") as f:
             for linea in f:
                 linea = linea.strip()
                 if not linea:
@@ -89,11 +88,11 @@ def _parsear_texto_simple(ruta: str) -> List[MensajeChat]:
     return mensajes
 
 
-def _parsear_json(ruta: str) -> List[MensajeChat]:
+def _parsear_json(ruta: str) -> list[MensajeChat]:
     """Parsea archivos JSON con mensajes."""
     mensajes = []
     try:
-        with open(ruta, "r", encoding="utf-8") as f:
+        with open(ruta, encoding="utf-8") as f:
             data = json.load(f)
 
         # Soportar diferentes formatos JSON
@@ -101,18 +100,18 @@ def _parsear_json(ruta: str) -> List[MensajeChat]:
             for item in data:
                 if isinstance(item, dict):
                     mensajes.append(MensajeChat(
-                        autor=item.get("author", item.get("user", "unknown")),
-                        contenido=item.get("content", item.get("message", ""))[:500],
-                        timestamp=item.get("timestamp", item.get("date", "")),
+                        autor=str(item.get("author", item.get("user", "unknown")) or "unknown"),
+                        contenido=str(item.get("content", item.get("message", "")) or "")[:500],
+                        timestamp=str(item.get("timestamp", item.get("date", "")) or ""),
                         plataforma="json",
                     ))
         elif isinstance(data, dict) and "messages" in data:
             for item in data["messages"]:
                 if isinstance(item, dict):
                     mensajes.append(MensajeChat(
-                        autor=item.get("author", item.get("user", "unknown")),
-                        contenido=item.get("content", item.get("message", ""))[:500],
-                        timestamp=item.get("timestamp", item.get("date", "")),
+                        autor=str(item.get("author", item.get("user", "unknown")) or "unknown"),
+                        contenido=str(item.get("content", item.get("message", "")) or "")[:500],
+                        timestamp=str(item.get("timestamp", item.get("date", "")) or ""),
                         plataforma="json",
                     ))
     except Exception:
@@ -121,7 +120,7 @@ def _parsear_json(ruta: str) -> List[MensajeChat]:
     return mensajes
 
 
-def parsear_chat(ruta: str) -> List[MensajeChat]:
+def parsear_chat(ruta: str) -> list[MensajeChat]:
     """Parsea un archivo de chat según su formato.
 
     Returns:
@@ -137,7 +136,7 @@ def parsear_chat(ruta: str) -> List[MensajeChat]:
         return _parsear_texto_simple(ruta)
 
 
-def clasificar_mensaje(msg: MensajeChat) -> Dict:
+def clasificar_mensaje(msg: MensajeChat) -> dict:
     """Clasifica un mensaje por su contenido.
 
     Returns:
@@ -191,7 +190,7 @@ def importar_chat(
     # Leer existentes para evitar duplicados
     existentes = set()
     if os.path.exists(output_path):
-        with open(output_path, "r", encoding="utf-8") as f:
+        with open(output_path, encoding="utf-8") as f:
             for linea in f:
                 linea = linea.strip()
                 if linea:

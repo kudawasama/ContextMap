@@ -1,19 +1,19 @@
-from __future__ import annotations
-
 """Escáner de proyecto para el mapa conceptual.
+
 
 Combina análisis de estructura y contenido de código fuente para generar
 eventos del grafo conceptual automáticamente sin saturar de ruido.
 """
 
+from __future__ import annotations
+
 import os
 from datetime import datetime
-from typing import List, Optional, Set
 
 from context_map.core.models import Event
-from context_map.infrastructure.analyzers.content import analizar_directorio, InfoContenido
-from context_map.infrastructure.analyzers.structure import escanear_proyecto, EstructuraProyecto
 from context_map.core.storage import append_jsonl, load_jsonl
+from context_map.infrastructure.analyzers.content import InfoContenido, analizar_directorio
+from context_map.infrastructure.analyzers.structure import EstructuraProyecto, escanear_proyecto
 
 
 def _ahora() -> str:
@@ -25,7 +25,7 @@ def _ahora() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-_CARPETAS_EXCLUIDAS: Set[str] = {
+_CARPETAS_EXCLUIDAS: set[str] = {
     ".context-map",
     ".venv",
     "venv",
@@ -65,7 +65,7 @@ def _es_ruta_excluida(ruta: str) -> bool:
     return any(parte.lower() in _CARPETAS_EXCLUIDAS for parte in partes)
 
 
-def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
+def _events_desde_estructura(est: EstructuraProyecto) -> list[Event]:
     """Genera eventos de alto nivel semántico a partir de la estructura.
 
     Args:
@@ -74,7 +74,7 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
     Returns:
         List[Event]: Eventos semánticos.
     """
-    eventos: List[Event] = []
+    eventos: list[Event] = []
 
     entrypoints_ratio = f"entrypoints: {len(est.entrypoints)}" if est.entrypoints else "sin entrypoints"
     eventos.append(
@@ -126,7 +126,7 @@ def _events_desde_estructura(est: EstructuraProyecto) -> List[Event]:
     return eventos
 
 
-def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 30) -> List[Event]:
+def _events_desde_contenido(contenidos: list[InfoContenido], max_eventos: int = 30) -> list[Event]:
     """Genera eventos semánticos consolidando complejidad y TODOs.
 
     Args:
@@ -136,7 +136,7 @@ def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 
     Returns:
         List[Event]: Eventos semánticos generados.
     """
-    eventos: List[Event] = []
+    eventos: list[Event] = []
     if not contenidos:
         return eventos
 
@@ -165,7 +165,7 @@ def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 
             )
         )
 
-    todos_global: List[str] = []
+    todos_global: list[str] = []
     for info in contenidos:
         if info.todos:
             for todo in info.todos:
@@ -190,8 +190,8 @@ def _events_desde_contenido(contenidos: List[InfoContenido], max_eventos: int = 
 
 def escanear_y_generar_eventos(
     ruta_raiz: str,
-    ignorar: Optional[List[str]] = None,
-) -> List[Event]:
+    ignorar: list[str] | None = None,
+) -> list[Event]:
     """Escanea el proyecto en la ruta dada y produce eventos normalizados.
 
     Args:
@@ -210,7 +210,7 @@ def escanear_y_generar_eventos(
     return ev_est + ev_cont
 
 
-def guardar_eventos_escaneados(eventos: List[Event], output_path: str) -> int:
+def guardar_eventos_escaneados(eventos: list[Event], output_path: str) -> int:
     """Guarda eventos escaneados en un archivo JSONL evitando duplicados.
 
     Args:

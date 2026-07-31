@@ -1,10 +1,13 @@
-from __future__ import annotations
-
 """Cargador de configuración declarativa (.contextmap.toml / pyproject.toml)."""
 
+from __future__ import annotations
+
 import os
-import tomllib
-from typing import Optional
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 o anterior
+    import tomli as tomllib
 
 from context_map.core.models.config import ContextMapConfig
 

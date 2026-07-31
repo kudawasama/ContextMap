@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import os
 
-from context_map.application.commands.scan import cmd_scan
-from context_map.application.commands.importers import cmd_import_git
 from context_map.application.commands.build import cmd_build
+from context_map.application.commands.importers import cmd_import_git
+from context_map.application.commands.scan import cmd_scan
 
 
 def cmd_auto(args) -> None:
@@ -39,14 +39,14 @@ def cmd_auto(args) -> None:
         if os.path.exists(git_dir):
             try:
                 if not hasattr(args, "limit"):
-                    setattr(args, "limit", 50)
+                    args.limit = 50
                 cmd_import_git(args)
             except Exception as err:
                 if not quiet:
                     print(f"[auto] [WARN] No se pudo importar el historial Git ({err})")
 
-        setattr(args, "clean", True)
-        setattr(args, "brief", True)
+        args.clean = True
+        args.brief = True
         cmd_build(args)
 
         if not quiet:

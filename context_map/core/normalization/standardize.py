@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """Estandarización y clasificación semántica de nodos del grafo.
+
 
 Proporciona funciones para:
 - Clasificación semántica basada en Conventional Commits (feature, fix, refactor, docs, test, etc.).
@@ -11,11 +10,11 @@ Proporciona funciones para:
 - Deduplicación de nodos por (tipo, título) para mantener el grafo limpio.
 """
 
+from __future__ import annotations
+
 import re
-from typing import List, Dict, Tuple, Optional, Set
 
 from context_map.core.models import Node
-
 
 # ============================================================
 # MAPEOS DE ESTANDARIZACIÓN Y CLASIFICACIÓN SEMÁNTICA
@@ -29,7 +28,7 @@ TAGS_ELIMINAR: set[str] = {
     "__init__.py",
 }
 
-CLASSIFICATION_PATTERNS: List[Tuple[List[str], str, str]] = [
+CLASSIFICATION_PATTERNS: list[tuple[list[str], str, str]] = [
     (["feat", "feature", "nueva", "agregar", "añadir", "implementar", "crear", "soporte para"], "feature", "Feature"),
     (["fix", "corregir", "arreglar", "solucionar", "resolver", "patch", "bug", "error", "fallo"], "fix", "Fix"),
     (["update", "actualizar", "mejorar", "optimizar", "refactor", "refactorizar", "reestructurar", "limpiar"], "update", "Update"),
@@ -42,10 +41,10 @@ CLASSIFICATION_PATTERNS: List[Tuple[List[str], str, str]] = [
     (["security", "seguridad", "auth", "autenticacion", "autorizacion", "vulnerabilidad", "cifrado"], "security", "Security"),
 ]
 
-DEFAULT_CLASSIFICATION: Tuple[str, str] = ("other", "Otro")
+DEFAULT_CLASSIFICATION: tuple[str, str] = ("other", "Otro")
 
 
-def inferir_classification(node: Node) -> Tuple[str, str]:
+def inferir_classification(node: Node) -> tuple[str, str]:
     """Infiere el id y la etiqueta de clasificación semántica del nodo a partir de su contenido.
 
     Args:
@@ -94,7 +93,7 @@ def classification_tag(classification_id: str) -> str:
     return f"class:{classification_id}"
 
 
-TAG_FILE_MAP: Dict[str, str] = {
+TAG_FILE_MAP: dict[str, str] = {
     "antigravity.py": "integracion",
     "chat_export.py": "integracion",
     "checker.py": "analisis",
@@ -115,7 +114,7 @@ TAG_FILE_MAP: Dict[str, str] = {
     "writer.py": "presentacion",
 }
 
-TAG_MERGE: Dict[str, str] = {
+TAG_MERGE: dict[str, str] = {
     "doc": "documentacion",
     "docs": "documentacion",
     "commit": "git",
@@ -132,7 +131,7 @@ TAG_MERGE: Dict[str, str] = {
 }
 
 
-def estandarizar_tags(tags: List[str]) -> List[str]:
+def estandarizar_tags(tags: list[str]) -> list[str]:
     """Estandariza, limpia y desduplica la lista de etiquetas de un nodo.
 
     Args:
@@ -141,7 +140,7 @@ def estandarizar_tags(tags: List[str]) -> List[str]:
     Returns:
         List[str]: Lista de etiquetas estandarizadas y ordenadas.
     """
-    tags_estandarizados: List[str] = []
+    tags_estandarizados: list[str] = []
 
     for tag in tags:
         if tag in TAGS_ELIMINAR:
@@ -183,9 +182,11 @@ def inferir_status(node: Node) -> str:
     if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
         return "completado"
 
-    if node.source == "scanner":
-        if any(prefix in node.title for prefix in ["Función:", "Módulo:", "Clase:", "Documentación", "Entrypoint:", "Proyecto", "Archivo:", "Carpeta", "capa", "__init__"]):
-            return "completado"
+    if node.source == "scanner" and any(
+        prefix in node.title
+        for prefix in ["Función:", "Módulo:", "Clase:", "Documentación", "Entrypoint:", "Proyecto", "Archivo:", "Carpeta", "capa", "__init__"]
+    ):
+        return "completado"
 
     # Patrones explícitos de completado en texto
     completado_kw = ["completad", "implementad", "hecho", "terminad", "listo", "resuelt", "aprobad", "finalizad", "[x]", "done", "fixed", "resolved"]
@@ -200,7 +201,7 @@ def inferir_status(node: Node) -> str:
     return "completado"
 
 
-def inferir_evidence(node: Node) -> List[str]:
+def inferir_evidence(node: Node) -> list[str]:
     """Infiere evidencias técnicas (archivos, clases, líneas) a partir del texto del nodo.
 
     Args:
@@ -209,7 +210,7 @@ def inferir_evidence(node: Node) -> List[str]:
     Returns:
         List[str]: Lista de evidencias extraídas.
     """
-    evidence: List[str] = []
+    evidence: list[str] = []
 
     if node.title:
         rutas = re.findall(r"[.\w/\\]+\.\w+", node.title)
@@ -290,11 +291,11 @@ def estandarizar_nodo(node: Node) -> Node:
     """
     classif_id, _ = inferir_classification(node)
     tags = estandarizar_tags(node.tags)
-    
+
     # Limpiar tags legacy "class{X}" sin colon (ej: "classchore", "classfeature")
     # que se generaron antes de que estandarizar_tags preservara ":"
     tags = [t for t in tags if not re.match(r'^class[a-z]+$', t)]
-    
+
     # Agregar class_tag solo si no existe ya en formato limpio
     class_tag = classification_tag(classif_id)
     if class_tag not in tags:
@@ -346,7 +347,7 @@ def estandarizar_nodo(node: Node) -> Node:
     )
 
 
-def estandarizar_nodos(nodes: List[Node]) -> List[Node]:
+def estandarizar_nodos(nodes: list[Node]) -> list[Node]:
     """Aplica la estandarización a una lista completa de nodos.
 
     Args:
@@ -358,7 +359,7 @@ def estandarizar_nodos(nodes: List[Node]) -> List[Node]:
     return [estandarizar_nodo(n) for n in nodes]
 
 
-def dedup_nodes(nodes: List[Node]) -> List[Node]:
+def dedup_nodes(nodes: list[Node]) -> list[Node]:
     """Elimina nodos duplicados conservando la última ocurrencia por (type, title[:80]).
 
     Previene la acumulación de nodos duplicados en graph.jsonl después de
@@ -371,7 +372,7 @@ def dedup_nodes(nodes: List[Node]) -> List[Node]:
     Returns:
         List[Node]: Lista desduplicada, último nodo por clave gana.
     """
-    seen: Dict[Tuple[str, str], Node] = {}
+    seen: dict[tuple[str, str], Node] = {}
     for n in nodes:
         key = (n.type, n.title[:80].lower())
         seen[key] = n  # última ocurrencia gana

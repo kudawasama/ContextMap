@@ -8,11 +8,11 @@ de secciones Markdown.
 from __future__ import annotations
 
 import re
-from typing import List, Dict, Optional, Set, Tuple
-from context_map.core.models import Node, Edge
+
+from context_map.core.models import Edge, Node
 
 # Mapeo de tipos a carpetas del vault
-TYPE_TO_FOLDER: Dict[str, str] = {
+TYPE_TO_FOLDER: dict[str, str] = {
     "BASE": "01-PROYECTOS",
     "IDEA": "02-IDEAS",
     "RIESGO": "03-RIESGO",
@@ -24,16 +24,16 @@ TYPE_TO_FOLDER: Dict[str, str] = {
 }
 
 # Subcarpetas por estado
-STATUS_FOLDERS: Dict[str, str] = {
+STATUS_FOLDERS: dict[str, str] = {
     "completado": "COMPLETADO",
     "en_progreso": "EN_PROGRESO",
     "pendiente": "PENDIENTE",
     "cancelado": "CANCELADO",
 }
 
-FOLDER_BY_NAME: Dict[str, str] = {v: k for k, v in TYPE_TO_FOLDER.items()}
+FOLDER_BY_NAME: dict[str, str] = {v: k for k, v in TYPE_TO_FOLDER.items()}
 
-STANDARD_TAGS_BY_TYPE: Dict[str, List[str]] = {
+STANDARD_TAGS_BY_TYPE: dict[str, list[str]] = {
     "BASE": ["proyecto"],
     "IDEA": ["idea"],
     "RIESGO": ["riesgo"],
@@ -44,7 +44,7 @@ STANDARD_TAGS_BY_TYPE: Dict[str, List[str]] = {
     "CORRECCION": ["correccion"],
 }
 
-STANDARD_TAGS_COMMON: List[str] = ["context-map"]
+STANDARD_TAGS_COMMON: list[str] = ["context-map"]
 
 
 def _clean_null_bytes(text: str) -> str:
@@ -71,11 +71,6 @@ def _slugificar(texto: str) -> str:
     return slug[:60] or "sin-nombre"
 
 
-def _safe_slug(text: str) -> str:
-    """Alias para slugificar un texto."""
-    return _slugificar(text)
-
-
 def _safe_filename(text: str) -> str:
     """Limpia caracteres inválidos en el nombre de un archivo, incluyendo nulos."""
     text = _clean_null_bytes(text)
@@ -89,10 +84,9 @@ def _mermaid_safe_id(text: str) -> str:
     text = _clean_null_bytes(text)
     safe = re.sub(r"[^a-zA-Z0-9]", "_", text)
     return safe[:30]
-    return safe[:30]
 
 
-def _normalize_tags(tags: List[str], type_name: str) -> List[str]:
+def _normalize_tags(tags: list[str], type_name: str) -> list[str]:
     """Normaliza y limita las etiquetas asociadas a un nodo.
 
     Aplica tres transformaciones:
@@ -130,9 +124,9 @@ source: "{node.source}"
 ---"""
 
 
-def _wiki_links(node: Node, all_nodes: List[Node], edges: List[Edge]) -> List[str]:
+def _wiki_links(node: Node, all_nodes: list[Node], edges: list[Edge]) -> list[str]:
     """Encuentra conexiones relacionadas basado únicamente en aristas directas."""
-    links: List[str] = []
+    links: list[str] = []
     for e in edges:
         if e.source == node.id:
             target = next((n for n in all_nodes if n.id == e.target), None)
@@ -145,12 +139,12 @@ def _wiki_links(node: Node, all_nodes: List[Node], edges: List[Edge]) -> List[st
                 slug = _slugificar(source.title)
                 links.append(f"[[{slug}|{source.title[:50]}]]")
 
-    seen: Set[str] = set()
-    unique: List[str] = []
-    for l in links:
-        if l not in seen:
-            seen.add(l)
-            unique.append(l)
+    seen: set[str] = set()
+    unique: list[str] = []
+    for enlace in links:
+        if enlace not in seen:
+            seen.add(enlace)
+            unique.append(enlace)
     return unique[:10]
 
 
@@ -159,18 +153,18 @@ def _section(title: str, body: str, level: int = 2) -> str:
     return f"{'#' * level} {title}\n\n{body.strip()}\n\n"
 
 
-def _node_list(nodes: List[Node]) -> str:
+def _node_list(nodes: list[Node]) -> str:
     """Renderiza una lista de nodos agrupados por tipo."""
     if not nodes:
         return "_(sin registros)_"
-    grouped: Dict[str, List[Node]] = {t: [] for t in [
+    grouped: dict[str, list[Node]] = {t: [] for t in [
         "BASE", "IDEA", "PRUEBA", "FUTURO", "CORRECCION",
         "CAMBIO", "RIESGO", "HITO",
     ]}
     for n in nodes:
         grouped.setdefault(n.type, []).append(n)
 
-    out: List[str] = []
+    out: list[str] = []
     for t in list(grouped.keys()):
         items = grouped.get(t, [])
         if not items:
@@ -191,7 +185,7 @@ def _node_list(nodes: List[Node]) -> str:
     return "\n".join(out)
 
 
-def _edges_table(edges: List[Edge]) -> str:
+def _edges_table(edges: list[Edge]) -> str:
     """Renderiza una tabla Markdown con las relaciones del grafo."""
     if not edges:
         return "_(sin conexiones)_"

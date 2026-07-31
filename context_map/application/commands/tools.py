@@ -1,4 +1,4 @@
-"""Comandos utilitarios: init, check, weekly, watch, brief, doctor.
+"""Comandos utilitarios: init, check, weekly, brief, doctor.
 
 Agrupa comandos de administración y diagnóstico que no encajan
 en los módulos de build, sync, scan o importación.
@@ -7,23 +7,20 @@ en los módulos de build, sync, scan o importación.
 from __future__ import annotations
 
 import os
-import time
-
-from context_map.core.models import Node, Edge
-from context_map.core.storage import load_jsonl
-from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
-from context_map.domain.analysis import analizar_readiness, formatear_readiness
-from context_map.domain.reporting import guardar_reporte
-from context_map.domain.health import run_doctor as doctor_run
 
 from context_map.application.commands._helpers import (
     CONTEXT_DIR,
-    STATE_DIR,
     MAPS_DIR,
+    STATE_DIR,
     ensure_dirs,
     project_name,
 )
-from context_map.application.commands.sync import do_sync
+from context_map.core.models import Edge, Node
+from context_map.core.storage import load_jsonl
+from context_map.domain.analysis import analizar_readiness, formatear_readiness
+from context_map.domain.health import run_doctor as doctor_run
+from context_map.domain.reporting import guardar_reporte
+from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
 
 
 def cmd_init(args) -> None:
@@ -63,33 +60,9 @@ def cmd_weekly(args) -> None:
 
     print(f"Reporte generado: {reporte}")
     print("")
-    with open(reporte, "r", encoding="utf-8") as f:
+    with open(reporte, encoding="utf-8") as f:
         lineas = f.readlines()[:30]
         print("".join(lineas))
-
-
-def cmd_watch(args) -> None:
-    """Observa cambios en el grafo y regenera automáticamente.
-
-    Args:
-        args: Namespace de argparse con ``interval``
-    """
-    print(f"Observando cambios cada {args.interval} segundos... (Ctrl+C para salir)")
-
-    last_mtime = 0
-
-    while True:
-        graph_path = os.path.join(STATE_DIR, "graph.jsonl")
-        if os.path.exists(graph_path):
-            current_mtime = os.path.getmtime(graph_path)
-            if current_mtime > last_mtime:
-                last_mtime = current_mtime
-                print("Detectado cambio, regenerando...")
-                try:
-                    do_sync(args, "Repo")
-                except Exception as e:
-                    print(f"Error: {e}")
-        time.sleep(args.interval)
 
 
 def cmd_brief(args) -> None:

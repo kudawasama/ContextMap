@@ -8,20 +8,19 @@ from __future__ import annotations
 
 import os
 
-from context_map.core.models import Event
-from context_map.domain.scanning import guardar_eventos_escaneados
-from context_map.infrastructure.integrations.git import leer_historial_git
-from context_map.infrastructure.integrations.hermes import importar_sesiones
-from context_map.infrastructure.integrations.chat_export import importar_chat
-from context_map.infrastructure.integrations.antigravity import importar_antigravity
-
 from context_map.application.commands._helpers import (
     RAW_DIR,
-    ensure_dirs,
     ahora,
+    ensure_dirs,
     project_name,
 )
 from context_map.application.commands.sync import do_sync
+from context_map.core.models import Event
+from context_map.domain.scanning import guardar_eventos_escaneados
+from context_map.infrastructure.integrations.antigravity import importar_antigravity
+from context_map.infrastructure.integrations.chat_export import importar_chat
+from context_map.infrastructure.integrations.git import leer_historial_git
+from context_map.infrastructure.integrations.hermes import importar_sesiones
 
 
 def cmd_import_git(args) -> None:
@@ -153,29 +152,6 @@ def cmd_import_antigravity(args) -> None:
     output = os.path.join(RAW_DIR, "events.jsonl")
     importados = importar_antigravity(
         ide=True,
-        limite=args.limit or 5,
-        output_path=output,
-    )
-
-    print(f"Conversaciones importadas: {importados} eventos nuevos")
-
-    if importados > 0:
-        do_sync(args, project_name(args))
-
-
-def cmd_import_antigravity2(args) -> None:
-    """Importa chats de Antigravity 2.0.
-
-    Args:
-        args: Namespace de argparse con ``limit``, ``project``
-    """
-    ensure_dirs()
-
-    print("Importando conversaciones de Antigravity 2.0...")
-
-    output = os.path.join(RAW_DIR, "events.jsonl")
-    importados = importar_antigravity(
-        ide=False,
         limite=args.limit or 5,
         output_path=output,
     )

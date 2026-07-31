@@ -9,107 +9,33 @@ Módulo Fachada que coordina los submódulos especializados:
 from __future__ import annotations
 
 import os
-from typing import List, Dict, Optional, Set, Tuple
 
-from context_map.core.models import Node, Edge
-from context_map.presentation.vault.templates import (
-    TYPE_TO_FOLDER,
-    STATUS_FOLDERS,
-    FOLDER_BY_NAME,
-    STANDARD_TAGS_BY_TYPE,
-    STANDARD_TAGS_COMMON,
-    _slugificar,
-    _safe_slug,
-    _safe_filename,
-    _mermaid_safe_id,
-    _normalize_tags,
-    _frontmatter,
-    _wiki_links,
-    _section,
-    _node_list,
-    _edges_table,
-)
+from context_map.core.models import Edge, Node
 from context_map.presentation.vault.atomic import (
-    _render_nota,
-    _render_moc,
-    _detectar_grupo,
-    _consolidar_grupo,
     _consolidar_nodos,
-    _obtener_carpeta_estado,
     _crear_estructura_carpetas,
     _obtener_ruta_nota,
     _render_conexiones,
+    _render_moc,
+    _render_nota,
     _render_tracking_consolidacion,
 )
 from context_map.presentation.vault.consolidated import (
-    _extract_project_purpose,
     _render_consolidated_vault,
     _render_hierarchical_vault,
 )
-
-
-def _vault_nodes_and_edges(output_dir: str) -> Tuple[List[Node], List[Edge]]:
-    """Reconstruye el grafo de nodos y aristas leyendo los archivos de la bóveda."""
-    nodes: List[Node] = []
-    edges: List[Edge] = []
-    seen_nodes: Set[str] = {"00-INDICE"}
-    seen_edges: Set[Tuple[str, str, str]] = set()
-
-    def add_node(
-        node_id: str,
-        title: str,
-        kind: str,
-        tags: List[str],
-        summary: str = "",
-        source: str = "vault",
-    ) -> Optional[Node]:
-        if node_id in seen_nodes:
-            return None
-        seen_nodes.add(node_id)
-        node = Node(
-            id=node_id,
-            type=kind,
-            title=title,
-            summary=summary,
-            tags=tags,
-            source=source,
-            status="completado",
-        )
-        nodes.append(node)
-        return node
-
-    def add_edge(src: str, target: str, kind: str = "contains", note: str = "") -> None:
-        if not src or not target or src == target:
-            return
-        edge_key = (src, target, kind)
-        if edge_key in seen_edges:
-            return
-        seen_edges.add(edge_key)
-        edges.append(Edge(source=src, target=target, kind=kind, note=note))
-
-    # Nodos principales MOC
-    add_node("00-INDICE", "Índice MOC", "BASE", ["moc", "indice"])
-    add_node("01-PROPOSITO", "Propósito del Proyecto", "BASE", ["proposito"])
-    add_node("02-IDEAS", "Ideas y Características", "IDEA", ["ideas"])
-    add_node("03-ESTRUCTURA", "Estructura del Proyecto", "BASE", ["estructura"])
-    add_node("04-RIESGOS_Y_COMPLEJIDAD", "Riesgos y Complejidad", "RIESGO", ["riesgo"])
-    add_node("05-BACKLOG_Y_TODOS", "Backlog y Tareas Pendientes", "FUTURO", ["backlog"])
-    add_node("06-HISTORIAL_Y_DECISIONES", "Historial y Decisiones", "CAMBIO", ["historial"])
-
-    add_edge("00-INDICE", "01-PROPOSITO", "contains")
-    add_edge("00-INDICE", "02-IDEAS", "contains")
-    add_edge("00-INDICE", "03-ESTRUCTURA", "contains")
-    add_edge("00-INDICE", "04-RIESGOS_Y_COMPLEJIDAD", "contains")
-    add_edge("00-INDICE", "05-BACKLOG_Y_TODOS", "contains")
-    add_edge("00-INDICE", "06-HISTORIAL_Y_DECISIONES", "contains")
-
-    return nodes, edges
+from context_map.presentation.vault.templates import (
+    _edges_table,
+    _mermaid_safe_id,
+    _node_list,
+    _section,
+)
 
 
 def render_obsidian_vault(
     project_name: str,
-    nodes: List[Node],
-    edges: List[Edge],
+    nodes: list[Node],
+    edges: list[Edge],
     output_dir: str = ".context-map/vault",
     mode: str = "consolidated",
 ) -> str:
@@ -164,9 +90,9 @@ def render_obsidian_vault(
     )
 
 
-def render_active_map(project_name: str, nodes: List[Node], edges: List[Edge]) -> str:
+def render_active_map(project_name: str, nodes: list[Node], edges: list[Edge]) -> str:
     """Genera una vista textual sintética del mapa de contexto para ACTIVE.md."""
-    nodes_by_type: Dict[str, List[Node]] = {}
+    nodes_by_type: dict[str, list[Node]] = {}
     for n in nodes:
         nodes_by_type.setdefault(n.type, []).append(n)
 
@@ -205,7 +131,7 @@ def render_active_map(project_name: str, nodes: List[Node], edges: List[Edge]) -
     return f"# {project_name} — Context Map\n\n{body}"
 
 
-def render_mermaid(nodes: List[Node], edges: List[Edge]) -> str:
+def render_mermaid(nodes: list[Node], edges: list[Edge]) -> str:
     """Genera un diagrama Mermaid de las conexiones entre nodos."""
     if not nodes:
         return "```mermaid\ngraph TD\n    empty[Vacío]\n```"

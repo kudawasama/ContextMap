@@ -8,17 +8,19 @@ Re-exporta símbolos desde sus submódulos correspondientes:
 - `synchronization`: Sincronización incremental del mapa.
 """
 
+from __future__ import annotations
+
 from context_map.domain.analysis import (
-    analizar_readiness,
-    formatear_readiness,
     ResultadoReadiness,
     SenalReadiness,
+    analizar_readiness,
+    formatear_readiness,
 )
 from context_map.domain.health import (
-    run as run_doctor,
-    DoctorReport,
     DoctorCheck,
+    DoctorReport,
 )
+from context_map.domain.health import run as run_doctor
 from context_map.domain.reporting import (
     generar_semanal,
     guardar_reporte,
