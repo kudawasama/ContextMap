@@ -143,15 +143,35 @@ def resolve_vault_mode(args) -> str:
 
 
 def clean_vault_dir(project_name: str | None = None) -> None:
-    """Elimina el contenido del vault para una reconstrucción limpia.
-
-    Si se pasa project_name, limpia .context-map/vault-{Nombre}/.
+    """Elimina el contenido del vault para una reconstrucción limpia,
+    preservando notas de planes manuales en 5.0-BACKLOG.
     """
     vdir = vault_dir(project_name)
+    backlog_dir = os.path.join(vdir, "5.0-BACKLOG")
+    preservados: dict[str, str] = {}
+
+    if os.path.isdir(backlog_dir):
+        for fname in os.listdir(backlog_dir):
+            if fname.endswith(".md") and fname not in ("5.0-BACKLOG.md", "5.1-Tareas.md"):
+                fpath = os.path.join(backlog_dir, fname)
+                try:
+                    with open(fpath, encoding="utf-8") as f:
+                        preservados[fname] = f.read()
+                except Exception as err:
+                    logger.debug("No se pudo respaldar nota %s: %s", fname, err)
+
     if os.path.isdir(vdir):
         shutil.rmtree(vdir, ignore_errors=True)
     os.makedirs(vdir, exist_ok=True)
-    print(f"[clean] Vault limpiado: {vdir}")
+
+    if preservados:
+        target_backlog = os.path.join(vdir, "5.0-BACKLOG")
+        os.makedirs(target_backlog, exist_ok=True)
+        for fname, content in preservados.items():
+            with open(os.path.join(target_backlog, fname), "w", encoding="utf-8") as f:
+                f.write(content)
+
+    print(f"[clean] Vault limpiado: {vdir} (preservadas {len(preservados)} notas del backlog)")
 
 
 def safe_rmtree(path: str) -> None:

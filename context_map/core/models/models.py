@@ -66,6 +66,7 @@ class Node:
     related_to: list[str] = field(default_factory=list)
     evidence: list[str] = field(default_factory=list)
     classification: str = ""
+    concept: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """Serializa el nodo a un diccionario para persistencia en formato JSON/JSONL.

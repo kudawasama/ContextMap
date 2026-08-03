@@ -287,19 +287,28 @@ def test_contexto_narrativo_con_alma() -> None:
         ideas_dir = os.path.join(temp_dir, "2.0-IDEAS", "2.1-Ideas-Pendientes")
         assert os.path.exists(ideas_dir), "No se creó el directorio de ideas pendientes"
 
-        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md") and f != "2.1-Ideas-Pendientes.md"]
+        # Las notas ahora están en subcarpetas por concepto
+        concepto_dirs = [
+            d for d in os.listdir(ideas_dir)
+            if os.path.isdir(os.path.join(ideas_dir, d))
+        ]
+        assert len(concepto_dirs) > 0, "No se crearon carpetas de concepto"
+
+        archivos = []
+        for cd in concepto_dirs:
+            for f in os.listdir(os.path.join(ideas_dir, cd)):
+                if f.endswith(".md") and f != f"{cd}.md":
+                    archivos.append(os.path.join(ideas_dir, cd, f))
         assert len(archivos) > 0, "No se generaron notas de ideas pendientes"
 
-        sample_note = os.path.join(ideas_dir, archivos[0])
+        sample_note = archivos[0]
         with open(sample_note, encoding="utf-8") as f:
             content = f.read()
 
-        assert "POR QUÉ" in content, "La nota no contiene la sección ¿POR QUÉ?"
-        assert "DE DÓNDE SURGIÓ" in content, "La nota no contiene la sección ¿DE DÓNDE SURGIÓ?"
-        assert "PARA QUÉ" in content, "La nota no contiene la sección ¿PARA QUÉ?"
-        assert "CÓMO" in content, "La nota no contiene la sección ¿CÓMO?"
-        assert "PROS Y CONTRAS" in content, "La nota no contiene la sección PROS Y CONTRAS"
-        assert "PROS (Ventajas)" in content, "La nota no contiene la tabla de PROS"
+        assert "## 💡 IDEA" in content, "La nota no contiene la sección IDEA"
+        assert "## 🧠 LÓGICA" in content, "La nota no contiene la sección LÓGICA"
+        assert "## 🔧 MEJORA" in content, "La nota no contiene la sección MEJORA"
+        assert "## ✅ CONCLUSIÓN" in content, "La nota no contiene la sección CONCLUSIÓN"
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -368,7 +377,17 @@ def test_null_byte_character_in_filename() -> None:
         )
         ideas_dir = os.path.join(temp_dir, "2.0-IDEAS", "2.1-Ideas-Pendientes")
         assert os.path.exists(ideas_dir)
-        archivos = [f for f in os.listdir(ideas_dir) if f.endswith(".md") and f != "2.1-Ideas-Pendientes.md"]
+        # Las notas están en subcarpetas por concepto
+        concepto_dirs = [
+            d for d in os.listdir(ideas_dir)
+            if os.path.isdir(os.path.join(ideas_dir, d))
+        ]
+        assert len(concepto_dirs) > 0
+        archivos = []
+        for cd in concepto_dirs:
+            for f in os.listdir(os.path.join(ideas_dir, cd)):
+                if f.endswith(".md") and f != f"{cd}.md":
+                    archivos.append(f)
         assert len(archivos) > 0
         assert "\x00" not in archivos[0]
 

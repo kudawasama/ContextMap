@@ -74,6 +74,14 @@ def _render_nota(node: Node, all_nodes: list[Node], edges: list[Edge]) -> str:
     partes.append(generar_contexto_narrativo(node))
     partes.append("")
 
+    from context_map.presentation.vault.mermaid import generar_diagrama_mermaid_nodo
+    mermaid_diag = generar_diagrama_mermaid_nodo(node, all_nodes, edges)
+    if mermaid_diag:
+        partes.append("## 📊 Mapa de Conexiones (Mermaid)")
+        partes.append("")
+        partes.append(mermaid_diag)
+        partes.append("")
+
     if links:
         partes.append("## 🔗 Conexiones")
         partes.append("")

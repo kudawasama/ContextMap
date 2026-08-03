@@ -126,12 +126,20 @@ def _events_desde_estructura(est: EstructuraProyecto) -> list[Event]:
     return eventos
 
 
-def _events_desde_contenido(contenidos: list[InfoContenido], max_eventos: int = 30) -> list[Event]:
-    """Genera eventos semánticos consolidando complejidad y TODOs.
+import re
+
+
+def _events_desde_contenido(
+    contenidos: list[InfoContenido],
+    max_eventos: int = 30,
+    ruta_raiz: str = ".",
+) -> list[Event]:
+    """Genera eventos semánticos consolidando complejidad y TODOs con ubicaciones estables.
 
     Args:
         contenidos (List[InfoContenido]): Información del contenido.
         max_eventos (int): Límite de eventos.
+        ruta_raiz (str): Ruta raíz del proyecto.
 
     Returns:
         List[Event]: Eventos semánticos generados.
@@ -143,7 +151,10 @@ def _events_desde_contenido(contenidos: list[InfoContenido], max_eventos: int = 
     complejos = [info for info in contenidos if info.complejidad == "alta"]
     if len(complejos) >= 2:
         top3 = sorted(complejos, key=lambda x: x.lineas_codigo, reverse=True)[:3]
-        resumen = "; ".join(f"{os.path.basename(c.ruta)} ({c.lineas_codigo} líneas)" for c in top3)
+        rutas_top3 = [
+            os.path.relpath(c.ruta, ruta_raiz).replace("\\", "/") for c in top3
+        ]
+        resumen = "; ".join(rutas_top3)
         eventos.append(
             Event(
                 type="RIESGO",
@@ -151,37 +162,61 @@ def _events_desde_contenido(contenidos: list[InfoContenido], max_eventos: int = 
                 timestamp=_ahora(),
                 source="scanner",
                 tags=["complejidad", "riesgo"],
+                meta={
+                    "total_complejos": len(complejos),
+                    "archivos": [
+                        os.path.relpath(c.ruta, ruta_raiz).replace("\\", "/")
+                        for c in complejos
+                    ],
+                },
             )
         )
     elif len(complejos) == 1:
         c = complejos[0]
+        rel_path = os.path.relpath(c.ruta, ruta_raiz).replace("\\", "/")
         eventos.append(
             Event(
                 type="RIESGO",
-                text=f"Archivo complejo: {os.path.basename(c.ruta)} ({c.lineas_codigo} líneas)",
+                text=f"Archivo complejo: {rel_path}",
                 timestamp=_ahora(),
                 source="scanner",
                 tags=["complejidad", "riesgo"],
+                meta={"lineas_codigo": c.lineas_codigo, "ruta": rel_path},
             )
         )
 
-    todos_global: list[str] = []
+    todos_global: list[tuple[str, str]] = []
     for info in contenidos:
         if info.todos:
+            rel_path = os.path.relpath(info.ruta, ruta_raiz).replace("\\", "/")
+            if rel_path.startswith(".."):
+                continue
             for todo in info.todos:
-                texto = todo.replace("TODO:", "").replace("FIXME:", "").replace("HACK:", "").strip()
-                if texto and texto not in todos_global:
-                    todos_global.append(texto)
+                match = re.match(r"L(\d+):\s*(.*)", todo)
+                if match:
+                    line_no, line_text = match.group(1), match.group(2)
+                    clean_text = line_text.replace("TODO:", "").replace("FIXME:", "").replace("HACK:", "").strip()
+                    if clean_text:
+                        ubicacion = f"{rel_path}:L{line_no}"
+                        if (ubicacion, clean_text) not in todos_global:
+                            todos_global.append((ubicacion, clean_text))
+                else:
+                    clean_text = todo.replace("TODO:", "").replace("FIXME:", "").replace("HACK:", "").strip()
+                    if clean_text:
+                        ubicacion = rel_path
+                        if (ubicacion, clean_text) not in todos_global:
+                            todos_global.append((ubicacion, clean_text))
 
     if todos_global:
-        for todo_texto in todos_global[:5]:
+        for ubicacion, todo_texto in todos_global[:max_eventos]:
             eventos.append(
                 Event(
                     type="FUTURO",
-                    text=f"TODO: {todo_texto}",
+                    text=f"TODO ({ubicacion}): {todo_texto}",
                     timestamp=_ahora(),
                     source="scanner",
                     tags=["todo"],
+                    meta={"ubicacion": ubicacion, "texto": todo_texto},
                 )
             )
 
@@ -205,7 +240,7 @@ def escanear_y_generar_eventos(
     contenidos = analizar_directorio(ruta_raiz)
 
     ev_est = _events_desde_estructura(estructura)
-    ev_cont = _events_desde_contenido(contenidos)
+    ev_cont = _events_desde_contenido(contenidos, ruta_raiz=ruta_raiz)
 
     return ev_est + ev_cont
 

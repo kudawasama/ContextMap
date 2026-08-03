@@ -9,6 +9,7 @@ Responsabilidades:
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -241,11 +242,22 @@ def _contexto_futuro(node: Node) -> str:
     title = node.title.strip()
     summary = node.summary.strip() or f"Tarea pendiente: {title}."
 
+    ubicacion = ""
+    match = re.search(r"TODO\s*\(([^)]+)\)", title, re.IGNORECASE)
+    if match:
+        ubicacion = match.group(1).strip()
+    elif "Ubicación: `" in summary:
+        m_sum = re.search(r"Ubicación:\s*`([^`]+)`", summary)
+        if m_sum:
+            ubicacion = m_sum.group(1).strip()
+
+    ubicacion_texto = f"`{ubicacion}`" if ubicacion else summary
+
     return f"""### 📝 1. Tarea Pendiente (TODO)
 '{title}'
 
 ### 📍 2. Detalles y Ubicación
-{summary}
+{ubicacion_texto}
 
 ### 🎯 3. Prioridad Sugerida
 Evaluada como tarea de mejora o mantenimiento pendiente para próximos desarrollos."""
@@ -326,15 +338,19 @@ def _summary_prueba(texto: str, lower: str) -> str:
 def _summary_futuro(texto: str, lower: str) -> str:
     """Resumen para eventos de tipo FUTURO."""
     if "todo" in lower or "pendiente" in lower:
-        ubicacion = ""
-        if "en " in lower or ":" in texto:
-            partes = texto.split(":")
+        match = re.search(r"TODO\s*\(([^)]+)\):\s*(.*)", texto, re.IGNORECASE)
+        if match:
+            ubicacion = match.group(1).strip()
+            detalle = match.group(2).strip()
+            return f"Pendiente: {detalle}.\n\nUbicación: `{ubicacion}`"
+
+        if ":" in texto:
+            partes = texto.split(":", 1)
             if len(partes) >= 2:
                 ubicacion = partes[0].strip()
-        result = f"Pendiente: {texto}."
-        if ubicacion:
-            result += f"\n\nUbicación: `{ubicacion}`"
-        return result
+                detalle = partes[1].strip()
+                return f"Pendiente: {detalle}.\n\nUbicación: `{ubicacion}`"
+        return f"Pendiente: {texto}."
     if "futuro" in lower or "próximo" in lower or "roadmap" in texto:
         return f"Plan: {texto}."
     return f"Tarea: {texto}."

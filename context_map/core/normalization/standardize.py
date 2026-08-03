@@ -43,6 +43,77 @@ CLASSIFICATION_PATTERNS: list[tuple[list[str], str, str]] = [
 
 DEFAULT_CLASSIFICATION: tuple[str, str] = ("other", "Otro")
 
+# ============================================================
+# CLASIFICACIÓN POR CONCEPTO / DOMINIO TÉCNICO
+# Organiza ideas por concepto: BASEDEDATOS, TUI, CLI, UI, API...
+# ============================================================
+CONCEPT_PATTERNS: list[tuple[list[str], str]] = [
+    (["base de datos", "database", " db", "sql", "query", "consulta", "tabla", "schema",
+      "migracion", "migración", "modelo", "modelos", "repositorio", "repository",
+      "maestroclasificacion", "facturascontrol", "ordenescompra", "guias"],
+     "BASEDEDATOS"),
+    (["tui", "textual", "interfaz terminal", "pantalla", "panel", "widget", "lazyapp",
+      "gobernanzalazy", "menú", "menu.py", "console"],
+     "TUI"),
+    (["cli", "comando", "argumento", "flag", "terminal", "consola", "shell", "argparse",
+      "click", "typer", "entrypoint", "main.py", "cli.py"],
+     "CLI"),
+    (["ui", "frontend", "interfaz", "vista", "componente", "pagina", "página", "estilo",
+      "css", "html", "dashboard", "tablero"],
+     "UI"),
+    (["api", "endpoint", "rest", "graphql", "webhook", "integracion", "integración",
+      "servicio", "service", "wrapper", "conector", "connector"],
+     "API"),
+    (["bot", "telegram", "whatsapp", "discord", "playwright", "descarga", "pdf",
+      "icstruye", "iconstruye", "automatizacion", "automatización"],
+     "AUTOMATIZACION"),
+    (["etl", "ingesta", "ingest", "parser", "parse", "normalizar", "limpieza", "clean",
+      "transformacion", "transformación", "extractor", "detector"],
+     "ETL"),
+    (["reporte", "report", "monthly", "mensual", "consolidado", "excel", "xlsx", "xls",
+      "openpyxl", "hoja", "sheet"],
+     "REPORTES"),
+    (["test", "prueba", "testing", "cobertura", "mock", "fixture", "assert", "unittest",
+      "pytest", "smoke"],
+     "TESTING"),
+    (["config", "settings", "environment", "env", "variable", ".env", "yaml", "toml",
+      "pyproject", "requirements"],
+     "CONFIGURACION"),
+    (["docker", "kubernetes", "deploy", "ci", "cd", "github actions", "workflow",
+      "pipeline", "infraestructura", "servidor"],
+     "DEVOPS"),
+    (["documentacion", "documentación", "readme", "changelog", "docstring", "guia",
+      "tutorial", "wiki", "docs"],
+     "DOCUMENTACION"),
+    (["seguridad", "security", "auth", "autenticacion", "autorizacion", "permiso",
+      "token", "jwt", "oauth"],
+     "SEGURIDAD"),
+    (["performance", "rendimiento", "velocidad", "latencia", "memoria", "cpu", "cache",
+      "optimizacion", "optimización"],
+     "PERFORMANCE"),
+]
+
+DEFAULT_CONCEPT: str = "GENERAL"
+
+
+def inferir_concepto(node: Node) -> str:
+    """Infiere el concepto/dominio técnico del nodo.
+
+    Args:
+        node (Node): Nodo a analizar.
+
+    Returns:
+        str: ID de concepto ('BASEDEDATOS', 'TUI', 'CLI', 'ETL', ...).
+    """
+    text = f"{node.title} {node.summary or ''}".lower()
+
+    for keywords, concept_id in CONCEPT_PATTERNS:
+        for kw in keywords:
+            if kw in text:
+                return concept_id
+
+    return DEFAULT_CONCEPT
+
 
 def inferir_classification(node: Node) -> tuple[str, str]:
     """Infiere el id y la etiqueta de clasificación semántica del nodo a partir de su contenido.
@@ -290,6 +361,7 @@ def estandarizar_nodo(node: Node) -> Node:
         Node: Nuevo nodo estandarizado.
     """
     classif_id, _ = inferir_classification(node)
+    concept_id = inferir_concepto(node)
     tags = estandarizar_tags(node.tags)
 
     # Limpiar tags legacy "class{X}" sin colon (ej: "classchore", "classfeature")
@@ -329,6 +401,7 @@ def estandarizar_nodo(node: Node) -> Node:
         created_at=node.created_at,
         updated_at=node.updated_at,
         classification=classif_id,
+        concept=concept_id,
     )
 
     return Node(
@@ -344,6 +417,7 @@ def estandarizar_nodo(node: Node) -> Node:
         created_at=node.created_at,
         updated_at=node.updated_at,
         classification=classif_id,
+        concept=concept_id,
     )
 
 
@@ -359,6 +433,47 @@ def estandarizar_nodos(nodes: list[Node]) -> list[Node]:
     return [estandarizar_nodo(n) for n in nodes]
 
 
+import os
+
+
+def depurar_nodos_obsoletos(nodes: list[Node], project_root: str = ".") -> list[Node]:
+    """Filtra y elimina nodos de RIESGO obsoletos cuyos archivos referenciados ya no existen.
+
+    Args:
+        nodes (list[Node]): Nodos del grafo.
+        project_root (str): Ruta raíz del proyecto.
+
+    Returns:
+        list[Node]: Lista de nodos purgada.
+    """
+    nodos_validos: list[Node] = []
+    for n in nodes:
+        if n.type == "RIESGO":
+            if re.search(r"\(\d+\s*l[ií]neas?\)", n.title, re.IGNORECASE) or re.search(r"\(\d+\s*l[ií]neas?\)", n.summary or "", re.IGNORECASE):
+                continue
+
+            archivos = re.findall(r"([\w.\-/]+\.py)", n.title + " " + (n.summary or ""))
+            if archivos:
+                existe = False
+                for fname in archivos:
+                    if os.path.exists(os.path.join(project_root, fname)) or os.path.exists(fname):
+                        existe = True
+                        break
+                    base = os.path.basename(fname)
+                    for root, dirs, files in os.walk(project_root):
+                        dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", "node_modules", ".context-map")]
+                        if base in files:
+                            existe = True
+                            break
+                    if existe:
+                        break
+                if not existe:
+                    continue
+
+        nodos_validos.append(n)
+    return nodos_validos
+
+
 def dedup_nodes(nodes: list[Node]) -> list[Node]:
     """Elimina nodos duplicados conservando la última ocurrencia por (type, title[:80]).
 
@@ -372,8 +487,9 @@ def dedup_nodes(nodes: list[Node]) -> list[Node]:
     Returns:
         List[Node]: Lista desduplicada, último nodo por clave gana.
     """
+    nodes_limpios = depurar_nodos_obsoletos(nodes)
     seen: dict[tuple[str, str], Node] = {}
-    for n in nodes:
+    for n in nodes_limpios:
         key = (n.type, n.title[:80].lower())
         seen[key] = n  # última ocurrencia gana
     return list(seen.values())

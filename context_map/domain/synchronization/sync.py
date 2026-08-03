@@ -114,6 +114,49 @@ def _encontrar_nodos_nuevos(
     return nuevos
 
 
+import re
+
+
+def _depurar_nodos_obsoletos(nodos: list[Node], project_root: str = ".") -> list[Node]:
+    """Filtra y elimina nodos de RIESGO obsoletos cuyos archivos referenciados ya no existen.
+
+    Args:
+        nodos (list[Node]): Nodos del grafo.
+        project_root (str): Ruta raíz del proyecto.
+
+    Returns:
+        list[Node]: Lista de nodos purgada.
+    """
+    nodos_validos: list[Node] = []
+    for n in nodos:
+        if n.type == "RIESGO":
+            if re.search(r"\(\d+\s+líneas\)", n.title) or re.search(r"\(\d+\s+líneas\)", n.summary):
+                logger.info("Depurando nodo RIESGO con formato volátil obsoleto: %s", n.id)
+                continue
+
+            archivos = re.findall(r"([\w.\-/]+\.py)", n.title + " " + n.summary)
+            if archivos:
+                existe = False
+                for fname in archivos:
+                    if os.path.exists(os.path.join(project_root, fname)) or os.path.exists(fname):
+                        existe = True
+                        break
+                    base = os.path.basename(fname)
+                    for root, dirs, files in os.walk(project_root):
+                        dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", "node_modules", ".context-map")]
+                        if base in files:
+                            existe = True
+                            break
+                    if existe:
+                        break
+                if not existe:
+                    logger.info("Depurando nodo RIESGO para archivo inexistente (%s): %s", archivos, n.id)
+                    continue
+
+        nodos_validos.append(n)
+    return nodos_validos
+
+
 def sync_incremental(
     chats_dir: str,
     raw_dir: str,
@@ -130,6 +173,7 @@ def sync_incremental(
         dict: Estadísticas de la sincronización.
     """
     nodos_existentes, aristas_existentes = _cargar_estado_existente(state_dir)
+    nodos_existentes = _depurar_nodos_obsoletos(nodos_existentes)
     hashes_procesados = _eventos_procesados(state_dir)
 
     todos_eventos: list[Event] = []
@@ -143,8 +187,17 @@ def sync_incremental(
             eventos_nuevos.append(e)
 
     if not eventos_nuevos:
+        graph_file = os.path.join(state_dir, "graph.jsonl")
+        todos_nodos = dedup_nodes(_depurar_nodos_obsoletos(nodos_existentes))
+        try:
+            with open(graph_file, "w", encoding="utf-8") as f:
+                for n in todos_nodos:
+                    f.write(json.dumps(n.to_dict(), ensure_ascii=False) + "\n")
+        except Exception as err:
+            logger.error("No se pudo persistir el grafo limpio en %s: %s", graph_file, err)
+
         return {
-            "nodos_existentes": len(nodos_existentes),
+            "nodos_existentes": len(todos_nodos),
             "aristas_existentes": len(aristas_existentes),
             "eventos_nuevos": 0,
             "nodos_agregados": 0,
@@ -178,7 +231,8 @@ def sync_incremental(
     graph_file = os.path.join(state_dir, "graph.jsonl")
     todos_nodos = nodos_existentes + (nodos_nuevos if nodos_nuevos else [])
 
-    # Deduplicar antes de persistir para eliminar acumulaciones históricas
+    # Depurar y deduplicar antes de persistir para eliminar acumulaciones históricas
+    todos_nodos = _depurar_nodos_obsoletos(todos_nodos)
     todos_nodos = dedup_nodes(todos_nodos)
 
     try:
@@ -189,7 +243,7 @@ def sync_incremental(
         logger.error("No se pudo persistir el grafo en %s: %s", graph_file, err)
 
     return {
-        "nodos_existentes": len(nodos_existentes),
+        "nodos_existentes": len(todos_nodos),
         "aristas_existentes": len(aristas_existentes),
         "eventos_nuevos": len(eventos_nuevos),
         "nodos_agregados": len(nodos_nuevos),
