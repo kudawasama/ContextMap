@@ -26,10 +26,13 @@ def cmd_hook_install(args=None) -> None:
 
     script_content = """#!/bin/sh
 # ContextMap Auto-Sync Pre-Commit Hook
+# Prioriza el código local del repo (python -m context_map.cli) antes que
+# el binario global 'ctxmap', que puede estar desactualizado.
+if python -m context_map.cli build --clean --brief --quiet 2>/dev/null; then
+    exit 0
+fi
 if command -v ctxmap >/dev/null 2>&1; then
     ctxmap build --clean --brief --quiet
-elif command -v python >/dev/null 2>&1; then
-    python -m context_map.cli build --clean --brief --quiet
 fi
 """
 
