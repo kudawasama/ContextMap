@@ -90,8 +90,6 @@ def _render_nota_idea(
     tags_str = ", ".join(f'"{t}"' for t in tags_list)
     concepto = _concepto_nodo(n)
     clasif = getattr(n, "classification", "") or "idea"
-    # Conexión al nodo índice del concepto (mismo directorio) para conectar el grafo
-    concepto_link = f"[[{concepto}|{concepto}]]"
 
     partes = [
         "---",
@@ -107,7 +105,7 @@ def _render_nota_idea(
         "",
         f"# 📋 {n.title}",
         "",
-        f"> **Concepto:** {concepto_link} · **Clasificación:** `{clasif}` · **Estado:** {ICONOS_STATUS.get(status, '💡')} {status}",
+        f"> **Concepto:** `{concepto}` · **Clasificación:** `{clasif}` · **Estado:** {ICONOS_STATUS.get(status, '💡')} {status}",
         "",
         "---",
         "",
@@ -163,6 +161,27 @@ def _agrupar_por_concepto(nodos: list[Node]) -> dict[str, list[Node]]:
     return dict(sorted(grupos.items()))
 
 
+def _nombre_batch_idea(idx: int, total: int, concepto: str, batch_size: int = 10) -> str:
+    """Genera el nombre de archivo del batch que contiene la idea completada.
+
+    Las ideas completadas se agrupan en archivos batch numerados
+    ``NN-CONCEPTO-INICIO-FIN.md`` para evitar decenas de notas sueltas.
+
+    Args:
+        idx (int): Índice de la idea dentro de la lista del concepto (0-based).
+        total (int): Cantidad total de ideas del concepto.
+        concepto (str): Concepto técnico al que pertenece la idea.
+        batch_size (int): Máximo de ideas por batch.
+
+    Returns:
+        str: Nombre del archivo batch que contiene la idea.
+    """
+    batch_num = idx // batch_size + 1
+    start_num = idx // batch_size * batch_size + 1
+    end_num = min(start_num + batch_size - 1, total)
+    return f"{batch_num:02d}-{concepto}-{start_num:02d}-{end_num:02d}.md"
+
+
 def _render_indice_concepto(
     concepto: str,
     nodos: list[Node],
@@ -176,7 +195,15 @@ def _render_indice_concepto(
 ) -> None:
     """Renderiza el índice de un concepto dentro de una sección de estado."""
     seccion_dir = os.path.basename(os.path.dirname(directorio))
-    backlink = f"[[2.0-IDEAS/{seccion_dir}|⬅ Volver a {seccion_dir}]]"
+    # El archivo índice de la sección no siempre coincide con el nombre de la
+    # carpeta (ej: 2.3-Ideas-Completas-e-Implementadas/ -> 2.3-Ideas-Completas.md)
+    archivo_padre_por_dir: dict[str, str] = {
+        "2.1-Ideas-Pendientes": "2.1-Ideas-Pendientes",
+        "2.2-Ideas-Futuras": "2.2-Ideas-Futuras",
+        "2.3-Ideas-Completas-e-Implementadas": "2.3-Ideas-Completas",
+    }
+    archivo_padre = archivo_padre_por_dir.get(seccion_dir, seccion_dir)
+    backlink = f"[[{archivo_padre}|⬅ Volver a {seccion_dir}]]"
     index_parts = cabecera_fn(
         "seccion", f"ideas-{status}-{concepto.lower()}", project_name, fecha_actual,
         ["context-map", "ideas", status, concepto.lower()],
@@ -190,12 +217,15 @@ def _render_indice_concepto(
         "## Lista de Ideas",
         "",
     ])
-    for n in nodos:
-        slug = _nombre_nota_idea(n)
+    for i, n in enumerate(nodos):
+        if status == "completado":
+            slug = _nombre_batch_idea(i, len(nodos), concepto)
+        else:
+            slug = _nombre_nota_idea(n)
         icono = ICONOS_STATUS.get(n.status, "💡")
         index_parts.append(f"- {icono} [[{slug}|{n.title}]]")
     index_parts.extend(pie_fn(backlink))
-    _escribir_markdown(directorio, f"{concepto}.md", index_parts)
+    _escribir_markdown(directorio, f"{concepto}-{status_label}.md", index_parts)
 
 
 def _render_seccion_ideas(
@@ -242,10 +272,17 @@ def _render_seccion_ideas(
         "",
         "## Sub-secciones",
         "",
-        "- [[2.1-Ideas-Pendientes/2.1-Ideas-Pendientes|2.1 Ideas Pendientes]]",
-        "- [[2.2-Ideas-Futuras/2.2-Ideas-Futuras|2.2 Ideas Futuras]]",
-        "- [[2.3-Ideas-Completas-e-Implementadas/2.3-Ideas-Completas|2.3 Ideas Completas]]",
-        "- [[2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]",
+    ])
+    sub_secciones = []
+    if pendientes:
+        sub_secciones.append("- [[2.1-Ideas-Pendientes/2.1-Ideas-Pendientes|2.1 Ideas Pendientes]]")
+    if activas:
+        sub_secciones.append("- [[2.2-Ideas-Futuras/2.2-Ideas-Futuras|2.2 Ideas Futuras]]")
+    if completadas:
+        sub_secciones.append("- [[2.3-Ideas-Completas-e-Implementadas/2.3-Ideas-Completas|2.3 Ideas Completas]]")
+    sub_secciones.append("- [[2.4-Ideas-Relevantes|2.4 Ideas Relevantes]]")
+    partes.extend(sub_secciones)
+    partes.extend([
         "",
         "---",
         "[[00-INDICE|⬅ Volver al índice]]",
@@ -275,13 +312,13 @@ def _render_seccion_ideas(
         ])
         grupos = _agrupar_por_concepto(pendientes)
         for concepto, nodos in grupos.items():
-            index_parts.append(f"- [[2.1-Ideas-Pendientes/{concepto}|{concepto}]] ({len(nodos)})")
+            index_parts.append(f"- [[{concepto}-Pendientes|{concepto}]] ({len(nodos)})")
             concepto_dir = os.path.join(pendientes_dir, concepto)
             os.makedirs(concepto_dir, exist_ok=True)
             for n in nodos:
                 _render_nota_idea(
                     n, project_name, fecha_actual, concepto_dir, "pendiente",
-                    f"[[2.1-Ideas-Pendientes/{concepto}|⬅ Volver a {concepto}]]",
+                    f"[[{concepto}-Pendientes|⬅ Volver a {concepto}]]",
                     pie_fn,
                 )
             _render_indice_concepto(
@@ -313,13 +350,13 @@ def _render_seccion_ideas(
         ])
         grupos = _agrupar_por_concepto(activas)
         for concepto, nodos in grupos.items():
-            index_parts.append(f"- [[2.2-Ideas-Futuras/{concepto}|{concepto}]] ({len(nodos)})")
+            index_parts.append(f"- [[{concepto}-Futuras|{concepto}]] ({len(nodos)})")
             concepto_dir = os.path.join(futuras_dir, concepto)
             os.makedirs(concepto_dir, exist_ok=True)
             for n in nodos:
                 _render_nota_idea(
                     n, project_name, fecha_actual, concepto_dir, "activo",
-                    f"[[2.2-Ideas-Futuras/{concepto}|⬅ Volver a {concepto}]]",
+                    f"[[{concepto}-Futuras|⬅ Volver a {concepto}]]",
                     pie_fn,
                 )
             _render_indice_concepto(
@@ -351,7 +388,7 @@ def _render_seccion_ideas(
         ])
         grupos = _agrupar_por_concepto(completadas)
         for concepto, nodos in grupos.items():
-            index_parts.append(f"- [[2.3-Ideas-Completas-e-Implementadas/{concepto}|{concepto}]] ({len(nodos)})")
+            index_parts.append(f"- [[{concepto}-Completas|{concepto}]] ({len(nodos)})")
             concepto_dir = os.path.join(completadas_dir, concepto)
             os.makedirs(concepto_dir, exist_ok=True)
 
@@ -382,7 +419,7 @@ def _render_seccion_ideas(
                         batch_parts.append(n.summary)
                         batch_parts.append("")
                 batch_parts.extend(pie_fn(
-                    f"[[2.3-Ideas-Completas-e-Implementadas/{concepto}|⬅ Volver a {concepto}]]",
+                    f"[[{concepto}-Completas|⬅ Volver a {concepto}]]",
                 ))
                 _escribir_markdown(concepto_dir, filename, batch_parts)
 

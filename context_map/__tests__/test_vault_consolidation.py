@@ -105,6 +105,23 @@ def _crear_edges_de_prueba() -> list[Edge]:
     ]
 
 
+def _es_indice_concepto(filename: str) -> bool:
+    """Determina si un archivo es índice de concepto (tiene sufijo de estado).
+
+    Los índices de concepto se nombran como ``{CONCEPTO}-{Estado}.md``
+    (ej: ``DEVOPS-Pendientes.md``, ``CLI-Completas.md``), por lo que se
+    excluyen al buscar notas de ideas individuales.
+
+    Args:
+        filename (str): Nombre del archivo a evaluar.
+
+    Returns:
+        bool: True si el archivo es un índice de concepto.
+    """
+    sufijos = ("-Pendientes.md", "-Futuras.md", "-Completas.md")
+    return filename.endswith(sufijos)
+
+
 def test_consolidated_vault_limita_archivos() -> None:
     """Verifica que en modo consolidado no se generen más de 10 archivos .md."""
     nodos = _crear_nodos_de_prueba()
@@ -297,7 +314,7 @@ def test_contexto_narrativo_con_alma() -> None:
         archivos = []
         for cd in concepto_dirs:
             for f in os.listdir(os.path.join(ideas_dir, cd)):
-                if f.endswith(".md") and f != f"{cd}.md":
+                if f.endswith(".md") and not _es_indice_concepto(f):
                     archivos.append(os.path.join(ideas_dir, cd, f))
         assert len(archivos) > 0, "No se generaron notas de ideas pendientes"
 
@@ -386,7 +403,7 @@ def test_null_byte_character_in_filename() -> None:
         archivos = []
         for cd in concepto_dirs:
             for f in os.listdir(os.path.join(ideas_dir, cd)):
-                if f.endswith(".md") and f != f"{cd}.md":
+                if f.endswith(".md") and not _es_indice_concepto(f):
                     archivos.append(f)
         assert len(archivos) > 0
         assert "\x00" not in archivos[0]

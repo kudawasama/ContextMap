@@ -198,7 +198,7 @@ def _render_hierarchical_vault(
     _render_seccion_riesgos(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
     _render_seccion_backlog(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
     _render_seccion_historial(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
-    _render_grafo_conexiones(output_dir, nodes, edges)
+    _render_grafo_conexiones(output_dir, nodes, edges, con_wikilinks=False)
 
     if preservados:
         target_backlog = os.path.join(output_dir, "5.0-BACKLOG")

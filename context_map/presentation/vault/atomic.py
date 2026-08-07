@@ -274,8 +274,22 @@ def _obtener_ruta_nota(node: Node, output_dir: str) -> str:
     return os.path.join(output_dir, folder, f"{slug}.md")
 
 
-def _render_conexiones(output_dir: str, nodes: list[Node], edges: list[Edge]) -> None:
-    """Genera un archivo con todas las conexiones para graph view."""
+def _render_conexiones(
+    output_dir: str,
+    nodes: list[Node],
+    edges: list[Edge],
+    con_wikilinks: bool = True,
+) -> None:
+    """Genera un archivo con todas las conexiones para graph view.
+
+    Args:
+        output_dir (str): Directorio de salida de la bóveda.
+        nodes (list[Node]): Lista de nodos del mapa de contexto.
+        edges (list[Edge]): Lista de aristas/relaciones.
+        con_wikilinks (bool): Si True usa wikilinks (modo raw donde los slugs
+            existen como archivos); si False muestra texto plano (modo
+            jerárquico, donde los nombres de archivo no derivan del slug).
+    """
     from context_map.core.storage.store import _ensure
 
     path = os.path.join(output_dir, "00-CONEXIONES.md")
@@ -305,7 +319,10 @@ def _render_conexiones(output_dir: str, nodes: list[Node], edges: list[Edge]) ->
         tgt_slug = _slugificar(tgt.title) if tgt else e.target
         src_title = src.title[:40] if src else e.source
         tgt_title = tgt.title[:40] if tgt else e.target
-        partes.append(f"| [[{src_slug}\\|{src_title}]] | [[{tgt_slug}\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
+        if con_wikilinks:
+            partes.append(f"| [[{src_slug}\\\\|{src_title}]] | [[{tgt_slug}\\\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
+        else:
+            partes.append(f"| {src_title} | {tgt_title} | {e.kind} | {e.note or '—'} |")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(partes))

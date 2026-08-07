@@ -143,14 +143,21 @@ def _mencion_nodo_en_lista(nodo: Node, vistos: set[str], clave_limite: int = 80)
     return False
 
 
-def _render_grafo_conexiones(output_dir: str, nodes: list[Node], edges: list[Edge]) -> None:
+def _render_grafo_conexiones(
+    output_dir: str,
+    nodes: list[Node],
+    edges: list[Edge],
+    con_wikilinks: bool = True,
+) -> None:
     """Renderiza el archivo de conexiones del grafo.
 
     Args:
         output_dir (str): Directorio de salida de la bóveda.
         nodes (list[Node]): Lista de nodos del mapa de contexto.
         edges (list[Edge]): Lista de aristas/relaciones.
+        con_wikilinks (bool): Si True renderiza con wikilinks; si False usa
+            texto plano (topología jerárquica estricta, evita nodos fantasma).
     """
     from context_map.presentation.vault.atomic import _render_conexiones
 
-    _render_conexiones(output_dir, nodes, edges)
+    _render_conexiones(output_dir, nodes, edges, con_wikilinks=con_wikilinks)
