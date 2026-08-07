@@ -53,14 +53,19 @@ def _concepto_nodo(n: Node) -> str:
 
 
 def _nombre_nota_idea(n: Node) -> str:
-    """Genera el nombre de archivo de una idea.
+    """Genera el nombre de archivo de una idea, garantizado ÚNICO.
 
-    Formato: idea_{timestamp}_{ACCION}.md
-    Ej: idea_0321510_CAMBIO_LOGICA.md
+    Formato: idea_{id}_{ACCION}.md
+    Ej: idea_FUTURO001_MANTENIMIENTO.md
+
+    Usa el ``id`` del nodo (único por definición) en lugar del timestamp:
+    dos ideas del mismo concepto creadas el mismo segundo generaban el
+    mismo nombre (idea_{ts}_{ACCION}.md), y Obsidian fusiona archivos con
+    el mismo nombre base mezclando estados (pendientes/futuras/completas).
     """
-    ts = re.sub(r"\D", "", n.created_at or "")[-6:] or "000000"
+    id_limpio = re.sub(r"[^a-zA-Z0-9_-]", "", n.id or "")[:40] or "sin-id"
     accion = _accion_nodo(n)
-    return f"idea_{ts}_{accion}.md"
+    return f"idea_{id_limpio}_{accion}.md"
 
 
 def _render_nota_idea(

@@ -57,14 +57,89 @@ Cualquier agente que tome una tarea en este proyecto **DEBE** seguir estos pasos
 
 ---
 
-## 4. Topología Estricta en Árbol para Obsidian (Graph View)
+## 4. Topología Estricta en Árbol para Obsidian (Graph View) — REGLA INAMOVIBLE
 
-Al modificar o extender el renderizador del Vault en `presentation/vault/`:
+> **Esta es la regla MÁS IMPORTANTE del renderizador. Ningún agente, refactor
+> o "mejora" puede violarla. El Graph View de Obsidian DEBE verse como un
+> árbol puro: cada nota cuelga de EXACTAMENTE UN padre, las ramas de ideas
+> pendientes (2.1), futuras (2.2) y completadas (2.3) son INDEPENDIENTES y
+> NUNCA se cruzan entre sí ni con otras secciones.**
 
-1. **Nivel 0 (`00-INDICE.md`)**: Enlaza **únicamente** a los 6 Nodos de Sección Raíz (`1.0`, `2.0`, `3.0`, `4.0`, `5.0`, `6.0`).
-2. **Nivel 1 (Secciones Raíz `X.0`)**: Enlazan a `00-INDICE.md` hacia arriba y a sus sub-nodos `X.Y` hacia abajo.
-3. **Nivel 2 y Nodos Hoja (`2.1-Pendientes`, `2.2-Futuras`, `2.3-Completadas`, `4.0-RIESGOS/*.md`)**: Enlazan **exclusivamente a su Sección Padre (`X.0` o `X.Y`)**, NUNCA de regreso a `00-INDICE.md`.
-4. **Sincronización Multi-Vault**: Todo cambio en `build` debe renderizarse en `.context-map/vault/` y en `.context-map/vault-<project>/` simultáneamente para que la vista de Obsidian se actualice en tiempo real.
+### 4.1 Estructura del Árbol (obligatoria)
+
+```
+00-INDICE.md                      ← raíz (padre de todos)
+├── 1.0-PROPOSITO/                ← sección raíz
+│   └── 1.1, 1.2, 1.3             ← hojas → SOLO a su sección padre
+├── 2.0-IDEAS/                    ← sección raíz
+│   ├── 2.1-Ideas-Pendientes/     ← RAMA INDEPENDIENTE
+│   │   └── DEVOPS/DEVOPS-Pendientes.md      ← índice de concepto (nombre ÚNICO)
+│   │       └── idea_*.md                     ← nota → SOLO a su índice
+│   ├── 2.2-Ideas-Futuras/        ← RAMA INDEPENDIENTE (solo si hay activas)
+│   │   └── CONCEPTO/CONCEPTO-Futuras.md
+│   ├── 2.3-Ideas-Completas-e-Implementadas/  ← RAMA INDEPENDIENTE
+│   │   └── DEVOPS/DEVOPS-Completas.md
+│   │       └── 01-DEVOPS-01-10.md            ← batch → SOLO a su índice
+│   └── 2.4-Ideas-Relevantes.md
+├── 3.0-ESTRUCTURA/ → 3.1
+├── 4.0-RIESGOS/ → notas de riesgo
+├── 5.0-BACKLOG/ → 5.1
+└── 6.0-HISTORIAL/ → 6.1, 6.2, 6.3
+```
+
+### 4.2 Reglas Obligatorias (violarlas = bug)
+
+1. **CADA NOTA TIENE EXACTAMENTE UN PADRE** (árbol puro). El padre se
+   materializa como el ÚNICO wikilink con `⬅` (pie "Volver a..."). Ningún
+   nodo enlaza a más de un nivel superior, ni a nodos hermanos, ni entre
+   secciones de estado, ni a `00-INDICE.md` (salvo las 6 secciones raíz).
+2. **Nivel 0 (`00-INDICE.md`)**: Enlaza **únicamente** a los 6 Nodos de
+   Sección Raíz (`1.0`, `2.0`, `3.0`, `4.0`, `5.0`, `6.0`).
+3. **Nivel 1 (Secciones Raíz `X.0`)**: Enlazan a `00-INDICE.md` (su padre)
+   y a sus sub-nodos `X.Y` (sus hijos). Nada más.
+4. **Nivel 2 y Nodos Hoja**: Enlazan **exclusivamente a su Sección Padre**
+   vía el pie `⬅ Volver a ...`. NUNCA de regreso a `00-INDICE.md`.
+5. **Índices de concepto con nombre ÚNICO por estado**:
+   `{CONCEPTO}-Pendientes.md`, `{CONCEPTO}-Futuras.md`, `{CONCEPTO}-Completas.md`.
+   NUNCA `{CONCEPTO}.md` a secas: Obsidian fusiona archivos con el mismo
+   nombre base y mezclaría ideas pendientes con completas.
+6. **PROHIBIDO enlazar por nombre corto ambiguo**: todo wikilink a un índice
+   de concepto usa su nombre único completo (con sufijo de estado). Las notas
+   de idea muestran el concepto como texto plano (`` ``Concepto`` ``), SIN
+   wikilink adicional al índice (el pie ya enlaza al padre).
+7. **Los batches de ideas completadas se nombran `NN-CONCEPTO-INICIO-FIN.md`
+   y su índice DEBE enlazar a los batches reales** (nunca a `idea_*.md`
+   inexistentes → nodos fantasma).
+8. **Enlaces a sub-secciones condicionales**: `2.0-IDEAS.md` solo enlaza a
+   `2.1` / `2.2` / `2.3` si existen nodos de ese estado. Enlaces rotos =
+   nodos fantasma = bug.
+9. **`00-CONEXIONES.md` en modo jerárquico se renderiza SIN wikilinks**
+   (`con_wikilinks=False`): los nombres de archivo del modo jerárquico no
+   derivan del slug del título, así que los wikilinks crearían nodos fantasma.
+
+### 4.3 Verificación Automática (inamovible)
+
+- El test `context_map/__tests__/test_topologia_arbol.py` DEBE pasar antes
+  de cualquier commit (verificado por `python -m pytest`). Comprueba:
+  - 0 nodos sin padre (excepto `00-INDICE.md` y `00-CONEXIONES.md`)
+  - 0 colisiones de nombre base entre archivos del vault
+  - 0 wikilinks rotos (target que no existe como archivo)
+  - Cada índice de concepto termina en `-Pendientes/-Futuras/-Completas.md`
+- El **pre-commit hook** regenera el vault con el código LOCAL
+  (`python -m context_map.cli build`) — NUNCA con el binario global `ctxmap`
+  desactualizado. Si el vault generado no pasa 4.3, el commit está roto.
+
+### 4.4 Vault ÚNICO por proyecto
+
+- El vault activo es `.context-map/vault-<NombreProyecto>` (ej:
+  `vault-ContextMap`, sin guión extra). El nombre lo resuelve el repo GitHub.
+- PROHIBIDO acumular vaults paralelos obsoletos (`vault-Context-Map`,
+  `vault-TestAuto`, etc.): cualquier vault que no se regenera por `build`
+  debe moverse a `.context-map/_legacy/` o eliminarse. Solo debe existir UN
+  vault por proyecto para que Obsidian no mezcle grafos.
+- **Sincronización Multi-Vault**: Todo cambio en `build` debe renderizarse
+  en `.context-map/vault/` y en `.context-map/vault-<project>/`
+  simultáneamente para que la vista de Obsidian se actualice en tiempo real.
 
 ---
 
