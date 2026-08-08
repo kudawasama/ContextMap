@@ -32,6 +32,19 @@ def _crear_proyecto_python() -> str:
     return temp_dir
 
 
+def _crear_proyecto_multiharness() -> str:
+    """Crea un proyecto con todos los harnesses agénticos simulados."""
+    temp_dir = _crear_proyecto_python()
+    for d in [".opencode", ".codex", ".gemini", ".aider", ".roo", ".antigravity", ".claude", ".windsurf", ".idea", ".vscode"]:
+        os.makedirs(os.path.join(temp_dir, d), exist_ok=True)
+    # Archivos de reglas que activan la detección de Cline y Claude Code
+    with open(os.path.join(temp_dir, ".clinerules"), "w", encoding="utf-8") as f:
+        f.write("# cline\n")
+    with open(os.path.join(temp_dir, "CLAUDE.md"), "w", encoding="utf-8") as f:
+        f.write("# claude\n")
+    return temp_dir
+
+
 def test_detectar_stack_python() -> None:
     """Verifica la detección de stack Python con pytest."""
     temp_dir = _crear_proyecto_python()
@@ -119,6 +132,73 @@ def test_adaptar_respeta_existentes() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_detectar_multiharness() -> None:
+    """Verifica la detección de todos los harnesses agénticos."""
+    temp_dir = _crear_proyecto_multiharness()
+    try:
+        eco = detectar_ecosistema(temp_dir)
+        print(f"   IDEs: {eco.ide.ides}")
+        print(f"   Agentes: {eco.ide.agentes}")
+
+        assert "VS Code" in eco.ide.ides
+        assert "Cursor" in eco.ide.ides
+        assert "Windsurf" in eco.ide.ides
+        assert "JetBrains" in eco.ide.ides
+
+        agentes = eco.ide.agentes
+        assert "OpenCode" in agentes, f"Falta OpenCode en {agentes}"
+        assert "OpenAI Codex" in agentes, f"Falta OpenAI Codex en {agentes}"
+        assert "Gemini CLI" in agentes, f"Falta Gemini CLI en {agentes}"
+        assert "Aider" in agentes, f"Falta Aider en {agentes}"
+        assert "Roo Code" in agentes, f"Falta Roo Code en {agentes}"
+        assert "Claude Code" in agentes, f"Falta Claude Code en {agentes}"
+        assert "Antigravity" in agentes, f"Falta Antigravity en {agentes}"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_multiharness_genera_reglas() -> None:
+    """Verifica la generación de reglas para todos los harnesses."""
+    temp_dir = _crear_proyecto_multiharness()
+    try:
+        eco = detectar_ecosistema(temp_dir)
+        generados = adaptar_ecosistema("DemoMulti", eco, target_dir=temp_dir)
+
+        esperados = [
+            "AGENTS.md",
+            ".cursor/rules/contextmap.mdc",
+            ".cursorrules",
+            ".windsurfrules",
+            ".roo/rules/contextmap.md",
+            "GEMINI.md",
+            ".aider.conf.yml",
+            "opencode.json",
+            ".github/copilot-instructions.md",
+            ".hermes/config.yaml",
+        ]
+        for ruta in esperados:
+            assert ruta in generados, f"No se generó {ruta} (generados: {generados})"
+
+        # CLAUDE.md existe en el fixture y se respeta (no se regenera sin --overwrite)
+        assert os.path.exists(os.path.join(temp_dir, "CLAUDE.md")), "Falta CLAUDE.md"
+
+        # Verificar contenido de archivos clave
+        with open(os.path.join(temp_dir, "GEMINI.md"), encoding="utf-8") as f:
+            gemini = f.read()
+        assert "ContextMap" in gemini and "pytest" in gemini.lower()
+
+        with open(os.path.join(temp_dir, "opencode.json"), encoding="utf-8") as f:
+            opencode = f.read()
+        assert "DemoMulti" in opencode and "pytest" in opencode.lower()
+
+        with open(os.path.join(temp_dir, ".roo/rules/contextmap.md"), encoding="utf-8") as f:
+            roo = f.read()
+        assert "pytest" in roo.lower()
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Detección de stack ===")
     test_detectar_stack_python()
@@ -138,6 +218,16 @@ if __name__ == "__main__":
     print("=== Test: Respeto de reglas existentes ===")
     test_adaptar_respeta_existentes()
     print("   OK: test_adaptar_respeta_existentes PASO")
+
+    print()
+    print("=== Test: Multi-harness detección ===")
+    test_detectar_multiharness()
+    print("   OK: test_detectar_multiharness PASO")
+
+    print()
+    print("=== Test: Multi-harness reglas ===")
+    test_adaptar_multiharness_genera_reglas()
+    print("   OK: test_adaptar_multiharness_genera_reglas PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")

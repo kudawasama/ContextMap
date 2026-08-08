@@ -153,6 +153,12 @@ ctxmap ingest carta.pdf --brief       # Ingiere un archivo y regenera el brief
 ctxmap adapt .                        # Detecta stack + IDE y genera reglas por agente
 ctxmap adapt . --overwrite            # Fuerza sobrescritura de reglas existentes
 
+# Cobertura de agentes: AGENTS.md (universal), CLAUDE.md (Claude Code),
+# .cursorrules + .cursor/rules (Cursor), .windsurfrules (Windsurf),
+# .clinerules (Cline), .roo/rules (Roo Code), GEMINI.md (Gemini CLI),
+# opencode.json (OpenCode), .aider.conf.yml (Aider),
+# .github/copilot-instructions.md (Copilot), .hermes/ (Hermes)
+
 # Diagnóstico y Mantenimiento
 ctxmap check .                        # Verifica la preparación (readiness) del sistema
 ctxmap update                         # Actualiza ContextMap a la última versión de GitHub

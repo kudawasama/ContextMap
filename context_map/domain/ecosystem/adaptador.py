@@ -217,6 +217,84 @@ def _generar_copilot_instructions(project_name: str, eco: EcosistemaInfo) -> str
 """
 
 
+def _generar_gemini_rules(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera reglas para Gemini CLI (GEMINI.md)."""
+    test = _test_command(eco)
+    langs = ", ".join(eco.stack.lenguajes) or "No detectado"
+    return f"""# Gemini CLI — Reglas para {project_name}
+
+> Generado automáticamente por **ContextMap** — stack: {langs}.
+
+## Contexto obligatorio
+
+1. Lee `.context-map/CONTEXT.md` (brief ejecutivo) antes de cualquier cambio.
+2. Explora `.context-map/vault-{project_name}/` para el grafo del proyecto.
+3. No supongas lógica: inspecciona el código fuente antes de proponer cambios.
+
+## Verificación
+
+```bash
+{test}
+python -m context_map.cli build --clean --brief
+```
+
+## Convenciones
+
+- Commits: Conventional Commits en español (`feat:`, `fix:`, `refactor:`, `docs:`).
+- Respuestas y docstrings en Español Técnico Profesional.
+- Respetar la arquitectura modular existente.
+"""
+
+
+def _generar_aider_conf(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera configuración para Aider (.aider.conf.yml)."""
+    test = _test_command(eco)
+    return f"""# Aider — Configuración para {project_name}
+# Generado automáticamente por ContextMap
+
+auto-commits: false
+gitignore: true
+lint: false
+# Verificación manual sugerida por ContextMap:
+#   {test}
+#   python -m context_map.cli build --clean --brief
+"""
+
+
+def _generar_roo_rules(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera reglas para Roo Code (.roo/rules/contextmap.md)."""
+    test = _test_command(eco)
+    return f"""# Roo Code — Reglas para {project_name}
+
+> Generado automáticamente por **ContextMap**.
+
+- **Contexto obligatorio**: lee `.context-map/CONTEXT.md` antes de cualquier cambio.
+- **Vault**: explora `.context-map/vault-{project_name}/` para contexto del grafo.
+- **Tests**: ejecuta `{test}` antes de cada commit (100% en verde).
+- **ContextMap**: tras cambios, `python -m context_map.cli scan .` y
+  `python -m context_map.cli build --clean --brief`.
+- **Idioma**: respuestas, comentarios y docstrings en Español Técnico Profesional.
+- **Commits**: Conventional Commits en español.
+"""
+
+
+def _generar_opencode_json(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera configuración para OpenCode (opencode.json)."""
+    test = _test_command(eco)
+    return f"""{{
+  "$schema": "https://opencode.ai/schema.json",
+  "project": "{project_name}",
+  "instructions": [
+    "Lee .context-map/CONTEXT.md antes de cualquier cambio.",
+    "Ejecuta `{test}` antes de cada commit.",
+    "Ejecuta `python -m context_map.cli build --clean --brief` tras cambios.",
+    "Commits: Conventional Commits en español.",
+    "Docstrings y respuestas en Español Técnico Profesional."
+  ]
+}}
+"""
+
+
 def _generar_hermes_config(project_name: str, eco: EcosistemaInfo) -> str:
     """Genera .hermes/config.yaml para el ecosistema Hermes."""
     test = _test_command(eco)
@@ -334,17 +412,29 @@ def adaptar_ecosistema(
     if "Claude Code" in eco.ide.agentes or os.path.isdir(os.path.join(target_dir, ".claude")):
         _escribir("CLAUDE.md", _generar_claude_md(project_name, eco, fecha))
 
-    if "Cursor" in eco.ide.ides or ".cursor" in eco.ide.reglas_existentes:
+    if "Cursor" in eco.ide.ides or ".cursor" in eco.ide.reglas_existentes or ".cursorrules" in eco.ide.reglas_existentes:
         # Regla moderna de Cursor en .cursor/rules/
         _escribir(".cursor/rules/contextmap.mdc", _generar_cursor_rules(project_name, eco))
         # Regla legacy en raíz
         _escribir(".cursorrules", _generar_cursor_rules(project_name, eco))
 
-    if "Windsurf" in eco.ide.ides:
+    if "Windsurf" in eco.ide.ides or ".windsurfrules" in eco.ide.reglas_existentes:
         _escribir(".windsurfrules", _generar_windsurf_rules(project_name, eco))
 
-    if "Cline" in eco.ide.agentes:
+    if "Cline" in eco.ide.agentes or ".clinerules" in eco.ide.reglas_existentes:
         _escribir(".clinerules", _generar_cursor_rules(project_name, eco))
+
+    if "Roo Code" in eco.ide.agentes or ".roo/rules" in eco.ide.reglas_existentes:
+        _escribir(".roo/rules/contextmap.md", _generar_roo_rules(project_name, eco))
+
+    if "Gemini CLI" in eco.ide.agentes or "GEMINI.md" in eco.ide.reglas_existentes:
+        _escribir("GEMINI.md", _generar_gemini_rules(project_name, eco))
+
+    if "Aider" in eco.ide.agentes or ".aider.conf.yml" in eco.ide.reglas_existentes or ".aider.conf.yaml" in eco.ide.reglas_existentes:
+        _escribir(".aider.conf.yml", _generar_aider_conf(project_name, eco))
+
+    if "OpenCode" in eco.ide.agentes or "opencode.json" in eco.ide.reglas_existentes or ".opencode/" in eco.ide.reglas_existentes:
+        _escribir("opencode.json", _generar_opencode_json(project_name, eco))
 
     if "GitHub Copilot" in eco.ide.agentes or os.path.isdir(os.path.join(target_dir, ".github")):
         _escribir(".github/copilot-instructions.md", _generar_copilot_instructions(project_name, eco))

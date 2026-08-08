@@ -248,13 +248,15 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
     # --- Archivos de reglas agénticas ---
     reglas_candidatas = [
         "AGENTS.md", "CLAUDE.md", ".cursorrules", ".windsurfrules",
-        ".clinerules", ".github/copilot-instructions.md",
+        ".clinerules", ".github/copilot-instructions.md", "GEMINI.md",
+        ".aider.conf.yml", ".aider.conf.yaml", ".roo/rules",
+        "opencode.json", ".opencode/",
     ]
     for ruta in reglas_candidatas:
-        if _existe(target_dir, ruta):
+        if os.path.isdir(os.path.join(target_dir, ruta)) or _existe(target_dir, ruta):
             info.reglas_existentes.append(ruta)
 
-    # --- Directorios de agentes ---
+    # --- Directorios de agentes / harnesses CLI ---
     if os.path.isdir(os.path.join(target_dir, ".hermes")):
         info.agentes.append("Hermes")
         info.reglas_existentes.append(".hermes/")
@@ -262,6 +264,16 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
         info.agentes.append("Claude")
     if os.path.isdir(os.path.join(target_dir, ".antigravity")):
         info.agentes.append("Antigravity")
+    if os.path.isdir(os.path.join(target_dir, ".opencode")) or _existe(target_dir, "opencode.json"):
+        info.agentes.append("OpenCode")
+    if os.path.isdir(os.path.join(target_dir, ".codex")):
+        info.agentes.append("OpenAI Codex")
+    if os.path.isdir(os.path.join(target_dir, ".gemini")) or _existe(target_dir, "GEMINI.md"):
+        info.agentes.append("Gemini CLI")
+    if os.path.isdir(os.path.join(target_dir, ".aider")) or _existe(target_dir, ".aider.conf.yml") or _existe(target_dir, ".aider.conf.yaml"):
+        info.agentes.append("Aider")
+    if os.path.isdir(os.path.join(target_dir, ".roo")):
+        info.agentes.append("Roo Code")
     if os.path.isdir(os.path.join(target_dir, ".github")):
         # Copilot usa .github/copilot-instructions.md; el dir .github no implica Copilot
         if _existe(target_dir, ".github/copilot-instructions.md"):
@@ -270,14 +282,22 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
     # Inferir agentes por archivos de reglas
     if "CLAUDE.md" in info.reglas_existentes:
         info.agentes.append("Claude Code")
-    if ".cursorrules" in info.reglas_existentes:
+    if ".cursorrules" in info.reglas_existentes or ".cursor" in info.reglas_existentes:
         info.agentes.append("Cursor")
     if ".windsurfrules" in info.reglas_existentes:
         info.agentes.append("Windsurf")
     if ".clinerules" in info.reglas_existentes:
         info.agentes.append("Cline")
+    if ".roo/rules" in info.reglas_existentes:
+        info.agentes.append("Roo Code")
+    if "GEMINI.md" in info.reglas_existentes:
+        info.agentes.append("Gemini CLI")
+    if ".aider.conf.yml" in info.reglas_existentes or ".aider.conf.yaml" in info.reglas_existentes:
+        info.agentes.append("Aider")
+    if "opencode.json" in info.reglas_existentes or ".opencode/" in info.reglas_existentes:
+        info.agentes.append("OpenCode")
     if "AGENTS.md" in info.reglas_existentes:
-        info.agentes.append("Antigravity/Cursor/Claude (AGENTS.md)")
+        info.agentes.append("AGENTS.md (estándar universal)")
 
     # Deduplicar preservando orden
     info.ides = list(dict.fromkeys(info.ides))
