@@ -109,4 +109,9 @@ def create_parser() -> argparse.ArgumentParser:
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
     sub.add_parser("doctor", help="Diagnostica el entorno y repara problemas conocidos")
 
+    s_adapt = sub.add_parser("adapt", help="Detecta stack/IDE y genera reglas agénticas adaptadas")
+    s_adapt.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a analizar")
+    s_adapt.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_adapt.add_argument("--overwrite", action="store_true", help="Sobrescribir reglas existentes")
+
     return p

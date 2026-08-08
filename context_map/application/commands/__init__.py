@@ -16,6 +16,7 @@ from context_map.application.commands.importers import (
     cmd_import_sessions,
 )
 from context_map.application.commands.ingest import cmd_ingest
+from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.scan import cmd_scan
 from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do_sync
 from context_map.application.commands.tools import (
@@ -45,4 +46,5 @@ __all__ = [
     "cmd_doctor",
     "cmd_update",
     "cmd_ingest",
+    "cmd_adapt",
 ]

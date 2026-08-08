@@ -1,0 +1,26 @@
+# Configuración del agente Hermes para ContextMap
+# Generado automáticamente por ContextMap — adaptado al stack detectado
+
+project:
+  name: "ContextMap"
+  description: "Proyecto gestionado con ContextMap"
+  language: "Python"
+  architecture: "Modular (gobernanza por ContextMap)"
+
+agent:
+  instructions: ".context-map/CONTEXT.md"
+  language_style:
+    code: "es"
+    messages: "es"
+    commit_messages: "es"
+
+workflows:
+  dev_loop: ".hermes/workflows/dev-loop.md"
+  test_loop: ".hermes/workflows/test-loop.md"
+
+shields:
+  pre_commit: ".hermes/shields/pre-commit.md"
+  quality: ".hermes/shields/quality-gate.md"
+
+triggers:
+  post_commit: ".hermes/triggers/post-commit.md"

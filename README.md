@@ -149,6 +149,10 @@ ctxmap import-chat telegram.txt       # Importa chats de Telegram, Discord o Sla
 ctxmap ingest docs/                   # Ingiere MD/TXT/PDF → nodos DOCUMENTO (3.2-DOCUMENTOS)
 ctxmap ingest carta.pdf --brief       # Ingiere un archivo y regenera el brief
 
+# Adaptación al ecosistema agéntico
+ctxmap adapt .                        # Detecta stack + IDE y genera reglas por agente
+ctxmap adapt . --overwrite            # Fuerza sobrescritura de reglas existentes
+
 # Diagnóstico y Mantenimiento
 ctxmap check .                        # Verifica la preparación (readiness) del sistema
 ctxmap update                         # Actualiza ContextMap a la última versión de GitHub
