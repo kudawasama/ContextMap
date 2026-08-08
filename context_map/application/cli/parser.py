@@ -74,6 +74,19 @@ def create_parser() -> argparse.ArgumentParser:
     s_git.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_git.add_argument("--limit", type=int, default=50, help="Máximo de commits")
 
+    s_ingest = sub.add_parser("ingest", help="Ingiere documentos externos (MD/TXT/PDF) al mapa de contexto")
+    s_ingest.add_argument("target", help="Archivo o directorio de documentos a ingerir")
+    s_ingest.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_ingest.add_argument(
+        "--mode",
+        choices=["consolidated", "raw", "hierarchical"],
+        default="hierarchical",
+        help="Modo de generación del vault",
+    )
+    s_ingest.add_argument("--raw", action="store_true", help="Alias para --mode raw")
+    s_ingest.add_argument("--brief", action="store_true", help="Regenerar brief tras ingerir")
+    s_ingest.add_argument("--quiet", action="store_true", help="Modo silencioso")
+
     s_sessions = sub.add_parser("import-sessions", help="Importa sesiones de Hermes")
     s_sessions.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_sessions.add_argument("--db", default=None, help="Ruta a sessions.db")

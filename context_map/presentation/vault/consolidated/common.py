@@ -105,6 +105,7 @@ def _clasificar_nodos(nodes: list[Node]) -> dict[str, list[Node]]:
         "PRUEBA": [n for n in nodes if n.type == "PRUEBA"],
         "FUTURO": [n for n in nodes if n.type == "FUTURO"],
         "HITO": [n for n in nodes if n.type == "HITO"],
+        "DOCUMENTO": [n for n in nodes if n.type == "DOCUMENTO"],
     }
 
 

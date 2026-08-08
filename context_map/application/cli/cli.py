@@ -24,6 +24,7 @@ from context_map.application.commands import (
     cmd_weekly,
 )
 from context_map.application.commands.hook import cmd_hook_install
+from context_map.application.commands.ingest import cmd_ingest
 from context_map.core.logging_setup import setup_logging
 
 
@@ -54,6 +55,7 @@ def main() -> None:
         "update": cmd_update,
         "doctor": cmd_doctor,
         "hook": cmd_hook_install,
+        "ingest": cmd_ingest,
     }
 
     if args.cmd == "sync":

@@ -13,7 +13,10 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
 
-NODE_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
+NODE_TYPES: set[str] = {
+    "IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO",
+    "DOCUMENTO",
+}
 
 
 def _now() -> str:

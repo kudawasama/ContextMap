@@ -315,6 +315,9 @@ def corregir_tipo(node: Node) -> str:
     summary_lower = node.summary.lower() if node.summary else ""
     text = f"{title_lower} {summary_lower}"
 
+    if node.type == "DOCUMENTO":
+        return "DOCUMENTO"
+
     if node.source == "git":
         if "feat:" in text or "feature:" in text:
             return "IDEA"
@@ -360,8 +363,9 @@ def estandarizar_nodo(node: Node) -> Node:
     Returns:
         Node: Nuevo nodo estandarizado.
     """
-    classif_id, _ = inferir_classification(node)
-    concept_id = inferir_concepto(node)
+    es_documento = node.type == "DOCUMENTO"
+    classif_id, _ = inferir_classification(node) if not es_documento else (node.classification or "docs", "Documento")
+    concept_id = inferir_concepto(node) if not es_documento else (node.concept or "GENERAL")
     tags = estandarizar_tags(node.tags)
 
     # Limpiar tags legacy "class{X}" sin colon (ej: "classchore", "classfeature")
@@ -411,7 +415,7 @@ def estandarizar_nodo(node: Node) -> Node:
         summary=node.summary,
         tags=tags,
         source=node.source,
-        status=inferir_status(nodo_temp),
+        status=node.status if es_documento else inferir_status(nodo_temp),
         version=node.version,
         evidence=inferir_evidence(node) or node.evidence,
         created_at=node.created_at,

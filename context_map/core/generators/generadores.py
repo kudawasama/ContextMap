@@ -78,6 +78,8 @@ def generar_contexto_narrativo(node: Node) -> str:
         return _contexto_base(node)
     elif node_type == "PRUEBA":
         return _contexto_prueba(node)
+    elif node_type == "DOCUMENTO":
+        return _contexto_documento(node)
     elif node_type == "FUTURO":
         return _contexto_futuro(node)
     elif node_type == "HITO":
@@ -169,6 +171,45 @@ def _contexto_riesgo(node: Node) -> str:
 ### 📊 5. MATRIZ DE GRAVEDAD Y MITIGACIÓN
 
 {tabla_gravedad}"""
+
+
+def _contexto_documento(node: Node) -> str:
+    """Narrativa especializada para DOCUMENTOS ingeridos (Síntesis + Citas).
+
+    Los documentos externos (PDFs, MD, TXT) se convierten en nodos de
+    conocimiento con una síntesis del contenido y citas textuales
+    referenciadas, de modo que los agentes puedan citar la fuente exacta.
+
+    Args:
+        node (Node): Nodo de tipo DOCUMENTO.
+
+    Returns:
+        str: Bloque Markdown con síntesis y citas del documento.
+    """
+    title = node.title.strip()
+    summary = node.summary.strip() or f"Documento de conocimiento: {title}."
+    source = node.source or "ingesta de documentos"
+    concepto = getattr(node, "concept", "") or "GENERAL"
+
+    sintesis = summary
+    citas = list(node.evidence or [])
+
+    tabla_citas = "\n".join(
+        f"- 📌 {cita}" for cita in citas[:10]
+    ) or "- _(Sin citas extraídas)_"
+
+    return f"""### 📄 1. ¿Qué DOCUMENTO es?
+{title} — concepto `{concepto}` · ingerido vía `{source}`.
+
+### 🧠 2. SÍNTESIS del contenido
+{sintesis}
+
+### 🔖 3. CITAS referenciadas
+{tabla_citas}
+
+### 💡 4. Para qué se ingirió
+Proveer contexto fiable y trazable a los agentes de IA: el conocimiento del
+documento queda a disposición del grafo sin re-leer el original cada vez."""
 
 
 def _contexto_cambio_correccion(node: Node) -> str:

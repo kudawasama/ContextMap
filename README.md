@@ -49,6 +49,7 @@ Context Map enriquece cada nota del Vault con un formato narrativo polimórfico 
 - 💡 **IDEAS**: ¿Por qué?, ¿De dónde surgió?, ¿Para qué?, ¿Cómo?, y tabla de **Pros y Contras**.
 - ⚠️ **RIESGOS**: ¿Qué riesgo es?, ¿Dónde se ubica?, Impacto, Mitigación y **Matriz de Gravedad**.
 - 🔧 **CAMBIOS / CORRECCIONES**: ¿Qué se modificó?, Razón del cambio, Archivos y **Verificación de No-Regresión**.
+- 📄 **DOCUMENTOS**: Síntesis extractiva, concepto dominante y **citas referenciadas** del documento ingerido.
 - 📦 **BASE**: Componente estructural, **Rol en la Arquitectura** e integraciones clave.
 - 🧪 **PRUEBAS**: Funcionalidad validada, **Criterios de Aceptación** y comando `pytest`.
 - 📝 **FUTURO**: Tarea pendiente, ubicación en código y **Prioridad de implementación**.
@@ -143,6 +144,10 @@ ctxmap import-git .                   # Importa historial de commits recientes
 ctxmap import-sessions                # Importa sesiones de Hermes Agent
 ctxmap import-antigravity             # Importa conversaciones de Antigravity IDE
 ctxmap import-chat telegram.txt       # Importa chats de Telegram, Discord o Slack
+
+# Ingesta de documentos externos (segundo cerebro / LLM Wiki style)
+ctxmap ingest docs/                   # Ingiere MD/TXT/PDF → nodos DOCUMENTO (3.2-DOCUMENTOS)
+ctxmap ingest carta.pdf --brief       # Ingiere un archivo y regenera el brief
 
 # Diagnóstico y Mantenimiento
 ctxmap check .                        # Verifica la preparación (readiness) del sistema
