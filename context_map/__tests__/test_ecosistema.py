@@ -199,6 +199,85 @@ def test_adaptar_multiharness_genera_reglas() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_adaptar_merge_preserva_reglas_usuario() -> None:
+    """Verifica que --merge anexa el bloque ContextMap sin borrar las reglas del usuario."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        # AGENTS.md existente con reglas propias del usuario
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write("# Mi proyecto\n\n## Reglas del equipo\n- No tocar config sin preguntar\n- Commits en español\n")
+
+        eco = detectar_ecosistema(temp_dir)
+        generados = adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+
+        # Reglas del usuario preservadas
+        assert "Reglas del equipo" in contenido, "Se perdieron las reglas del usuario"
+        assert "No tocar config sin preguntar" in contenido
+        # Bloque ContextMap anexado con marcadores
+        assert "CONTEXTMAP:BEGIN" in contenido, "Falta marcador de inicio"
+        assert "CONTEXTMAP:END" in contenido, "Falta marcador de fin"
+        assert "DemoProj" in contenido
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_merge_idempotente() -> None:
+    """Verifica que merge repetido no duplica el bloque ContextMap."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write("# Mi proyecto\n\n## Reglas del equipo\n- Regla 1\n")
+
+        eco = detectar_ecosistema(temp_dir)
+        # Primer merge
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+        # Segundo merge (idempotente)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+
+        assert contenido.count("CONTEXTMAP:BEGIN") == 1, (
+            f"El bloque ContextMap se duplicó: {contenido.count('CONTEXTMAP:BEGIN')} veces"
+        )
+        assert "Regla 1" in contenido, "Se perdieron reglas del usuario en re-merge"
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_merge_vs_overwrite() -> None:
+    """Verifica que overwrite reemplaza completo y respect no toca."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write("# Reglas manuales SOLO")
+
+        eco = detectar_ecosistema(temp_dir)
+
+        # respect: no toca
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="respect")
+        with open(agents_path, encoding="utf-8") as f:
+            assert f.read().strip() == "# Reglas manuales SOLO", "respect modificó el archivo"
+
+        # overwrite: reemplaza completo (sin marcadores, sin reglas del usuario)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="overwrite")
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+        assert "CONTEXTMAP:BEGIN" not in contenido, "overwrite debería reemplazar, no fusionar"
+        assert "DemoProj" in contenido
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Detección de stack ===")
     test_detectar_stack_python()
@@ -228,6 +307,21 @@ if __name__ == "__main__":
     print("=== Test: Multi-harness reglas ===")
     test_adaptar_multiharness_genera_reglas()
     print("   OK: test_adaptar_multiharness_genera_reglas PASO")
+
+    print()
+    print("=== Test: Merge preserva reglas usuario ===")
+    test_adaptar_merge_preserva_reglas_usuario()
+    print("   OK: test_adaptar_merge_preserva_reglas_usuario PASO")
+
+    print()
+    print("=== Test: Merge idempotente ===")
+    test_adaptar_merge_idempotente()
+    print("   OK: test_adaptar_merge_idempotente PASO")
+
+    print()
+    print("=== Test: Merge vs Overwrite ===")
+    test_adaptar_merge_vs_overwrite()
+    print("   OK: test_adaptar_merge_vs_overwrite PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")

@@ -36,6 +36,7 @@ def cmd_adapt(args) -> None:
         eco=eco,
         target_dir=target,
         overwrite=bool(getattr(args, "overwrite", False)),
+        modo="merge" if getattr(args, "merge", False) else "respect",
     )
 
     if generados:

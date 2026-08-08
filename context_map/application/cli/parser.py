@@ -113,5 +113,6 @@ def create_parser() -> argparse.ArgumentParser:
     s_adapt.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a analizar")
     s_adapt.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_adapt.add_argument("--overwrite", action="store_true", help="Sobrescribir reglas existentes")
+    s_adapt.add_argument("--merge", action="store_true", help="Fusionar: anexa/actualiza bloque ContextMap preservando reglas del usuario")
 
     return p

@@ -150,8 +150,9 @@ ctxmap ingest docs/                   # Ingiere MD/TXT/PDF → nodos DOCUMENTO (
 ctxmap ingest carta.pdf --brief       # Ingiere un archivo y regenera el brief
 
 # Adaptación al ecosistema agéntico
-ctxmap adapt .                        # Detecta stack + IDE y genera reglas por agente
-ctxmap adapt . --overwrite            # Fuerza sobrescritura de reglas existentes
+ctxmap adapt .                        # Detecta stack + IDE, respeta reglas existentes
+ctxmap adapt . --merge               # Fusiona: anexa bloque ContextMap preservando reglas del usuario
+ctxmap adapt . --overwrite           # Fuerza sobrescritura de reglas existentes
 
 # Cobertura de agentes: AGENTS.md (universal), CLAUDE.md (Claude Code),
 # .cursorrules + .cursor/rules (Cursor), .windsurfrules (Windsurf),

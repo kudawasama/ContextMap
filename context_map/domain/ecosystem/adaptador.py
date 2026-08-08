@@ -376,18 +376,27 @@ def adaptar_ecosistema(
     eco: EcosistemaInfo,
     target_dir: str = ".",
     overwrite: bool = False,
+    modo: str = "respect",
 ) -> list[str]:
     """Genera/actualiza las reglas agénticas según el ecosistema detectado.
 
-    Crea AGENTS.md contextual (siempre), y luego los archivos específicos
-    de cada agente detectado: CLAUDE.md, .cursorrules, .windsurfrules,
-    .clinerules, .github/copilot-instructions.md y el ecosistema .hermes/.
+    Crea AGENTS.md contextual y los archivos específicos de cada agente
+    detectado: CLAUDE.md, .cursorrules, .windsurfrules, .clinerules,
+    .github/copilot-instructions.md, GEMINI.md, opencode.json y el
+    ecosistema .hermes/.
 
     Args:
         project_name (str): Nombre del proyecto.
         eco (EcosistemaInfo): Ecosistema detectado (stack + IDE/agentes).
         target_dir (str): Directorio raíz del proyecto.
-        overwrite (bool): Si True, sobrescribe archivos de reglas existentes.
+        overwrite (bool): Si True, sobrescribe archivos de reglas existentes
+            (equivale a ``modo="overwrite"``).
+        modo (str): Modo de escritura sobre archivos existentes:
+            - 'respect': no toca archivos existentes (por defecto).
+            - 'merge': anexa el bloque ContextMap delimitado por marcadores
+              si el archivo no lo tiene; si ya lo tiene, reemplaza solo ese
+              bloque (preserva las reglas del usuario).
+            - 'overwrite': reemplaza el archivo completo.
 
     Returns:
         list[str]: Rutas de los archivos generados/actualizados.
@@ -395,17 +404,53 @@ def adaptar_ecosistema(
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
     generados: list[str] = []
 
-    def _escribir(ruta_rel: str, contenido: str, forzar: bool = False) -> None:
-        ruta = os.path.join(target_dir, ruta_rel)
-        if os.path.exists(ruta) and not (overwrite or forzar):
-            logger.debug("Regla existente, se respeta: %s", ruta_rel)
-            return
-        os.makedirs(os.path.dirname(ruta), exist_ok=True)
-        with open(ruta, "w", encoding="utf-8") as f:
-            f.write(contenido)
-        generados.append(ruta_rel)
+    if overwrite:
+        modo = "overwrite"
 
-    # 1. AGENTS.md contextual: se crea si no existe; se sobrescribe SOLO con --overwrite
+    MARCA_INICIO = "<!-- CONTEXTMAP:BEGIN -->"
+    MARCA_FIN = "<!-- CONTEXTMAP:END -->"
+
+    def _escribir(ruta_rel: str, contenido: str, forzar: bool = False) -> None:
+        """Escribe una regla según el modo elegido (respect/merge/overwrite)."""
+        ruta = os.path.join(target_dir, ruta_rel)
+        if not os.path.exists(ruta):
+            os.makedirs(os.path.dirname(ruta), exist_ok=True)
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(contenido)
+            generados.append(ruta_rel)
+            return
+
+        if modo == "overwrite" or forzar:
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(contenido)
+            generados.append(ruta_rel)
+            return
+
+        if modo == "merge":
+            with open(ruta, encoding="utf-8") as f:
+                actual = f.read()
+            bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
+            if MARCA_INICIO in actual:
+                # Reemplazar solo el bloque ContextMap anterior (idempotente)
+                import re as _re
+                nuevo = _re.sub(
+                    _re.escape(MARCA_INICIO) + r".*?" + _re.escape(MARCA_FIN),
+                    bloque.strip(),
+                    actual,
+                    flags=_re.DOTALL,
+                )
+            else:
+                # Anexar bloque al final preservando reglas del usuario
+                nuevo = actual.rstrip() + "\n" + bloque
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(nuevo)
+            generados.append(f"{ruta_rel} (merge)")
+            return
+
+        # modo respect: no tocar existente
+        logger.debug("Regla existente, se respeta: %s", ruta_rel)
+
+    # 1. AGENTS.md contextual: crea si no existe; respect/merge/overwrite según modo
     _escribir("AGENTS.md", _generar_agents_md(project_name, eco, fecha))
 
     # 2. Reglas por agente detectado
