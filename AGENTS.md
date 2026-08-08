@@ -28,6 +28,7 @@ context_map/
 ├── domain/                      # Lógica de negocio
 │   ├── scanning/                # Escáner estático del proyecto
 │   ├── synchronization/         # Sincronización incremental del grafo
+│   ├── ingestion/               # Ingesta de documentos externos (MD/TXT/PDF → DOCUMENTO)
 │   ├── analysis/                # Análisis de readiness del sistema
 │   ├── health/                  # Diagnóstico y mantenimiento (doctor)
 │   └── reporting/               # Reportes semanales de avance
