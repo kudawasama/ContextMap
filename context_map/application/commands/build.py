@@ -95,5 +95,9 @@ def cmd_build(args) -> None:
         print(f"brief: {brief_path}")
         print(f"agents: {agents_path}")
 
+    # Auto-adaptación del ecosistema agéntico tras cada build (solo crea reglas faltantes)
+    from context_map.application.commands.adapt import do_adapt
+    do_adapt(target=".", project_name=proj, modo="respect", quiet=True)
+
     print("build:ok -> ACTIVE.md")
     print(f"vault ({vault_mode}):ok -> {vault_path}")

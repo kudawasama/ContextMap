@@ -7,6 +7,32 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.3.0] - 2026-08-07
+
+### ✨ Nuevo
+
+- **`ctxmap ingest` — Ingesta de documentos externos (segundo cerebro / LLM Wiki)**: Convierte archivos MD/TXT/PDF en nodos `DOCUMENTO` con síntesis extractiva, concepto dominante y citas referenciadas. Nuevo tipo de nodo `DOCUMENTO` y sección `3.2-DOCUMENTOS` en el vault (respeta topología en árbol).
+- **`ctxmap adapt` — Adaptación al ecosistema agéntico**: Detecta el stack técnico del proyecto (lenguaje, framework, test runner, package manager, entrypoints desde `pyproject.toml`) y los IDEs/harnesses presentes, y genera reglas específicas por agente:
+  - `AGENTS.md` contextual (estándar universal: Antigravity, Cursor, Claude, Copilot, OpenCode, Codex, Gemini)
+  - `CLAUDE.md` (Claude Code), `.cursor/rules/contextmap.mdc` + `.cursorrules` (Cursor), `.windsurfrules` (Windsurf), `.clinerules` (Cline), `.roo/rules/contextmap.md` (Roo Code), `GEMINI.md` (Gemini CLI), `opencode.json` (OpenCode), `.aider.conf.yml` (Aider), `.github/copilot-instructions.md` (Copilot)
+  - Ecosistema `.hermes/` completo (config.yaml, workflows, shields, triggers)
+  - **3 modos**: `respect` (no toca existentes), `--merge` (anexa bloque `<!-- CONTEXTMAP:BEGIN/END -->` preservando reglas del usuario, idempotente), `--overwrite` (reemplaza completo)
+- **Auto-adaptación en `init` y `build`**: tras inicializar o construir, ContextMap detecta y crea reglas faltantes automáticamente.
+
+### 🔄 Cambiado
+
+- **Topología estricta en árbol (REGLA INAMOVIBLE)**: Cada nota del vault cuelga de EXACTAMENTE UN padre; las ramas 2.1-Pendientes / 2.2-Futuras / 2.3-Completas son independientes y nunca se cruzan. Índices de concepto con nombre único por estado (`DEVOPS-Pendientes.md` ≠ `DEVOPS-Completas.md`) para evitar que Obsidian fusione estados. `00-CONEXIONES.md` sin wikilinks en modo jerárquico.
+- **Nombres de nota idea únicos por id**: `idea_{id}_{ACCION}.md` (antes `idea_{timestamp}_{ACCION}.md` colisionaba si dos ideas del mismo concepto se creaban el mismo segundo).
+- **Pre-commit hook usa el código local** (`python -m context_map.cli build`) antes que el binario global `ctxmap` desactualizado.
+- **Vault único por proyecto**: los vaults obsoletos se mueven a `.context-map/_legacy/`.
+
+### ✅ Añadido
+
+- **Test de topología inamovible** (`test_topologia_arbol.py`): verifica 0 nodos sin padre, 0 colisiones de nombre base, 0 enlaces rotos e índices con sufijo de estado.
+- Tests de ingesta (`test_ingest.py`) y de ecosistema (`test_ecosistema.py`): 45 tests en verde.
+
+---
+
 ## [Unreleased]
 
 ### ♻️ Refactorizado

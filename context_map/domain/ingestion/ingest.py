@@ -97,14 +97,18 @@ def _extraer_pdf(ruta: str) -> str:
         ValueError: Si pymupdf no está instalado o el PDF no tiene texto.
     """
     try:
-        import fitz  # PyMuPDF
+        # PyMuPDF moderno (>=1.24): import pymupdf; legado: import fitz
+        try:
+            import pymupdf  # type: ignore[import-not-found]
+        except ImportError:
+            import fitz as pymupdf  # type: ignore[no-redef]
     except ImportError as err:
         raise ValueError(
             "Para ingerir PDFs instala PyMuPDF: `uv pip install pymupdf`"
         ) from err
 
     try:
-        doc = fitz.open(ruta)
+        doc = pymupdf.open(ruta)
         paginas: list[str] = []
         for pagina in doc:
             texto = pagina.get_text()

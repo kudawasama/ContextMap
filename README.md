@@ -122,6 +122,9 @@ pip install -e .
 
 # O instalar con UV (recomendado)
 uv tool install git+https://github.com/kudawasama/ContextMap.git
+
+# Extra para ingesta de PDFs (ctxmap ingest *.pdf)
+uv pip install pymupdf   # o: pip install -e ".[pdf]"
 ```
 
 ---

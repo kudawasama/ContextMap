@@ -31,6 +31,11 @@ def cmd_init(args) -> None:
     print("init:ok ->", os.path.abspath(CONTEXT_DIR))
     print(f"agents:ok -> {agents_path}")
 
+    # Auto-adaptación del ecosistema agéntico (solo crea reglas faltantes, no toca existentes)
+    from context_map.application.commands.adapt import do_adapt
+    do_adapt(target=".", project_name=proj, modo="respect", quiet=True)
+    print("adapt:ok -> reglas agénticas generadas")
+
 
 def cmd_check(args) -> None:
     """Verifica readiness del proyecto (score 0-100).
