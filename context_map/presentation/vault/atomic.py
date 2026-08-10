@@ -279,6 +279,7 @@ def _render_conexiones(
     nodes: list[Node],
     edges: list[Edge],
     con_wikilinks: bool = True,
+    usar_rutas_reales: bool = False,
 ) -> None:
     """Genera un archivo con todas las conexiones para graph view.
 
@@ -289,6 +290,10 @@ def _render_conexiones(
         con_wikilinks (bool): Si True usa wikilinks (modo raw donde los slugs
             existen como archivos); si False muestra texto plano (modo
             jerárquico, donde los nombres de archivo no derivan del slug).
+        usar_rutas_reales (bool): Si True, los wikilinks se resuelven a la
+            ruta real de archivo del nodo (mapa mental conectado en modo
+            jerárquico); los nodos sin archivo individual se muestran como
+            texto plano (0 nodos fantasma).
     """
     from context_map.core.storage.store import _ensure
 
@@ -320,7 +325,24 @@ def _render_conexiones(
         src_title = src.title[:40] if src else e.source
         tgt_title = tgt.title[:40] if tgt else e.target
         if con_wikilinks:
-            partes.append(f"| [[{src_slug}\\\\|{src_title}]] | [[{tgt_slug}\\\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
+            if usar_rutas_reales:
+                # Mapa mental conectado: wikilink SOLO si ambos extremos tienen
+                # archivo real; si no, texto plano (0 nodos fantasma).
+                from context_map.presentation.vault.consolidated.rutas import (
+                    ruta_archivo_nodo,
+                )
+
+                r_src = ruta_archivo_nodo(src) if src else None
+                r_tgt = ruta_archivo_nodo(tgt) if tgt else None
+                if r_src and r_tgt:
+                    partes.append(
+                        f"| [[{r_src}\\|{src_title}]] | [[{r_tgt}\\|{tgt_title}]] "
+                        f"| {e.kind} | {e.note or '—'} |"
+                    )
+                else:
+                    partes.append(f"| {src_title} | {tgt_title} | {e.kind} | {e.note or '—'} |")
+            else:
+                partes.append(f"| [[{src_slug}\\|{src_title}]] | [[{tgt_slug}\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
         else:
             partes.append(f"| {src_title} | {tgt_title} | {e.kind} | {e.note or '—'} |")
 

@@ -149,6 +149,7 @@ def _render_grafo_conexiones(
     nodes: list[Node],
     edges: list[Edge],
     con_wikilinks: bool = True,
+    usar_rutas_reales: bool = False,
 ) -> None:
     """Renderiza el archivo de conexiones del grafo.
 
@@ -158,7 +159,14 @@ def _render_grafo_conexiones(
         edges (list[Edge]): Lista de aristas/relaciones.
         con_wikilinks (bool): Si True renderiza con wikilinks; si False usa
             texto plano (topología jerárquica estricta, evita nodos fantasma).
+        usar_rutas_reales (bool): Si True, los wikilinks se resuelven a la
+            ruta real de archivo del nodo (modo jerárquico); si False, usa
+            slugs (modo raw/consolidado donde los slugs existen como archivos).
     """
     from context_map.presentation.vault.atomic import _render_conexiones
 
-    _render_conexiones(output_dir, nodes, edges, con_wikilinks=con_wikilinks)
+    _render_conexiones(
+        output_dir, nodes, edges,
+        con_wikilinks=con_wikilinks,
+        usar_rutas_reales=usar_rutas_reales,
+    )

@@ -15,6 +15,7 @@ def _render_nota_riesgo(
     fecha_actual: str,
     directorio: str,
     pie_fn,
+    todos_nodos: list[Node] | None = None,
 ) -> None:
     """Renderiza una nota atómica de tipo RIESGO con contexto narrativo.
 
@@ -24,6 +25,7 @@ def _render_nota_riesgo(
         fecha_actual (str): Marca de tiempo ISO.
         directorio (str): Directorio donde se escribe la nota.
         pie_fn (Callable): Generador de pie.
+        todos_nodos (list[Node] | None): Todos los nodos del mapa (conexiones).
     """
     from context_map.core.generators import generar_contexto_narrativo
 
@@ -57,6 +59,25 @@ def _render_nota_riesgo(
         for ev in n.evidence:
             partes.append(f"- {ev}")
         partes.append("")
+
+    if todos_nodos:
+        from context_map.presentation.vault.consolidated.rutas import (
+            conexiones_de_nodo,
+            ruta_archivo_nodo,
+        )
+
+        conexiones = conexiones_de_nodo(n, todos_nodos)
+        partes.append("## 🔗 Conexiones")
+        partes.append("")
+        if conexiones:
+            for rel in conexiones:
+                destino = ruta_archivo_nodo(rel)
+                if destino:
+                    partes.append(f"- [[{destino}|{rel.title[:60]}]]")
+        else:
+            partes.append("_(Sin conexiones registradas aún)_")
+        partes.append("")
+
     partes.extend(pie_fn("[[4.0-RIESGOS/4.0-RIESGOS|⬅ Volver a 4.0 Riesgos]]"))
 
     _escribir_markdown(directorio, filename, partes)
@@ -115,9 +136,15 @@ def _render_seccion_riesgos(
 
     if clasificados["RIESGO"]:
         seen_riesgo_file: set[str] = set()
+        todos_nodos: list[Node] = [
+            n for grupo in clasificados.values() for n in grupo
+        ]
         for n in clasificados["RIESGO"]:
             key_file = n.title[:80]
             if key_file in seen_riesgo_file:
                 continue
             seen_riesgo_file.add(key_file)
-            _render_nota_riesgo(n, project_name, fecha_actual, riesgos_dir, pie_fn)
+            _render_nota_riesgo(
+                n, project_name, fecha_actual, riesgos_dir, pie_fn,
+                todos_nodos=todos_nodos,
+            )

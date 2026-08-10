@@ -220,7 +220,22 @@ def _render_hierarchical_vault(
     _render_seccion_riesgos(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
     _render_seccion_backlog(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
     _render_seccion_historial(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
-    _render_grafo_conexiones(output_dir, nodes, edges, con_wikilinks=False)
+    _render_grafo_conexiones(output_dir, nodes, edges, con_wikilinks=True, usar_rutas_reales=True)
+
+    # Mapa mental conectado: lienzo, grupos de color, plantillas y nota del día
+    from context_map.presentation.vault.consolidated.canvas import (
+        render_canvas,
+        render_graph_json,
+        render_nota_dia,
+        render_plantillas,
+    )
+
+    project_root = os.path.dirname(os.path.dirname(output_dir))
+    render_canvas(output_dir, nodes, edges)
+    render_graph_json(output_dir, nodes)
+    render_plantillas(project_root, project_name)
+    render_nota_dia(project_root, project_name, nodes)
+    os.makedirs(os.path.join(output_dir, "adjuntos"), exist_ok=True)
 
     if preservados:
         target_backlog = os.path.join(output_dir, "5.0-BACKLOG")

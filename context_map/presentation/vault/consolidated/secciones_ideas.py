@@ -76,6 +76,7 @@ def _render_nota_idea(
     status: str,
     backlink: str,
     pie_fn,
+    todos_nodos: list[Node] | None = None,
 ) -> None:
     """Renderiza una nota atómica de tipo IDEA con contexto narrativo estructurado.
 
@@ -87,6 +88,8 @@ def _render_nota_idea(
         status (str): Estado de la idea ('pendiente' | 'activo').
         backlink (str): Wikilink de regreso a la sección padre.
         pie_fn (Callable): Función generadora del cierre pie.
+        todos_nodos (list[Node] | None): Todos los nodos del mapa (para la
+            sección de conexiones). Si None, no se genera la sección.
     """
     from context_map.core.generators import generar_contexto_narrativo
 
@@ -148,6 +151,26 @@ def _render_nota_idea(
         for ev in n.evidence:
             partes.append(f"- {ev}")
         partes.append("")
+
+    if todos_nodos:
+        # Mapa mental conectado: sección de conexiones con archivos reales
+        from context_map.presentation.vault.consolidated.rutas import (
+            conexiones_de_nodo,
+            ruta_archivo_nodo,
+        )
+
+        conexiones = conexiones_de_nodo(n, todos_nodos)
+        partes.append("## 🔗 Conexiones")
+        partes.append("")
+        if conexiones:
+            for rel in conexiones:
+                destino = ruta_archivo_nodo(rel)
+                if destino:
+                    partes.append(f"- [[{destino}|{rel.title[:60]}]]")
+        else:
+            partes.append("_(Sin conexiones registradas aún — se conecta al trabajar la historia)_")
+        partes.append("")
+
     partes.extend(pie_fn(backlink))
 
     _escribir_markdown(directorio, filename, partes)
@@ -259,6 +282,11 @@ def _render_seccion_ideas(
     pendientes = [n for n in idea_nodes if n.status == "pendiente"]
     activas = [n for n in idea_nodes if n.status == "activo"]
 
+    # Todos los nodos del mapa (para la sección de conexiones de cada nota)
+    todos_nodos: list[Node] = [
+        n for grupo in clasificados.values() for n in grupo
+    ]
+
     partes = cabecera_fn(
         "seccion", "ideas", project_name, fecha_actual,
         ["context-map", "ideas"],
@@ -325,6 +353,7 @@ def _render_seccion_ideas(
                     n, project_name, fecha_actual, concepto_dir, "pendiente",
                     f"[[{concepto}-Pendientes|⬅ Volver a {concepto}]]",
                     pie_fn,
+                    todos_nodos=todos_nodos,
                 )
             _render_indice_concepto(
                 concepto, nodos, project_name, fecha_actual, concepto_dir,
@@ -363,6 +392,7 @@ def _render_seccion_ideas(
                     n, project_name, fecha_actual, concepto_dir, "activo",
                     f"[[{concepto}-Futuras|⬅ Volver a {concepto}]]",
                     pie_fn,
+                    todos_nodos=todos_nodos,
                 )
             _render_indice_concepto(
                 concepto, nodos, project_name, fecha_actual, concepto_dir,
@@ -445,6 +475,8 @@ def _render_seccion_ideas(
         if key not in seen_ideas_top and len(top_ideas) < 20:
             seen_ideas_top.add(key)
             top_ideas.append(n)
+    # T6: orden cronológico por fecha de ingreso (created_at)
+    top_ideas.sort(key=lambda n: (n.created_at or ""))
 
     ideas_top_parts = cabecera_fn(
         "ideas-relevantes", None, project_name, fecha_actual,
@@ -452,7 +484,7 @@ def _render_seccion_ideas(
         "# 2.4 Ideas Relevantes",
     )
     ideas_top_parts.extend([
-        "Las ideas más importantes y transversales del proyecto.",
+        "Las ideas más importantes y transversales del proyecto, ordenadas por fecha de ingreso.",
         "",
         "---",
         "",
@@ -461,13 +493,30 @@ def _render_seccion_ideas(
         for n in top_ideas:
             status_icon = ICONOS_STATUS.get(n.status, "💡")
             concepto = _concepto_nodo(n)
-            ideas_top_parts.append(f"- {status_icon} **{n.title}** ({n.status}) · `{concepto}`")
+            fecha = (n.created_at or "")[:10] or "—"
+            ideas_top_parts.append(
+                f"- {status_icon} **{n.title}** ({n.status}) · `{concepto}` · 🗓️ {fecha}"
+            )
             if n.summary:
                 ideas_top_parts.append(f"  - {n.summary}")
         ideas_top_parts.append("")
     else:
         ideas_top_parts.append("_(No se registraron ideas)_")
         ideas_top_parts.append("")
+
+    # T7: Base de ideas (Dataview) con fallback estático arriba
+    ideas_top_parts.extend([
+        "## 📊 Base de Ideas (Dataview)",
+        "",
+        "```dataview",
+        "TABLE created AS \"Ingreso\", concept AS \"Concepto\", status AS \"Estado\"",
+        "FROM \"2.0-IDEAS\"",
+        "SORT created ASC",
+        "```",
+        "",
+        "> Si no tienes el plugin Dataview, la lista ordenada de arriba es la fuente.",
+        "",
+    ])
 
     ideas_top_parts.extend(pie_fn("[[2.0-IDEAS/2.0-IDEAS|⬅ Volver a 2.0 Ideas]]"))
     _escribir_markdown(ideas_dir, "2.4-Ideas-Relevantes.md", ideas_top_parts)
