@@ -139,3 +139,70 @@ def test_auto_command_orchestrates_full_workflow() -> None:
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_clean_vault_dir_preserva_manuales() -> None:
+    """Verifica que build --clean NO borra la zona .manual/ ni las notas preserve:true."""
+    from context_map.application.commands._helpers import clean_vault_dir, vault_dir
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_manual_")
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(temp_dir)
+        vdir = vault_dir("TestManual")
+        os.makedirs(os.path.join(vdir, ".manual"), exist_ok=True)
+        os.makedirs(os.path.join(vdir, "2.0-IDEAS"), exist_ok=True)
+
+        with open(os.path.join(vdir, ".manual", "SESION-2026-08-09.md"), "w", encoding="utf-8") as f:
+            f.write("---\ntype: nota-manual\n---\n# Sesión\n")
+        with open(os.path.join(vdir, "2.0-IDEAS", "idea-manual.md"), "w", encoding="utf-8") as f:
+            f.write("---\npreserve: true\n---\n# Idea preservada\n")
+        with open(os.path.join(vdir, "2.0-IDEAS", "idea-generada.md"), "w", encoding="utf-8") as f:
+            f.write("---\ntype: idea\n---\n# Idea generada\n")
+
+        n = clean_vault_dir("TestManual")
+
+        assert os.path.exists(os.path.join(vdir, ".manual", "SESION-2026-08-09.md"))
+        assert os.path.exists(os.path.join(vdir, "2.0-IDEAS", "idea-manual.md"))
+        assert not os.path.exists(os.path.join(vdir, "2.0-IDEAS", "idea-generada.md"))
+        assert n >= 2, f"Esperaba >=2 notas manuales preservadas, obtuve {n}"
+    finally:
+        os.chdir(old_cwd)
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_refresh_command_actualiza_contexto_sin_clean() -> None:
+    """Verifica que ctxmap refresh corre scan+build+check y NO usa --clean."""
+    import json
+
+    from context_map.application.commands.refresh import cmd_refresh
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_refresh_")
+    py_path = os.path.join(temp_dir, "app.py")
+
+    try:
+        with open(py_path, "w", encoding="utf-8") as f:
+            f.write("# TODO: test refresh\ndef main(): pass\n")
+
+        class Args:
+            target = temp_dir
+            project = "TestRefresh"
+            quiet = True
+
+        cmd_refresh(Args())
+
+        context_dir = os.path.join(temp_dir, ".context-map")
+        brief_path = os.path.join(context_dir, "CONTEXT.md")
+        assert os.path.exists(brief_path)
+        with open(brief_path, encoding="utf-8") as f:
+            brief = f.read()
+        assert "¿Qué es y por qué existe?" in brief
+
+        # El refresh NUNCA marca clean=True en el último build
+        last_build = os.path.join(context_dir, "state", "last_build.json")
+        assert os.path.exists(last_build)
+        with open(last_build, encoding="utf-8") as f:
+            info = json.load(f)
+        assert info["clean"] is False
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)

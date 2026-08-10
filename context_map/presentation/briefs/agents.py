@@ -61,9 +61,22 @@ Antes de responder preguntas sobre el proyecto o escribir código, el Agente DEB
    - `2.0-IDEAS/` (`2.1-Ideas-Pendientes`, `2.2-Ideas-Futuras`, `2.3-Ideas-Completas`)
    - `4.0-RIESGOS/` (Deuda técnica y zonas de complejidad)
    - `5.0-BACKLOG/` (`5.1-Tareas.md`)
-3. **Responder las 3 preguntas del alma** antes de proponer cambios:
+3. **Leer la Historia del Proyecto (chats y conversaciones)**:
+   Importar las conversaciones e historial con el usuario para que las decisiones y
+   los porqués queden en el mapa:
+
+   ```bash
+   python -m context_map.cli import-git .          # historial de commits y decisiones
+   python -m context_map.cli import-sessions       # sesiones de Hermes Agent
+   python -m context_map.cli import-antigravity    # conversaciones de Antigravity IDE
+   python -m context_map.cli import-chat <archivo> # chats exportados (Telegram/Discord/Slack)
+   ```
+
+   Si el usuario comparte una conversación o menciona un chat relevante, importarla
+   ANTES de responder: ahí viven las ideas, decisiones y contexto emocional del proyecto.
+4. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
-4. **No Suponer Lógica**:
+5. **No Suponer Lógica**:
    Inspeccionar los archivos de código fuente antes de formular diagnósticos o proponer cambios.
 
 ---
@@ -102,11 +115,29 @@ python -m context_map.cli check .
 
 El contexto no se genera una vez y se olvida: **es la memoria viva del proyecto**.
 Después de implementar cualquier cambio, el Agente DEBE actualizar el mapa para que
-refleje su trabajo (nodos CAMBIO / CORRECCION / IDEA):
+refleje su trabajo (nodos CAMBIO / CORRECCION / IDEA). La forma más simple es el
+comando único (scan + build preservando manuales + check):
+
+```bash
+python -m context_map.cli refresh .     # 1 paso: deja el contexto al día
+```
+
+O equivalentemente, paso a paso:
 
 ```bash
 python -m context_map.cli scan .        # registrar lo que cambió
-python -m context_map.cli build --brief # regenerar vault + brief
+python -m context_map.cli build --brief # regenerar vault + brief (sin --clean)
+```
+
+**La conversación también es historia del proyecto.** Al terminar una sesión de
+trabajo con el usuario, el Agente DEBE importarla para que las decisiones, ideas y
+porqués queden registrados:
+
+```bash
+python -m context_map.cli import-sessions    # esta sesión de Hermes Agent
+python -m context_map.cli import-antigravity # conversación de Antigravity IDE
+python -m context_map.cli import-chat <archivo>  # chat exportado por el usuario
+python -m context_map.cli refresh .          # regenerar vault + brief con la historia
 ```
 
 Un contexto que no se actualiza muere: el siguiente agente queda ciego y el proyecto

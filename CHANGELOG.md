@@ -12,11 +12,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ### ✨ Nuevo
 
 - **Brief con alma (`CONTEXT.md`)**: El brief ejecutivo ahora abre con **"¿Qué es y por qué existe?"** — extrae el propósito real del proyecto desde `README.md` y obliga al agente a responder las 3 preguntas del alma (¿por qué existe?, ¿para qué sirve?, ¿qué cumple?) desde el vault `1.0-PROPOSITO`. Un brief puro de métricas era "pésimo, no decía nada" y el agente del IDE lo ignoraba.
-- **"Cómo trabajar aquí — dale vida al contexto"**: Reemplaza la "Estructura Recomendada" genérica por un protocolo accionable: leer brief + vault, revisar riesgos, inspeccionar código real y **actualizar el mapa después de trabajar** (`ctxmap scan .` + `ctxmap build --brief`) para que el contexto nunca muera.
+- **"Cómo trabajar aquí — dale vida al contexto"**: Reemplaza la "Estructura Recomendada" genérica por un protocolo accionable: leer brief + vault, revisar riesgos, inspeccionar código real y **actualizar el mapa después de trabajar** para que el contexto nunca muera.
+- **Detección de IDE por proceso activo**: `detectar_ide_proceso()` lista los procesos del sistema (tasklist/ps) y detecta Cursor, VS Code, Windsurf, JetBrains y Antigravity **corriendo ahora**, aunque el proyecto no tenga su carpeta de configuración. `ctxmap adapt` los reporta como "IDEs por proceso activo" y genera sus reglas.
+- **`ctxmap refresh` — contexto al día en 1 paso**: scan + build (preservando manuales, SIN `--clean`) + check. Reemplaza el protocolo de 4 comandos: `python -m pytest && ctxmap refresh .`.
+- **Zona protegida `.manual/` en el vault**: `build --clean` JAMÁS borra el trabajo manual. Preserva la carpeta `.manual/` completa, cualquier nota con frontmatter `preserve: true`, y el backlog manual previo. Reporta cuántas notas preservó. El `00-INDICE.md` enlaza las notas de `.manual/`.
 
 ### 🔄 Cambiado
 
-- **AGENTS.md generado**: La regla prioritaria ahora dice **"LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa"**; el Protocolo de Inicio incluye las 3 preguntas del alma y se agrega la sección **"Mantén Vivo el Contexto (Regla de Vida del Proyecto)"**: tras implementar, `scan` + `build --brief` para que el mapa refleje el trabajo (nodos CAMBIO/CORRECCION/IDEA).
+- **AGENTS.md generado**: La regla prioritaria ahora dice **"LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa"**; el Protocolo de Inicio incluye **leer/importar la historia del proyecto** (chats, sesiones Hermes, Antigravity, git) y las 3 preguntas del alma; se agrega la sección **"Mantén Vivo el Contexto (Regla de Vida del Proyecto)"** con `ctxmap refresh`.
+- **Pre-commit hook**: ahora usa `build --brief` (SIN `--clean`) para no destruir notas manuales (antes `--clean` las borraba en cada commit).
+- **`ctxmap check` — Salud del Vault**: reporta nº de notas manuales, vaults activos y alerta si el último build usó `--clean` (destructivo) con cuántas notas preservó (`state/last_build.json`).
 - **`generar_brief()` acepta `project_dir`**: extrae el propósito del README del proyecto real (robusto ante invocaciones con target temporal, p. ej. tests).
 
 ---

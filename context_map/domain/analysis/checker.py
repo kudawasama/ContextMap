@@ -182,6 +182,74 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
     return resultado
 
 
+def _salud_vault(ruta_raiz: str) -> dict[str, object]:
+    """Evalúa la salud del vault de ContextMap (notas manuales y último build).
+
+    Cuenta las notas manuales (zona protegida ``.manual/`` + notas con
+    frontmatter ``preserve: true``) y lee ``state/last_build.json`` para
+    saber si el último build usó ``--clean`` (destructivo).
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        dict[str, object]: Resumen de salud del vault.
+    """
+    import json as _json
+
+    context_dir = os.path.join(ruta_raiz, ".context-map")
+    vault_dirs: list[str] = []
+    if os.path.isdir(context_dir):
+        vault_dirs = [
+            os.path.join(context_dir, d)
+            for d in os.listdir(context_dir)
+            if d.startswith("vault") and os.path.isdir(os.path.join(context_dir, d))
+        ]
+
+    n_manuales = 0
+    for vdir in vault_dirs:
+        manual_dir = os.path.join(vdir, ".manual")
+        if os.path.isdir(manual_dir):
+            for _raiz, _dirs, archivos in os.walk(manual_dir):
+                n_manuales += sum(1 for a in archivos if a.endswith(".md"))
+        # preserve:true en cualquier parte del vault (excepto .manual/, ya contado)
+        for raiz, _dirs, archivos in os.walk(vdir):
+            if ".manual" in raiz.split(os.sep):
+                continue
+            for fname in archivos:
+                if not fname.endswith(".md"):
+                    continue
+                try:
+                    with open(os.path.join(raiz, fname), encoding="utf-8") as f:
+                        primeras = [next(f, "") for _ in range(10)]
+                    if primeras and primeras[0].strip() == "---":
+                        for linea in primeras[1:]:
+                            if linea.strip().startswith("---"):
+                                break
+                            clave = linea.strip().lower().replace(" ", "")
+                            if clave.startswith("preserve:") and "true" in clave:
+                                n_manuales += 1
+                                break
+                except Exception:
+                    continue
+
+    info_build: dict[str, object] = {}
+    last_build = os.path.join(context_dir, "state", "last_build.json")
+    if os.path.isfile(last_build):
+        try:
+            with open(last_build, encoding="utf-8") as f:
+                info_build = _json.load(f)
+        except Exception:
+            info_build = {}
+
+    return {
+        "vaults": len(vault_dirs),
+        "notas_manuales": n_manuales,
+        "ultimo_build_clean": bool(info_build.get("clean", False)),
+        "manuales_preservadas": int(info_build.get("manuales_preservadas", 0)),
+    }
+
+
 def formatear_readiness(resultado: ResultadoReadiness) -> str:
     """Formatea el resultado del análisis de readiness como Markdown legible.
 
@@ -207,6 +275,25 @@ def formatear_readiness(resultado: ResultadoReadiness) -> str:
         lineas.append(f"- {icono} {s.nombre} (peso: {s.peso})")
         if s.detalle and not s.presente:
             lineas.append(f"  - _{s.detalle}_")
+
+    # Salud del vault (notas manuales + último build)
+    salud = _salud_vault(resultado.ruta_raiz)
+    lineas.extend(["", "## Salud del Vault (ContextMap)", ""])
+    lineas.append(f"- 📝 Notas manuales: **{salud['notas_manuales']}**")
+    lineas.append(f"- 🗂️ Vaults activos: **{salud['vaults']}**")
+    if salud["ultimo_build_clean"]:
+        lineas.append(
+            f"- ⚠️ Último build usó **--clean** (destructivo): se preservaron "
+            f"**{salud['manuales_preservadas']}** notas manuales. "
+            "Prefiere `ctxmap refresh` para builds no destructivos."
+        )
+    else:
+        lineas.append("- ✅ Último build fue no destructivo (sin --clean).")
+    if salud["notas_manuales"] == 0:
+        lineas.append(
+            "- 💡 Consejo: crea tus notas de sesión/decisiones en "
+            "`.context-map/vault-*/.manual/` — el build JAMÁS las borra."
+        )
 
     if resultado.gaps:
         lineas.extend(["", "## Faltante", ""])

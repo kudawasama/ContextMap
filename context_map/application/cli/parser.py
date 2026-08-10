@@ -27,6 +27,14 @@ def create_parser() -> argparse.ArgumentParser:
     s_auto.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_auto.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
+    s_refresh = sub.add_parser(
+        "refresh",
+        help="Actualiza el contexto en 1 paso: scan + build (preservando manuales) + check",
+    )
+    s_refresh.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_refresh.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_refresh.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
+
     sub.add_parser("init", help="Crea estructura .context-map/")
 
     s_build = sub.add_parser("build", help="Genera vault completo")

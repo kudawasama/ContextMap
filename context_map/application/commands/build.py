@@ -17,6 +17,7 @@ from context_map.application.commands._helpers import (
     collect_events,
     ensure_dirs,
     project_name,
+    registrar_build_info,
     resolve_vault_mode,
     vault_dir,
 )
@@ -47,7 +48,10 @@ def cmd_build(args) -> None:
     # Resolver modo del vault y aplicar limpieza si se solicitó
     vault_mode = resolve_vault_mode(args)
     if getattr(args, "clean", False):
-        clean_vault_dir(proj)
+        manuales = clean_vault_dir(proj)
+        registrar_build_info(proj, clean=True, manuales_preservadas=manuales)
+    else:
+        registrar_build_info(proj, clean=False)
 
     extra_events = collect_events()
     if extra_events:

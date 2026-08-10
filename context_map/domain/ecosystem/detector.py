@@ -48,11 +48,15 @@ class IDEInfo:
         ides (list[str]): IDEs detectados ('VS Code', 'Cursor', 'Windsurf', 'JetBrains').
         agentes (list[str]): Agentes de código detectados ('Claude Code', 'Copilot', ...).
         reglas_existentes (list[str]): Archivos de reglas ya presentes.
+        ides_por_proceso (list[str]): IDEs detectados por proceso activo del sistema
+            (no por marcadores del proyecto). Permite saber que el IDE está corriendo
+            aunque el proyecto no tenga su carpeta de configuración.
     """
 
     ides: list[str] = field(default_factory=list)
     agentes: list[str] = field(default_factory=list)
     reglas_existentes: list[str] = field(default_factory=list)
+    ides_por_proceso: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -69,6 +73,12 @@ class EcosistemaInfo:
 
     def resumen_texto(self) -> str:
         """Devuelve un resumen legible del ecosistema detectado."""
+        ides_linea = f"- IDEs: {', '.join(self.ide.ides) or 'no detectado'}"
+        if self.ide.ides_por_proceso:
+            ides_linea += (
+                f"\n- IDEs por proceso activo: {', '.join(self.ide.ides_por_proceso)}"
+                " (corriendo ahora, aunque el proyecto no tenga su carpeta)"
+            )
         lineas = [
             "## 🧰 Stack detectado",
             f"- Lenguajes: {', '.join(self.stack.lenguajes) or 'no detectado'}",
@@ -78,7 +88,7 @@ class EcosistemaInfo:
             f"- Entrypoints: {', '.join(self.stack.entrypoints) or 'no detectado'}",
             "",
             "## 🛠️ IDE / Agentes detectados",
-            f"- IDEs: {', '.join(self.ide.ides) or 'no detectado'}",
+            ides_linea,
             f"- Agentes: {', '.join(self.ide.agentes) or 'no detectado'}",
             f"- Reglas existentes: {', '.join(self.ide.reglas_existentes) or 'ninguna'}",
         ]
@@ -218,6 +228,97 @@ def detectar_stack(target_dir: str = ".") -> StackInfo:
 # Detección de IDE / agentes
 # ============================================================
 
+# Procesos de IDE conocidos -> nombre de IDE (detección por proceso activo).
+# Clave en minúsculas: el nombre real del proceso varía por SO/versión.
+PROCESOS_IDE: dict[str, str] = {
+    "cursor.exe": "Cursor",
+    "cursor": "Cursor",
+    "code.exe": "VS Code",
+    "code": "VS Code",
+    "code - insiders.exe": "VS Code",
+    "code-insiders": "VS Code",
+    "codium.exe": "VS Code",
+    "codium": "VS Code",
+    "windsurf.exe": "Windsurf",
+    "windsurf": "Windsurf",
+    "windsurf-next.exe": "Windsurf",
+    "idea64.exe": "JetBrains",
+    "idea.exe": "JetBrains",
+    "idea": "JetBrains",
+    "pycharm64.exe": "JetBrains",
+    "pycharm.exe": "JetBrains",
+    "pycharm": "JetBrains",
+    "webstorm64.exe": "JetBrains",
+    "goland64.exe": "JetBrains",
+    "rider64.exe": "JetBrains",
+    "clion64.exe": "JetBrains",
+    "datagrip64.exe": "JetBrains",
+    "phpstorm64.exe": "JetBrains",
+    "rubymine64.exe": "JetBrains",
+    "androidstudio64.exe": "JetBrains",
+    "antigravity.exe": "Antigravity",
+    "antigravity": "Antigravity",
+}
+
+
+def _listar_procesos() -> list[str]:
+    """Lista los nombres de procesos activos del sistema (en minúsculas).
+
+    Windows usa ``tasklist``; Unix/macOS usa ``ps``. Ante cualquier error
+    devuelve lista vacía (la detección por proceso es complementaria, nunca
+    debe romper el flujo).
+
+    Returns:
+        list[str]: Nombres de procesos activos en minúsculas.
+    """
+    import subprocess
+
+    try:
+        if os.name == "nt":
+            resultado = subprocess.run(
+                ["tasklist", "/FO", "CSV", "/NH"],
+                capture_output=True, text=True, timeout=10,
+            )
+            nombres: list[str] = []
+            for linea in resultado.stdout.splitlines():
+                if linea.startswith('"'):
+                    proc = linea.split('"')[1].strip().lower()
+                    if proc:
+                        nombres.append(proc)
+            return nombres
+        # Unix / macOS
+        resultado = subprocess.run(
+            ["ps", "-axo", "comm"],
+            capture_output=True, text=True, timeout=10,
+        )
+        nombres = []
+        for linea in resultado.stdout.splitlines():
+            proc = os.path.basename(linea.strip()).lower()
+            if proc:
+                nombres.append(proc)
+        return nombres
+    except Exception as err:
+        logger.debug("No se pudo listar procesos del sistema: %s", err)
+        return []
+
+
+def detectar_ide_proceso() -> list[str]:
+    """Detecta IDEs por proceso activo del sistema.
+
+    Complementa la detección por marcadores del proyecto: si el usuario tiene
+    Cursor/VS Code/Windsurf/JetBrains/Antigravity corriendo AHORA, se reporta
+    aunque el proyecto no tenga su carpeta de configuración (`.cursor/`, etc.).
+
+    Returns:
+        list[str]: IDEs detectados por proceso activo, sin duplicados.
+    """
+    detectados: list[str] = []
+    for proc in _listar_procesos():
+        ide = PROCESOS_IDE.get(proc)
+        if ide and ide not in detectados:
+            detectados.append(ide)
+    return detectados
+
 
 def detectar_ide(target_dir: str = ".") -> IDEInfo:
     """Detecta IDEs y herramientas agénticas presentes en el proyecto.
@@ -310,13 +411,24 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
 def detectar_ecosistema(target_dir: str = ".") -> EcosistemaInfo:
     """Detecta el ecosistema completo (stack + IDE/agentes) del proyecto.
 
+    Combina la detección por marcadores del proyecto (`.cursor/`, `.vscode/`,
+    etc.) con la detección por proceso activo del sistema: si un IDE está
+    corriendo ahora pero el proyecto no tiene su carpeta, igual se reporta
+    (y se generan sus reglas).
+
     Args:
         target_dir (str): Directorio raíz del proyecto a analizar.
 
     Returns:
         EcosistemaInfo: Información completa del ecosistema.
     """
+    ide = detectar_ide(target_dir)
+    ides_proceso = detectar_ide_proceso()
+    if ides_proceso:
+        # Solo se marca como "por proceso" lo que no vino por marcadores
+        ide.ides_por_proceso = [i for i in ides_proceso if i not in ide.ides]
+        ide.ides = list(dict.fromkeys(ide.ides + ides_proceso))
     return EcosistemaInfo(
         stack=detectar_stack(target_dir),
-        ide=detectar_ide(target_dir),
+        ide=ide,
     )

@@ -226,8 +226,9 @@ Este proyecto se gobierna por su contexto. El agente DEBE:
 2. **Revisar los riesgos** antes de hacer cambios y **ejecutar los tests** antes de cada commit.
 3. **Inspeccionar el código real** — no suponer rutas ni lógica.
 4. **Mantener vivo el contexto**: después de implementar, actualizar el mapa para que
-   refleje el trabajo realizado (`ctxmap scan .` + `ctxmap build --brief`).
-   El contexto que no se actualiza muere y el siguiente agente queda ciego.
+   refleje el trabajo realizado — `ctxmap refresh .` (scan + build + check en 1 paso,
+   sin destruir notas manuales). El contexto que no se actualiza muere y el
+   siguiente agente queda ciego.
 """
 
 
@@ -236,6 +237,9 @@ def _comandos_utiles() -> str:
     return """## Comandos Útiles
 
 ```bash
+# Actualizar el contexto en 1 paso (scan + build preservando manuales + check)
+ctxmap refresh .
+
 # Verificar estado
 ctxmap check .
 

@@ -116,6 +116,17 @@ def _render_indice_hierarchico(
         all_tags.update(n.tags)
     tags_badges = " ".join(f"`#{t}`" for t in sorted(all_tags)[:20])
 
+    # Notas manuales (zona protegida .manual/) para enlazarlas en el índice
+    manual_dir = os.path.join(output_dir, ".manual")
+    manual_notas: list[str] = []
+    if os.path.isdir(manual_dir):
+        for raiz, _dirs, archivos in os.walk(manual_dir):
+            for fname in sorted(archivos):
+                if not fname.endswith(".md"):
+                    continue
+                rel = os.path.relpath(os.path.join(raiz, fname), output_dir)
+                manual_notas.append(rel.replace(os.sep, "/"))
+
     partes = [
         "---",
         "type: moc",
@@ -156,9 +167,19 @@ def _render_indice_hierarchico(
         "",
         "---",
         "",
-        "## 🏷️ Tags Principales",
-        "",
     ]
+    if manual_notas:
+        partes.extend(["## 📝 Notas Manuales", ""])
+        for rel in manual_notas:
+            nombre = os.path.splitext(os.path.basename(rel))[0]
+            partes.append(f"- [[{rel}|{nombre}]]")
+        partes.extend(["", "---", ""])
+    partes.extend(
+        [
+            "## 🏷️ Tags Principales",
+            "",
+        ]
+    )
     partes.append(tags_badges or "`#context-map`")
     partes.append("")
 

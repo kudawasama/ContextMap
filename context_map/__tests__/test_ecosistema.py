@@ -71,6 +71,42 @@ def test_detectar_ide() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_detectar_ide_proceso() -> None:
+    """Verifica la detección de IDE por proceso activo (mockeando tasklist/ps)."""
+    import context_map.domain.ecosystem.detector as detector
+
+    original = detector._listar_procesos
+    try:
+        detector._listar_procesos = lambda: [
+            "cursor.exe", "code.exe", "python.exe", "explorer.exe",
+        ]
+        ides = detector.detectar_ide_proceso()
+        assert "Cursor" in ides
+        assert "VS Code" in ides
+        assert len(ides) == 2, f"Esperaba 2 IDEs, obtuve: {ides}"
+    finally:
+        detector._listar_procesos = original
+
+
+def test_detectar_ecosistema_fusiona_proceso() -> None:
+    """Verifica que detectar_ecosistema fusiona IDEs por marcador y por proceso."""
+    import context_map.domain.ecosystem.detector as detector
+
+    temp_dir = _crear_proyecto_python()  # trae .cursor/
+    original = detector._listar_procesos
+    try:
+        detector._listar_procesos = lambda: ["code.exe"]
+        eco = detectar_ecosistema(temp_dir)
+        # Cursor vino por marcador .cursor/; VS Code por proceso activo
+        assert "Cursor" in eco.ide.ides
+        assert "VS Code" in eco.ide.ides
+        assert "VS Code" in eco.ide.ides_por_proceso
+        assert "Cursor" not in eco.ide.ides_por_proceso
+    finally:
+        detector._listar_procesos = original
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_adaptar_ecosistema_genera_reglas() -> None:
     """Verifica que adaptar_ecosistema genera las reglas por agente."""
     temp_dir = _crear_proyecto_python()
@@ -287,6 +323,13 @@ if __name__ == "__main__":
     print("=== Test: Detección de IDE ===")
     test_detectar_ide()
     print("   OK: test_detectar_ide PASO")
+
+    print()
+    print("=== Test: Detección por proceso activo ===")
+    test_detectar_ide_proceso()
+    print("   OK: test_detectar_ide_proceso PASO")
+    test_detectar_ecosistema_fusiona_proceso()
+    print("   OK: test_detectar_ecosistema_fusiona_proceso PASO")
 
     print()
     print("=== Test: Adaptación de reglas ===")

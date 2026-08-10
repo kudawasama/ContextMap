@@ -6,6 +6,7 @@ operaciones comunes que varios comandos necesitan reutilizar.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -142,14 +143,90 @@ def resolve_vault_mode(args) -> str:
     return getattr(args, "mode", "hierarchical")
 
 
-def clean_vault_dir(project_name: str | None = None) -> None:
-    """Elimina el contenido del vault para una reconstrucción limpia,
-    preservando notas de planes manuales en 5.0-BACKLOG.
+def _leer_frontmatter_preserve(fpath: str) -> bool:
+    """Detecta si una nota del vault pide ser preservada (frontmatter preserve: true).
+
+    Args:
+        fpath (str): Ruta del archivo Markdown.
+
+    Returns:
+        bool: True si el frontmatter contiene ``preserve: true``.
+    """
+    try:
+        with open(fpath, encoding="utf-8") as f:
+            primeras = [next(f, "") for _ in range(10)]
+    except Exception:
+        return False
+    if not primeras or primeras[0].strip() != "---":
+        return False
+    for linea in primeras[1:]:
+        if linea.strip().startswith("---"):
+            break
+        clave = linea.strip().lower().replace(" ", "")
+        if clave.startswith("preserve:") and "true" in clave:
+            return True
+    return False
+
+
+def _copiar_dir(origen: str, destino: str) -> None:
+    """Copia recursiva de un directorio (sin sobrescribir destino existente)."""
+    if not os.path.isdir(origen):
+        return
+    for raiz, _dirs, archivos in os.walk(origen):
+        for archivo in archivos:
+            src = os.path.join(raiz, archivo)
+            rel = os.path.relpath(src, origen)
+            dst = os.path.join(destino, rel)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+
+
+def clean_vault_dir(project_name: str | None = None) -> int:
+    """Elimina el contenido del vault para una reconstrucción limpia.
+
+    **NUNCA borra el trabajo manual.** Preserva:
+    - La carpeta reservada ``.manual/`` completa (zona protegida del usuario).
+    - Cualquier nota con frontmatter ``preserve: true`` (esté donde esté).
+    - Las notas de planes manuales en ``5.0-BACKLOG`` (comportamiento previo).
+
+    Args:
+        project_name (str | None): Nombre del proyecto (para el vault nombrado).
+
+    Returns:
+        int: Cantidad de archivos manuales preservados.
     """
     vdir = vault_dir(project_name)
-    backlog_dir = os.path.join(vdir, "5.0-BACKLOG")
-    preservados: dict[str, str] = {}
+    temp_preservados = os.path.join(CONTEXT_DIR, "_preservar_manual")
 
+    # 1. Respaldo de la zona protegida .manual/ + notas preserve:true
+    manual_dir = os.path.join(vdir, ".manual")
+    preservados: dict[str, str] = {}
+    if os.path.isdir(manual_dir):
+        # Preservar la carpeta .manual/ completa (incluido el nombre de la carpeta)
+        destino_manual = os.path.join(temp_preservados, ".manual")
+        os.makedirs(destino_manual, exist_ok=True)
+        _copiar_dir(manual_dir, destino_manual)
+
+    # Notas preserve:true en cualquier parte del vault (excepto .manual/, ya respaldado)
+    if os.path.isdir(vdir):
+        for raiz, _dirs, archivos in os.walk(vdir):
+            if ".manual" in raiz.split(os.sep):
+                continue
+            for fname in archivos:
+                if not fname.endswith(".md"):
+                    continue
+                fpath = os.path.join(raiz, fname)
+                if _leer_frontmatter_preserve(fpath):
+                    rel = os.path.relpath(fpath, vdir)
+                    dst = os.path.join(temp_preservados, rel)
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    try:
+                        shutil.copy2(fpath, dst)
+                    except Exception as err:
+                        logger.debug("No se pudo respaldar nota preserve %s: %s", rel, err)
+
+    # 2. Respaldo histórico: notas manuales en 5.0-BACKLOG
+    backlog_dir = os.path.join(vdir, "5.0-BACKLOG")
     if os.path.isdir(backlog_dir):
         for fname in os.listdir(backlog_dir):
             if fname.endswith(".md") and fname not in ("5.0-BACKLOG.md", "5.1-Tareas.md"):
@@ -160,18 +237,32 @@ def clean_vault_dir(project_name: str | None = None) -> None:
                 except Exception as err:
                     logger.debug("No se pudo respaldar nota %s: %s", fname, err)
 
+    # 3. Borrar el vault y recrearlo
     if os.path.isdir(vdir):
         shutil.rmtree(vdir, ignore_errors=True)
     os.makedirs(vdir, exist_ok=True)
 
+    # 4. Restaurar .manual/ y preserve:true
+    n_restaurados = 0
+    if os.path.isdir(temp_preservados):
+        _copiar_dir(temp_preservados, vdir)
+        n_restaurados = sum(
+            len(archivos)
+            for _raiz, _dirs, archivos in os.walk(temp_preservados)
+        )
+        shutil.rmtree(temp_preservados, ignore_errors=True)
+
+    # 5. Restaurar backlog manual
     if preservados:
         target_backlog = os.path.join(vdir, "5.0-BACKLOG")
         os.makedirs(target_backlog, exist_ok=True)
         for fname, content in preservados.items():
             with open(os.path.join(target_backlog, fname), "w", encoding="utf-8") as f:
                 f.write(content)
+        n_restaurados += len(preservados)
 
-    print(f"[clean] Vault limpiado: {vdir} (preservadas {len(preservados)} notas del backlog)")
+    print(f"[clean] Vault limpiado: {vdir} (preservadas {n_restaurados} notas manuales)")
+    return n_restaurados
 
 
 def safe_rmtree(path: str) -> None:
@@ -201,6 +292,34 @@ def safe_rmtree(path: str) -> None:
                 )
             except Exception as err:
                 logger.debug("No se pudo forzar borrado de %s: %s", path, err)
+
+
+def registrar_build_info(
+    project_name: str | None,
+    clean: bool,
+    manuales_preservadas: int = 0,
+) -> None:
+    """Registra metadatos del último build en ``state/last_build.json``.
+
+    Permite que ``ctxmap check`` alerte si el último build usó ``--clean``
+    (destructivo) y cuántas notas manuales se preservaron.
+
+    Args:
+        project_name (str | None): Nombre del proyecto.
+        clean (bool): Si el último build usó --clean.
+        manuales_preservadas (int): Cantidad de notas manuales preservadas.
+    """
+    os.makedirs(STATE_DIR, exist_ok=True)
+    info = {
+        "clean": bool(clean),
+        "manuales_preservadas": int(manuales_preservadas),
+        "timestamp": ahora(),
+    }
+    try:
+        with open(os.path.join(STATE_DIR, "last_build.json"), "w", encoding="utf-8") as f:
+            json.dump(info, f, ensure_ascii=False, indent=2)
+    except Exception as err:
+        logger.debug("No se pudo registrar last_build.json: %s", err)
 
 
 def append_nodes_edges(nodes: list[Node], edges: list[Edge]) -> None:
