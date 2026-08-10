@@ -1,8 +1,12 @@
 """Generador de briefs para agentes de IA.
 
-
 Construye un resumen ejecutivo en formato Markdown (`CONTEXT.md`) diseñado para que un agente
-pueda comprender los objetivos, riesgos y estado del proyecto en menos de 30 segundos.
+pueda comprender **qué es el proyecto, por qué existe, qué cumple**, sus riesgos y su estado
+en menos de 30 segundos.
+
+Regla de diseño: un brief puro de métricas NO sirve — el agente lo ignora. El brief debe
+responder el PORQUÉ (alma del proyecto) y decirle al agente QUÉ HACER con el contexto
+(leer el vault, trabajar y actualizar el mapa para mantenerlo vivo).
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ def generar_brief(
     edges: list[Edge],
     readiness_score: int = 0,
     output_path: str = ".context-map/CONTEXT.md",
+    project_dir: str = ".",
 ) -> str:
     """Genera el brief ejecutivo `CONTEXT.md` para los agentes de IA.
 
@@ -29,19 +34,22 @@ def generar_brief(
         edges (List[Edge]): Aristas del mapa conceptual.
         readiness_score (int): Score de readiness del proyecto.
         output_path (str): Ruta de salida para el archivo de brief.
+        project_dir (str): Directorio raíz del proyecto (para leer README.md y el vault).
 
     Returns:
         str: Contenido Markdown del brief generado.
     """
     stats = _calcular_stats(nodes)
+    proposito = _extraer_proposito(project_name, project_dir)
 
     sections = [
         _header(project_name),
+        _que_es_y_por_que_existe(project_name, proposito),
         _resumen_ejecutivo(project_name, stats, readiness_score),
         _estado_proyecto(stats),
         _riesgos_criticos(nodes),
         _tareas_pendientes(nodes),
-        _estructura_recomendada(nodes),
+        _como_trabajar_aqui(project_name),
         _comandos_utiles(),
         _footer(),
     ]
@@ -55,6 +63,30 @@ def generar_brief(
     return brief
 
 
+def _extraer_proposito(project_name: str, project_dir: str) -> str:
+    """Extrae el propósito del proyecto desde README.md (primer párrafo significativo).
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        project_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        str: Propósito del proyecto, o string vacío si no se pudo extraer.
+    """
+    try:
+        from context_map.presentation.vault.consolidated.common import _extract_project_purpose
+
+        return _extract_project_purpose(os.path.abspath(project_dir))
+    except Exception:
+        return ""
+
+
+def _vault_nombre(project_name: str) -> str:
+    """Nombre sanitizado de la carpeta del vault (mismo criterio que `vault_dir`)."""
+    safe = project_name.strip().replace(" ", "-").replace("/", "-")
+    return f"vault-{safe}"
+
+
 def _header(project_name: str) -> str:
     """Encabezado del brief.
 
@@ -66,8 +98,41 @@ def _header(project_name: str) -> str:
     """
     return f"""# {project_name} — Brief para Agentes
 
-> **Lee esto antes de trabajar en el proyecto.**
+> **LEE esto ANTES de trabajar.** Este brief y el vault son la memoria viva del
+> proyecto: qué es, por qué existe, qué cumple, qué está pendiente y qué riesgos tiene.
 > Última actualización: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+"""
+
+
+def _que_es_y_por_que_existe(project_name: str, proposito: str) -> str:
+    """Sección de identidad: qué es el proyecto, por qué existe y qué cumple.
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        proposito (str): Propósito extraído del README (o vacío).
+
+    Returns:
+        str: Sección en Markdown con el alma del proyecto.
+    """
+    if proposito:
+        descripcion = f"**{project_name}**: {proposito}"
+    else:
+        descripcion = (
+            f"**{project_name}**: consulta `README.md` y el vault "
+            f"`.context-map/{_vault_nombre(project_name)}/1.0-PROPOSITO/` "
+            "para conocer su identidad y propósito."
+        )
+
+    return f"""## ¿Qué es y por qué existe?
+
+{descripcion}
+
+Antes de tocar código, pregúntate y responde con el contexto del vault
+(`1.0-PROPOSITO/1.1-Mapa-Mental-Narrativo.md` y `1.3-Proposito.md`):
+
+- **¿Por qué existe este proyecto?** — qué problema resuelve.
+- **¿Para qué sirve?** — qué valor entrega a quien lo usa.
+- **¿Qué cumple?** — qué promesas y objetivos debe respetar (no romper).
 """
 
 
@@ -116,9 +181,13 @@ def _riesgos_criticos(nodes: list[Node]) -> str:
 
     lines = ["## Riesgos Críticos\n"]
     for r in riesgos[:5]:
-        lines.append(f"- ⚠️ **{r.title[:80]}**")
+        titulo = r.title[:80].strip()
+        lines.append(f"- ⚠️ **{titulo}**")
+        # Evitar duplicar el título dentro del resumen
         if r.summary:
-            lines.append(f"  {r.summary[:120]}")
+            resumen = r.summary.strip()
+            if resumen != titulo and not resumen.startswith(titulo[:60]):
+                lines.append(f"  {resumen[:120]}")
     return "\n".join(lines)
 
 
@@ -132,18 +201,33 @@ def _tareas_pendientes(nodes: list[Node]) -> str:
     lines = ["## Tareas Pendientes\n"]
     for f in futuros[:5]:
         lines.append(f"- 📝 **{f.title[:80]}**")
+        if f.summary and f.summary != f.title:
+            lines.append(f"  {f.summary[:120]}")
     return "\n".join(lines)
 
 
-def _estructura_recomendada(nodes: list[Node]) -> str:
-    """Sección de recomendaciones para agentes."""
-    return """## Estructura Recomendada
+def _como_trabajar_aqui(project_name: str) -> str:
+    """Sección de instrucciones para que el agente use y mantenga vivo el contexto.
 
-Al trabajar en este proyecto:
-1. Lee el README para entender el propósito
-2. Revisa los riesgos antes de hacer cambios
-3. Ejecuta los tests antes de cada commit
-4. Documenta las decisiones importantes
+    Args:
+        project_name (str): Nombre del proyecto.
+
+    Returns:
+        str: Sección en Markdown con el protocolo de trabajo del agente.
+    """
+    vault = f".context-map/{_vault_nombre(project_name)}"
+
+    return f"""## Cómo trabajar aquí — dale vida al contexto
+
+Este proyecto se gobierna por su contexto. El agente DEBE:
+
+1. **Leer este brief** y explorar el vault (`{vault}/`): propósito (1.0),
+   ideas (2.0), riesgos (4.0) y backlog (5.0).
+2. **Revisar los riesgos** antes de hacer cambios y **ejecutar los tests** antes de cada commit.
+3. **Inspeccionar el código real** — no suponer rutas ni lógica.
+4. **Mantener vivo el contexto**: después de implementar, actualizar el mapa para que
+   refleje el trabajo realizado (`ctxmap scan .` + `ctxmap build --brief`).
+   El contexto que no se actualiza muere y el siguiente agente queda ciego.
 """
 
 
@@ -155,8 +239,11 @@ def _comandos_utiles() -> str:
 # Verificar estado
 ctxmap check .
 
-# Generar contexto actualizado
-ctxmap build --project "Nombre"
+# Escanear cambios y actualizar el mapa
+ctxmap scan .
+
+# Generar contexto actualizado (vault + brief)
+ctxmap build --brief
 
 # Ver reporte semanal
 ctxmap weekly

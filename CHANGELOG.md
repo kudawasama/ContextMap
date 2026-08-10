@@ -7,6 +7,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [Unreleased]
+
+### ✨ Nuevo
+
+- **Brief con alma (`CONTEXT.md`)**: El brief ejecutivo ahora abre con **"¿Qué es y por qué existe?"** — extrae el propósito real del proyecto desde `README.md` y obliga al agente a responder las 3 preguntas del alma (¿por qué existe?, ¿para qué sirve?, ¿qué cumple?) desde el vault `1.0-PROPOSITO`. Un brief puro de métricas era "pésimo, no decía nada" y el agente del IDE lo ignoraba.
+- **"Cómo trabajar aquí — dale vida al contexto"**: Reemplaza la "Estructura Recomendada" genérica por un protocolo accionable: leer brief + vault, revisar riesgos, inspeccionar código real y **actualizar el mapa después de trabajar** (`ctxmap scan .` + `ctxmap build --brief`) para que el contexto nunca muera.
+
+### 🔄 Cambiado
+
+- **AGENTS.md generado**: La regla prioritaria ahora dice **"LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa"**; el Protocolo de Inicio incluye las 3 preguntas del alma y se agrega la sección **"Mantén Vivo el Contexto (Regla de Vida del Proyecto)"**: tras implementar, `scan` + `build --brief` para que el mapa refleje el trabajo (nodos CAMBIO/CORRECCION/IDEA).
+- **`generar_brief()` acepta `project_dir`**: extrae el propósito del README del proyecto real (robusto ante invocaciones con target temporal, p. ej. tests).
+
+---
+
 ## [1.3.0] - 2026-08-07
 
 ### ✨ Nuevo

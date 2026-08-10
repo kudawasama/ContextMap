@@ -40,7 +40,8 @@ def generar_instrucciones_agentes(
     content = f"""# Instrucciones para Agentes de IA — {project_name}
 
 > ⚠️ **REGLA PRIORITARIA PARA AGENTES DE IA**:
-> Lee este documento antes de realizar cualquier investigación o modificación en el repositorio.
+> **LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa.**
+> Este proyecto se gobierna por su contexto: si no lo lees, trabajas a ciegas.
 > Última actualización: {fecha}
 
 Este proyecto utiliza **ContextMap** para gobernanza de contexto, mapas conceptuales y trazabilidad técnica. Cualquier agente de Inteligencia Artificial (Antigravity, Cursor, Claude, Hermes, Copilot, Windsurf, etc.) debe seguir estas instrucciones obligatoriamente.
@@ -52,14 +53,17 @@ Este proyecto utiliza **ContextMap** para gobernanza de contexto, mapas conceptu
 Antes de responder preguntas sobre el proyecto o escribir código, el Agente DEBE:
 
 1. **Leer el Brief Ejecutivo**:
-   Consultar [.context-map/CONTEXT.md](file:///.context-map/CONTEXT.md) para entender el resumen ejecutivo, métricas, riesgos críticos y tareas pendientes.
+   Consultar [.context-map/CONTEXT.md](file:///.context-map/CONTEXT.md) — responde
+   **qué es el proyecto, por qué existe, qué cumple**, sus riesgos críticos y tareas pendientes.
 2. **Explorar el Vault Jerárquico**:
    Inspeccionar `.context-map/vault/` o `.context-map/vault-{project_name}/`:
-   - `1.0-PROPOSITO/` (Dominio del proyecto y README)
+   - `1.0-PROPOSITO/` (Identidad: qué es, por qué existe, qué cumple)
    - `2.0-IDEAS/` (`2.1-Ideas-Pendientes`, `2.2-Ideas-Futuras`, `2.3-Ideas-Completas`)
    - `4.0-RIESGOS/` (Deuda técnica y zonas de complejidad)
    - `5.0-BACKLOG/` (`5.1-Tareas.md`)
-3. **No Suponer Lógica**:
+3. **Responder las 3 preguntas del alma** antes de proponer cambios:
+   ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
+4. **No Suponer Lógica**:
    Inspeccionar los archivos de código fuente antes de formular diagnósticos o proponer cambios.
 
 ---
@@ -94,7 +98,23 @@ python -m context_map.cli check .
 
 ---
 
-## 4. Convención de Commits
+## 4. Mantén Vivo el Contexto (Regla de Vida del Proyecto)
+
+El contexto no se genera una vez y se olvida: **es la memoria viva del proyecto**.
+Después de implementar cualquier cambio, el Agente DEBE actualizar el mapa para que
+refleje su trabajo (nodos CAMBIO / CORRECCION / IDEA):
+
+```bash
+python -m context_map.cli scan .        # registrar lo que cambió
+python -m context_map.cli build --brief # regenerar vault + brief
+```
+
+Un contexto que no se actualiza muere: el siguiente agente queda ciego y el proyecto
+pierde su historia. **Trabajar aquí incluye dejar el contexto al día.**
+
+---
+
+## 5. Convención de Commits
 
 * Usar **Conventional Commits** en español (ej. `feat: ...`, `fix: ...`, `refactor: ...`, `docs: ...`).
 """
