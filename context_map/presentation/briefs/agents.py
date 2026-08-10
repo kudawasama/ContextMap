@@ -97,10 +97,15 @@ El contexto es la **memoria viva del proyecto**:
 2. Al terminar una sesión de trabajo, importa la conversación (`import-sessions`,
    `import-antigravity`, `import-chat`) para que las decisiones y porqués queden
    registrados.
-3. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
+3. **Actualizar NO es solo correr el script**: verifica el resultado y corrígelo.
+   El script propone, TÚ dispones — si `refresh` dejó títulos crudos
+   (`TODO (ruta.py:Ln):`), métricas en `1.3-Proposito`, plantillas vacías o
+   notas sin alma, corrígelas (títulos legibles, tarjeta técnica para TODOs,
+   notas con alma en `7.0-MANUAL/`). No des el contexto por bueno sin revisarlo.
+4. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
    proyecto pierde su historia.
 
-> Comandos exactos: `.context-map/contextmap-skill.md`.
+> Comandos exactos y criterios de verificación: `.context-map/contextmap-skill.md`.
 
 ---
 

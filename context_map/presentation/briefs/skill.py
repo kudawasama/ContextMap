@@ -43,6 +43,33 @@ def generar_skill_contextmap(
 ctxmap refresh .     # = scan + build (preservando manuales) + check
 ```
 
+## 🔄 Actualizar NO es solo correr el script (flujo del agente)
+
+Cuando el usuario pida "actualiza el contexto" (o al terminar de trabajar),
+NO des el output del script por bueno. Ejecuta el ciclo completo:
+
+1. **EJECUTA**: `ctxmap refresh .` (scan + build + check).
+2. **VERIFICA** el resultado (criterios de calidad):
+   - `ctxmap check .` sin alertas.
+   - Títulos legibles: sin `TODO (ruta.py:Ln):` crudo, sin paths aplanados
+     (`context_mapcore...` — deben leerse `context_map/core/...`).
+   - `1.3-Proposito` y `CONTEXT.md` SIN métricas del scanner
+     ("Proyecto 'X' — N archivos, N líneas").
+   - Notas SIN plantillas vacías (frases que sirven para cualquier nodo:
+     "Existe la necesidad técnica de abordar 'X'..."), sin `..` dobles,
+     sin ubicación duplicada.
+3. **CORRIGE** los garabatos:
+   - Tarea técnica (TODO del código) → tarjeta técnica honesta: qué es,
+     dónde está, qué hace ese módulo, estado. NO narrativa de diseño.
+   - Idea/mejora conversada → nota con alma en la zona protegida
+     `{vault}/7.0-MANUAL/` (¿Qué es? ¿Por qué existe? ¿Para qué? ¿Qué
+     cumple? + conexiones) con frontmatter `preserve: true`.
+   - Título feo → corrígelo en el estado/nota para que se lea como humano.
+4. **REGENERA Y RE-VERIFICA** si corregiste (refresh de nuevo + check).
+
+> Regla: el script propone, el AGENTE dispone. El contexto se da por bueno
+> solo cuando el agente lo revisó y lo corrigió.
+
 ## 🧰 Comandos paso a paso
 
 ```bash
@@ -84,16 +111,19 @@ Cada nota del vault se escribe con formato narrativo polimórfico según su tipo
 **Regla de oro:** el contexto debe responder ¿por qué existe?, ¿para qué sirve?,
 ¿qué cumple? — si una nota no responde el porqué, no tiene alma.
 
-## 🛡️ Zona protegida `.manual/`
+## 🛡️ Zona protegida `7.0-MANUAL/` (visible en Obsidian)
 
-Las notas manuales (sesiones, decisiones, fichas) viven en:
+Las notas manuales (sesiones, decisiones, mejoras — lo que el agente escribe
+de lo conversado) viven en:
 
 ```
-{vault}/.manual/
+{vault}/7.0-MANUAL/
 ```
 
-El build JAMÁS las borra (también respeta frontmatter `preserve: true` donde sea
-que estén). El `00-INDICE.md` las enlaza automáticamente.
+Es una carpeta VISIBLE (Obsidian oculta las carpetas que empiezan con ".").
+El build JAMÁS las borra (también respeta frontmatter `preserve: true` donde
+sea que estén). El `00-INDICE.md` las enlaza automáticamente y `ctxmap check`
+cuenta cuántas hay.
 
 ## 🌳 Topología del vault (regla inamovible)
 

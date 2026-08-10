@@ -229,11 +229,13 @@ Este proyecto se gobierna por su contexto. El agente DEBE:
 3. **Inspeccionar el código real** — no suponer rutas ni lógica.
 4. **Importar la historia del proyecto** (chats y conversaciones con el usuario).
 5. **Mantener vivo el contexto**: después de implementar, actualizar el mapa
-   (`ctxmap refresh .`). El contexto que no se actualiza muere y el siguiente
-   agente queda ciego.
+   (`ctxmap refresh .`) y **verificar el resultado** — el script propone, el
+   agente dispone: si quedaron títulos crudos, métricas en este brief, plantillas
+   vacías o notas sin alma, corregirlas (notas con alma en `7.0-MANUAL/`).
+   El contexto que no se actualiza muere y el siguiente agente queda ciego.
 
-> Comandos exactos y metodología para escribir notas con alma:
-> `.context-map/contextmap-skill.md`
+> Comandos exactos, criterios de verificación y metodología para escribir notas
+> con alma: `.context-map/contextmap-skill.md`
 """
 
 

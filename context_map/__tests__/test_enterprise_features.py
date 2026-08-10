@@ -235,6 +235,7 @@ def test_agents_md_es_que_y_skill_es_como() -> None:
         assert "contextmap-skill.md" in agents_txt
         assert "LEE el contexto del proyecto ANTES" in agents_txt
         assert "Importar la historia del proyecto" in agents_txt
+        assert "verifica el resultado" in agents_txt
         assert "python -m context_map.cli" not in agents_txt
         assert "ctxmap import-" not in agents_txt
         assert "ctxmap scan" not in agents_txt
@@ -243,8 +244,11 @@ def test_agents_md_es_que_y_skill_es_como() -> None:
         # Skill en .context-map/: el CÓMO — comandos exactos y metodología narrativa
         assert "import-git" in skill_txt
         assert "Cómo escribir las notas dándole vida" in skill_txt
+        assert "Actualizar NO es solo correr el script" in skill_txt
+        assert "CORRIGE" in skill_txt
+        assert "7.0-MANUAL" in skill_txt
         assert "ctxmap refresh" in skill_txt
-        assert ".manual/" in skill_txt
+        assert "7.0-MANUAL/" in skill_txt
         assert "preserve: true" in skill_txt
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
