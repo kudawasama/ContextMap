@@ -61,9 +61,29 @@ Context Map enriquece cada nota del Vault con un formato narrativo polimórfico 
 
 ---
 
-## 🏛️ Gobernanza Automática de Agentes (`AGENTS.md`)
+## 🏛️ Gobernanza Automática de Agentes (los 3 niveles del contexto)
 
-Al ejecutar `ctxmap build --brief` o `ctxmap init`, ContextMap genera automáticamente un archivo `AGENTS.md` en la raíz del proyecto objetivo. Este documento impone las normas obligatorias para cualquier modelo de IA:
+ContextMap organiza el contexto en **3 niveles** para que cualquier agente de IA
+(Antigravity, Cursor, Claude, Hermes, Copilot, etc.) se ponga al día y trabaje bien:
+
+```
+AGENTS.md (raíz)                    → QUÉ   : instrucciones (lee el contexto, importa la historia, mantén vivo)
+.context-map/contextmap-skill.md    → CÓMO  : comandos exactos + metodología para escribir notas con alma
+.context-map/CONTEXT.md             → estado: qué es el proyecto, por qué existe, riesgos, tareas
+.context-map/vault-<proyecto>/      → datos : grafo completo (ideas, riesgos, historial)
+```
+
+- **`AGENTS.md`** (generado por `ctxmap build --brief` / `ctxmap init`) define **QUÉ** hacer:
+  leer el brief, explorar el vault, importar la historia del proyecto, responder las
+  3 preguntas del alma (¿por qué existe? ¿para qué sirve? ¿qué cumple?) y mantener el
+  contexto vivo. No repite comandos ni metodología.
+- **`.context-map/contextmap-skill.md`** (el CÓMO) contiene los comandos exactos
+  (`refresh`, `scan`, `build --brief`, `import-*`) y la metodología narrativa para
+  escribir cada nota dándole vida (formato por tipo: IDEA/RIESGO/CAMBIO/BASE/PRUEBA/FUTURO).
+- **`.context-map/CONTEXT.md`** es el brief de estado: propósito real del proyecto,
+  métricas, riesgos críticos y tareas pendientes.
+
+Reglas que impone la gobernanza:
 
 - **Español Técnico Profesional**: Todas las interacciones, explicaciones y docstrings.
 - **Documentación Formal**: Google Style / PEP 257 en todas las funciones y clases.

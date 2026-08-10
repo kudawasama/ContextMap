@@ -15,8 +15,8 @@ pip install -e .
 # Ejecutar tests unitarios (deben pasar 100%)
 python -m pytest
 
-# Verificar readiness
-python -m context_map.cli check .
+# Dejar el contexto al día (scan + build preservando manuales + check)
+python -m context_map.cli refresh .
 ```
 
 ## Arquitectura del Proyecto (Clean Architecture Jerárquica)
@@ -43,8 +43,8 @@ context_map/
 │   ├── integrations/               # Git, Hermes, Antigravity, Chat exports
 │   └── analyzers/                  # Analizadores AST de estructura y contenido
 ├── presentation/                   # Generación de salidas visuales
-│   ├── vault/                      # Generador Obsidian Vault (atomic, consolidated, templates)
-│   └── briefs/                     # Generador de CONTEXT.md y AGENTS.md
+│   ├── vault/                      # Generador Obsidian Vault (hierarchical, consolidated, preservar.py)
+│   └── briefs/                     # Generadores de CONTEXT.md, AGENTS.md y contextmap-skill.md
 └── __tests__/                      # Suite de tests unitarios
 ```
 
@@ -52,17 +52,21 @@ context_map/
 
 | Comando | Descripción |
 | --------- | ------------- |
-| `ctxmap auto [target]` | Automatización All-in-One completa (scan + git + build --clean --brief) |
+| `ctxmap auto [target]` | Automatización All-in-One (scan + git + build limpio) |
+| `ctxmap refresh [target]` | ★ Día a día: scan + build (preservando manuales) + check en 1 paso |
 | `ctxmap init` | Inicializa estructura `.context-map/` y `AGENTS.md` |
 | `ctxmap scan [target]` | Escanea proyecto y genera eventos sintácticos |
 | `ctxmap build` | Genera Vault Obsidian completo y briefs |
-| `ctxmap build --clean --brief` | Reconstrucción limpia con brief para Agentes |
+| `ctxmap build --clean --brief` | Reconstrucción limpia con brief (preserva `.manual/` y `preserve: true`) |
 | `ctxmap sync` | Sincronización incremental de nodos |
 | `ctxmap hook install [target]` | Instala el Git Pre-Commit Hook automático |
-| `ctxmap check [target]` | Analiza el score de readiness del proyecto (0-100) |
+| `ctxmap check [target]` | Readiness (0-100) + Salud del Vault (notas manuales, alerta de --clean) |
 | `ctxmap import-git [target]` | Importa historial de commits y tags de Git |
 | `ctxmap import-antigravity` | Importa sesiones de chat de Antigravity IDE |
 | `ctxmap import-sessions` | Importa sesiones de Hermes Agent |
+| `ctxmap import-chat <archivo>` | Importa chats externos (Telegram/Discord/Slack) |
+| `ctxmap ingest <docs>` | Ingiere MD/TXT/PDF → nodos DOCUMENTO |
+| `ctxmap adapt [target]` | Detecta stack + IDE (incluye IDE por proceso activo) y genera reglas por agente |
 | `ctxmap weekly` | Genera reporte semanal de avances |
 | `ctxmap doctor` | Diagnóstico de salud y reparación de estado |
 
