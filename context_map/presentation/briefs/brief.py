@@ -225,33 +225,26 @@ Este proyecto se gobierna por su contexto. El agente DEBE:
    ideas (2.0), riesgos (4.0) y backlog (5.0).
 2. **Revisar los riesgos** antes de hacer cambios y **ejecutar los tests** antes de cada commit.
 3. **Inspeccionar el código real** — no suponer rutas ni lógica.
-4. **Mantener vivo el contexto**: después de implementar, actualizar el mapa para que
-   refleje el trabajo realizado — `ctxmap refresh .` (scan + build + check en 1 paso,
-   sin destruir notas manuales). El contexto que no se actualiza muere y el
-   siguiente agente queda ciego.
+4. **Importar la historia del proyecto** (chats y conversaciones con el usuario).
+5. **Mantener vivo el contexto**: después de implementar, actualizar el mapa
+   (`ctxmap refresh .`). El contexto que no se actualiza muere y el siguiente
+   agente queda ciego.
+
+> Comandos exactos y metodología para escribir notas con alma:
+> `.context-map/contextmap-skill.md`
 """
 
 
 def _comandos_utiles() -> str:
-    """Sección de comandos esenciales del CLI."""
+    """Sección de comandos esenciales del CLI (solo la referencia; detalle en la skill)."""
     return """## Comandos Útiles
 
 ```bash
 # Actualizar el contexto en 1 paso (scan + build preservando manuales + check)
 ctxmap refresh .
-
-# Verificar estado
-ctxmap check .
-
-# Escanear cambios y actualizar el mapa
-ctxmap scan .
-
-# Generar contexto actualizado (vault + brief)
-ctxmap build --brief
-
-# Ver reporte semanal
-ctxmap weekly
 ```
+
+> Lista completa de comandos y metodología de escritura: `.context-map/contextmap-skill.md`
 """
 
 

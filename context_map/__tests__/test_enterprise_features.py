@@ -198,11 +198,53 @@ def test_refresh_command_actualiza_contexto_sin_clean() -> None:
             brief = f.read()
         assert "¿Qué es y por qué existe?" in brief
 
+        # El refresh genera la skill de ContextMap (el CÓMO)
+        skill_path = os.path.join(context_dir, "contextmap-skill.md")
+        assert os.path.exists(skill_path)
+
         # El refresh NUNCA marca clean=True en el último build
         last_build = os.path.join(context_dir, "state", "last_build.json")
         assert os.path.exists(last_build)
         with open(last_build, encoding="utf-8") as f:
             info = json.load(f)
         assert info["clean"] is False
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_agents_md_es_que_y_skill_es_como() -> None:
+    """Verifica la separación de niveles: AGENTS.md = QUÉ (referencias), skill = CÓMO."""
+    from context_map.presentation.briefs import (
+        generar_instrucciones_agentes,
+        generar_skill_contextmap,
+    )
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_que_como_")
+    try:
+        agents_path = generar_instrucciones_agentes(
+            "Demo", target_dir=temp_dir, overwrite_if_exists=False
+        )
+        skill_path = generar_skill_contextmap("Demo", target_dir=temp_dir)
+
+        with open(agents_path, encoding="utf-8") as f:
+            agents_txt = f.read()
+        with open(skill_path, encoding="utf-8") as f:
+            skill_txt = f.read()
+
+        # AGENTS.md: instrucciones QUÉ + referencia a la skill; SIN sintaxis de comandos
+        assert "contextmap-skill.md" in agents_txt
+        assert "LEE el contexto del proyecto ANTES" in agents_txt
+        assert "Importar la historia del proyecto" in agents_txt
+        assert "python -m context_map.cli" not in agents_txt
+        assert "ctxmap import-" not in agents_txt
+        assert "ctxmap scan" not in agents_txt
+        assert "ctxmap build --clean" not in agents_txt
+
+        # Skill en .context-map/: el CÓMO — comandos exactos y metodología narrativa
+        assert "import-git" in skill_txt
+        assert "Cómo escribir las notas dándole vida" in skill_txt
+        assert "ctxmap refresh" in skill_txt
+        assert ".manual/" in skill_txt
+        assert "preserve: true" in skill_txt
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)

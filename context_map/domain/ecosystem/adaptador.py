@@ -54,7 +54,11 @@ def _build_command(eco: EcosistemaInfo) -> str:
 
 
 def _reglas_contextuales(eco: EcosistemaInfo) -> str:
-    """Construye el bloque de reglas de contexto (stack + verificación)."""
+    """Construye el bloque de contexto del proyecto (stack detectado + verificación).
+
+    Es Dato (qué es el proyecto), no Cómo: el detalle de comandos y metodología
+    vive en `.context-map/contextmap-skill.md`.
+    """
     test = _test_command(eco)
     build = _build_command(eco)
     langs = ", ".join(eco.stack.lenguajes) or "No detectado"
@@ -62,68 +66,65 @@ def _reglas_contextuales(eco: EcosistemaInfo) -> str:
     eps = ", ".join(eco.stack.entrypoints) or "No detectado"
     estructura = ", ".join(eco.stack.estructura) or "No detectado"
 
-    return f"""## 🧰 Stack detectado por ContextMap
+    return f"""## 🧰 Stack detectado por ContextMap (dato del proyecto)
 
 - **Lenguaje(s)**: {langs}
 - **Framework(s)**: {fws}
 - **Package manager**: {eco.stack.package_manager or 'No detectado'}
 - **Entrypoint(s)**: `{eps}`
 - **Estructura**: {estructura}
+- **Tests**: `{test}`
+- **Build**: `{build}`
 
 ## ✅ Verificación obligatoria (antes de cada commit)
 
 ```bash
-# 1. Tests (deben pasar 100%)
 {test}
+ctxmap refresh .          # contexto al día: scan + build (preservando manuales) + check
+```
 
-# 2. Build / sintaxis
-{build}
-
-# 3. ContextMap: escanear, reconstruir vault y verificar readiness
-python -m context_map.cli scan .
-python -m context_map.cli build --clean --brief
-python -m context_map.cli check .
-```"""
+> Detalle de comandos y metodología de escritura: `.context-map/contextmap-skill.md`"""
 
 
 def _generar_agents_md(project_name: str, eco: EcosistemaInfo, fecha: str) -> str:
-    """Genera el contenido de AGENTS.md contextual."""
+    """Genera el contenido de AGENTS.md contextual (QUÉ + stack; el CÓMO vive en la skill)."""
     contexto = _reglas_contextuales(eco)
     return f"""# Instrucciones para Agentes de IA — {project_name}
 
 > ⚠️ **REGLA PRIORITARIA PARA AGENTES DE IA**:
-> Lee este documento antes de realizar cualquier investigación o modificación en el repositorio.
+> **LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa.**
+> Este proyecto se gobierna por su contexto: si no lo lees, trabajas a ciegas.
 > Última actualización: {fecha}
 > ⚡ Generado automáticamente por **ContextMap** — adaptado al stack real del proyecto.
 
-Este proyecto utiliza **ContextMap** para gobernanza de contexto, mapas conceptuales y trazabilidad técnica. Cualquier agente de Inteligencia Artificial (Antigravity, Cursor, Claude, Hermes, Copilot, Windsurf, etc.) debe seguir estas instrucciones obligatoriamente.
+Este `AGENTS.md` define **QUÉ** hacer; el **CÓMO** (comandos exactos y metodología
+para escribir las notas con alma) está en
+**[.context-map/contextmap-skill.md](file:///.context-map/contextmap-skill.md)**.
 
 ---
 
-## 1. Protocolo de Inicio (Ponerse en Contexto)
+## 1. Protocolo de Inicio (QUÉ hacer antes de trabajar)
 
-Antes de responder preguntas sobre el proyecto o escribir código, el Agente DEBE:
-
-1. **Leer el Brief Ejecutivo**:
-   Consultar [.context-map/CONTEXT.md](file:///.context-map/CONTEXT.md) para entender el resumen ejecutivo, métricas, riesgos críticos y tareas pendientes.
-2. **Explorar el Vault Jerárquico**:
-   Inspeccionar `.context-map/vault/` o `.context-map/vault-{{project_name}}/`:
-   - `1.0-PROPOSITO/` (Dominio del proyecto y README)
-   - `2.0-IDEAS/` (`2.1-Ideas-Pendientes`, `2.2-Ideas-Futuras`, `2.3-Ideas-Completas`)
-   - `4.0-RIESGOS/` (Deuda técnica y zonas de complejidad)
-   - `5.0-BACKLOG/` (`5.1-Tareas.md`)
-3. **No Suponer Lógica**:
-   Inspeccionar los archivos de código fuente antes de formular diagnósticos o proponer cambios.
+1. **Leer el Brief Ejecutivo**: `.context-map/CONTEXT.md` — responde qué es el
+   proyecto, por qué existe, qué cumple, sus riesgos y tareas pendientes.
+2. **Explorar el Vault**: `.context-map/vault/` o `.context-map/vault-{{project_name}}/`:
+   propósito (1.0), ideas (2.0), riesgos (4.0) y backlog (5.0).
+3. **Importar la historia del proyecto**: las conversaciones con el usuario también
+   son contexto (comandos en la skill). Si el usuario comparte un chat, impórtalo
+   ANTES de responder.
+4. **Responder las 3 preguntas del alma** antes de proponer cambios:
+   ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
+5. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
 
 ---
 
-## 2. Estándares de Desarrollo y Arquitectura
+## 2. Estándares de Desarrollo (QUÉ respetar)
 
-* **Idioma**: Todas las explicaciones, comentarios y docstrings deben estar en **Español Técnico Profesional**.
-* **Clean Architecture**: Adherirse al Principio de Responsabilidad Única (SRP) y a la convención modular `modulo/submodulo/archivo.py`.
-* **Tipado Fuerte**: Uso explícito de Type Hinting en Python (`List`, `Dict`, `Tuple`, `Optional`).
-* **Docstrings**: Documentación formal en funciones, clases y módulos.
-* **Raíz Limpia**: No crear archivos estáticos de notas en la raíz (`PLAN.md`, `NOTES.txt`). Mantener únicamente los archivos estándar del repositorio.
+* **Idioma**: explicaciones, comentarios y docstrings en **Español Técnico Profesional**.
+* **Clean Architecture**: Principio de Responsabilidad Única (SRP) y convención modular `modulo/submodulo/archivo.py`.
+* **Tipado Fuerte**: Type Hinting explícito en Python (`List`, `Dict`, `Tuple`, `Optional`).
+* **Docstrings**: documentación formal en funciones, clases y módulos.
+* **Raíz Limpia**: no crear archivos sueltos en la raíz (`PLAN.md`, `NOTES.txt`).
 
 ---
 
@@ -131,7 +132,23 @@ Antes de responder preguntas sobre el proyecto o escribir código, el Agente DEB
 
 ---
 
-## 3. Convención de Commits
+## 3. Mantén Vivo el Contexto (QUÉ hacer al terminar)
+
+El contexto es la **memoria viva del proyecto**:
+
+1. Después de implementar, actualiza el mapa (`ctxmap refresh .`) para que refleje tu
+   trabajo (nodos CAMBIO / CORRECCION / IDEA).
+2. Al terminar una sesión de trabajo, importa la conversación (`import-sessions`,
+   `import-antigravity`, `import-chat`) para que las decisiones y porqués queden
+   registrados.
+3. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
+   proyecto pierde su historia.
+
+> Comandos exactos: `.context-map/contextmap-skill.md`.
+
+---
+
+## 4. Convención de Commits
 
 * Usar **Conventional Commits** en español (ej. `feat: ...`, `fix: ...`, `refactor: ...`, `docs: ...`).
 """

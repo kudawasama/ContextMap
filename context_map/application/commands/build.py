@@ -25,7 +25,11 @@ from context_map.core.models import Edge, Node
 from context_map.core.parsing import events_to_model
 from context_map.core.storage import load_jsonl, snapshot_map, write_map
 from context_map.domain.analysis import analizar_readiness
-from context_map.presentation.briefs import generar_brief, generar_instrucciones_agentes
+from context_map.presentation.briefs import (
+    generar_brief,
+    generar_instrucciones_agentes,
+    generar_skill_contextmap,
+)
 from context_map.presentation.vault import render_active_map, render_obsidian_vault
 
 
@@ -96,8 +100,10 @@ def cmd_build(args) -> None:
         readiness = analizar_readiness(".")
         generar_brief(proj, nodes, edges, readiness.score, brief_path)
         agents_path = generar_instrucciones_agentes(proj, target_dir=".", overwrite_if_exists=False)
+        skill_path = generar_skill_contextmap(proj, target_dir=".")
         print(f"brief: {brief_path}")
         print(f"agents: {agents_path}")
+        print(f"skill: {skill_path}")
 
     # Auto-adaptación del ecosistema agéntico tras cada build (solo crea reglas faltantes)
     from context_map.application.commands.adapt import do_adapt

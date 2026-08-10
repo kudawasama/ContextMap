@@ -44,104 +44,63 @@ def generar_instrucciones_agentes(
 > Este proyecto se gobierna por su contexto: si no lo lees, trabajas a ciegas.
 > Última actualización: {fecha}
 
-Este proyecto utiliza **ContextMap** para gobernanza de contexto, mapas conceptuales y trazabilidad técnica. Cualquier agente de Inteligencia Artificial (Antigravity, Cursor, Claude, Hermes, Copilot, Windsurf, etc.) debe seguir estas instrucciones obligatoriamente.
+Este proyecto utiliza **ContextMap** para gobernanza de contexto. Este `AGENTS.md`
+define **QUÉ** hacer; el **CÓMO** (comandos exactos y metodología para escribir las
+notas con alma) está en **[.context-map/contextmap-skill.md](file:///.context-map/contextmap-skill.md)**.
 
 ---
 
-## 1. Protocolo de Inicio (Ponerse en Contexto)
+## 1. Protocolo de Inicio (QUÉ hacer antes de trabajar)
 
-Antes de responder preguntas sobre el proyecto o escribir código, el Agente DEBE:
-
-1. **Leer el Brief Ejecutivo**:
-   Consultar [.context-map/CONTEXT.md](file:///.context-map/CONTEXT.md) — responde
-   **qué es el proyecto, por qué existe, qué cumple**, sus riesgos críticos y tareas pendientes.
-2. **Explorar el Vault Jerárquico**:
-   Inspeccionar `.context-map/vault/` o `.context-map/vault-{project_name}/`:
-   - `1.0-PROPOSITO/` (Identidad: qué es, por qué existe, qué cumple)
-   - `2.0-IDEAS/` (`2.1-Ideas-Pendientes`, `2.2-Ideas-Futuras`, `2.3-Ideas-Completas`)
-   - `4.0-RIESGOS/` (Deuda técnica y zonas de complejidad)
-   - `5.0-BACKLOG/` (`5.1-Tareas.md`)
-3. **Leer la Historia del Proyecto (chats y conversaciones)**:
-   Importar las conversaciones e historial con el usuario para que las decisiones y
-   los porqués queden en el mapa:
-
-   ```bash
-   python -m context_map.cli import-git .          # historial de commits y decisiones
-   python -m context_map.cli import-sessions       # sesiones de Hermes Agent
-   python -m context_map.cli import-antigravity    # conversaciones de Antigravity IDE
-   python -m context_map.cli import-chat <archivo> # chats exportados (Telegram/Discord/Slack)
-   ```
-
-   Si el usuario comparte una conversación o menciona un chat relevante, importarla
-   ANTES de responder: ahí viven las ideas, decisiones y contexto emocional del proyecto.
+1. **Leer el Brief Ejecutivo**: `.context-map/CONTEXT.md` — responde qué es el
+   proyecto, por qué existe, qué cumple, sus riesgos y tareas pendientes.
+2. **Explorar el Vault**: `.context-map/vault/` o `.context-map/vault-{project_name}/`:
+   propósito (1.0), ideas (2.0), riesgos (4.0) y backlog (5.0).
+3. **Importar la historia del proyecto**: las conversaciones con el usuario también
+   son contexto (comandos en la skill). Si el usuario comparte un chat, impórtalo
+   ANTES de responder.
 4. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
-5. **No Suponer Lógica**:
-   Inspeccionar los archivos de código fuente antes de formular diagnósticos o proponer cambios.
+5. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
 
 ---
 
-## 2. Estándares de Desarrollo y Arquitectura
+## 2. Estándares de Desarrollo (QUÉ respetar)
 
-* **Idioma**: Todas las explicaciones, comentarios y docstrings deben estar en **Español Técnico Profesional**.
-* **Clean Architecture**: Adherirse al Principio de Responsabilidad Única (SRP) y a la convención modular `modulo/submodulo/archivo.py`.
-* **Tipado Fuerte**: Uso explícito de Type Hinting en Python (`List`, `Dict`, `Tuple`, `Optional`).
-* **Docstrings**: Documentación formal en funciones, clases y módulos.
-* **Raíz Limpia**: No crear archivos estáticos de notas en la raíz (`PLAN.md`, `NOTES.txt`). Mantener únicamente los archivos estándar del repositorio.
-
----
-
-## 3. Protocolo de Verificación Obligatorio
-
-Después de realizar modificaciones o implementar nuevas funciones, el Agente DEBE ejecutar los siguientes comandos de verificación:
-
-```bash
-# 1. Ejecutar suite de pruebas unitarias (debe pasar 100%)
-python -m pytest
-
-# 2. Escanear cambios en el mapa de contexto
-python -m context_map.cli scan .
-
-# 3. Reconstruir el Vault de Obsidian y el Brief ejecutivo
-python -m context_map.cli build --clean --brief
-
-# 4. Auditar el score de readiness
-python -m context_map.cli check .
-```
+* **Idioma**: explicaciones, comentarios y docstrings en **Español Técnico Profesional**.
+* **Clean Architecture**: Principio de Responsabilidad Única (SRP) y convención modular `modulo/submodulo/archivo.py`.
+* **Tipado Fuerte**: Type Hinting explícito en Python (`List`, `Dict`, `Tuple`, `Optional`).
+* **Docstrings**: documentación formal en funciones, clases y módulos.
+* **Raíz Limpia**: no crear archivos sueltos en la raíz (`PLAN.md`, `NOTES.txt`).
 
 ---
 
-## 4. Mantén Vivo el Contexto (Regla de Vida del Proyecto)
+## 3. Verificación Obligatoria (QUÉ verificar)
 
-El contexto no se genera una vez y se olvida: **es la memoria viva del proyecto**.
-Después de implementar cualquier cambio, el Agente DEBE actualizar el mapa para que
-refleje su trabajo (nodos CAMBIO / CORRECCION / IDEA). La forma más simple es el
-comando único (scan + build preservando manuales + check):
+Después de modificar código:
 
 ```bash
-python -m context_map.cli refresh .     # 1 paso: deja el contexto al día
+python -m pytest          # suite de pruebas (debe pasar 100%)
+ctxmap refresh .          # contexto al día: scan + build (preservando manuales) + check
 ```
 
-O equivalentemente, paso a paso:
+> Detalle de cada comando y el formato de las notas: `.context-map/contextmap-skill.md`.
 
-```bash
-python -m context_map.cli scan .        # registrar lo que cambió
-python -m context_map.cli build --brief # regenerar vault + brief (sin --clean)
-```
+---
 
-**La conversación también es historia del proyecto.** Al terminar una sesión de
-trabajo con el usuario, el Agente DEBE importarla para que las decisiones, ideas y
-porqués queden registrados:
+## 4. Mantén Vivo el Contexto (QUÉ hacer al terminar)
 
-```bash
-python -m context_map.cli import-sessions    # esta sesión de Hermes Agent
-python -m context_map.cli import-antigravity # conversación de Antigravity IDE
-python -m context_map.cli import-chat <archivo>  # chat exportado por el usuario
-python -m context_map.cli refresh .          # regenerar vault + brief con la historia
-```
+El contexto es la **memoria viva del proyecto**:
 
-Un contexto que no se actualiza muere: el siguiente agente queda ciego y el proyecto
-pierde su historia. **Trabajar aquí incluye dejar el contexto al día.**
+1. Después de implementar, actualiza el mapa (`ctxmap refresh .`) para que refleje tu
+   trabajo (nodos CAMBIO / CORRECCION / IDEA).
+2. Al terminar una sesión de trabajo, importa la conversación (`import-sessions`,
+   `import-antigravity`, `import-chat`) para que las decisiones y porqués queden
+   registrados.
+3. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
+   proyecto pierde su historia.
+
+> Comandos exactos: `.context-map/contextmap-skill.md`.
 
 ---
 

@@ -19,7 +19,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ### 🔄 Cambiado
 
-- **AGENTS.md generado**: La regla prioritaria ahora dice **"LEE el contexto del proyecto ANTES de investigar o modificar cualquier cosa"**; el Protocolo de Inicio incluye **leer/importar la historia del proyecto** (chats, sesiones Hermes, Antigravity, git) y las 3 preguntas del alma; se agrega la sección **"Mantén Vivo el Contexto (Regla de Vida del Proyecto)"** con `ctxmap refresh`.
+- **AGENTS.md — separación QUÉ / CÓMO (arquitectura de niveles)**: El template ahora
+  solo da instrucciones de QUÉ hacer (leer contexto, explorar vault, importar historia,
+  3 preguntas del alma, mantener vivo) y referencia la skill. El CÓMO (comandos exactos
+  y metodología para escribir notas con alma) vive en **`.context-map/contextmap-skill.md`**,
+  generada por `generar_skill_contextmap()`. Aplica a ambos generadores (`briefs/agents.py`
+  y `domain/ecosystem/adaptador.py`). El brief `CONTEXT.md` queda como estado/datos y
+  referencia la skill en vez de listar comandos.
 - **Pre-commit hook**: ahora usa `build --brief` (SIN `--clean`) para no destruir notas manuales (antes `--clean` las borraba en cada commit).
 - **`ctxmap check` — Salud del Vault**: reporta nº de notas manuales, vaults activos y alerta si el último build usó `--clean` (destructivo) con cuántas notas preservó (`state/last_build.json`).
 - **`generar_brief()` acepta `project_dir`**: extrae el propósito del README del proyecto real (robusto ante invocaciones con target temporal, p. ej. tests).
