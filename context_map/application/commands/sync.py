@@ -60,6 +60,18 @@ def do_sync(
     nodes = [Node.from_dict(r) for r in records]
     edges = [Edge.from_dict(r) for r in e_records]
 
+    # T12: la historia conecta — edges 'relaciona' por menciones cruzadas
+    from context_map.application.commands._helpers import collect_events
+    from context_map.domain.synchronization.relaciones import crear_edges_por_menciones
+
+    nuevos_edges = crear_edges_por_menciones(nodes, edges, collect_events())
+    if nuevos_edges:
+        edges = edges + nuevos_edges
+        with open(os.path.join(STATE_DIR, "edges.jsonl"), "a", encoding="utf-8") as f:
+            for e in nuevos_edges:
+                f.write(json.dumps(e.to_dict(), ensure_ascii=False) + "\n")
+        print(f"relaciones: {len(nuevos_edges)} edges 'relaciona' por menciones cruzadas")
+
     md = render_active_map(proj_name or "Repo", nodes, edges)
     write_map(md)
 

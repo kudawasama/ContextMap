@@ -180,6 +180,47 @@ def test_plantillas_y_nota_del_dia() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_edges_relaciona_por_menciones_cruzadas() -> None:
+    """T12: la historia conecta — un evento que menciona 2+ nodos crea edge 'relaciona'."""
+    from context_map.core.models import Event
+    from context_map.domain.synchronization.relaciones import crear_edges_por_menciones
+
+    a = _nodo("I1", titulo="Bot contable", concepto="AUTOMATIZACION")
+    b = _nodo("I2", titulo="Reporte diario", concepto="REPORTES")
+    c = _nodo("I3", titulo="UI de casinos", concepto="UI")
+
+    ev = Event(
+        type="IDEA",
+        text="Hoy avanzamos el Bot contable y empezamos el Reporte diario",
+        timestamp="2026-08-10T10:00:00",
+        source="chat",
+    )
+    nuevos = crear_edges_por_menciones([a, b, c], [], [ev])
+    assert len(nuevos) == 1
+    assert nuevos[0].kind == "relaciona"
+    assert {nuevos[0].source, nuevos[0].target} == {"I1", "I2"}
+    assert "mencion cruzada" in nuevos[0].note
+
+
+def test_edges_relaciona_dedup() -> None:
+    """T12: no duplica edges existentes (ni en sentido inverso)."""
+    from context_map.core.models import Edge, Event
+    from context_map.domain.synchronization.relaciones import crear_edges_por_menciones
+
+    a = _nodo("I1", titulo="Bot contable")
+    b = _nodo("I2", titulo="Reporte diario")
+    existente = Edge(source="I1", target="I2", kind="relaciona")
+
+    ev = Event(
+        type="IDEA",
+        text="Bot contable y Reporte diario juntos",
+        timestamp="2026-08-10T10:00:00",
+        source="chat",
+    )
+    nuevos = crear_edges_por_menciones([a, b], [existente], [ev])
+    assert nuevos == []
+
+
 if __name__ == "__main__":
     import sys
 
@@ -193,6 +234,8 @@ if __name__ == "__main__":
         test_canvas_es_json_valido_con_archivos_reales,
         test_graph_json_grupos_por_estado,
         test_plantillas_y_nota_del_dia,
+        test_edges_relaciona_por_menciones_cruzadas,
+        test_edges_relaciona_dedup,
     ]
     fallos = 0
     for t in tests:
