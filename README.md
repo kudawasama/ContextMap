@@ -136,6 +136,32 @@ Tu `AGENTS.md` generado ya instruye al agente del IDE a correr `ctxmap refresh` 
 de cada sesión de trabajo e **importar la historia** (`import-sessions`, `import-antigravity`,
 `import-chat`) para que las decisiones y porqués queden registrados en el mapa.
 
+## 🗺️ Mapa Mental Conectado (no solo un árbol)
+
+ContextMap NO es un simple árbol de índices: cada nota se conecta con sus
+relaciones reales y el vault se ve y navega como un mapa mental profesional:
+
+- **🔗 Conexiones en cada nota**: ideas y riesgos incluyen su sección
+  "Conexiones" con wikilinks a archivos reales (mismo concepto, misma sesión,
+  menciones cruzadas; top-5). Al abrir una nota, el **Local Graph** de Obsidian
+  muestra con quién se relaciona.
+- **`00-CONEXIONES.md`**: materializa el grafo (aristas explícitas + "Conexiones
+  Semánticas" derivadas) sin nodos fantasma.
+- **`00-MAPA-MENTAL.canvas` (Lienzo)**: el grafo completo como lienzo editable.
+- **Grupos de color** (`.obsidian/graph.json`): pendientes, futuras, completadas,
+  riesgos y estructura con colores distintos en el Graph View.
+- **Orden por fecha de ingreso**: listados cronológicos (`created_at`) + base
+  **Dataview** en 2.4-Ideas-Relevantes (con fallback estático).
+- **Plantillas**: `.context-map/plantillas/nota-sesion.md` para tus notas manuales
+  (con `preserve: true`).
+- **Nota del día**: `.manual/Diario/YYYY-MM-DD.md` enlaza los nodos ingresados hoy.
+- **Adjuntos**: carpeta `adjuntos/` del vault para imágenes y archivos.
+- **La historia conecta**: las conversaciones importadas crean edges `relaciona`
+  cuando mencionan 2+ nodos.
+
+> Para abrir el vault en Obsidian: *Abrir carpeta como bóveda* →
+> `.context-map/vault-<proyecto>/`.
+
 ---
 
 ## 🛡️ Zona protegida `.manual/` — tu trabajo nunca se borra
