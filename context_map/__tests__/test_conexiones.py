@@ -252,6 +252,19 @@ def test_restaurar_paths_legibles() -> None:
     assert "context_mapcore" not in legible
 
 
+def test_todo_codigo_no_es_tarea() -> None:
+    """Los TODOs con código crudo NO son tareas del proyecto (filtro de ruido)."""
+    from context_map.presentation.vault.consolidated.secciones_backlog import _es_todo_codigo
+
+    crudo = _nodo("F1", tipo="FUTURO", titulo='TODO (x.py:L1): return f"""### 📝 1. Tarea Pendiente')
+    crudo2 = _nodo("F2", tipo="FUTURO", titulo="TODO (y.py:L2): if any(kw in text for kw in pendiente_kw)")
+    limpio = _nodo("F3", tipo="FUTURO", titulo="TODO (z.py:L3): Narrativa especializada para tareas FUTURAS")
+
+    assert _es_todo_codigo(crudo)
+    assert _es_todo_codigo(crudo2)
+    assert not _es_todo_codigo(limpio)  # TODO con texto legible SÍ es tarea
+
+
 def test_narrativa_idea_limpia_ruido() -> None:
     """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
     from context_map.core.generators import generar_contexto_narrativo
@@ -331,6 +344,7 @@ if __name__ == "__main__":
         test_conexiones_ignoran_todos_del_mismo_archivo,
         test_titulo_legible_quita_ruido,
         test_restaurar_paths_legibles,
+        test_todo_codigo_no_es_tarea,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,
         test_narrativa_idea_limpia_ruido,

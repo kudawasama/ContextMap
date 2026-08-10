@@ -349,6 +349,15 @@ def _render_seccion_ideas(
         ])
         grupos = _agrupar_por_concepto(pendientes)
         for concepto, nodos in grupos.items():
+            # Filtrar TODOs con código crudo (deuda técnica, no ideas del proyecto)
+            from context_map.presentation.vault.consolidated.secciones_backlog import (
+                _es_todo_codigo,
+            )
+
+            nodos_limpios = [n for n in nodos if not _es_todo_codigo(n)]
+            nodos = nodos_limpios
+            if not nodos:
+                continue
             index_parts.append(f"- [[{concepto}-Pendientes|{concepto}]] ({len(nodos)})")
             concepto_dir = os.path.join(pendientes_dir, concepto)
             os.makedirs(concepto_dir, exist_ok=True)
@@ -388,6 +397,14 @@ def _render_seccion_ideas(
         ])
         grupos = _agrupar_por_concepto(activas)
         for concepto, nodos in grupos.items():
+            from context_map.presentation.vault.consolidated.secciones_backlog import (
+                _es_todo_codigo,
+            )
+
+            nodos_limpios = [n for n in nodos if not _es_todo_codigo(n)]
+            nodos = nodos_limpios
+            if not nodos:
+                continue
             index_parts.append(f"- [[{concepto}-Futuras|{concepto}]] ({len(nodos)})")
             concepto_dir = os.path.join(futuras_dir, concepto)
             os.makedirs(concepto_dir, exist_ok=True)

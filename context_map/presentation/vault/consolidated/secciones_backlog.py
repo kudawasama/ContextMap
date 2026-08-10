@@ -8,6 +8,31 @@ from context_map.core.models import Node
 from context_map.presentation.vault.consolidated.common import _escribir_markdown
 
 
+def _es_todo_codigo(n) -> bool:
+    """True si el nodo FUTURO es un TODO con código crudo (ruido del scanner).
+
+    Un TODO del código cuyo texto es código fuente (docstring, return, f-string,
+    firma de función...) NO es una tarea del proyecto: es deuda técnica que el
+    scanner detectó. Se excluye del backlog y de las ideas para que el vault no
+    muestre garabatos.
+
+    Args:
+        n (Node): Nodo FUTURO/IDEA del scanner.
+
+    Returns:
+        bool: True si debe excluirse del backlog/ideas.
+    """
+    t = (n.title or "").strip()
+    if not t.lower().startswith("todo"):
+        return False
+    marcas_codigo = (
+        '"""', "return ", 'f"', "def ", "class ", "import ", "self.",
+        "if ", "for ", "=>", "\\n", "print(", "pass", "None", "True", "False",
+        "await ", "async ", "yield ",
+    )
+    return any(m in t for m in marcas_codigo)
+
+
 def _render_seccion_backlog(
     project_name: str,
     clasificados: dict[str, list[Node]],
@@ -62,14 +87,20 @@ def _render_seccion_backlog(
     ])
     if clasificados["FUTURO"]:
         from context_map.core.generators import generar_contexto_narrativo
+        from context_map.core.generators.generadores import _titulo_limpio
         for n in clasificados["FUTURO"]:
+            if _es_todo_codigo(n):
+                continue  # deuda técnica cruda: no es tarea del proyecto
             estado_mark = "[x]" if n.status == "completado" else "[ ]"
-            tareas_parts.append(f"## {estado_mark} {n.title}")
+            tareas_parts.append(f"## {estado_mark} {_titulo_limpio(n.title)}")
             tareas_parts.append("")
             if n.summary:
-                tareas_parts.append(n.summary)
+                tareas_parts.append(_titulo_limpio(n.summary))
                 tareas_parts.append("")
             tareas_parts.append(generar_contexto_narrativo(n))
+            tareas_parts.append("")
+        if len(tareas_parts) <= 7:
+            tareas_parts.append("_No hay tareas de proyecto registradas. Los TODOs del código se listan como tarjetas técnicas en 2.0-IDEAS; el backlog real vive en `7.0-MANUAL/BACKLOG.md`._")
             tareas_parts.append("")
     else:
         tareas_parts.append("- [x] No hay tareas pendientes en el backlog actual.")
