@@ -25,9 +25,10 @@ En cualquier sesión de chat con tu Agente de IA en el IDE, simplemente escríbe
 
 **¿Qué hace el Agente automáticamente?**
 
-1. Ejecuta el escaneo y construcción profunda (`ctxmap scan .` && `ctxmap build --clean --brief`).
-2. Genera las reglas de gobernanza en `AGENTS.md` y el resumen ejecutivo en `.context-map/CONTEXT.md`.
-3. Lee los archivos generados y queda **100% en contexto** de la arquitectura, métricas, riesgos y tareas pendientes del proyecto en esa misma respuesta.
+1. Ejecuta la inicialización completa (`ctxmap auto .`): escaneo + ingesta del historial git + construcción del vault y brief.
+2. Importa la historia del proyecto con el usuario (`ctxmap import-sessions`, `import-antigravity`, `import-chat`) para que las decisiones y porqués queden en el mapa.
+3. Genera las reglas de gobernanza en `AGENTS.md` y el resumen ejecutivo en `.context-map/CONTEXT.md`.
+4. Lee los archivos generados y queda **100% en contexto** de la arquitectura, métricas, riesgos y tareas pendientes del proyecto en esa misma respuesta.
 
 ---
 
@@ -38,6 +39,9 @@ Si estás trabajando directamente en consola o automatizando un script:
 ```bash
 # Modo All-in-One: Escaneo + Ingesta Git + Reconstrucción limpia en 1 solo paso
 ctxmap auto .
+
+# Día a día: deja el contexto al día en 1 paso (scan + build preservando manuales + check)
+ctxmap refresh .
 ```
 
 ---
@@ -66,7 +70,8 @@ Al ejecutar `ctxmap build --brief` o `ctxmap init`, ContextMap genera automátic
 - **Type Hinting Estricto**: Tipado fuerte en Python.
 - **Arquitectura Limpia**: Separación de capas en `core/`, `domain/`, `application/`, `infrastructure/` y `presentation/`.
 - **Topología Obsidian Limpia**: Grafo en árbol estricto de 3 niveles sin ciclos rotos.
-- **Verificación Mandatoria**: Ejecución previa de `pytest`, `ctxmap scan` y `ctxmap build`.
+- **Verificación Mandatoria**: Ejecución previa de `pytest` y `ctxmap refresh .` (o `ctxmap scan .` + `ctxmap build --brief`).
+- **Contexto Vivo**: Importar la historia del proyecto (chats/sesiones) y mantener el mapa al día tras cada sesión.
 
 ---
 
@@ -77,6 +82,7 @@ Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar 
 ```Architecture
 .context-map/vault/
 ├── 00-INDICE.md                          # Nivel 0: Dashboard central MOC
+├── .manual/                              # Zona protegida: notas manuales (nunca se borran)
 ├── 1.0-PROYECTO/                         # Nivel 1: Identidad y Visión
 ├── 2.0-IDEAS/                            # Nivel 1: Sub-clúster por estado
 │   ├── 2.1-Ideas-Pendientes/             # Nivel 2: Tareas y TODOs sin implementar
@@ -90,6 +96,37 @@ Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar 
 ```
 
 > **Sincronización Multi-Vault**: Cualquier regeneración con `build` actualiza simultáneamente todas las carpetas `vault*` dentro de `.context-map/` para reflejar cambios en tiempo real en Obsidian.
+
+---
+
+## 🔄 Día a día: deja el contexto vivo con `ctxmap refresh`
+
+El contexto no se genera una vez: **es la memoria viva del proyecto**. Después de
+trabajar (código, decisiones o conversaciones), actualiza el mapa en 1 solo paso:
+
+```bash
+ctxmap refresh .     # = scan + build (preservando manuales) + check
+```
+
+- **scan**: detecta cambios en el código y los convierte en nodos (CAMBIO/CORRECCION/IDEA).
+- **build --brief (sin --clean)**: regenera el vault y el brief SIN tocar tu trabajo manual.
+- **check**: audita el readiness y la salud del vault.
+
+Tu `AGENTS.md` generado ya instruye al agente del IDE a correr `ctxmap refresh` después
+de cada sesión de trabajo e **importar la historia** (`import-sessions`, `import-antigravity`,
+`import-chat`) para que las decisiones y porqués queden registrados en el mapa.
+
+---
+
+## 🛡️ Zona protegida `.manual/` — tu trabajo nunca se borra
+
+Cualquier nota que crees a mano en el vault vive en **`.context-map/vault-<proyecto>/.manual/`**:
+`build --clean` JAMÁS la borra (también respeta notas con `preserve: true` en el frontmatter,
+donde sea que estén). Al limpiar, ContextMap reporta cuántas notas manuales preservó y el
+índice `00-INDICE.md` las enlaza.
+
+> Crea ahí tus notas de sesión, decisiones y registros — el build las conserva y el
+> agente del IDE las lee como parte del contexto.
 
 ---
 
@@ -111,6 +148,9 @@ Context Map organiza el Vault jerárquicamente en **3 niveles** para garantizar 
 | Sync incremental inteligente (sin duplicados) | ❌ | ✅ |
 | Importador de chats de Antigravity IDE / Hermes / Telegram | ❌ | ✅ |
 | Multi-Vault Real-Time Sync | ❌ | ✅ |
+| Zona protegida de notas manuales (`.manual/`) | ❌ | ✅ |
+| Detección del IDE por proceso activo | ❌ | ✅ |
+| Comando único para mantener el contexto vivo (`refresh`) | ❌ | ✅ |
 
 ---
 
@@ -135,14 +175,18 @@ uv pip install pymupdf   # o: pip install -e ".[pdf]"
 # Escaneo e inicialización
 ctxmap init                           # Inicializa la estructura del proyecto
 ctxmap scan .                         # Escanea el código y genera nodos semánticos
+ctxmap auto .                         # Todo-en-uno: scan + git + build limpio
+
+# Día a día (recomendado): mantener el contexto vivo
+ctxmap refresh .                      # ★ scan + build (preservando manuales) + check en 1 paso
 
 # Construcción del Vault y Briefs
 ctxmap build                          # Reconstruye el Vault consolidado
-ctxmap build --clean                  # Limpia notas previas y regenera desde cero
+ctxmap build --clean                  # Regenera desde cero (preserva .manual/ y preserve:true)
 ctxmap build --brief                  # Genera CONTEXT.md y AGENTS.md
-ctxmap build --clean --brief          # Construcción limpia completa (Recomendado)
+ctxmap build --clean --brief          # Construcción limpia completa
 
-# Importadores
+# Importadores (la historia del proyecto también es contexto)
 ctxmap import-git .                   # Importa historial de commits recientes
 ctxmap import-sessions                # Importa sesiones de Hermes Agent
 ctxmap import-antigravity             # Importa conversaciones de Antigravity IDE
@@ -153,7 +197,7 @@ ctxmap ingest docs/                   # Ingiere MD/TXT/PDF → nodos DOCUMENTO (
 ctxmap ingest carta.pdf --brief       # Ingiere un archivo y regenera el brief
 
 # Adaptación al ecosistema agéntico
-ctxmap adapt .                        # Detecta stack + IDE, respeta reglas existentes
+ctxmap adapt .                        # Detecta stack + IDE (incluye IDE por proceso activo), respeta reglas
 ctxmap adapt . --merge               # Fusiona: anexa bloque ContextMap preservando reglas del usuario
 ctxmap adapt . --overwrite           # Fuerza sobrescritura de reglas existentes
 
@@ -164,7 +208,7 @@ ctxmap adapt . --overwrite           # Fuerza sobrescritura de reglas existentes
 # .github/copilot-instructions.md (Copilot), .hermes/ (Hermes)
 
 # Diagnóstico y Mantenimiento
-ctxmap check .                        # Verifica la preparación (readiness) del sistema
+ctxmap check .                        # Readiness + Salud del Vault (notas manuales, alerta de --clean)
 ctxmap update                         # Actualiza ContextMap a la última versión de GitHub
 ```
 
