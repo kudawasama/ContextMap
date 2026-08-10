@@ -265,6 +265,13 @@ def test_narrativa_idea_limpia_ruido() -> None:
     assert "TODO (core/foo.py" not in narrativa
     assert "Narrativa especializada" in narrativa
     assert '"""' not in narrativa
+    # Plano profesional: casillas de gobierno presentes
+    assert "¿PARA QUIÉN es?" in narrativa
+    assert "¿QUÉ VALOR APORTA?" in narrativa
+    assert "¿QUÉ SE ARRIESGA SI NO SE HACE?" in narrativa
+    assert "¿CÓMO SE SABE QUE ESTÁ LISTO?" in narrativa
+    assert "¿DE QUÉ DEPENDE?" in narrativa
+    assert "Pendiente de contexto" in narrativa
 
 
 def test_edges_relaciona_por_menciones_cruzadas() -> None:

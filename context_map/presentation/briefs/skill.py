@@ -99,17 +99,30 @@ ctxmap refresh .              # regenerar vault + brief con la historia
 
 ## 🎨 Cómo escribir las notas dándole vida (metodología narrativa)
 
-Cada nota del vault se escribe con formato narrativo polimórfico según su tipo:
+Cada nota del vault se escribe con formato narrativo polimórfico según su tipo.
+El plano PROFESIONAL completo tiene dos capas: **identidad/decisión** y
+**gobierno** (para quién, valor, límites, criterios de listo, dependencias):
 
-- 💡 **IDEA**: ¿Por qué?, ¿De dónde surgió?, ¿Para qué?, ¿Cómo? + tabla de **Pros y Contras**.
-- ⚠️ **RIESGO**: ¿Qué riesgo es?, ¿Dónde se ubica?, Impacto, Mitigación + **Matriz de Gravedad**.
-- 🔧 **CAMBIO / CORRECCION**: ¿Qué se modificó?, Razón del cambio, Archivos + **Verificación de No-Regresión**.
+- 💡 **IDEA**: ¿Por qué? (dolor real) · ¿De dónde surgió? (historia) · ¿Para qué?
+  · ¿Cómo? · Pros/Contras · **¿Para quién? (stakeholders)** · **¿Qué valor aporta?
+  (qué se gana)** · **¿Qué se arriesga si no se hace? (costo de no hacer)** ·
+  **¿Cómo se sabe que está LISTO? (criterios de aceptación)** · **¿De qué depende?**
+- ⚠️ **RIESGO**: ¿Qué riesgo es? · ¿Dónde se ubica? · Impacto · Mitigación +
+  **Matriz de Gravedad**.
+- 🔧 **CAMBIO / CORRECCION**: ¿Qué se modificó? · Razón del cambio · Archivos +
+  **Verificación de No-Regresión**.
 - 📦 **BASE**: Componente estructural, **Rol en la Arquitectura** e integraciones clave.
 - 🧪 **PRUEBA**: Funcionalidad validada, **Criterios de Aceptación** y comando `pytest`.
-- 📝 **FUTURO**: Tarea pendiente (TODO), Ubicación en código y **Prioridad**.
+- 📝 **FUTURO / TODO**: Tarea pendiente, Ubicación en código, **Prioridad**,
+  **¿Cómo se sabe que está LISTA?** y **Responsable**.
 
 **Regla de oro:** el contexto debe responder ¿por qué existe?, ¿para qué sirve?,
-¿qué cumple? — si una nota no responde el porqué, no tiene alma.
+¿qué cumple?, ¿para quién es?, ¿cómo se sabe que está listo? — si una nota no
+responde el porqué y el para quién, no tiene alma.
+
+**Casillas honestas:** si el agente NO tiene el dato de una casilla de gobierno,
+escribe "Pendiente de contexto" y la completa en la próxima actualización con la
+historia real — NUNCA inventar una plantilla genérica que suene a respuesta.
 
 ## 🛡️ Zona protegida `7.0-MANUAL/` (visible en Obsidian)
 

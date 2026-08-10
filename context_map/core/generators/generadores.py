@@ -108,7 +108,14 @@ def _titulo_limpio(texto: str) -> str:
 
 
 def _contexto_idea(node: Node) -> str:
-    """Narrativa especializada para IDEAS (Por qué, De dónde, Para qué, Cómo, Pros/Contras)."""
+    """Narrativa especializada para IDEAS (diseño/decisión + gobierno).
+
+    Las casillas de gobierno (para quién, valor, riesgo de no hacer, criterios
+    de listo, dependencias) son el plano profesional: si el agente no tiene el
+    dato, marca "Pendiente de contexto" (honesto) en vez de inventar plantillas.
+    El flujo de actualización del AGENTS.md completa esas casillas con la
+    historia real.
+    """
     title = _titulo_limpio(node.title.strip())
     summary = _titulo_limpio(node.summary.strip()) or f"Idea o concepto referente a {title}."
     source = node.source or "análisis de sistema"
@@ -119,10 +126,13 @@ def _contexto_idea(node: Node) -> str:
     elif "entrypoint" in lower_title or "cli" in lower_title:
         porque = f"Es crítico definir y aislar el punto de entrada '{title}' para garantizar una interfaz de ejecución limpia."
     else:
-        porque = f"Existe la necesidad técnica de abordar '{title}' para evolucionar la arquitectura del proyecto."
+        porque = (
+            f"Falta contexto registrado del porqué de '{title}'. "
+            "Completar con la historia real: conversación, decisión o dolor que la originó."
+        )
 
-    de_donde = f"Surgió del análisis de '{source}' durante el escaneo y seguimiento de contexto."
-    para_que = f"Para resolver '{summary}', permitiendo a los agentes de IA actuar con mayor precisión y contexto."
+    de_donde = f"Surgió de '{source}' (escaneo de código o importación de historia)."
+    para_que = f"Resuelve: {summary}. Completar el impacto esperado con el dueño."
     como = (
         f"1. Analizar las dependencias e impacto de '{title}'.\n"
         f"2. Diseñar la solución aplicando Clean Code y principios SOLID.\n"
@@ -135,6 +145,13 @@ def _contexto_idea(node: Node) -> str:
         f"| Otorga claridad técnica sobre '{title[:45]}'. | Requiere mantenimiento para evitar obsolescencia del contexto. |\n"
         "| Permite autonomía a los agentes de IA. | Añade tiempo de procesamiento inicial. |"
     )
+
+    # ---- Gobierno (plano profesional) ----
+    para_quien = "Pendiente de contexto — preguntar al dueño del proyecto para quién es."
+    valor = "Pendiente de contexto — qué valor aporta y qué se gana al implementarla."
+    riesgo_no_hacer = "Pendiente de contexto — qué se arriesga si no se hace (deuda o impacto)."
+    listo = "Pendiente de contexto — definir criterios de aceptación con el dueño."
+    dependencias = "Sin dependencias registradas (ver 🔗 Conexiones del mapa)."
 
     return f"""### ❓ 1. ¿POR QUÉ es esta idea?
 {porque}
@@ -150,7 +167,22 @@ def _contexto_idea(node: Node) -> str:
 
 ### ⚖️ 5. PROS Y CONTRAS
 
-{tabla_pros_contras}"""
+{tabla_pros_contras}
+
+### 👥 6. ¿PARA QUIÉN es? (stakeholders)
+{para_quien}
+
+### 💰 7. ¿QUÉ VALOR APORTA? (qué se gana)
+{valor}
+
+### ⚠️ 8. ¿QUÉ SE ARRIESGA SI NO SE HACE? (costo de no hacer)
+{riesgo_no_hacer}
+
+### ✅ 9. ¿CÓMO SE SABE QUE ESTÁ LISTO? (criterios de aceptación)
+{listo}
+
+### 🔗 10. ¿DE QUÉ DEPENDE? (dependencias y orden)
+{dependencias}"""
 
 
 def _contexto_riesgo(node: Node) -> str:
@@ -320,7 +352,13 @@ def _contexto_futuro(node: Node) -> str:
 {ubicacion_texto}
 
 ### 🎯 3. Prioridad Sugerida
-Evaluada como tarea de mejora o mantenimiento pendiente para próximos desarrollos."""
+Evaluada como tarea de mejora o mantenimiento pendiente para próximos desarrollos.
+
+### ✅ 4. ¿Cómo se sabe que está LISTA? (criterios)
+Pendiente de contexto — definir con el dueño qué valida que la tarea quedó hecha.
+
+### 👤 5. Responsable sugerido
+Pendiente de contexto — quién la trabajará."""
 
 
 def _contexto_hito(node: Node) -> str:

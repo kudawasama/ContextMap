@@ -135,6 +135,15 @@ Antes de tocar código, pregúntate y responde con el contexto del vault
 - **¿Por qué existe este proyecto?** — qué problema resuelve.
 - **¿Para qué sirve?** — qué valor entrega a quien lo usa.
 - **¿Qué cumple?** — qué promesas y objetivos debe respetar (no romper).
+- **¿Para quién es?** — usuarios y stakeholders (completar con la historia).
+- **¿Qué NO es?** — límites y fuera de alcance (lo que el proyecto NO hace).
+- **¿Qué NO tocar?** — reglas inamovibles del proyecto.
+
+> Si una casilla está "pendiente de contexto", complétala con la historia real
+> (conversaciones, README, decisiones) en una nota protegida de
+> `7.0-MANUAL/` (p. ej. `GOBIERNO.md`) — el build jamás la borra y el agente
+> la lee en cada actualización.
+
 """
 
 
