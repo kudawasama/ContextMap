@@ -201,6 +201,45 @@ def test_titulo_legible_quita_ruido() -> None:
     assert titulo_legible(n) == "Narrativa especializada"
 
 
+def test_proposito_biblia_extrae_identidad() -> None:
+    """La biblia extrae tagline + sección ¿Qué es? del README (sin la segunda sección)."""
+    from context_map.presentation.vault.consolidated.common import _extract_proposito_biblia
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_biblia_")
+    try:
+        with open(os.path.join(temp_dir, "README.md"), "w", encoding="utf-8") as f:
+            f.write(
+                "# Demo\n\n**Tagline del proyecto**\n\n[![badge](url)]\n\n---\n\n"
+                "## ¿Qué es?\n\nEsto es el alma del proyecto.\n\n"
+                "No es un simple generador: captura el alma.\n\n---\n\n"
+                "## Instalación\n\npip install demo\n"
+            )
+        biblia = _extract_proposito_biblia(temp_dir)
+        assert "Tagline del proyecto" in biblia
+        assert "Esto es el alma del proyecto" in biblia
+        assert "captura el alma" in biblia
+        assert "pip install" not in biblia  # segunda sección excluida
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_es_ruido_identidad() -> None:
+    """El ruido del scanner no entra a la biblia (1.3-Proposito)."""
+    from context_map.presentation.vault.consolidated.secciones_proposito import (
+        _es_ruido_identidad,
+    )
+
+    metrica = _nodo("B1", tipo="BASE", titulo="Proyecto 'Demo' — 100 archivos, 5000 líneas, entrypoints: 2")
+    todo = _nodo("B2", tipo="FUTURO", titulo="TODO (x.py:L1): pendiente")
+    entry = _nodo("B3", tipo="BASE", titulo="Entrypoint: main.py")
+    real = _nodo("B4", tipo="BASE", titulo="Núcleo de la arquitectura", summary="El dominio central")
+
+    assert _es_ruido_identidad(metrica)
+    assert _es_ruido_identidad(todo)
+    assert _es_ruido_identidad(entry)
+    assert not _es_ruido_identidad(real)
+
+
 def test_edges_relaciona_por_menciones_cruzadas() -> None:
     """T12: la historia conecta — un evento que menciona 2+ nodos crea edge 'relaciona'."""
     from context_map.core.models import Event

@@ -9,9 +9,32 @@ from context_map.core.models import Edge, Node
 from context_map.presentation.vault.consolidated.common import (
     _escribir_markdown,
     _extract_project_purpose,
+    _extract_proposito_biblia,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _es_ruido_identidad(n: Node) -> bool:
+    """True si el nodo es ruido del scanner, NO identidad del proyecto.
+
+    Filtra las métricas repetitivas del scan ('Proyecto X — N archivos'),
+    los TODOs y los entrypoints: son datos, no principios ni propósito.
+
+    Args:
+        n (Node): Nodo BASE a evaluar.
+
+    Returns:
+        bool: True si debe excluirse de la biblia (1.3-Proposito).
+    """
+    titulo = (n.title or "").strip().lower()
+    if titulo.startswith("proyecto '") and "archivos" in titulo:
+        return True  # métrica repetitiva del scan
+    if titulo.startswith("todo") or n.type == "FUTURO":
+        return True
+    if titulo.startswith("entrypoint"):
+        return True
+    return False
 
 
 def _render_seccion_proposito(
@@ -62,6 +85,7 @@ def _render_seccion_proposito(
     _escribir_markdown(proposito_dir, "1.0-PROPOSITO.md", partes)
 
     proposito_texto = _extract_project_purpose(os.getcwd())
+    proposito_biblia = _extract_proposito_biblia(os.getcwd())
 
     readme_content = ""
     readme_path = os.path.join(os.getcwd(), "README.md")
@@ -164,7 +188,9 @@ def _render_seccion_proposito(
         "## 🎯 Propósito del Dominio",
         "",
     ])
-    if proposito_texto:
+    if proposito_biblia:
+        identidad_parts.extend([proposito_biblia, ""])
+    elif proposito_texto:
         identidad_parts.extend([proposito_texto, ""])
     else:
         identidad_parts.extend([
@@ -176,10 +202,14 @@ def _render_seccion_proposito(
         "## 🏛️ Principios y Componentes Principales",
         "",
     ])
-    identidad_nodes = [n for n in clasificados["BASE"] if any(
-        kw in (n.title + " " + (n.summary or "")).lower()
-        for kw in ["proyecto", "propósito", "arquitectura", "core", "dominio"]
-    )]
+    identidad_nodes = [
+        n for n in clasificados["BASE"]
+        if not _es_ruido_identidad(n)
+        and any(
+            kw in (n.title + " " + (n.summary or "")).lower()
+            for kw in ["proyecto", "propósito", "arquitectura", "core", "dominio"]
+        )
+    ]
     if identidad_nodes:
         for n in identidad_nodes:
             identidad_parts.append(f"- **{n.title}**: {n.summary or '(sin descripción)'}")

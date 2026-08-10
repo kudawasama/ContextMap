@@ -64,7 +64,7 @@ def generar_brief(
 
 
 def _extraer_proposito(project_name: str, project_dir: str) -> str:
-    """Extrae el propósito del proyecto desde README.md (primer párrafo significativo).
+    """Extrae el propósito del proyecto desde README.md (biblia: tagline + ¿Qué es?).
 
     Args:
         project_name (str): Nombre del proyecto.
@@ -74,9 +74,11 @@ def _extraer_proposito(project_name: str, project_dir: str) -> str:
         str: Propósito del proyecto, o string vacío si no se pudo extraer.
     """
     try:
-        from context_map.presentation.vault.consolidated.common import _extract_project_purpose
+        from context_map.presentation.vault.consolidated.common import (
+            _extract_proposito_biblia,
+        )
 
-        return _extract_project_purpose(os.path.abspath(project_dir))
+        return _extract_proposito_biblia(os.path.abspath(project_dir))
     except Exception:
         return ""
 

@@ -86,6 +86,80 @@ def _extract_project_purpose(cwd: str) -> str:
     return paragraphs[0] if paragraphs else ""
 
 
+def _extract_proposito_biblia(cwd: str) -> str:
+    """Extrae el PROPOSITO-BIBLIA del README: tagline + sección '¿Qué es?'.
+
+    A diferencia de ``_extract_project_purpose`` (solo el primer párrafo),
+    esta función recoge la identidad completa: el tagline (línea en negrita
+    tras el título) y los párrafos de la primera sección con contenido
+    (normalmente ``## ¿Qué es?``), que contienen el alma del proyecto
+    (qué es, por qué existe, qué promete).
+
+    Args:
+        cwd (str): Directorio raíz del proyecto.
+
+    Returns:
+        str: Párrafos de identidad separados por doble salto de línea,
+        o string vacío si no se pudo extraer.
+    """
+    import re
+
+    readme_path = os.path.join(cwd, "README.md")
+    if not os.path.isfile(readme_path):
+        return ""
+    try:
+        with open(readme_path, encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception as err:
+        logger.warning("No se pudo leer README.md: %s", err)
+        return ""
+
+    tagline = ""
+    parrafos: list[str] = []
+    en_seccion_contenido = False
+    pausa_hasta_seccion = False  # tras el tagline esperamos la primera '## '
+
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("[!["):          # badge de imagen
+            continue
+        if s.startswith("---") or s.startswith("<!--") or s.startswith("___"):
+            continue
+        if s.startswith("# "):           # título principal
+            continue
+        if s.startswith("## "):
+            if not en_seccion_contenido:
+                # primera sección con contenido (normalmente ¿Qué es?)
+                en_seccion_contenido = True
+                continue
+            # segunda sección → fin del bloque de identidad
+            break
+        if s.startswith("|") or s.startswith("- [") or s.startswith("* ["):
+            continue
+        if s.startswith("```"):
+            continue
+
+        # limpiar markdown: **bold**, enlaces [x](url), imágenes ![..](..)
+        texto = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", s)
+        texto = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", texto)
+        texto = texto.replace("**", "").strip()
+        if not texto:
+            continue
+
+        if not en_seccion_contenido:
+            # antes de la primera sección: el tagline (frase corta en negrita)
+            if not tagline and len(texto) < 140:
+                tagline = texto
+            continue
+
+        parrafos.append(texto)
+
+    partes = [p for p in [tagline] + parrafos if p]
+    return "\n\n".join(partes)
+
+
 def _clasificar_nodos(nodes: list[Node]) -> dict[str, list[Node]]:
     """Clasifica los nodos del grafo según su tipo semántico.
 
