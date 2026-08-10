@@ -28,10 +28,13 @@ def _render_nota_riesgo(
         todos_nodos (list[Node] | None): Todos los nodos del mapa (conexiones).
     """
     from context_map.core.generators import generar_contexto_narrativo
+    from context_map.core.generators.generadores import _titulo_limpio
 
     filename = _safe_filename(n.title) + ".md"
     tags_list = _normalize_tags(n.tags, n.type)
     tags_str = ", ".join(f'"{t}"' for t in tags_list)
+    titulo_limpio = _titulo_limpio(n.title)
+    summary_limpio = _titulo_limpio(n.summary)
     partes = [
         "---",
         "type: riesgo",
@@ -42,11 +45,11 @@ def _render_nota_riesgo(
         f'source: "{n.source}"' if n.source else "source: ''",
         "---",
         "",
-        f"# ⚠️ {n.title}",
+        f"# ⚠️ {titulo_limpio}",
         "",
     ]
-    if n.summary:
-        partes.append(n.summary)
+    if summary_limpio:
+        partes.append(summary_limpio)
         partes.append("")
 
     partes.append("## 🧠 Contexto Narrativo con Alma")

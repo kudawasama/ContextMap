@@ -240,6 +240,21 @@ def test_es_ruido_identidad() -> None:
     assert not _es_ruido_identidad(real)
 
 
+def test_narrativa_idea_limpia_ruido() -> None:
+    """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
+    from context_map.core.generators import generar_contexto_narrativo
+
+    n = _nodo(
+        "I1",
+        titulo="TODO (core/foo.py:L10): Narrativa especializada para tareas",
+        summary='Pendiente: """Narrativa especializada para tareas FUTURAS."""',
+    )
+    narrativa = generar_contexto_narrativo(n)
+    assert "TODO (core/foo.py" not in narrativa
+    assert "Narrativa especializada" in narrativa
+    assert '"""' not in narrativa
+
+
 def test_edges_relaciona_por_menciones_cruzadas() -> None:
     """T12: la historia conecta — un evento que menciona 2+ nodos crea edge 'relaciona'."""
     from context_map.core.models import Event
@@ -296,6 +311,9 @@ if __name__ == "__main__":
         test_plantillas_y_nota_del_dia,
         test_conexiones_ignoran_todos_del_mismo_archivo,
         test_titulo_legible_quita_ruido,
+        test_proposito_biblia_extrae_identidad,
+        test_es_ruido_identidad,
+        test_narrativa_idea_limpia_ruido,
         test_edges_relaciona_por_menciones_cruzadas,
         test_edges_relaciona_dedup,
     ]

@@ -86,23 +86,30 @@ def _extract_project_purpose(cwd: str) -> str:
     return paragraphs[0] if paragraphs else ""
 
 
-def _extract_proposito_biblia(cwd: str) -> str:
-    """Extrae el PROPOSITO-BIBLIA del README: tagline + sección '¿Qué es?'.
+def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: int = 2600) -> str:
+    """Extrae el PROPOSITO-BIBLIA del README: tagline + secciones de identidad.
 
     A diferencia de ``_extract_project_purpose`` (solo el primer párrafo),
     esta función recoge la identidad completa: el tagline (línea en negrita
-    tras el título) y los párrafos de la primera sección con contenido
-    (normalmente ``## ¿Qué es?``), que contienen el alma del proyecto
-    (qué es, por qué existe, qué promete).
+    tras el título) y los párrafos de las primeras secciones de contenido
+    (``¿Qué es?``, metodología, etc.), que contienen el alma del proyecto.
 
     Args:
         cwd (str): Directorio raíz del proyecto.
+        max_secciones (int): Máximo de secciones ``## `` a capturar.
+        max_caracteres (int): Límite de caracteres del resultado.
 
     Returns:
         str: Párrafos de identidad separados por doble salto de línea,
         o string vacío si no se pudo extraer.
     """
     import re
+
+    SECCIONES_NO_IDENTIDAD = {
+        "instalación", "instalacion", "licencia", "contribuir",
+        "comparativa", "lista completa de comandos", "comandos",
+        "referencias", "changelog", "roadmap",
+    }
 
     readme_path = os.path.join(cwd, "README.md")
     if not os.path.isfile(readme_path):
@@ -116,8 +123,8 @@ def _extract_proposito_biblia(cwd: str) -> str:
 
     tagline = ""
     parrafos: list[str] = []
+    secciones_capturadas = 0
     en_seccion_contenido = False
-    pausa_hasta_seccion = False  # tras el tagline esperamos la primera '## '
 
     for line in lines:
         s = line.strip()
@@ -130,12 +137,18 @@ def _extract_proposito_biblia(cwd: str) -> str:
         if s.startswith("# "):           # título principal
             continue
         if s.startswith("## "):
+            titulo_seccion = s.lstrip("#").strip().lower()
             if not en_seccion_contenido:
                 # primera sección con contenido (normalmente ¿Qué es?)
                 en_seccion_contenido = True
+                secciones_capturadas += 1
                 continue
-            # segunda sección → fin del bloque de identidad
-            break
+            if titulo_seccion in SECCIONES_NO_IDENTIDAD:
+                break
+            secciones_capturadas += 1
+            if secciones_capturadas >= max_secciones:
+                break
+            continue
         if s.startswith("|") or s.startswith("- [") or s.startswith("* ["):
             continue
         if s.startswith("```"):
@@ -155,9 +168,13 @@ def _extract_proposito_biblia(cwd: str) -> str:
             continue
 
         parrafos.append(texto)
+        if sum(len(p) for p in parrafos) > max_caracteres:
+            parrafos = parrafos[:-1]
+            break
 
     partes = [p for p in [tagline] + parrafos if p]
-    return "\n\n".join(partes)
+    resultado = "\n\n".join(partes)
+    return resultado[:max_caracteres]
 
 
 def _clasificar_nodos(nodes: list[Node]) -> dict[str, list[Node]]:

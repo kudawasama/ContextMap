@@ -88,10 +88,29 @@ def generar_contexto_narrativo(node: Node) -> str:
     return _contexto_idea(node)
 
 
+def _titulo_limpio(texto: str) -> str:
+    """Limpia el ruido del scanner en títulos y summaries.
+
+    Quita los prefijos mecánicos que el scanner mete en los eventos:
+    ``TODO (ruta.py:L12): texto`` y ``Pendiente: texto``, además de comillas
+    triples sobrantes del código fuente.
+
+    Args:
+        texto (str): Título o summary crudo.
+
+    Returns:
+        str: Texto limpio y legible (humanizado).
+    """
+    t = re.sub(r"^TODO\s*\([^)]*\):\s*", "", texto or "").strip()
+    t = re.sub(r"^Pendiente:\s*", "", t).strip()
+    t = re.sub(r'^"""|"""$', "", t).strip()
+    return t or (texto or "").strip()
+
+
 def _contexto_idea(node: Node) -> str:
     """Narrativa especializada para IDEAS (Por qué, De dónde, Para qué, Cómo, Pros/Contras)."""
-    title = node.title.strip()
-    summary = node.summary.strip() or f"Idea o concepto referente a {title}."
+    title = _titulo_limpio(node.title.strip())
+    summary = _titulo_limpio(node.summary.strip()) or f"Idea o concepto referente a {title}."
     source = node.source or "análisis de sistema"
     lower_title = title.lower()
 
@@ -136,8 +155,8 @@ def _contexto_idea(node: Node) -> str:
 
 def _contexto_riesgo(node: Node) -> str:
     """Narrativa especializada para RIESGOS (Ubicación, Gravedad, Impacto, Mitigación)."""
-    title = node.title.strip()
-    summary = node.summary.strip() or f"Riesgo técnico identificado en {title}."
+    title = _titulo_limpio(node.title.strip())
+    summary = _titulo_limpio(node.summary.strip()) or f"Riesgo técnico identificado en {title}."
     source = node.source or "scanner"
 
     que_riesgo = f"Riesgo técnico o zona de alta complejidad referente a '{title}'."

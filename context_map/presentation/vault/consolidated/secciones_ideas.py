@@ -92,12 +92,15 @@ def _render_nota_idea(
             sección de conexiones). Si None, no se genera la sección.
     """
     from context_map.core.generators import generar_contexto_narrativo
+    from context_map.core.generators.generadores import _titulo_limpio
 
     filename = _nombre_nota_idea(n)
     tags_list = _normalize_tags(n.tags, n.type)
     tags_str = ", ".join(f'"{t}"' for t in tags_list)
     concepto = _concepto_nodo(n)
     clasif = getattr(n, "classification", "") or "idea"
+    titulo_limpio = _titulo_limpio(n.title)
+    summary_limpio = _titulo_limpio(n.summary)
 
     partes = [
         "---",
@@ -111,7 +114,7 @@ def _render_nota_idea(
         f'source: "{n.source}"' if n.source else "source: ''",
         "---",
         "",
-        f"# 📋 {n.title}",
+        f"# 📋 {titulo_limpio}",
         "",
         f"> **Concepto:** `{concepto}` · **Clasificación:** `{clasif}` · **Estado:** {ICONOS_STATUS.get(status, '💡')} {status}",
         "",
@@ -120,8 +123,8 @@ def _render_nota_idea(
         "## 💡 IDEA",
         "",
     ]
-    if n.summary:
-        partes.append(n.summary)
+    if summary_limpio:
+        partes.append(summary_limpio)
         partes.append("")
 
     partes.append("## 🧠 LÓGICA")
