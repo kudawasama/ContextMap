@@ -197,15 +197,15 @@ def _render_seccion_historial(
         "",
     ])
     if cambio_only:
-        from context_map.core.generators import generar_contexto_narrativo
+        from context_map.core.generators.generadores import _titulo_limpio
+
         for n in cambio_only:
-            cambios_parts.append(f"## 🔄 {n.title} ({n.created_at or 'Fecha no esp.'})")
+            fecha = (n.created_at or "")[:10]
+            cambios_parts.append(f"## 🔄 {_titulo_limpio(n.title)} ({fecha})")
             cambios_parts.append("")
             if n.summary and n.summary != n.title:
-                cambios_parts.append(n.summary)
+                cambios_parts.append(_titulo_limpio(n.summary))
                 cambios_parts.append("")
-            cambios_parts.append(generar_contexto_narrativo(n))
-            cambios_parts.append("")
     else:
         cambios_parts.append("_(No se registraron cambios)_")
         cambios_parts.append("")
@@ -225,14 +225,22 @@ def _render_seccion_historial(
         "",
     ])
     if correccion_only:
-        from context_map.core.generators import generar_contexto_narrativo
+        from context_map.core.generators.generadores import _titulo_limpio
+        from context_map.presentation.vault.consolidated.secciones_backlog import (
+            _es_todo_codigo,
+        )
+
         for n in correccion_only:
-            correcciones_parts.append(f"## 🔧 {n.title} ({n.created_at or 'Fecha no esp.'})")
+            if _es_todo_codigo(n):
+                continue  # TODO con código crudo no es una corrección del proyecto
+            fecha = (n.created_at or "")[:10]
+            correcciones_parts.append(f"## 🔧 {_titulo_limpio(n.title)} ({fecha})")
             correcciones_parts.append("")
             if n.summary and n.summary != n.title:
-                correcciones_parts.append(n.summary)
+                correcciones_parts.append(_titulo_limpio(n.summary))
                 correcciones_parts.append("")
-            correcciones_parts.append(generar_contexto_narrativo(n))
+        if len(correcciones_parts) <= 7:
+            correcciones_parts.append("_(Correcciones de código (TODOs) filtradas — no son correcciones del proyecto)_")
             correcciones_parts.append("")
     else:
         correcciones_parts.append("_(No se registraron correcciones)_")

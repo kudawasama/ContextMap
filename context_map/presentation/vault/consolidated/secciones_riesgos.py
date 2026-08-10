@@ -87,6 +87,30 @@ def _render_nota_riesgo(
     _escribir_markdown(directorio, filename, partes)
 
 
+def _clave_dedup_riesgo(n) -> str:
+    """Clave de dedup para riesgos: paths ordenados (mismo riesgo con distinto orden).
+
+    'Archivos de alta complejidad: b.py, a.py' y 'Archivos de alta complejidad:
+    a.py, b.py' son EL MISMO riesgo (scanner lo crea con orden variable).
+    """
+    import re
+
+    paths = re.findall(r"[A-Za-z_][\w/\\]*\.(?:py|js|ts|md|json)", n.title or "")
+    if paths:
+        return "|".join(sorted(p.replace("\\", "/").strip() for p in paths))
+    return (n.title or "")[:80]
+
+
+def _es_riesgo_real(n) -> bool:
+    """True si el nodo es realmente un RIESGO (no un IDEA mal clasificado)."""
+    t = (n.title or "").strip().lower()
+    if t.startswith("idea") or t.startswith("todo") or t.startswith("feature"):
+        return False
+    if n.type == "IDEA":
+        return False
+    return True
+
+
 def _render_seccion_riesgos(
     project_name: str,
     clasificados: dict[str, list[Node]],
@@ -124,9 +148,11 @@ def _render_seccion_riesgos(
         partes.append("")
         seen_riesgo_idx: set[str] = set()
         for n in clasificados["RIESGO"]:
-            key = n.title[:80]
+            if not _es_riesgo_real(n):
+                continue  # IDEA/TODO mal clasificado como riesgo
+            key = _clave_dedup_riesgo(n)
             if key in seen_riesgo_idx:
-                continue
+                continue  # mismo riesgo con paths en distinto orden
             seen_riesgo_idx.add(key)
             slug = _safe_filename(n.title)
             partes.append(f"- [[{slug}|⚠️ {n.title}]]")
@@ -144,9 +170,11 @@ def _render_seccion_riesgos(
             n for grupo in clasificados.values() for n in grupo
         ]
         for n in clasificados["RIESGO"]:
-            key_file = n.title[:80]
+            if not _es_riesgo_real(n):
+                continue  # IDEA/TODO mal clasificado como riesgo
+            key_file = _clave_dedup_riesgo(n)
             if key_file in seen_riesgo_file:
-                continue
+                continue  # mismo riesgo con paths en distinto orden
             seen_riesgo_file.add(key_file)
             _render_nota_riesgo(
                 n, project_name, fecha_actual, riesgos_dir, pie_fn,

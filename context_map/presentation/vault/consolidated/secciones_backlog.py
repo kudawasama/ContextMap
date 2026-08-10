@@ -28,7 +28,8 @@ def _es_todo_codigo(n) -> bool:
     marcas_codigo = (
         '"""', "return ", 'f"', "def ", "class ", "import ", "self.",
         "if ", "for ", "=>", "\\n", "print(", "pass", "None", "True", "False",
-        "await ", "async ", "yield ",
+        "await ", "async ", "yield ", "logger.", "add_argument", "rest(",
+        "todos =", "texto =", "cursor.", "conn.",
     )
     return any(m in t for m in marcas_codigo)
 

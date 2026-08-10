@@ -133,18 +133,28 @@ def _render_seccion_estructura(
     ])
     if clasificados["BASE"]:
         from context_map.core.generators import generar_contexto_narrativo
+        from context_map.core.generators.generadores import _titulo_limpio
+        from context_map.presentation.vault.consolidated.secciones_proposito import (
+            _es_ruido_identidad,
+        )
+
         seen_base: set[str] = set()
         for n in clasificados["BASE"]:
+            if _es_ruido_identidad(n):
+                continue  # métricas del scan ('Proyecto X — N archivos') y entrypoints no son fundamentos
             key = n.title[:80]
             if key in seen_base:
                 continue
             seen_base.add(key)
-            fund_parts.append(f"## 📦 {n.title}")
+            fund_parts.append(f"## 📦 {_titulo_limpio(n.title)}")
             fund_parts.append("")
             if n.summary:
-                fund_parts.append(n.summary)
+                fund_parts.append(_titulo_limpio(n.summary))
                 fund_parts.append("")
             fund_parts.append(generar_contexto_narrativo(n))
+            fund_parts.append("")
+        if len(fund_parts) <= 7:
+            fund_parts.append("_(Los componentes base con significado se listan aquí; las métricas del scan viven en 1.2-Datos-Clave)_")
             fund_parts.append("")
     else:
         fund_parts.append("_(No se registraron componentes base)_")
