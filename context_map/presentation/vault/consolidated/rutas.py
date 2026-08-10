@@ -29,6 +29,26 @@ def _id_limpio(node: Node) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]", "", node.id or "")[:40] or "sin-id"
 
 
+def _archivo_en_titulo(title: str) -> str | None:
+    """Extrae el path de archivo de un título tipo 'TODO (ruta.py:L12): ...'.
+
+    Args:
+        title (str): Título del nodo.
+
+    Returns:
+        str | None: Ruta del archivo (ej. ``core/foo.py``) o None.
+    """
+    m = re.search(r"([\w/\\]+\.py):L?\d+", title or "")
+    return m.group(1).replace("\\", "/") if m else None
+
+
+def titulo_legible(node: Node) -> str:
+    """Título legible para labels de enlaces (quita el ruido TODO(path:Ln):)."""
+    titulo = re.sub(r"^TODO\s*\([^)]*\):\s*", "", node.title or "").strip()
+    titulo = re.sub(r"^Pendiente:\s*", "", titulo).strip()
+    return titulo[:60] or (node.title or "")[:60]
+
+
 def ruta_archivo_nodo(node: Node | None) -> str | None:
     """Ruta relativa (al vault) del archivo que materializa el nodo, o None.
 
@@ -101,6 +121,12 @@ def conexiones_de_nodo(
         if otro.id == node.id:
             continue
         if ruta_archivo_nodo(otro) is None:
+            continue
+
+        # TODOs del MISMO archivo no son relación (ruido del scanner)
+        arch_a = _archivo_en_titulo(node.title)
+        arch_b = _archivo_en_titulo(otro.title)
+        if arch_a and arch_b and arch_a == arch_b:
             continue
 
         score = 0

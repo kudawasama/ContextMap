@@ -64,6 +64,7 @@ def _render_nota_riesgo(
         from context_map.presentation.vault.consolidated.rutas import (
             conexiones_de_nodo,
             ruta_archivo_nodo,
+            titulo_legible,
         )
 
         conexiones = conexiones_de_nodo(n, todos_nodos)
@@ -73,7 +74,7 @@ def _render_nota_riesgo(
             for rel in conexiones:
                 destino = ruta_archivo_nodo(rel)
                 if destino:
-                    partes.append(f"- [[{destino}|{rel.title[:60]}]]")
+                    partes.append(f"- [[{destino}|{titulo_legible(rel)}]]")
         else:
             partes.append("_(Sin conexiones registradas aún)_")
         partes.append("")

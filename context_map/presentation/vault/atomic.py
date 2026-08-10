@@ -349,6 +349,46 @@ def _render_conexiones(
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(partes))
 
+    # Mapa mental conectado: conexiones semánticas derivadas (solo modo jerárquico)
+    if usar_rutas_reales and nodes:
+        from context_map.presentation.vault.consolidated.rutas import (
+            conexiones_de_nodo,
+            ruta_archivo_nodo,
+            titulo_legible,
+        )
+
+        sem_parts = [
+            "",
+            "## 🧠 Conexiones Semánticas",
+            "",
+            "Relaciones derivadas por contexto (mismo concepto, misma sesión o",
+            "menciones cruzadas) — el mapa mental conectado.",
+            "",
+        ]
+        contados = 0
+        for n in nodes:
+            if ruta_archivo_nodo(n) is None:
+                continue
+            rels = conexiones_de_nodo(n, nodes)
+            if not rels:
+                continue
+            ruta_n = ruta_archivo_nodo(n)
+            sem_parts.append(f"### 🔗 {titulo_legible(n)}")
+            sem_parts.append("")
+            for rel in rels:
+                ruta_rel = ruta_archivo_nodo(rel)
+                if ruta_rel:
+                    sem_parts.append(
+                        f"- [[{ruta_n}|{titulo_legible(n)}]] ↔ [[{ruta_rel}|{titulo_legible(rel)}]]"
+                    )
+            sem_parts.append("")
+            contados += 1
+            if contados >= 40:  # acotar el archivo
+                break
+
+        with open(path, "a", encoding="utf-8") as f:
+            f.write("\n".join(sem_parts))
+
 
 def _render_tracking_consolidacion(output_dir: str, tracking: dict[str, list[str]]) -> None:
     """Genera archivo de tracking de consolidación."""

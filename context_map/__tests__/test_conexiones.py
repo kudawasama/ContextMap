@@ -180,6 +180,27 @@ def test_plantillas_y_nota_del_dia() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_conexiones_ignoran_todos_del_mismo_archivo() -> None:
+    """El ruido del scanner (TODOs del mismo archivo) NO crea conexiones."""
+    from context_map.presentation.vault.consolidated.rutas import conexiones_de_nodo
+
+    a = _nodo("I1", titulo="TODO (core/foo.py:L10): tarea A", concepto="DEVOPS")
+    b = _nodo("I2", titulo="TODO (core/foo.py:L20): tarea B", concepto="DEVOPS")
+    c = _nodo("I3", titulo="TODO (core/bar.py:L5): tarea C", concepto="DEVOPS")
+
+    cons = conexiones_de_nodo(a, [a, b, c])
+    ids = [n.id for n in cons]
+    assert "I2" not in ids   # mismo archivo → ruido
+    assert "I3" in ids       # distinto archivo, mismo concepto → relación real
+
+
+def test_titulo_legible_quita_ruido() -> None:
+    from context_map.presentation.vault.consolidated.rutas import titulo_legible
+
+    n = _nodo("I1", titulo="TODO (core/foo.py:L10): Narrativa especializada")
+    assert titulo_legible(n) == "Narrativa especializada"
+
+
 def test_edges_relaciona_por_menciones_cruzadas() -> None:
     """T12: la historia conecta — un evento que menciona 2+ nodos crea edge 'relaciona'."""
     from context_map.core.models import Event
@@ -234,6 +255,8 @@ if __name__ == "__main__":
         test_canvas_es_json_valido_con_archivos_reales,
         test_graph_json_grupos_por_estado,
         test_plantillas_y_nota_del_dia,
+        test_conexiones_ignoran_todos_del_mismo_archivo,
+        test_titulo_legible_quita_ruido,
         test_edges_relaciona_por_menciones_cruzadas,
         test_edges_relaciona_dedup,
     ]
