@@ -460,9 +460,10 @@ def _render_consolidated_vault(
     output_dir: str = ".context-map/vault",
 ) -> str:
     """Renderiza la bóveda Obsidian en modo consolidado (8 notas temáticas sintéticas)."""
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir, ignore_errors=True)
-    os.makedirs(output_dir, exist_ok=True)
+    # Limpiar el vault SIN destruir el trabajo manual (.manual/ + preserve:true)
+    from context_map.presentation.vault.preservar import limpiar_vault
+
+    limpiar_vault(output_dir)
     fecha_actual = datetime.now().isoformat(timespec="seconds")
 
     clasificados = _clasificar_nodos(nodes)

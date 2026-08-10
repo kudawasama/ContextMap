@@ -205,9 +205,10 @@ def _render_hierarchical_vault(
                 except Exception as err:
                     logger.debug("No se pudo respaldar %s: %s", fname, err)
 
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir, ignore_errors=True)
-    os.makedirs(output_dir, exist_ok=True)
+    # Limpiar el vault SIN destruir el trabajo manual (.manual/ + preserve:true)
+    from context_map.presentation.vault.preservar import limpiar_vault
+
+    limpiar_vault(output_dir)
     fecha_actual = datetime.now().isoformat(timespec="seconds")
 
     clasificados = _clasificar_nodos(nodes)
