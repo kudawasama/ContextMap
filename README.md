@@ -203,15 +203,34 @@ donde sea que estén). Al limpiar, ContextMap reporta cuántas notas manuales pr
 ## Instalación
 
 ```bash
-# Instalar globalmente con pip
-pip install -e .
-
-# O instalar con UV (recomendado)
+# Requisito: uv (recomendado) — https://docs.astral.sh/uv/
+# Instalar globalmente con UV (recomendado) — un solo comando, sin clonar
 uv tool install git+https://github.com/kudawasama/ContextMap.git
+
+# O con pip desde un clon
+#   git clone https://github.com/kudawasama/ContextMap.git
+#   cd ContextMap && pip install -e .
 
 # Extra para ingesta de PDFs (ctxmap ingest *.pdf)
 uv pip install pymupdf   # o: pip install -e ".[pdf]"
 ```
+
+## Actualizar a la última versión
+
+> ⚠️ `ctxmap update` está ROTO en Windows. La forma confiable es con uv:
+
+```bash
+# Binario global (todos los proyectos) — a la última versión de GitHub
+uv tool install --force git+https://github.com/kudawasama/ContextMap.git
+
+# Dentro del venv de un proyecto que usa ContextMap como paquete (ej. Gobernanza)
+uv pip install --force-reinstall git+https://github.com/kudawasama/ContextMap.git --python .venv/Scripts/python.exe
+# o con pip nativo: .venv/Scripts/python.exe -m pip install --force-reinstall git+https://github.com/kudawasama/ContextMap.git
+```
+
+> Nota: actualizar el PROGRAMA (binario/paquete) es distinto de actualizar el
+> CONTEXTO de un proyecto (`ctxmap refresh .`). El primero trae las mejoras del
+> programa; el segundo regenera el vault del proyecto.
 
 ---
 
@@ -255,7 +274,7 @@ ctxmap adapt . --overwrite           # Fuerza sobrescritura de reglas existentes
 
 # Diagnóstico y Mantenimiento
 ctxmap check .                        # Readiness + Salud del Vault (notas manuales, alerta de --clean)
-ctxmap update                         # Actualiza ContextMap a la última versión de GitHub
+ctxmap update                         # ROTO en Windows — actualiza con: uv tool install --force git+https://github.com/kudawasama/ContextMap.git
 ```
 
 ---
