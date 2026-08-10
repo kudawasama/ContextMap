@@ -354,6 +354,41 @@ def corregir_tipo(node: Node) -> str:
     return "IDEA"
 
 
+def _restaurar_paths_legibles(titulo: str) -> str:
+    """Reconstruye separadores en paths aplanados por scans antiguos.
+
+    Ejemplo: ``context_mapcorenormalizationstandardize.py`` →
+    ``context_map/core/normalization/standardize.py``.
+
+    Los scans viejos aplanaban los paths (quitaban "/") al crear el título del
+    RIESGO; esto inserta "/" antes de cada segmento de módulo conocido que esté
+    pegado a la palabra anterior.
+
+    Args:
+        titulo (str): Título del riesgo (posiblemente aplanado).
+
+    Returns:
+        str: Título con paths legibles cuando fue posible reconstruirlos.
+    """
+    SEGMENTOS = (
+        "context_map", "core", "domain", "application", "infrastructure",
+        "presentation", "scripts", "tests", "api", "src", "backend", "frontend",
+        "models", "commands", "parsing", "storage", "generators", "normalization",
+        "scanning", "synchronization", "ecosystem", "analysis", "vault", "briefs",
+        "importers", "integrations", "cli", "adaptador", "detector", "templates",
+        "raw", "consolidated", "atomic", "services", "utils", "helpers", "config",
+        "standardize", "estandarizar",
+    )
+    texto = titulo
+    for seg in SEGMENTOS:
+        texto = re.sub(
+            rf"(?<=\w){re.escape(seg)}(?=[a-z_.])",
+            "/" + seg,
+            texto,
+        )
+    return texto
+
+
 def estandarizar_nodo(node: Node) -> Node:
     """Aplica el proceso completo de estandarización y clasificación a un solo nodo.
 
@@ -390,6 +425,8 @@ def estandarizar_nodo(node: Node) -> Node:
         # Limpiar separadores residuales y espacios
         title = re.sub(r'\s*;\s*', ', ', title)
         title = title.rstrip(';,').strip()
+        # Reconstruir paths aplanados por scans antiguos
+        title = _restaurar_paths_legibles(title)
 
     nuevo_tipo = corregir_tipo(node)
     nodo_temp = Node(

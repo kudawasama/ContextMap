@@ -10,6 +10,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
 
 @dataclass
 class SenalReadiness:
@@ -208,13 +210,16 @@ def _salud_vault(ruta_raiz: str) -> dict[str, object]:
 
     n_manuales = 0
     for vdir in vault_dirs:
-        manual_dir = os.path.join(vdir, ".manual")
-        if os.path.isdir(manual_dir):
-            for _raiz, _dirs, archivos in os.walk(manual_dir):
-                n_manuales += sum(1 for a in archivos if a.endswith(".md"))
-        # preserve:true en cualquier parte del vault (excepto .manual/, ya contado)
+        # Zonas manuales visibles/ocultas (7.0-MANUAL y .manual)
+        zonas_set = set(ZONAS_MANUALES)
+        for zona in ZONAS_MANUALES:
+            zona_dir = os.path.join(vdir, zona)
+            if os.path.isdir(zona_dir):
+                for _raiz, _dirs, archivos in os.walk(zona_dir):
+                    n_manuales += sum(1 for a in archivos if a.endswith(".md"))
+        # preserve:true en cualquier parte del vault (excepto zonas manuales)
         for raiz, _dirs, archivos in os.walk(vdir):
-            if ".manual" in raiz.split(os.sep):
+            if zonas_set & set(raiz.split(os.sep)):
                 continue
             for fname in archivos:
                 if not fname.endswith(".md"):

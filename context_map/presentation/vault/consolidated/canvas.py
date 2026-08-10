@@ -5,7 +5,7 @@ Genera el mapa mental conectado en las herramientas nativas de Obsidian:
 - ``.obsidian/graph.json`` (Graph View): grupos de color por estado.
 - ``.context-map/plantillas/`` (Plantillas): nota de sesión manual con
   ``preserve: true``.
-- ``.context-map/vault-<proj>/.manual/Diario/YYYY-MM-DD.md`` (Nota del día):
+- ``.context-map/vault-<proj>/7.0-MANUAL/Diario/YYYY-MM-DD.md`` (Nota del día):
   enlaza los nodos ingresados ese día.
 
 Regla de oro: SOLO se referencian archivos que existen (sin nodos fantasma).
@@ -164,7 +164,7 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
         return None
 
     diario_dir = os.path.join(
-        output_dir, ".context-map", f"vault-{safe}", ".manual", "Diario",
+        output_dir, ".context-map", f"vault-{safe}", "7.0-MANUAL", "Diario",
     )
     os.makedirs(diario_dir, exist_ok=True)
     ruta = os.path.join(diario_dir, f"{hoy}.md")

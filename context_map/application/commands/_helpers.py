@@ -185,7 +185,7 @@ def clean_vault_dir(project_name: str | None = None) -> int:
     """Elimina el contenido del vault para una reconstrucción limpia.
 
     **NUNCA borra el trabajo manual.** Preserva:
-    - La carpeta reservada ``.manual/`` completa (zona protegida del usuario).
+    - Las zonas protegidas ``7.0-MANUAL/`` (visible en Obsidian) y ``.manual/``.
     - Cualquier nota con frontmatter ``preserve: true`` (esté donde esté).
     - Las notas de planes manuales en ``5.0-BACKLOG`` (comportamiento previo).
 
@@ -195,22 +195,25 @@ def clean_vault_dir(project_name: str | None = None) -> int:
     Returns:
         int: Cantidad de archivos manuales preservados.
     """
+    from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
     vdir = vault_dir(project_name)
     temp_preservados = os.path.join(CONTEXT_DIR, "_preservar_manual")
 
-    # 1. Respaldo de la zona protegida .manual/ + notas preserve:true
-    manual_dir = os.path.join(vdir, ".manual")
+    # 1. Respaldo de las zonas manuales + notas preserve:true
+    zonas_set = set(ZONAS_MANUALES)
     preservados: dict[str, str] = {}
-    if os.path.isdir(manual_dir):
-        # Preservar la carpeta .manual/ completa (incluido el nombre de la carpeta)
-        destino_manual = os.path.join(temp_preservados, ".manual")
-        os.makedirs(destino_manual, exist_ok=True)
-        _copiar_dir(manual_dir, destino_manual)
+    for zona in ZONAS_MANUALES:
+        zona_dir = os.path.join(vdir, zona)
+        if os.path.isdir(zona_dir):
+            destino_zona = os.path.join(temp_preservados, zona)
+            os.makedirs(destino_zona, exist_ok=True)
+            _copiar_dir(zona_dir, destino_zona)
 
-    # Notas preserve:true en cualquier parte del vault (excepto .manual/, ya respaldado)
+    # Notas preserve:true en cualquier parte del vault (excepto zonas manuales)
     if os.path.isdir(vdir):
         for raiz, _dirs, archivos in os.walk(vdir):
-            if ".manual" in raiz.split(os.sep):
+            if zonas_set & set(raiz.split(os.sep)):
                 continue
             for fname in archivos:
                 if not fname.endswith(".md"):

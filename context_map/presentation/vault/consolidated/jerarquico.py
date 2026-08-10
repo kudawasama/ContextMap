@@ -116,16 +116,19 @@ def _render_indice_hierarchico(
         all_tags.update(n.tags)
     tags_badges = " ".join(f"`#{t}`" for t in sorted(all_tags)[:20])
 
-    # Notas manuales (zona protegida .manual/) para enlazarlas en el índice
-    manual_dir = os.path.join(output_dir, ".manual")
+    # Notas manuales (zonas protegidas 7.0-MANUAL y .manual) para el índice
+    from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
     manual_notas: list[str] = []
-    if os.path.isdir(manual_dir):
-        for raiz, _dirs, archivos in os.walk(manual_dir):
-            for fname in sorted(archivos):
-                if not fname.endswith(".md"):
-                    continue
-                rel = os.path.relpath(os.path.join(raiz, fname), output_dir)
-                manual_notas.append(rel.replace(os.sep, "/"))
+    for zona in ZONAS_MANUALES:
+        zona_dir = os.path.join(output_dir, zona)
+        if os.path.isdir(zona_dir):
+            for raiz, _dirs, archivos in os.walk(zona_dir):
+                for fname in sorted(archivos):
+                    if not fname.endswith(".md"):
+                        continue
+                    rel = os.path.relpath(os.path.join(raiz, fname), output_dir)
+                    manual_notas.append(rel.replace(os.sep, "/"))
 
     partes = [
         "---",

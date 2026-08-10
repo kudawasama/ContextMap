@@ -3,7 +3,8 @@
 Centraliza la lógica de "borrar el vault regenerable SIN tocar lo que el
 usuario/agente creó a mano":
 
-- La carpeta reservada ``.manual/`` completa (zona protegida).
+- La carpeta visible ``7.0-MANUAL/`` (zona protegida — se ve en Obsidian).
+- La carpeta oculta ``.manual/`` (compatibilidad con versiones anteriores).
 - Cualquier nota con frontmatter ``preserve: true`` (esté donde esté).
 
 La usan ``build --clean`` (vía ``clean_vault_dir``) y los renderizadores del
@@ -19,7 +20,10 @@ import shutil
 
 logger = logging.getLogger(__name__)
 
-NOMBRE_ZONA_MANUAL = ".manual"
+# Zonas protegidas del trabajo manual. 7.0-MANUAL es la zona VISIBLE (Obsidian
+# oculta las carpetas que empiezan con "."); .manual se preserva por
+# compatibilidad con vaults generados por versiones anteriores.
+ZONAS_MANUALES = ("7.0-MANUAL", ".manual")
 
 
 def _leer_frontmatter_preserve(fpath: str) -> bool:
@@ -75,16 +79,18 @@ def limpiar_vault(output_dir: str) -> int:
     temp_preservados = os.path.join(output_dir, "..", "_preservar_manual")
     temp_preservados = os.path.abspath(temp_preservados)
 
-    manual_dir = os.path.join(output_dir, NOMBRE_ZONA_MANUAL)
-    if os.path.isdir(manual_dir):
-        destino_manual = os.path.join(temp_preservados, NOMBRE_ZONA_MANUAL)
-        os.makedirs(destino_manual, exist_ok=True)
-        _copiar_dir(manual_dir, destino_manual)
+    for zona in ZONAS_MANUALES:
+        zona_dir = os.path.join(output_dir, zona)
+        if os.path.isdir(zona_dir):
+            destino_zona = os.path.join(temp_preservados, zona)
+            os.makedirs(destino_zona, exist_ok=True)
+            _copiar_dir(zona_dir, destino_zona)
 
-    # Notas preserve:true en cualquier parte del vault (excepto .manual/, ya respaldado)
+    # Notas preserve:true en cualquier parte del vault (excepto zonas manuales)
+    zonas_set = set(ZONAS_MANUALES)
     if os.path.isdir(output_dir):
         for raiz, _dirs, archivos in os.walk(output_dir):
-            if NOMBRE_ZONA_MANUAL in raiz.split(os.sep):
+            if zonas_set & set(raiz.split(os.sep)):
                 continue
             for fname in archivos:
                 if not fname.endswith(".md"):

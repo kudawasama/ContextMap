@@ -171,7 +171,7 @@ def test_plantillas_y_nota_del_dia() -> None:
 
         nodos = [_nodo("I1", titulo="Bot", concepto="DEVOPS", fecha="2026-08-10T09:00:00")]
         render_nota_dia(temp_dir, "Demo", nodos)
-        diario = os.path.join(temp_dir, ".context-map", "vault-Demo", ".manual", "Diario", "2026-08-10.md")
+        diario = os.path.join(temp_dir, ".context-map", "vault-Demo", "7.0-MANUAL", "Diario", "2026-08-10.md")
         assert os.path.exists(diario)
         with open(diario, encoding="utf-8") as f:
             nota = f.read()
@@ -238,6 +238,18 @@ def test_es_ruido_identidad() -> None:
     assert _es_ruido_identidad(todo)
     assert _es_ruido_identidad(entry)
     assert not _es_ruido_identidad(real)
+
+
+def test_restaurar_paths_legibles() -> None:
+    """Los paths aplanados por scans antiguos se reconstruyen legibles."""
+    from context_map.core.normalization.standardize import _restaurar_paths_legibles
+
+    legible = _restaurar_paths_legibles(
+        "Archivos de alta complejidad context_mapcorenormalizationstandardize.py, context_mapdomainecosystemadaptador.py"
+    )
+    assert "context_map/core/normalization/standardize.py" in legible
+    assert "context_map/domain/ecosystem/adaptador.py" in legible
+    assert "context_mapcore" not in legible
 
 
 def test_narrativa_idea_limpia_ruido() -> None:
@@ -311,6 +323,7 @@ if __name__ == "__main__":
         test_plantillas_y_nota_del_dia,
         test_conexiones_ignoran_todos_del_mismo_archivo,
         test_titulo_legible_quita_ruido,
+        test_restaurar_paths_legibles,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,
         test_narrativa_idea_limpia_ruido,
