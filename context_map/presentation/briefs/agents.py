@@ -92,18 +92,27 @@ ctxmap refresh .          # contexto al día: scan + build (preservando manuales
 
 El contexto es la **memoria viva del proyecto**:
 
-1. Después de implementar, actualiza el mapa (`ctxmap refresh .`) para que refleje tu
-   trabajo (nodos CAMBIO / CORRECCION / IDEA).
-2. Al terminar una sesión de trabajo, importa la conversación (`import-sessions`,
-   `import-antigravity`, `import-chat`) para que las decisiones y porqués queden
-   registrados.
-3. **Actualizar NO es solo correr el script**: verifica el resultado y corrígelo.
-   El script propone, TÚ dispones — si `refresh` dejó títulos crudos
-   (`TODO (ruta.py:Ln):`), métricas en `1.3-Proposito`, plantillas vacías o
-   notas sin alma, corrígelas (títulos legibles, tarjeta técnica para TODOs,
-   notas con alma en `7.0-MANUAL/`). No des el contexto por bueno sin revisarlo.
-4. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
-   proyecto pierde su historia.
+1. **Documenta AUTOMÁTICAMENTE** lo conversado: si durante el trabajo surge
+   una idea, una decisión, un porqué o una lección, escríbela EN EL MOMENTO
+   (no esperes a que te lo pidan). Lo que se hable, se diga o se decida queda
+   en el vault. Memoria viva = nada se pierde.
+2. **Nota del día** (`7.0-MANUAL/Diario/<fecha>.md`): al terminar la sesión,
+   resumen de lo hecho, decidido y pendiente.
+3. **8.0-KNOWLEDGE** (`8.0-KNOWLEDGE/`): si aprendiste algo reutilizable (un
+   prompt que funcionó, un error que costó, un procedimiento), documéntalo
+   con el formato fijo: 🎯 Lección · 🛠️ Cómo se resolvió · 💬 Prompt
+   específico · 📋 Instrucción específica · 🔗 Conexiones.
+4. Después de implementar, actualiza el mapa (`ctxmap refresh .`) para que
+   refleje tu trabajo (nodos CAMBIO / CORRECCION / IDEA).
+5. **Actualizar NO es solo correr el script**: verifica el resultado y
+   corrígelo. El script propone, TÚ dispones — si `refresh` dejó títulos
+   crudos (`TODO (ruta.py:Ln):`), métricas en `1.3-Proposito`, plantillas
+   vacías o notas sin alma, corrígelas (títulos legibles, tarjeta técnica
+   para TODOs, notas con alma en `7.0-MANUAL/`). Humaniza TODOS los archivos
+   del vault, no solo la zona manual. No des el contexto por bueno sin
+   revisarlo.
+6. Un contexto que no se actualiza muere: el siguiente agente queda ciego y
+   el proyecto pierde su historia.
 
 > Comandos exactos y criterios de verificación: `.context-map/contextmap-skill.md`.
 
