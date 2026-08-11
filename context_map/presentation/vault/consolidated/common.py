@@ -57,6 +57,7 @@ _PATH_GRAFO: dict[str, str] = {
     "5.0-BACKLOG": "#d97706",
     "6.0-HISTORIAL": "#f59e0b",
     "7.0-MANUAL": "#14b8a6",
+    "8.0-KNOWLEDGE": "#10b981",
 }
 
 

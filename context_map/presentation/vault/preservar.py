@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Zonas protegidas del trabajo manual. 7.0-MANUAL es la zona VISIBLE (Obsidian
 # oculta las carpetas que empiezan con "."); .manual se preserva por
 # compatibilidad con vaults generados por versiones anteriores.
-ZONAS_MANUALES = ("7.0-MANUAL", ".manual")
+ZONAS_MANUALES = ("7.0-MANUAL", "8.0-KNOWLEDGE", ".manual")
 
 
 def _leer_frontmatter_preserve(fpath: str) -> bool:

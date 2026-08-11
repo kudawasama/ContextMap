@@ -353,6 +353,14 @@ def test_grupos_grafo_por_tag_y_path() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_zona_knowledge_protegida() -> None:
+    """8.0-KNOWLEDGE es zona protegida (el build jamás la borra)."""
+    from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
+    assert "8.0-KNOWLEDGE" in ZONAS_MANUALES
+    assert "7.0-MANUAL" in ZONAS_MANUALES
+
+
 def test_tags_dominio_desde_yaml() -> None:
     """Los tags de dominio (grupos reales) se asignan desde dominios.yaml."""
     import json
@@ -475,6 +483,7 @@ if __name__ == "__main__":
         test_snippet_etiquetas_se_genera_y_activa,
         test_grupos_grafo_por_tag_y_path,
         test_tags_dominio_desde_yaml,
+        test_zona_knowledge_protegida,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,

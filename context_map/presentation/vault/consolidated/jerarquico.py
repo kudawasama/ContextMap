@@ -167,6 +167,7 @@ def _render_indice_hierarchico(
         "- [[4.0-RIESGOS/4.0-RIESGOS|4.0 Riesgos]]",
         "- [[5.0-BACKLOG/5.0-BACKLOG|5.0 Backlog]]",
         "- [[6.0-HISTORIAL/6.0-HISTORIAL|6.0 Historial]]",
+        "- [[8.0-KNOWLEDGE/8.0-KNOWLEDGE|8.0 Knowledge (aprendizaje)]]",
         "",
         "---",
         "",

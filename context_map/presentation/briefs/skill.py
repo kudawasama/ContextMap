@@ -89,6 +89,25 @@ siempre el contexto (nunca borres información real ni notas con historia):
 > TODO el vault, no solo 7.0-MANUAL. Guardar siempre el contexto: nada se
 > borra si tiene historia; lo tosco se REDACTa, no se elimina.
 
+## 🧠 MEMORIA VIVA DEL PROYECTO (regla fundamental)
+
+ContextMap ES la memoria del proyecto — y la mantiene el AGENTE,
+constantemente:
+
+- **Documenta AUTOMÁTICAMENTE**: si durante el trabajo surge una idea, una
+  decisión, un porqué o una lección, escríbela en el momento — no esperes a
+  que te lo pidan. Memoria viva = lo conversado queda.
+- **Nota del día** (`{vault}/7.0-MANUAL/Diario/<fecha>.md`): resumen de lo
+  conversado y decidido hoy (qué se hizo, qué se decidió, qué falta).
+- **8.0-KNOWLEDGE** (`{vault}/8.0-KNOWLEDGE/`): el APRENDIZAJE accionable.
+  Cada conocimiento reutilizable se documenta con el formato fijo:
+  🎯 Lección · 🛠️ Cómo se resolvió · 💬 Prompt específico · 📋 Instrucción
+  específica · 🔗 Conexiones. Si una lección puede servir después, es
+  KNOWLEDGE; si es solo registro del día, queda en el Diario.
+- **Criterio**: si lo que conversaste podría reutilizarse (un prompt que
+  funcionó, un error que costó, un procedimiento) → 8.0-KNOWLEDGE. Todo lo
+  demás → nota del día. Ambas zonas con `preserve: true`.
+
 > Regla: el script propone, el AGENTE dispone. El contexto se da por bueno
 > solo cuando el agente lo revisó y lo corrigió.
 

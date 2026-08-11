@@ -165,6 +165,16 @@ deduplicados, historia con los mensajes reales, ideas con alma. **Guardar
 siempre el contexto**: nunca borrar información con historia ni notas
 manuales — lo tosco se redacta, no se elimina.
 
+### 5.2 MEMORIA VIVA DEL PROYECTO (regla fundamental)
+
+ContextMap es la **memoria del proyecto**, mantenida constantemente por el
+agente: si durante el trabajo surge una idea, decisión o lección, se
+**documenta automáticamente** (sin esperar a que lo pidan) en la nota del
+día (`7.0-MANUAL/Diario/`) y, si es reutilizable, como conocimiento
+accionable en `8.0-KNOWLEDGE/` (formato: Lección · Cómo se resolvió ·
+Prompt específico · Instrucción específica · Conexiones). Lo conversado
+siempre queda.
+
 ---
 
 ## 6. Verificación Obligatoria y Commits

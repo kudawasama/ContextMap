@@ -186,6 +186,14 @@ def test_topologia_arbol_estricto() -> None:
             mode="hierarchical",
         )
 
+        # La zona 8.0-KNOWLEDGE la escribe el AGENTE (preserve) — el índice la
+        # enlaza, así que el vault de prueba debe crearla para que el enlace
+        # resuelva (igual que en producción).
+        knowledge_dir = os.path.join(temp_dir, "8.0-KNOWLEDGE")
+        os.makedirs(knowledge_dir, exist_ok=True)
+        with open(os.path.join(knowledge_dir, "8.0-KNOWLEDGE.md"), "w", encoding="utf-8") as f:
+            f.write("---\ntype: indice\npreserve: true\n---\n\n# Knowledge\n")
+
         por_nombre, errores, colisiones = _analizar_vault(temp_dir)
 
         # 1. Índices de concepto únicos por estado (DEVOPS-Pendientes != DEVOPS-Completas)
