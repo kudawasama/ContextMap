@@ -89,7 +89,10 @@ def cmd_build(args) -> None:
     render_obsidian_vault(proj, nodes, edges, vault_path, mode=vault_mode)
 
     # Snippet CSS: etiquetas con color por contexto (se activa solo)
-    from context_map.presentation.vault.consolidated.common import generar_snippet_etiquetas
+    from context_map.presentation.vault.consolidated.common import (
+        generar_snippet_etiquetas,
+        generar_color_groups,
+    )
 
     try:
         snippet = generar_snippet_etiquetas(vault_path)
@@ -97,6 +100,13 @@ def cmd_build(args) -> None:
             print(f"tags: {snippet}")
     except Exception as err:  # noqa: BLE001 — no romper el build por el snippet
         print(f"tags: (sin snippet) {err}")
+
+    try:
+        grafo = generar_color_groups(vault_path)
+        if grafo:
+            print(f"graph-groups: {grafo}")
+    except Exception as err:  # noqa: BLE001
+        print(f"graph-groups: (sin grupos) {err}")
 
     # Snapshot
     snapshot_name = getattr(args, "snapshot_name", "") or None

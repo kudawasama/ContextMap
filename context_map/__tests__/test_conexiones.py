@@ -330,6 +330,29 @@ def test_snippet_etiquetas_se_genera_y_activa() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_grupos_grafo_por_tag_y_path() -> None:
+    """El build genera los grupos de color del grafo (tag/path) en graph.json."""
+    import json
+
+    from context_map.presentation.vault.consolidated.common import generar_color_groups
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_graph_")
+    try:
+        ruta = generar_color_groups(temp_dir)
+        assert ruta and os.path.exists(ruta)
+        with open(ruta, encoding="utf-8") as f:
+            graph = json.load(f)
+        grupos = {g["query"]: g for g in graph["colorGroups"]}
+        assert "tag:#riesgo" in grupos
+        assert "tag:#DEVOPS" in grupos
+        assert "path:4.0-RIESGOS" in grupos
+        assert "path:7.0-MANUAL" in grupos
+        # colores distintos para grupos distintos
+        assert grupos["tag:#riesgo"]["color"]["rgb"] != grupos["tag:#DEVOPS"]["color"]["rgb"]
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_narrativa_idea_limpia_ruido() -> None:
     """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
     from context_map.core.generators import generar_contexto_narrativo
@@ -423,6 +446,7 @@ if __name__ == "__main__":
         test_importador_sesiones_state_db_moderno,
         test_todo_scanner_no_es_idea,
         test_snippet_etiquetas_se_genera_y_activa,
+        test_grupos_grafo_por_tag_y_path,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,

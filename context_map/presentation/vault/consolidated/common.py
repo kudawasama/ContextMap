@@ -15,6 +15,107 @@ from context_map.core.models import Edge, Node
 logger = logging.getLogger(__name__)
 
 
+_COLORES_GRAFO: dict[str, str] = {
+    # Colores VIVOS para grupos del graph view (se distinguen entre sí)
+    "riesgo": "#ef4444",
+    "ideas": "#eab308",
+    "pendiente": "#eab308",
+    "activo": "#3b82f6",
+    "completado": "#22c55e",
+    "cambio": "#f97316",
+    "correccion": "#f97316",
+    "base": "#94a3b8",
+    "prueba": "#94a3b8",
+    "futuro": "#8b5cf6",
+    "manual": "#14b8a6",
+    "historia": "#f59e0b",
+    "backlog": "#d97706",
+    "gobierno": "#059669",
+    "mcp": "#2563eb",
+    "indice": "#64748b",
+    "mejora": "#10b981",
+    "DEVOPS": "#6366f1",
+    "UI": "#ec4899",
+    "ETL": "#06b6d4",
+    "TESTING": "#22c55e",
+    "TUI": "#8b5cf6",
+    "GENERAL": "#94a3b8",
+    "BASEDEDATOS": "#0891b2",
+    "REPORTES": "#f97316",
+    "context-map": "#9b6e12",
+}
+
+_PATH_GRAFO: dict[str, str] = {
+    "00-INDICE": "#64748b",
+    "1.0-PROPOSITO": "#0ea5e9",
+    "2.0-IDEAS": "#eab308",
+    "3.0-ESTRUCTURA": "#8b5cf6",
+    "4.0-RIESGOS": "#ef4444",
+    "5.0-BACKLOG": "#d97706",
+    "6.0-HISTORIAL": "#f59e0b",
+    "7.0-MANUAL": "#14b8a6",
+}
+
+
+def generar_color_groups(vault_dir: str) -> str | None:
+    """Genera los GRUPOS DE COLOR del grafo (graph view) en graph.json.
+
+    Añade ``colorGroups`` a ``.obsidian/graph.json``: un grupo por etiqueta
+    (tag:#riesgo en rojo, tag:#ideas en ámbar...), por estado, por concepto
+    (DEVOPS/UI/ETL...) y por sección (path:4.0-RIESGOS...). Obsidian colorea
+    los NODOS del grafo según estos filtros — funciona con el frontmatter
+    (no depende de etiquetas inline).
+
+    Args:
+        vault_dir (str): Directorio del vault.
+
+    Returns:
+        str | None: Ruta de graph.json o None si falló.
+    """
+    import json
+
+    obsidian_dir = os.path.join(vault_dir, ".obsidian")
+    os.makedirs(obsidian_dir, exist_ok=True)
+    graph_path = os.path.join(obsidian_dir, "graph.json")
+
+    graph: dict = {}
+    if os.path.exists(graph_path):
+        try:
+            with open(graph_path, encoding="utf-8") as f:
+                graph = json.load(f)
+        except Exception:
+            graph = {}
+
+    def _rgb(hex_color: str) -> int:
+        return int(hex_color.lstrip("#"), 16)
+
+    nuevos: list[dict] = []
+    for etiqueta, color in sorted(_COLORES_GRAFO.items()):
+        nuevos.append({
+            "query": f"tag:#{etiqueta}",
+            "color": {"a": 1, "rgb": _rgb(color)},
+        })
+    for ruta, color in sorted(_PATH_GRAFO.items()):
+        nuevos.append({
+            "query": f"path:{ruta}",
+            "color": {"a": 1, "rgb": _rgb(color)},
+        })
+
+    # Reemplazar los colorGroups (los nuestros cubren tags y paths completos)
+    graph["colorGroups"] = nuevos
+    graph.setdefault("collapse-filter", False)
+    graph.setdefault("showTags", True)
+    graph.setdefault("showAttachments", False)
+    graph.setdefault("hideUnresolved", False)
+    graph.setdefault("showOrphans", True)
+    graph.setdefault("collapse-color-groups", False)
+
+    with open(graph_path, "w", encoding="utf-8") as f:
+        json.dump(graph, f, ensure_ascii=False, indent=2)
+
+    return graph_path
+
+
 def _linea_tags_inline(n: Node) -> str:
     """Línea de etiquetas inline coloreadas para poner bajo el título de una nota.
 
