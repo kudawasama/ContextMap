@@ -234,6 +234,41 @@ uv pip install --force-reinstall git+https://github.com/kudawasama/ContextMap.gi
 
 ---
 
+## 🔌 Servidor MCP (`ctxmap mcp`)
+
+ContextMap expone sus herramientas como **tools MCP** (transporte stdio) para que
+cualquier agente compatible (Hermes Agent, Claude Desktop, Cursor, Windsurf)
+las llame directamente, sin shell:
+
+```bash
+ctxmap mcp     # arranca el servidor (bloqueante, stdio)
+```
+
+Tools disponibles: `refresh` (el flujo completo), `scan`, `build`, `check`,
+`import_git`, `import_chat`, `import_sessions`, `adapt` y `context` (lee el
+CONTEXT.md del proyecto).
+
+Conexión en Hermes (se descubren como `mcp_ctxmap_*` en cada conversación):
+
+```bash
+hermes mcp add ctxmap --command ctxmap --args mcp
+```
+
+En Claude Desktop / Cursor, añade a la config MCP:
+
+```json
+{
+  "mcpServers": {
+    "ctxmap": { "command": "ctxmap", "args": ["mcp"] }
+  }
+}
+```
+
+> Requiere el extra `mcp` (SDK): instala con
+> `uv tool install --force --reinstall --with "mcp>=1.2.0,<2.0.0" .`
+
+---
+
 ## Lista Completa de Comandos
 
 ```bash
