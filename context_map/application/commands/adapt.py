@@ -72,9 +72,16 @@ def cmd_adapt(args) -> None:
     proj = project_name(args)
 
     print(f"🔍 Analizando ecosistema de '{target}'...")
+    if getattr(args, "overwrite", False):
+        modo = "overwrite"
+    elif getattr(args, "merge", False):
+        modo = "merge"
+    else:
+        modo = "respect"
+
     do_adapt(
         target=target,
         project_name=proj,
-        modo="merge" if getattr(args, "merge", False) else "respect",
+        modo=modo,
         quiet=False,
     )

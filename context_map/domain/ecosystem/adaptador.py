@@ -388,6 +388,41 @@ Después de cada commit:
 """
 
 
+def _es_generado_ctxmap(ruta: str) -> bool:
+    """True si el archivo de reglas fue generado por ContextMap.
+
+    Los AGENTS.md de versiones anteriores del generador no traen los marcadores
+    ``CONTEXTMAP:BEGIN/END`` pero sí mencionan ContextMap en su cabecera, lo que
+    permite distinguirlos de un AGENTS.md escrito a mano por el usuario.
+    """
+    if not os.path.exists(ruta):
+        return False
+    try:
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            contenido = f.read()
+    except Exception:
+        return False
+    return (
+        "CONTEXTMAP:BEGIN" in contenido
+        or "ContextMap" in contenido
+        or "context-map" in contenido
+    )
+
+
+def _tiene_memoria_viva(ruta: str) -> bool:
+    """True si el archivo ya incluye la regla de memoria viva (v1.5+)."""
+    if not os.path.exists(ruta):
+        return False
+    try:
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            contenido = f.read().lower()
+    except Exception:
+        return False
+    return any(
+        marca in contenido for marca in ("memoria viva", "8.0-knowledge", "7.0-manual")
+    )
+
+
 def adaptar_ecosistema(
     project_name: str,
     eco: EcosistemaInfo,
@@ -464,7 +499,30 @@ def adaptar_ecosistema(
             generados.append(f"{ruta_rel} (merge)")
             return
 
-        # modo respect: no tocar existente
+        # modo respect: no tocar existente, salvo UPGRADE de reglas fundamentales
+        # (fix 2026-08-11, hallazgo B del piloto en Bot_AX_Contable): si el archivo
+        # fue generado por una versión ANTERIOR de ContextMap (contiene la marca)
+        # pero le falta la regla de memoria viva (v1.5+), se le anexa el bloque
+        # ContextMap con las reglas nuevas — los archivos manuales se respetan.
+        if _es_generado_ctxmap(ruta) and not _tiene_memoria_viva(ruta):
+            with open(ruta, encoding="utf-8") as f:
+                actual = f.read()
+            bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
+            if MARCA_INICIO in actual:
+                import re as _re
+                nuevo = _re.sub(
+                    _re.escape(MARCA_INICIO) + r".*?" + _re.escape(MARCA_FIN),
+                    bloque.strip(),
+                    actual,
+                    flags=_re.DOTALL,
+                )
+            else:
+                # anexar al final preservando las reglas previas
+                nuevo = actual.rstrip() + "\n" + bloque
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(nuevo)
+            generados.append(f"{ruta_rel} (upgrade memoria viva)")
+            return
         logger.debug("Regla existente, se respeta: %s", ruta_rel)
 
     # 1. AGENTS.md contextual: crea si no existe; respect/merge/overwrite según modo

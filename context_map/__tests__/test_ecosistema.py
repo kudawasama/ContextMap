@@ -314,6 +314,84 @@ def test_adaptar_merge_vs_overwrite() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_adaptar_upgrade_memoria_viva_agents_generado() -> None:
+    """Un AGENTS.md generado por una versión ANTERIOR de ContextMap (sin la regla
+    de memoria viva) se actualiza en modo respect (hallazgo B, caso Bot_AX_Contable).
+
+    El archivo contiene la marca de ContextMap (fue generado por ctxmap) pero NO
+    la regla de memoria viva (v1.5+) → se le anexa el bloque ContextMap con las
+    reglas nuevas, preservando el contenido previo.
+    """
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write(
+                "# Instrucciones — Bot Demo\n\n"
+                "Este proyecto utiliza **ContextMap** para gobernanza de contexto.\n"
+                "## 1. Protocolo de Inicio\n- Leer el brief\n"
+            )
+
+        eco = detectar_ecosistema(temp_dir)
+        generados = adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="respect")
+
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+
+        # Reglas previas preservadas
+        assert "Protocolo de Inicio" in contenido, "Se perdió el contenido previo"
+        # Nueva regla de memoria viva propagada
+        assert "memoria viva" in contenido.lower(), "No se propagó la regla de memoria viva"
+        assert "CONTEXTMAP:BEGIN" in contenido, "Falta el marcador del bloque ContextMap"
+        assert any("upgrade" in g for g in generados), f"Debe reportarse el upgrade (generados: {generados})"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_respect_no_upgrade_manual() -> None:
+    """Un AGENTS.md MANUAL (sin marca de ContextMap) NO se toca en modo respect,
+    aunque le falte la memoria viva (el upgrade solo aplica a archivos generados)."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write("# Reglas manuales SOLO del equipo")
+
+        eco = detectar_ecosistema(temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="respect")
+
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+        assert contenido.strip() == "# Reglas manuales SOLO del equipo", (
+            "respect modificó un AGENTS.md manual"
+        )
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_cmd_adapt_overwrite_flag_funciona() -> None:
+    """El flag --overwrite llega a adaptar_ecosistema (antes se ignoraba en cmd_adapt)."""
+    from argparse import Namespace
+
+    from context_map.application.commands.adapt import cmd_adapt
+
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write("# Reglas manuales SOLO")
+
+        args = Namespace(target=temp_dir, project="DemoProj", overwrite=True, merge=False)
+        cmd_adapt(args)
+
+        with open(agents_path, encoding="utf-8") as f:
+            contenido = f.read()
+        assert "DemoProj" in contenido, "--overwrite no regeneró AGENTS.md"
+        assert "Reglas manuales SOLO" not in contenido, "--overwrite debía reemplazar completo"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Detección de stack ===")
     test_detectar_stack_python()
