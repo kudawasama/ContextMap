@@ -286,6 +286,15 @@ def _render_seccion_ideas(
     pendientes = [n for n in idea_nodes if n.status == "pendiente"]
     activas = [n for n in idea_nodes if n.status == "activo"]
 
+    # Filtrar TODOs con código crudo (deuda técnica del scanner — no son ideas)
+    from context_map.presentation.vault.consolidated.secciones_backlog import (
+        _es_todo_codigo,
+    )
+
+    completadas = [n for n in completadas if not _es_todo_codigo(n)]
+    pendientes = [n for n in pendientes if not _es_todo_codigo(n)]
+    activas = [n for n in activas if not _es_todo_codigo(n)]
+
     # Todos los nodos del mapa (para la sección de conexiones de cada nota)
     todos_nodos: list[Node] = [
         n for grupo in clasificados.values() for n in grupo
@@ -469,10 +478,12 @@ def _render_seccion_ideas(
                     "",
                 ]
                 for n in batch:
-                    batch_parts.append(f"## 🔧 {n.title}")
+                    from context_map.core.generators.generadores import _titulo_limpio
+
+                    batch_parts.append(f"## 🔧 {_titulo_limpio(n.title)}")
                     batch_parts.append("")
                     if n.summary:
-                        batch_parts.append(n.summary)
+                        batch_parts.append(_titulo_limpio(n.summary))
                         batch_parts.append("")
                 batch_parts.extend(pie_fn(
                     f"[[{concepto}-Completas|⬅ Volver a {concepto}]]",
