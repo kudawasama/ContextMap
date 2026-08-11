@@ -164,15 +164,58 @@ relaciones reales y el vault se ve y navega como un mapa mental profesional:
 
 ---
 
-## 🛡️ Zona protegida `.manual/` — tu trabajo nunca se borra
+## 🛡️ Zona protegida — tu trabajo nunca se borra
 
-Cualquier nota que crees a mano en el vault vive en **`.context-map/vault-<proyecto>/.manual/`**:
-`build --clean` JAMÁS la borra (también respeta notas con `preserve: true` en el frontmatter,
-donde sea que estén). Al limpiar, ContextMap reporta cuántas notas manuales preservó y el
-índice `00-INDICE.md` las enlaza.
+Las zonas **`7.0-MANUAL/`** (historia conversada, decisiones, diario) y
+**`8.0-KNOWLEDGE/`** (aprendizaje del agente) son VISIBLES en Obsidian y el
+build JAMÁS las borra (también respeta notas con `preserve: true` en el
+frontmatter, donde sea que estén; `.manual/` se preserva por compatibilidad).
+Al limpiar, ContextMap reporta cuántas notas manuales preservó y el índice
+`00-INDICE.md` las enlaza.
 
 > Crea ahí tus notas de sesión, decisiones y registros — el build las conserva y el
 > agente del IDE las lee como parte del contexto.
+
+---
+
+## 🧠 Memoria viva y 8.0-KNOWLEDGE (el aprendizaje del agente)
+
+ContextMap es la **memoria del proyecto**, mantenida constantemente por el
+agente: si durante el trabajo surge una idea, decisión o lección, el agente la
+**documenta automáticamente** (sin esperar a que lo pidan) en:
+
+- **Nota del día** — `7.0-MANUAL/Diario/<fecha>.md`: lo conversado y decidido hoy.
+- **8.0-KNOWLEDGE/** — `vault-<proyecto>/8.0-KNOWLEDGE/`: el APRENDIZAJE
+  accionable. Cada conocimiento reutilizable con formato fijo:
+  🎯 Lección · 🛠️ Cómo se resolvió · 💬 Prompt específico · 📋 Instrucción
+  específica · 🔗 Conexiones.
+
+Ambas zonas son protegidas (`preserve: true`) — el build jamás las borra.
+Criterio: si lo conversado puede reutilizarse (un prompt que funcionó, un error
+que costó, un procedimiento) → KNOWLEDGE; si es solo registro del día → Diario.
+
+### 🎨 Grupos de color por contexto
+
+- **Etiquetas inline** con color por tag: snippet autogenerado
+  `.obsidian/snippets/colored-tags.css` (se activa solo en appearance.json).
+- **Grupos del grafo** (graph view): `graph.json` → `colorGroups` — un grupo
+  por tag (`tag:#riesgo` rojo), por sección (`path:4.0-RIESGOS`) y por
+  dominio temático. Funciona con el frontmatter.
+- **Dominios reales del proyecto**: `.context-map/dominios.yaml` — define los
+  GRUPOS temáticos del proyecto con palabras clave; cada nota se etiqueta
+  `grupo-<dominio>` según su contenido. Edítalo para tus grupos reales.
+
+### 📥 Importar la historia conversada
+
+```bash
+ctxmap import-sessions --project <Nombre>   # sesiones de Hermes (state.db)
+ctxmap import-git --project <Nombre>        # historial de commits
+ctxmap import-chat --file <chat.jsonl>      # chat exportado
+```
+
+> El importador de sesiones filtra por proyecto (cwd/git_repo_root): SIEMPRE
+> usa `--project` — sin filtro contamina el vault con sesiones de otros
+> proyectos. Hermes guarda sus sesiones en `state.db` (no `sessions.db`).
 
 ---
 
