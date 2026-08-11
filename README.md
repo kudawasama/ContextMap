@@ -260,6 +260,12 @@ uv pip install pymupdf   # o: pip install -e ".[pdf]"
 
 ## Actualizar a la última versión
 
+> 🔔 **Aviso automático**: `ctxmap check`, `ctxmap build` y `ctxmap refresh`
+> comparan la versión local con el último tag de GitHub (caché de 24h). Si hay
+> una versión nueva, avisan al final: "⬆️ Hay una actualización disponible:
+> vX.Y.Z (tienes A.B.C)". Para publicar una versión: bump en `pyproject.toml`
+> + `git tag vX.Y.Z` + `git push origin vX.Y.Z`.
+
 > ⚠️ `ctxmap update` está ROTO en Windows. La forma confiable es con uv:
 
 ```bash
