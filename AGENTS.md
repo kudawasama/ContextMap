@@ -156,6 +156,15 @@ Toda nota generada para una entidad en el Vault debe invocar `generar_contexto_n
 * **`PRUEBA`**: Funcionalidad validada, Criterios de Aceptación y comando `pytest`.
 * **`FUTURO`**: Tarea pendiente (TODO), Ubicación en código y Prioridad.
 
+### 5.1 HUMANIZAR TODOS LOS ARCHIVOS (regla obligatoria)
+
+Al actualizar el contexto, el agente debe revisar y **redactar TODOS los
+archivos del vault** (no solo `7.0-MANUAL/`): índices con propósito (no
+conteos), narrativas sin plantillas vacías, títulos legibles, riesgos
+deduplicados, historia con los mensajes reales, ideas con alma. **Guardar
+siempre el contexto**: nunca borrar información con historia ni notas
+manuales — lo tosco se redacta, no se elimina.
+
 ---
 
 ## 6. Verificación Obligatoria y Commits
