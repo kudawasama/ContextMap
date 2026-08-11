@@ -67,6 +67,28 @@ NO des el output del script por bueno. Ejecuta el ciclo completo:
    - Título feo → corrígelo en el estado/nota para que se lea como humano.
 4. **REGENERA Y RE-VERIFICA** si corregiste (refresh de nuevo + check).
 
+## ✍️ HUMANIZAR TODOS LOS ARCHIVOS (regla obligatoria)
+
+El propósito del vault es que TODOS los archivos se lean como la historia
+del proyecto — no solo la zona manual. Al actualizar, revisa CADA archivo
+del vault (0.0 a 7.0) y redacta lo que el scanner dejó tosco, PRESERVANDO
+siempre el contexto (nunca borres información real ni notas con historia):
+
+- **Índices (X.0)**: que digan qué hay y por qué, no solo conteos.
+- **1.x**: propósito/biblia con el alma real; datos clave reales; sin métricas.
+- **2.x**: ideas con narrativa honesta (10 preguntas); TODOs del scanner
+  NO son ideas (filtrados) — si aparece uno, muévelo a tarjeta técnica.
+- **3.x**: fundamentos reales (no "Proyecto 'X' — N archivos" repetidos).
+- **4.x**: riesgos reales, deduplicados, con paths legibles y por qué importan.
+- **5.x**: tareas reales con criterios de listo; sin código crudo.
+- **6.x**: historia legible (mensajes de commits, no plantillas de 5 preguntas).
+- **7.0-MANUAL/**: zona protegida — escribe aquí la historia conversada
+  (decisiones, porqués, ideas) con `preserve: true`.
+
+> Regla de oro: el script propone, el AGENTE dispone — y el agente humaniza
+> TODO el vault, no solo 7.0-MANUAL. Guardar siempre el contexto: nada se
+> borra si tiene historia; lo tosco se REDACTa, no se elimina.
+
 > Regla: el script propone, el AGENTE dispone. El contexto se da por bueno
 > solo cuando el agente lo revisó y lo corrigió.
 
