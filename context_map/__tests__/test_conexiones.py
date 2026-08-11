@@ -169,9 +169,12 @@ def test_plantillas_y_nota_del_dia() -> None:
             contenido = f.read()
         assert "preserve: true" in contenido
 
-        nodos = [_nodo("I1", titulo="Bot", concepto="DEVOPS", fecha="2026-08-10T09:00:00")]
+        from datetime import datetime
+
+        hoy = datetime.now().strftime("%Y-%m-%d")
+        nodos = [_nodo("I1", titulo="Bot", concepto="DEVOPS", fecha=f"{hoy}T09:00:00")]
         render_nota_dia(temp_dir, "Demo", nodos)
-        diario = os.path.join(temp_dir, ".context-map", "vault-Demo", "7.0-MANUAL", "Diario", "2026-08-10.md")
+        diario = os.path.join(temp_dir, ".context-map", "vault-Demo", "7.0-MANUAL", "Diario", f"{hoy}.md")
         assert os.path.exists(diario)
         with open(diario, encoding="utf-8") as f:
             nota = f.read()
@@ -265,6 +268,44 @@ def test_todo_codigo_no_es_tarea() -> None:
     assert not _es_todo_codigo(limpio)  # TODO con texto legible SÍ es tarea
 
 
+def test_importador_sesiones_state_db_moderno() -> None:
+    """El importador lee el state.db moderno de Hermes (started_at/timestamp)."""
+    import sqlite3
+
+    from context_map.infrastructure.integrations.hermes import leer_sesiones
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_state_")
+    try:
+        db = os.path.join(temp_dir, "state.db")
+        conn = sqlite3.connect(db)
+        conn.execute("CREATE TABLE sessions (id TEXT, title TEXT, started_at TEXT)")
+        conn.execute("CREATE TABLE messages (id TEXT, session_id TEXT, role TEXT, content TEXT, timestamp TEXT)")
+        conn.execute("INSERT INTO sessions VALUES ('s1', 'Sesion de prueba', '2026-08-10T10:00:00')")
+        conn.execute("INSERT INTO messages VALUES ('m1', 's1', 'user', 'Hola', '2026-08-10T10:00:01')")
+        conn.execute("INSERT INTO messages VALUES ('m2', 's1', 'assistant', 'Respuesta', '2026-08-10T10:00:02')")
+        conn.commit()
+        conn.close()
+
+        sesiones = leer_sesiones(db_path=db, limite=5)
+        assert len(sesiones) == 1
+        assert sesiones[0].titulo == "Sesion de prueba"
+        assert len(sesiones[0].mensajes) == 2
+        assert sesiones[0].mensajes[0].contenido == "Hola"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_todo_scanner_no_es_idea() -> None:
+    """Todo TODO del scanner (aunque sea legible) no es una idea del proyecto."""
+    from context_map.presentation.vault.consolidated.secciones_backlog import _es_todo_scanner
+
+    todo_legible = _nodo("F1", tipo="FUTURO", titulo="TODO (x.py:L1): texto legible de tarea")
+    idea_real = _nodo("I1", tipo="IDEA", titulo="feat: priorizar nombre de repositorio GitHub")
+
+    assert _es_todo_scanner(todo_legible)
+    assert not _es_todo_scanner(idea_real)
+
+
 def test_narrativa_idea_limpia_ruido() -> None:
     """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
     from context_map.core.generators import generar_contexto_narrativo
@@ -355,6 +396,8 @@ if __name__ == "__main__":
         test_titulo_legible_quita_ruido,
         test_restaurar_paths_legibles,
         test_todo_codigo_no_es_tarea,
+        test_importador_sesiones_state_db_moderno,
+        test_todo_scanner_no_es_idea,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,

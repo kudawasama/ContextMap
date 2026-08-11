@@ -8,6 +8,24 @@ from context_map.core.models import Node
 from context_map.presentation.vault.consolidated.common import _escribir_markdown
 
 
+def _es_todo_scanner(n) -> bool:
+    """True si el nodo es un TODO del scanner (con path 'TODO (ruta.py:...)').
+
+    Aunque el texto sea legible, un TODO del código NO es una idea del
+    proyecto: es deuda técnica. Se excluye de las secciones de ideas (2.x)
+    para que el vault no muestre pendientes de código como ideas.
+
+    Args:
+        n (Node): Nodo FUTURO/IDEA del scanner.
+
+    Returns:
+        bool: True si debe excluirse de las ideas.
+    """
+    import re
+
+    return bool(re.match(r"^TODO\s*\(", (n.title or "").strip()))
+
+
 def _es_todo_codigo(n) -> bool:
     """True si el nodo FUTURO es un TODO con código crudo (ruido del scanner).
 

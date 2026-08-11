@@ -34,17 +34,40 @@ class Sesion:
 
 
 def _encontrar_db_sessions() -> str | None:
-    """Busca la base de datos de sesiones de Hermes."""
-    # Rutas comunes donde Hermes guarda sesiones
-    rutas_posibles = [
+    """Busca la base de datos de sesiones de Hermes.
+
+    Hermes guarda las sesiones en ``state.db`` (no ``sessions.db``) dentro de
+    su HERMES_HOME. En Windows el home está en ``%LOCALAPPDATA%/hermes``; en
+    Unix en ``~/.hermes``. También revisa los homes de perfiles
+    (``profiles/<nombre>/state.db``).
+
+    Returns:
+        str | None: Ruta a la DB de sesiones o None.
+    """
+    import glob
+
+    candidatos = [
+        os.path.expanduser("~/.hermes/state.db"),
+        os.path.expanduser("~/AppData/Local/hermes/state.db"),
+        os.path.expanduser("~/.config/hermes/state.db"),
+        # compatibilidad con la convención vieja sessions.db
         os.path.expanduser("~/.hermes/sessions.db"),
         os.path.expanduser("~/AppData/Local/hermes/sessions.db"),
         os.path.expanduser("~/.config/hermes/sessions.db"),
     ]
-
-    for ruta in rutas_posibles:
+    for ruta in candidatos:
         if os.path.exists(ruta):
             return ruta
+
+    # homes de perfiles: <root>/profiles/<nombre>/state.db
+    for patron in (
+        os.path.expanduser("~/.hermes/profiles/*/state.db"),
+        os.path.expanduser("~/AppData/Local/hermes/profiles/*/state.db"),
+        os.path.expanduser("~/.config/hermes/profiles/*/state.db"),
+    ):
+        coincidencias = glob.glob(patron)
+        if coincidencias:
+            return coincidencias[0]
 
     return None
 
@@ -76,8 +99,18 @@ def leer_sesiones(
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        # Detectar columnas reales (state.db moderno: started_at/timestamp;
+        # convención vieja: created_at)
+        cols_sessions = [r[1] for r in cursor.execute("PRAGMA table_info(sessions)")]
+        cols_messages = [r[1] for r in cursor.execute("PRAGMA table_info(messages)")]
+        col_fecha_s = "started_at" if "started_at" in cols_sessions else ("created_at" if "created_at" in cols_sessions else "id")
+        col_fecha_m = "timestamp" if "timestamp" in cols_messages else ("created_at" if "created_at" in cols_messages else "id")
+
         # Buscar sesiones
-        query = "SELECT id, title, created_at FROM sessions ORDER BY created_at DESC"
+        query = (
+            f"SELECT id, title, {col_fecha_s} FROM sessions "
+            f"ORDER BY {col_fecha_s} DESC"
+        )
         if limite:
             query += f" LIMIT {limite}"
 
@@ -88,12 +121,12 @@ def leer_sesiones(
             sesion = Sesion(
                 id=str(fila[0]),
                 titulo=fila[1] or "Sin título",
-                fecha_inicio=fila[2] or "",
+                fecha_inicio=str(fila[2] or ""),
             )
 
             # Leer mensajes de esta sesión
             cursor.execute(
-                "SELECT id, role, content, created_at FROM messages WHERE session_id = ? ORDER BY created_at",
+                f"SELECT id, role, content, {col_fecha_m} FROM messages WHERE session_id = ? ORDER BY {col_fecha_m}",
                 (fila[0],)
             )
             mensajes = cursor.fetchall()
@@ -103,7 +136,7 @@ def leer_sesiones(
                     id=msg[0],
                     rol=msg[1] or "unknown",
                     contenido=msg[2] or "",
-                    timestamp=msg[3] or "",
+                    timestamp=str(msg[3] or ""),
                 ))
 
             sesiones.append(sesion)

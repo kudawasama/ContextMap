@@ -286,14 +286,14 @@ def _render_seccion_ideas(
     pendientes = [n for n in idea_nodes if n.status == "pendiente"]
     activas = [n for n in idea_nodes if n.status == "activo"]
 
-    # Filtrar TODOs con código crudo (deuda técnica del scanner — no son ideas)
+    # Filtrar TODOs del scanner (deuda técnica — no son ideas del proyecto)
     from context_map.presentation.vault.consolidated.secciones_backlog import (
-        _es_todo_codigo,
+        _es_todo_scanner,
     )
 
-    completadas = [n for n in completadas if not _es_todo_codigo(n)]
-    pendientes = [n for n in pendientes if not _es_todo_codigo(n)]
-    activas = [n for n in activas if not _es_todo_codigo(n)]
+    completadas = [n for n in completadas if not _es_todo_scanner(n)]
+    pendientes = [n for n in pendientes if not _es_todo_scanner(n)]
+    activas = [n for n in activas if not _es_todo_scanner(n)]
 
     # Todos los nodos del mapa (para la sección de conexiones de cada nota)
     todos_nodos: list[Node] = [
