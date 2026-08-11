@@ -287,6 +287,16 @@ def test_narrativa_idea_limpia_ruido() -> None:
     assert "Pendiente de contexto" in narrativa
 
 
+def test_servidor_mcp_expone_herramientas() -> None:
+    """El servidor MCP registra las tools de ContextMap (sin mcp instalado no falla el import)."""
+    from context_map.infrastructure import mcp_server
+
+    assert mcp_server is not None
+    # Las tools se definen como funciones en el módulo (decorador condicional)
+    for nombre in ("refresh", "scan", "build", "check", "import_git", "context"):
+        assert hasattr(mcp_server, nombre), f"falta tool {nombre}"
+
+
 def test_edges_relaciona_por_menciones_cruzadas() -> None:
     """T12: la historia conecta — un evento que menciona 2+ nodos crea edge 'relaciona'."""
     from context_map.core.models import Event
@@ -345,6 +355,7 @@ if __name__ == "__main__":
         test_titulo_legible_quita_ruido,
         test_restaurar_paths_legibles,
         test_todo_codigo_no_es_tarea,
+        test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,
         test_narrativa_idea_limpia_ruido,

@@ -35,6 +35,11 @@ def create_parser() -> argparse.ArgumentParser:
     s_refresh.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_refresh.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
+    sub.add_parser(
+        "mcp",
+        help="Arranca el servidor MCP (stdio) que expone las herramientas de ctxmap como tools",
+    )
+
     sub.add_parser("init", help="Crea estructura .context-map/")
 
     s_build = sub.add_parser("build", help="Genera vault completo")

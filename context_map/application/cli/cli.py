@@ -30,6 +30,13 @@ from context_map.application.commands.adapt import cmd_adapt
 from context_map.core.logging_setup import setup_logging
 
 
+def cmd_mcp(args=None) -> None:
+    """Arranca el servidor MCP de ContextMap (stdio)."""
+    from context_map.infrastructure.mcp_server import run
+
+    run()
+
+
 def main() -> None:
     """Punto de entrada principal de la CLI."""
     p = create_parser()
@@ -60,6 +67,7 @@ def main() -> None:
         "hook": cmd_hook_install,
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
+        "mcp": cmd_mcp,
     }
 
     if args.cmd == "sync":
