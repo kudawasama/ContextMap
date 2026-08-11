@@ -101,6 +101,18 @@ def generar_color_groups(vault_dir: str) -> str | None:
             "color": {"a": 1, "rgb": _rgb(color)},
         })
 
+    # Grupos de DOMINIO (los grupos reales del contexto, desde dominios.yaml)
+    paleta_dominios = [
+        "#f43f5e", "#8b5cf6", "#059669", "#2563eb", "#06b6d4",
+        "#0ea5e9", "#14b8a6", "#d946ef", "#f59e0b", "#10b981",
+    ]
+    cwd_proyecto = os.path.dirname(os.path.dirname(vault_dir))
+    for i, dominio in enumerate(sorted(_leer_dominios(cwd_proyecto).keys())):
+        nuevos.append({
+            "query": f"tag:#grupo-{dominio}",
+            "color": {"a": 1, "rgb": _rgb(paleta_dominios[i % len(paleta_dominios)])},
+        })
+
     # Reemplazar los colorGroups (los nuestros cubren tags y paths completos)
     graph["colorGroups"] = nuevos
     graph.setdefault("collapse-filter", False)
@@ -116,7 +128,63 @@ def generar_color_groups(vault_dir: str) -> str | None:
     return graph_path
 
 
-def _linea_tags_inline(n: Node) -> str:
+_DOMINIOS_CACHE: dict[str, dict[str, list[str]]] = {}
+
+
+def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
+    """Lee los dominios temáticos del proyecto desde ``.context-map/dominios.yaml``.
+
+    Cada dominio define palabras clave; una nota se etiqueta con
+    ``grupo-<dominio>`` cuando su título/resumen las menciona. Son los
+    GRUPOS REALES del contexto (configurables por proyecto).
+
+    Args:
+        cwd (str | None): Directorio del proyecto (default: os.getcwd()).
+
+    Returns:
+        dict[str, list[str]]: Mapeo dominio -> palabras clave.
+    """
+    import yaml
+
+    base = cwd or os.getcwd()
+    ruta = os.path.join(base, ".context-map", "dominios.yaml")
+    if ruta in _DOMINIOS_CACHE:
+        return _DOMINIOS_CACHE[ruta]
+    dominios: dict[str, list[str]] = {}
+    try:
+        if os.path.isfile(ruta):
+            with open(ruta, encoding="utf-8") as f:
+                datos = yaml.safe_load(f) or {}
+            for nombre, claves in datos.items():
+                if isinstance(claves, list):
+                    dominios[str(nombre)] = [str(c).lower() for c in claves]
+    except Exception as err:  # noqa: BLE001 — los dominios son opcionales
+        logger.debug("dominios.yaml no legible: %s", err)
+    _DOMINIOS_CACHE[ruta] = dominios
+    return dominios
+
+
+def _tags_dominio(n: Node, cwd: str | None = None) -> list[str]:
+    """Devuelve los tags ``grupo-<dominio>`` que aplican al nodo.
+
+    Args:
+        n (Node): Nodo del mapa.
+        cwd (str | None): Directorio del proyecto.
+
+    Returns:
+        list[str]: Etiquetas de dominio (ej. ``grupo-humanizacion``).
+    """
+    texto = f"{n.title or ''} {n.summary or ''}".lower()
+    if not texto.strip():
+        return []
+    resultado: list[str] = []
+    for nombre, claves in _leer_dominios(cwd).items():
+        if any(c in texto for c in claves):
+            resultado.append(f"grupo-{nombre}")
+    return resultado
+
+
+def _linea_tags_inline(n: Node, cwd: str | None = None) -> str:
     """Línea de etiquetas inline coloreadas para poner bajo el título de una nota.
 
     Devuelve algo como ``> #ideas #pendiente #DEVOPS`` (se pinta con el
@@ -148,6 +216,8 @@ def _linea_tags_inline(n: Node) -> str:
         etiquetas.append(estado)
     if concepto:
         etiquetas.append(concepto)
+    # Tags de dominio (grupos REALES del contexto, de dominios.yaml)
+    etiquetas.extend(_tags_dominio(n, cwd))
     if not etiquetas:
         return ""
     return "> " + " ".join(f"#{e}" for e in etiquetas)

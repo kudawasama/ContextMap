@@ -353,6 +353,33 @@ def test_grupos_grafo_por_tag_y_path() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_tags_dominio_desde_yaml() -> None:
+    """Los tags de dominio (grupos reales) se asignan desde dominios.yaml."""
+    import json
+
+    from context_map.presentation.vault.consolidated.common import (
+        _leer_dominios,
+        _tags_dominio,
+    )
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_dom_")
+    try:
+        os.makedirs(os.path.join(temp_dir, ".context-map"), exist_ok=True)
+        with open(os.path.join(temp_dir, ".context-map", "dominios.yaml"), "w", encoding="utf-8") as f:
+            f.write("humanizacion:\n  - humaniz\n  - legible\nmcp:\n  - servidor mcp\n  - hermes\n")
+
+        nodo = _nodo("I1", tipo="IDEA", titulo="Humanización del scanner: títulos legibles")
+        tags = _tags_dominio(nodo, cwd=temp_dir)
+        assert "grupo-humanizacion" in tags
+        assert "grupo-mcp" not in tags
+
+        nodo2 = _nodo("I2", tipo="IDEA", titulo="Servidor MCP para Hermes")
+        assert "grupo-mcp" in _tags_dominio(nodo2, cwd=temp_dir)
+        assert len(_leer_dominios(temp_dir)) == 2
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_narrativa_idea_limpia_ruido() -> None:
     """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
     from context_map.core.generators import generar_contexto_narrativo
@@ -447,6 +474,7 @@ if __name__ == "__main__":
         test_todo_scanner_no_es_idea,
         test_snippet_etiquetas_se_genera_y_activa,
         test_grupos_grafo_por_tag_y_path,
+        test_tags_dominio_desde_yaml,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,
