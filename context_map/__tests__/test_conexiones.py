@@ -226,6 +226,41 @@ def test_proposito_biblia_extrae_identidad() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_proposito_biblia_no_captura_requisitos_como_identidad() -> None:
+    """Tagline largo + primera sección operativa (Requisitos) → la biblia es el tagline, no los requisitos.
+
+    Reproduce el caso real Bot_AX_Contable: el README abre con una frase de
+    identidad de ~150 caracteres (mayor al antiguo límite de 140) y la primera
+    sección ``## 🚀 Requisitos`` (que antes se capturaba como "alma" porque la
+    primera sección no pasaba el filtro SECCIONES_NO_IDENTIDAD).
+    """
+    from context_map.presentation.vault.consolidated.common import _extract_proposito_biblia
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_biblia_req_")
+    try:
+        with open(os.path.join(temp_dir, "README.md"), "w", encoding="utf-8") as f:
+            f.write(
+                "# Bot AX Contable\n\n"
+                "Bot de automatización para **Microsoft Dynamics AX** que registra diarios "
+                "contables automáticamente mediante reconocimiento de imágenes y OCR (Tesseract).\n\n"
+                "---\n\n"
+                "## 🚀 Requisitos\n\n"
+                "- **Python 3.12** (o 3.11+)\n"
+                "- **Tesseract OCR** — Descargar desde UB-Mannheim\n"
+                "- Dependencias Python: `pip install -r requirements.txt`\n\n"
+                "## 📦 Instalación\n\n"
+                "```bash\npip install -r requirements.txt\n```\n"
+            )
+        biblia = _extract_proposito_biblia(temp_dir)
+        assert "Bot de automatización" in biblia
+        assert "Dynamics AX" in biblia
+        assert "Python 3.12" not in biblia  # requisitos NO son identidad
+        assert "Tesseract OCR" not in biblia
+        assert "pip install" not in biblia  # instalación NO entra
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_es_ruido_identidad() -> None:
     """El ruido del scanner no entra a la biblia (1.3-Proposito)."""
     from context_map.presentation.vault.consolidated.secciones_proposito import (

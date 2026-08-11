@@ -350,6 +350,16 @@ def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: 
         "instalación", "instalacion", "licencia", "contribuir",
         "comparativa", "lista completa de comandos", "comandos",
         "referencias", "changelog", "roadmap",
+        # Secciones operativas — NO son identidad (ampliado 2026-08-11 tras el
+        # piloto en Bot_AX_Contable: la primera sección del README era
+        # "## 🚀 Requisitos" y se capturaba como "alma").
+        "requisitos", "requerimientos", "requirements", "dependencias",
+        "prerequisitos", "pre-requisitos", "configuración inicial",
+        "configuracion inicial", "uso", "uso rápido", "uso rapido",
+        "instrucciones", "instalación y uso", "instalacion y uso",
+        "puesta en marcha", "quickstart", "inicio rápido", "inicio rapido",
+        "ejecución", "ejecucion", "cómo usar", "como usar",
+        "cómo se usa", "como se usa",
     }
 
     readme_path = os.path.join(cwd, "README.md")
@@ -379,13 +389,17 @@ def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: 
             continue
         if s.startswith("## "):
             titulo_seccion = s.lstrip("#").strip().lower()
+            # normalizar: quitar emojis/símbolos para comparar (p. ej. "🚀 requisitos")
+            titulo_norm = re.sub(r"[^\w\sáéíóñü-]", "", titulo_seccion).strip()
+            if titulo_norm in SECCIONES_NO_IDENTIDAD:
+                # La PRIMERA sección operativa también corta: requisitos/instalación
+                # NO son identidad (fix 2026-08-11, caso Bot_AX_Contable).
+                break
             if not en_seccion_contenido:
                 # primera sección con contenido (normalmente ¿Qué es?)
                 en_seccion_contenido = True
                 secciones_capturadas += 1
                 continue
-            if titulo_seccion in SECCIONES_NO_IDENTIDAD:
-                break
             secciones_capturadas += 1
             if secciones_capturadas >= max_secciones:
                 break
@@ -403,8 +417,9 @@ def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: 
             continue
 
         if not en_seccion_contenido:
-            # antes de la primera sección: el tagline (frase corta en negrita)
-            if not tagline and len(texto) < 140:
+            # antes de la primera sección: el tagline (frase de identidad;
+            # límite generoso para frases reales de ~150-300 caracteres)
+            if not tagline and len(texto) < 400:
                 tagline = texto
             continue
 
