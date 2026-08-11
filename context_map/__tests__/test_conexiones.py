@@ -306,6 +306,30 @@ def test_todo_scanner_no_es_idea() -> None:
     assert not _es_todo_scanner(idea_real)
 
 
+def test_snippet_etiquetas_se_genera_y_activa() -> None:
+    """El build genera el snippet CSS de etiquetas y lo activa en appearance.json."""
+    import json
+
+    from context_map.presentation.vault.consolidated.common import generar_snippet_etiquetas
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_tags_")
+    try:
+        ruta = generar_snippet_etiquetas(temp_dir)
+        assert ruta and os.path.exists(ruta)
+        with open(ruta, encoding="utf-8") as f:
+            css = f.read()
+        assert '.tag[href="#ideas"]' in css
+        assert '.tag[href="#riesgo"]' in css
+
+        appearance = os.path.join(temp_dir, ".obsidian", "appearance.json")
+        assert os.path.exists(appearance)
+        with open(appearance, encoding="utf-8") as f:
+            cfg = json.load(f)
+        assert "colored-tags" in cfg["enabledCssSnippets"]
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_narrativa_idea_limpia_ruido() -> None:
     """La narrativa de una idea con TODO(path) sale limpia, no mecánica."""
     from context_map.core.generators import generar_contexto_narrativo
@@ -398,6 +422,7 @@ if __name__ == "__main__":
         test_todo_codigo_no_es_tarea,
         test_importador_sesiones_state_db_moderno,
         test_todo_scanner_no_es_idea,
+        test_snippet_etiquetas_se_genera_y_activa,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,
         test_es_ruido_identidad,

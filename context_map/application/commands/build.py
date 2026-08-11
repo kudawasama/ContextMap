@@ -88,6 +88,16 @@ def cmd_build(args) -> None:
     vault_path = vault_dir(proj)
     render_obsidian_vault(proj, nodes, edges, vault_path, mode=vault_mode)
 
+    # Snippet CSS: etiquetas con color por contexto (se activa solo)
+    from context_map.presentation.vault.consolidated.common import generar_snippet_etiquetas
+
+    try:
+        snippet = generar_snippet_etiquetas(vault_path)
+        if snippet:
+            print(f"tags: {snippet}")
+    except Exception as err:  # noqa: BLE001 — no romper el build por el snippet
+        print(f"tags: (sin snippet) {err}")
+
     # Snapshot
     snapshot_name = getattr(args, "snapshot_name", "") or None
     snap = snapshot_map(nodes=nodes, edges=edges, name=snapshot_name)
