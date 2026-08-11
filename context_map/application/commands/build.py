@@ -131,3 +131,8 @@ def cmd_build(args) -> None:
 
     print("build:ok -> ACTIVE.md")
     print(f"vault ({vault_mode}):ok -> {vault_path}")
+
+    # Aviso de actualización pendiente (caché 24h, sin bloquear)
+    from context_map.infrastructure.version_check import aviso_actualizacion
+
+    print(aviso_actualizacion())

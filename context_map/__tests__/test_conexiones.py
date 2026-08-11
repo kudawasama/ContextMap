@@ -353,6 +353,20 @@ def test_grupos_grafo_por_tag_y_path() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_version_check_normaliza_y_avisa() -> None:
+    """El check de versiones compara semánticamente y avisa sin romper sin red."""
+    from context_map.infrastructure import version_check as vc
+
+    assert vc._normalizar("1.4.0") > vc._normalizar("1.3.0")
+    assert vc._normalizar("v1.10.0") > vc._normalizar("v1.9.2")
+    assert vc._normalizar("1.2.0") < vc._normalizar("1.3.0")
+    assert vc.version_local()  # no vacío
+
+    # Sin red no rompe: devuelve cadena vacía o mensaje, nunca excepción
+    texto = vc.aviso_actualizacion(force=True)
+    assert isinstance(texto, str)
+
+
 def test_zona_knowledge_protegida() -> None:
     """8.0-KNOWLEDGE es zona protegida (el build jamás la borra)."""
     from context_map.presentation.vault.preservar import ZONAS_MANUALES
@@ -483,6 +497,7 @@ if __name__ == "__main__":
         test_snippet_etiquetas_se_genera_y_activa,
         test_grupos_grafo_por_tag_y_path,
         test_tags_dominio_desde_yaml,
+        test_version_check_normaliza_y_avisa,
         test_zona_knowledge_protegida,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,

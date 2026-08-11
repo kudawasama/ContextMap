@@ -46,6 +46,10 @@ def cmd_check(args) -> None:
     ruta = args.target or os.getcwd()
     resultado = analizar_readiness(ruta)
     print(formatear_readiness(resultado))
+    # Aviso de actualización pendiente (caché 24h, sin bloquear)
+    from context_map.infrastructure.version_check import aviso_actualizacion
+
+    print(aviso_actualizacion())
 
 
 def cmd_weekly(args) -> None:
