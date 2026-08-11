@@ -31,6 +31,8 @@ class Sesion:
     titulo: str
     fecha_inicio: str
     mensajes: list[Mensaje] = field(default_factory=list)
+    cwd: str = ""
+    git_repo_root: str = ""
 
 
 def _encontrar_db_sessions() -> str | None:
@@ -106,10 +108,13 @@ def leer_sesiones(
         col_fecha_s = "started_at" if "started_at" in cols_sessions else ("created_at" if "created_at" in cols_sessions else "id")
         col_fecha_m = "timestamp" if "timestamp" in cols_messages else ("created_at" if "created_at" in cols_messages else "id")
 
-        # Buscar sesiones
+        # Buscar sesiones (incluye cwd/git_repo_root para filtrar por proyecto)
+        cols_con = [c for c in cols_sessions if c in ("cwd", "git_repo_root")]
+        cols_sel = ", ".join(cols_con)
         query = (
-            f"SELECT id, title, {col_fecha_s} FROM sessions "
-            f"ORDER BY {col_fecha_s} DESC"
+            f"SELECT id, title, {col_fecha_s}"
+            + (f", {cols_sel}" if cols_sel else "")
+            + f" FROM sessions ORDER BY {col_fecha_s} DESC"
         )
         if limite:
             query += f" LIMIT {limite}"
@@ -123,6 +128,10 @@ def leer_sesiones(
                 titulo=fila[1] or "Sin título",
                 fecha_inicio=str(fila[2] or ""),
             )
+            if cols_con:
+                sesion.cwd = str(fila[3] or "")
+                if len(cols_con) > 1:
+                    sesion.git_repo_root = str(fila[4] or "")
 
             # Leer mensajes de esta sesión
             cursor.execute(
@@ -204,13 +213,28 @@ def importar_sesiones(
     db_path: str | None = None,
     limite: int = 5,
     output_path: str = ".context-map/raw/events.jsonl",
+    project: str = "",
 ) -> int:
     """Importa sesiones de Hermes como eventos.
+
+    Args:
+        db_path (str | None): Ruta a la DB de sesiones (None = autodetecta).
+        limite (int): Máximo de sesiones a leer.
+        output_path (str): Archivo de eventos de salida.
+        project (str): Nombre del proyecto — si se pasa, solo se importan
+            sesiones cuyo cwd/git_repo_root/título lo mencionen (evita
+            contaminar el vault con sesiones de otros proyectos).
 
     Returns:
         Número de eventos importados
     """
     sesiones = leer_sesiones(db_path, limite)
+    if project:
+        p = project.lower()
+        sesiones = [
+            s for s in sesiones
+            if p in f"{s.cwd} {s.git_repo_root} {s.titulo}".lower()
+        ]
     eventos_totales = []
 
     for sesion in sesiones:

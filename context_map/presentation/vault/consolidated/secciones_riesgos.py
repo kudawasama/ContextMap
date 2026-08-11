@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node
-from context_map.presentation.vault.consolidated.common import _escribir_markdown
+from context_map.presentation.vault.consolidated.common import _escribir_markdown, _linea_tags_inline
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
 
 
@@ -48,6 +48,10 @@ def _render_nota_riesgo(
         f"# ⚠️ {titulo_limpio}",
         "",
     ]
+    linea_tags = _linea_tags_inline(n)
+    if linea_tags:
+        partes.append(linea_tags)
+        partes.append("")
     if summary_limpio:
         partes.append(summary_limpio)
         partes.append("")

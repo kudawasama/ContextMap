@@ -108,6 +108,7 @@ def cmd_import_sessions(args) -> None:
         db_path=args.db,
         limite=args.limit or 5,
         output_path=output,
+        project=project_name(args),
     )
 
     print(f"Sesiones importadas: {importados} eventos nuevos")

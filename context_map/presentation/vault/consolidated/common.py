@@ -15,6 +15,43 @@ from context_map.core.models import Edge, Node
 logger = logging.getLogger(__name__)
 
 
+def _linea_tags_inline(n: Node) -> str:
+    """Línea de etiquetas inline coloreadas para poner bajo el título de una nota.
+
+    Devuelve algo como ``> #ideas #pendiente #DEVOPS`` (se pinta con el
+    snippet CSS ``colored-tags``). Vacío si el nodo no tiene etiquetas útiles.
+
+    Args:
+        n (Node): Nodo del mapa.
+
+    Returns:
+        str: Línea de etiquetas o string vacío.
+    """
+    mapa_tipo = {
+        "IDEA": "ideas",
+        "RIESGO": "riesgo",
+        "CAMBIO": "cambio",
+        "CORRECCION": "correccion",
+        "BASE": "base",
+        "PRUEBA": "prueba",
+        "FUTURO": "futuro",
+    }
+    etiquetas: list[str] = []
+    tipo = getattr(n, "type", "") or ""
+    estado = getattr(n, "status", "") or ""
+    concepto = getattr(n, "concept", "") or ""
+
+    if tipo in mapa_tipo:
+        etiquetas.append(mapa_tipo[tipo])
+    if estado in ("pendiente", "activo", "completado"):
+        etiquetas.append(estado)
+    if concepto:
+        etiquetas.append(concepto)
+    if not etiquetas:
+        return ""
+    return "> " + " ".join(f"#{e}" for e in etiquetas)
+
+
 def _extract_project_purpose(cwd: str) -> str:
     """Extrae el propósito del proyecto desde README.md si existe.
 
