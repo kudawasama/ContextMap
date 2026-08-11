@@ -135,6 +135,28 @@ def generar_color_groups(vault_dir: str) -> str | None:
 _DOMINIOS_CACHE: dict[str, dict[str, list[str]]] = {}
 
 
+def _parsear_dominios_simple(texto: str) -> dict[str, list[str]]:
+    """Parser mínimo del formato de dominios.yaml (sin depender de pyyaml).
+
+    Soporta el subconjunto que usamos: ``nombre:`` seguido de líneas
+    ``  - palabra clave``. Comentarios (#) y ``---`` se ignoran.
+    """
+    dominios: dict[str, list[str]] = {}
+    nombre_actual: str | None = None
+    for linea in texto.splitlines():
+        limpia = linea.strip()
+        if not limpia or limpia.startswith("#") or limpia.startswith("---"):
+            continue
+        if limpia.endswith(":") and not limpia.startswith("-"):
+            nombre_actual = limpia[:-1].strip()
+            dominios[nombre_actual] = []
+        elif limpia.startswith("- ") and nombre_actual:
+            valor = limpia[2:].strip().strip('"').strip("'")
+            if valor:
+                dominios[nombre_actual].append(valor)
+    return {k: v for k, v in dominios.items() if v}
+
+
 def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
     """Lee los dominios temáticos del proyecto desde ``.context-map/dominios.yaml``.
 
@@ -148,8 +170,6 @@ def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
     Returns:
         dict[str, list[str]]: Mapeo dominio -> palabras clave.
     """
-    import yaml
-
     base = cwd or os.getcwd()
     ruta = os.path.join(base, ".context-map", "dominios.yaml")
     if ruta in _DOMINIOS_CACHE:
@@ -158,10 +178,19 @@ def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
     try:
         if os.path.isfile(ruta):
             with open(ruta, encoding="utf-8") as f:
-                datos = yaml.safe_load(f) or {}
-            for nombre, claves in datos.items():
-                if isinstance(claves, list):
-                    dominios[str(nombre)] = [str(c).lower() for c in claves]
+                texto = f.read()
+            try:
+                import yaml  # noqa: PLC0415 — opcional; fallback si no está
+
+                datos = yaml.safe_load(texto) or {}
+                for nombre, claves in datos.items():
+                    if isinstance(claves, list):
+                        dominios[str(nombre)] = [str(c).lower() for c in claves]
+            except ImportError:
+                # El entorno del binario (uv tool) puede no tener pyyaml:
+                # usamos el parser mínimo del formato.
+                for nombre, claves in _parsear_dominios_simple(texto).items():
+                    dominios[nombre] = [c.lower() for c in claves]
     except Exception as err:  # noqa: BLE001 — los dominios son opcionales
         logger.debug("dominios.yaml no legible: %s", err)
     _DOMINIOS_CACHE[ruta] = dominios
