@@ -52,16 +52,32 @@ notas con alma) está en **[.context-map/contextmap-skill.md](file:///.context-m
 
 ## 1. Protocolo de Inicio (QUÉ hacer antes de trabajar)
 
-1. **Leer el Brief Ejecutivo**: `.context-map/CONTEXT.md` — responde qué es el
+1. **Verificar el PROYECTO correcto**: el vault de ESTE proyecto es
+   `.context-map/vault-{project_name}/`. Si el usuario pregunta por OTRO proyecto
+   o por un vault que no es este, dilo ANTES de responder — no respondas con el
+   contexto de otro proyecto.
+2. **Leer el Brief Ejecutivo**: `.context-map/CONTEXT.md` — responde qué es el
    proyecto, por qué existe, qué cumple, sus riesgos y tareas pendientes.
-2. **Explorar el Vault**: `.context-map/vault/` o `.context-map/vault-{project_name}/`:
+3. **Comprobar la FRESCURA del contexto**: si el brief avisa que el diario manual
+   es más nuevo que el build (sección "Estado del Contexto"), ejecuta
+   `ctxmap refresh .` ANTES de responder sobre el estado del proyecto.
+4. **Explorar el Vault**: `.context-map/vault/` o `.context-map/vault-{project_name}/`:
    propósito (1.0), ideas (2.0), riesgos (4.0) y backlog (5.0).
-3. **Importar la historia del proyecto**: las conversaciones con el usuario también
+5. **Leer los PENDIENTES REALES**: además del backlog generado (5.0-BACKLOG),
+   revisa SIEMPRE `.context-map/vault-{project_name}/7.0-MANUAL/BACKLOG.md`
+   (si existe) y el diario más reciente (`7.0-MANUAL/Diario/`). Los pendientes
+   conversados con el usuario viven ahí — si solo lees el backlog del scanner
+   podrías creer que no hay nada pendiente cuando sí lo hay.
+6. **Importar la historia del proyecto**: las conversaciones con el usuario también
    son contexto (comandos en la skill). Si el usuario comparte un chat, impórtalo
    ANTES de responder.
-4. **Responder las 3 preguntas del alma** antes de proponer cambios:
+7. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
-5. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
+8. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
+
+> ⚠️ **NUNCA respondas "¿qué quedó pendiente?" basándote solo en un documento
+> suelto (auditoría, CHANGELOG, etc.)** — cruza SIEMPRE el brief + backlog manual
+> + diario más reciente. Esa es la fuente de verdad del proyecto.
 
 ---
 

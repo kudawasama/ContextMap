@@ -7,6 +7,38 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.5.0] — 2026-08-11
+
+### ✨ Nuevo — Confiabilidad del contexto (lección del incidente Gemini)
+
+- **Verificación del PROYECTO correcto en AGENTS.md**: el protocolo de inicio
+  ordena confirmar que el vault del proyecto es el correcto antes de responder —
+  evita el error de responder con el contexto de OTRO proyecto (incidente
+  Gemini/mi-app-utm 2026-08-11: Antigravity estaba en c:/mi-app-utm y respondió
+  pendientes de ese vault cuando el usuario preguntaba por ContextMap).
+- **Sección "Estado del Contexto" en el brief**: compara la fecha del último
+  build (`state/last_build.json`) contra el diario manual más reciente
+  (`7.0-MANUAL/Diario/`). Si el diario es más nuevo → aviso "el contexto puede
+  estar desactualizado: ejecuta `ctxmap refresh .` ANTES de responder".
+  Implementación: `_chequear_frescura()` en `briefs/brief.py`.
+- **Pendientes del backlog manual en el brief**: el CONTEXT.md ahora combina
+  los pendientes conversados con el usuario (`7.0-MANUAL/BACKLOG.md`, zona
+  protegida) con los TODOs del código (nodos FUTURO). Antes el brief solo
+  mostraba TODOs del scanner y podía decir "No hay tareas pendientes" cuando
+  el backlog manual sí tenía trabajo pendiente. Implementación:
+  `_extraer_pendientes_manuales()` en `briefs/brief.py`.
+- **Versión del proyecto en el brief**: se detecta desde pyproject.toml /
+  package.json y se muestra en el Resumen Ejecutivo.
+- **Protocolo de lectura obligatorio en la skill** (`contextmap-skill.md`):
+  sección "🧭 PONERSE EN CONTEXTO CORRECTAMENTE" — orden de lectura (brief →
+  frescura → backlog manual → diario → 5.0-BACKLOG → riesgos → código) y regla
+  anti-error: NUNCA responder "¿qué quedó pendiente?" basándose solo en un
+  documento suelto (auditoría, CHANGELOG, docs/).
+- **Tests de regresión**: `test_brief_protocolo_anti_error_proyecto_equivocado`
+  y `test_brief_refleja_pendientes_manuales_y_frescura` (79 tests verdes).
+
+---
+
 ## [1.4.0] — 2026-08-11
 
 ### ✨ Nuevo

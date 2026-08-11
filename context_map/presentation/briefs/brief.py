@@ -11,7 +11,9 @@ responder el PORQUÉ (alma del proyecto) y decirle al agente QUÉ HACER con el c
 
 from __future__ import annotations
 
+import json
 import os
+import re
 from datetime import datetime
 from typing import Any
 
@@ -41,14 +43,18 @@ def generar_brief(
     """
     stats = _calcular_stats(nodes)
     proposito = _extraer_proposito(project_name, project_dir)
+    version = _detectar_version(project_dir)
+    pendientes_manuales = _extraer_pendientes_manuales(project_name, project_dir)
+    frescura = _chequear_frescura(project_name, project_dir)
 
     sections = [
         _header(project_name),
         _que_es_y_por_que_existe(project_name, proposito),
-        _resumen_ejecutivo(project_name, stats, readiness_score),
+        _resumen_ejecutivo(project_name, stats, readiness_score, version),
         _estado_proyecto(stats),
+        _aviso_frescura(frescura),
         _riesgos_criticos(nodes),
-        _tareas_pendientes(nodes),
+        _tareas_pendientes(nodes, pendientes_manuales),
         _como_trabajar_aqui(project_name),
         _comandos_utiles(),
         _footer(),
@@ -147,26 +153,166 @@ Antes de tocar código, pregúntate y responde con el contexto del vault
 """
 
 
-def _resumen_ejecutivo(name: str, stats: dict[str, Any], score: int) -> str:
+def _detectar_version(project_dir: str) -> str:
+    """Detecta la versión actual del proyecto (pyproject.toml / package.json / git describe).
+
+    Args:
+        project_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        str: Versión detectada, o string vacío si no se pudo determinar.
+    """
+    try:
+        pyproject = os.path.join(project_dir, "pyproject.toml")
+        if os.path.exists(pyproject):
+            with open(pyproject, encoding="utf-8") as f:
+                m = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', f.read(), re.MULTILINE)
+            if m:
+                return m.group(1)
+
+        package_json = os.path.join(project_dir, "package.json")
+        if os.path.exists(package_json):
+            with open(package_json, encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict) and data.get("version"):
+                return str(data["version"])
+    except Exception:
+        pass
+    return ""
+
+
+def _extraer_pendientes_manuales(project_name: str, project_dir: str) -> list[str]:
+    """Extrae los pendientes REALES del backlog manual (7.0-MANUAL/BACKLOG.md si existe).
+
+    El backlog generado (5.0-BACKLOG) solo lista TODOs del código. Los pendientes
+    conversados con el usuario viven en la nota protegida ``7.0-MANUAL/BACKLOG.md``;
+    el brief debe reflejarlos o el agente cree que no hay nada pendiente.
+
+    Args:
+        project_name (str): Nombre del proyecto (para resolver el vault).
+        project_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        List[str]: Líneas con los pendientes manuales (títulos de sección + criterio).
+    """
+    vault = os.path.join(project_dir, ".context-map", _vault_nombre(project_name))
+    backlog = os.path.join(vault, "7.0-MANUAL", "BACKLOG.md")
+    if not os.path.exists(backlog):
+        return []
+
+    try:
+        with open(backlog, encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return []
+
+    pendientes: list[str] = []
+    en_pendientes = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            titulo = stripped.lower()
+            en_pendientes = "pendiente" in titulo or "tareas" in titulo or "por hacer" in titulo
+            continue
+        if not en_pendientes:
+            continue
+        # Sección "NO hacer" o "HECHO" corta la lista de pendientes
+        if stripped.startswith("### ") or stripped.startswith("## "):
+            if stripped.startswith("### "):
+                titulo = stripped[4:].strip()
+                # Quitar numeración "1." / "1)" y negritas
+                titulo = re.sub(r"^\d+[.)]\s*", "", titulo)
+                titulo = titulo.strip("*").strip()
+                if titulo and len(pendientes) < 10:
+                    pendientes.append(titulo)
+            continue
+    return pendientes
+
+
+def _chequear_frescura(project_name: str, project_dir: str) -> str:
+    """Compara la fecha del último build vs el diario manual más reciente.
+
+    Si el diario (memoria viva, escrito por el agente) es MÁS NUEVO que el último
+    ``ctxmap build``, el brief está desactualizado y el agente debe refrescar
+    ANTES de responder — evita el error de responder con un contexto viejo.
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        project_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        str: Mensaje de aviso, o string vacío si el contexto está al día.
+    """
+    try:
+        state = os.path.join(project_dir, ".context-map", "state", "last_build.json")
+        if not os.path.exists(state):
+            return ""
+        with open(state, encoding="utf-8") as f:
+            info = json.load(f)
+        build_ts = info.get("timestamp", "")
+        if not build_ts:
+            return ""
+
+        # Buscar el diario manual más reciente
+        vault = os.path.join(project_dir, ".context-map", _vault_nombre(project_name))
+        diario_dir = os.path.join(vault, "7.0-MANUAL", "Diario")
+        if not os.path.isdir(diario_dir):
+            return ""
+
+        diarios = sorted(
+            (d for d in os.listdir(diario_dir) if d.endswith(".md")),
+            reverse=True,
+        )
+        if not diarios:
+            return ""
+
+        diario_fecha = diarios[0].replace(".md", "")
+        try:
+            build_dt = datetime.fromisoformat(build_ts).date()
+            diario_dt = datetime.strptime(diario_fecha, "%Y-%m-%d").date()
+        except ValueError:
+            return ""
+
+        if diario_dt > build_dt:
+            return (
+                f"El diario manual ({diario_fecha}) es MÁS NUEVO que este brief "
+                f"(build {build_dt.isoformat()}). El contexto puede estar desactualizado: "
+                f"ejecuta `ctxmap refresh .` ANTES de responder sobre el estado del proyecto."
+            )
+    except Exception:
+        return ""
+    return ""
+
+
+def _aviso_frescura(frescura: str) -> str:
+    """Sección que avisa si el contexto está desactualizado (o confirma que está al día)."""
+    if not frescura:
+        return "## Estado del Contexto\n\n✅ Contexto al día (último build).\n"
+    return f"## Estado del Contexto\n\n⚠️ **{frescura}**\n"
+
+
+def _resumen_ejecutivo(name: str, stats: dict[str, Any], score: int, version: str = "") -> str:
     """Resumen ejecutivo principal.
 
     Args:
         name (str): Nombre del proyecto.
         stats (Dict[str, Any]): Estadísticas calculadas.
         score (int): Puntaje de readiness.
+        version (str): Versión detectada del proyecto (opcional).
 
     Returns:
         str: Resumen ejecutivo.
     """
     total = stats["total"]
     tipos = ", ".join(f"{k}: {v}" for k, v in stats["por_tipo"].items())
+    version_line = f"\n**Versión**: {version}" if version else ""
 
     return f"""## Resumen Ejecutivo
 
 **Proyecto**: {name}
 **Nodos totales**: {total}
 **Distribución**: {tipos}
-**Readiness**: {score}/100
+**Readiness**: {score}/100{version_line}
 """
 
 
@@ -202,18 +348,44 @@ def _riesgos_criticos(nodes: list[Node]) -> str:
     return "\n".join(lines)
 
 
-def _tareas_pendientes(nodes: list[Node]) -> str:
-    """Sección de tareas y elementos futuros."""
-    futuros = [n for n in nodes if n.type == "FUTURO"]
+def _tareas_pendientes(nodes: list[Node], pendientes_manuales: list[str] | None = None) -> str:
+    """Sección de tareas y elementos futuros.
 
-    if not futuros:
+    Combina los TODOs detectados en el código (nodos FUTURO) con los pendientes
+    REALES del backlog manual (7.0-MANUAL/BACKLOG.md) — que son los que el agente
+    debe reflejar para no responder "no hay nada pendiente" cuando sí lo hay.
+
+    Args:
+        nodes (List[Node]): Nodos del mapa.
+        pendientes_manuales (Optional[List[str]]): Pendientes del backlog manual.
+
+    Returns:
+        str: Sección de tareas pendientes en Markdown.
+    """
+    futuros = [n for n in nodes if n.type == "FUTURO"]
+    manuales = pendientes_manuales or []
+
+    if not futuros and not manuales:
         return "## Tareas Pendientes\n\nNo hay tareas pendientes. ✅"
 
     lines = ["## Tareas Pendientes\n"]
-    for f in futuros[:5]:
-        lines.append(f"- 📝 **{f.title[:80]}**")
-        if f.summary and f.summary != f.title:
-            lines.append(f"  {f.summary[:120]}")
+
+    if manuales:
+        lines.append("### 📋 Pendientes del proyecto (backlog manual)")
+        lines.append("")
+        for titulo in manuales:
+            lines.append(f"- {titulo}")
+        lines.append("")
+        lines.append("> Fuente: `7.0-MANUAL/BACKLOG.md` (pendientes conversados, con criterios de listo).")
+        lines.append("")
+
+    if futuros:
+        lines.append("### 🔧 TODOs del código (deuda técnica)")
+        lines.append("")
+        for f in futuros[:5]:
+            lines.append(f"- 📝 **{f.title[:80]}**")
+            if f.summary and f.summary != f.title:
+                lines.append(f"  {f.summary[:120]}")
     return "\n".join(lines)
 
 

@@ -50,12 +50,27 @@ context_map/
 
 Cualquier agente que tome una tarea en este proyecto **DEBE** seguir estos pasos obligatorios antes de escribir o modificar código:
 
-1. **Leer el Brief Ejecutivo**:
+1. **Verificar el PROYECTO correcto**: el vault de ESTE proyecto es
+   `.context-map/vault-ContextMap/`. Si el usuario pregunta por OTRO proyecto (p. ej.
+   mi-app-utm) o por un vault que no es este, dilo ANTES de responder — nunca
+   respondas con el contexto de otro proyecto.
+2. **Leer el Brief Ejecutivo**:
    Consultar [.context-map/CONTEXT.md](file:///c:/Users/jose.cespedes/Desktop/PruebaContext/.context-map/CONTEXT.md) para conocer las métricas, riesgos críticos y tareas pendientes.
-2. **Revisar el Backlog y Vault**:
+3. **Comprobar la FRESCURA del contexto**: si el brief avisa que el diario manual
+   es más nuevo que el build (sección "Estado del Contexto"), ejecuta
+   `ctxmap refresh .` ANTES de responder sobre el estado del proyecto.
+4. **Leer los PENDIENTES REALES**: además del backlog generado (5.0-BACKLOG),
+   revisa SIEMPRE `.context-map/vault-ContextMap/7.0-MANUAL/BACKLOG.md` (si existe)
+   y el diario más reciente (`7.0-MANUAL/Diario/`). Los pendientes conversados con
+   el usuario viven ahí.
+5. **Revisar el Backlog y Vault**:
    Inspeccionar `.context-map/vault-ContextMap/2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
-3. **No Suponer Rutas o Lógica**:
+6. **No Suponer Rutas o Lógica**:
    Inspeccionar el código fuente antes de formular hipótesis de cambio.
+
+> ⚠️ **NUNCA respondas "¿qué quedó pendiente?" basándote solo en un documento
+> suelto (auditoría, CHANGELOG, docs/)** — cruza SIEMPRE el brief + backlog manual
+> + diario más reciente. Esa es la fuente de verdad del proyecto.
 
 ---
 

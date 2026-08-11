@@ -252,3 +252,87 @@ def test_agents_md_es_que_y_skill_es_como() -> None:
         assert "preserve: true" in skill_txt
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_brief_protocolo_anti_error_proyecto_equivocado() -> None:
+    """Verifica que el AGENTS.md generado instruye verificar el proyecto correcto."""
+    from context_map.presentation.briefs import generar_instrucciones_agentes
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_proyecto_")
+    try:
+        agents_path = generar_instrucciones_agentes(
+            "MiApp", target_dir=temp_dir, overwrite_if_exists=False
+        )
+        with open(agents_path, encoding="utf-8") as f:
+            txt = f.read()
+
+        assert "Verificar el PROYECTO correcto" in txt
+        assert "vault-MiApp" in txt
+        assert "FRESCURA" in txt
+        assert "ctxmap refresh" in txt
+        assert "PENDIENTES REALES" in txt
+        assert "BACKLOG.md" in txt
+        assert "fuente de verdad" in txt
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_brief_refleja_pendientes_manuales_y_frescura() -> None:
+    """Verifica que el brief incluye los pendientes del backlog manual y el estado de frescura.
+
+    Este es el caso real del incidente Gemini/mi-app-utm: el backlog manual tenía
+    pendientes pero el brief decía "No hay tareas pendientes" y el contexto estaba
+    desactualizado sin aviso.
+    """
+    from context_map.core.models import Node
+    from context_map.presentation.briefs import generar_brief
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_brief_confiable_")
+    try:
+        # Crear el vault con backlog manual (pendientes conversados)
+        vault = os.path.join(temp_dir, ".context-map", "vault-TestConfiable")
+        manual = os.path.join(vault, "7.0-MANUAL")
+        diario = os.path.join(manual, "Diario")
+        state = os.path.join(temp_dir, ".context-map", "state")
+        os.makedirs(diario, exist_ok=True)
+        os.makedirs(state, exist_ok=True)
+
+        with open(os.path.join(manual, "BACKLOG.md"), "w", encoding="utf-8") as f:
+            f.write(
+                "## ✅ HECHO\n- Algo listo\n\n"
+                "## 📌 TAREAS PENDIENTES (con criterios de listo)\n\n"
+                "### 1. Probar el flujo completo\n- **Qué**: validar la visión\n"
+                "- **Cómo se sabe que está LISTO**: un proyecto real con vault\n\n"
+                "### 2. Decidir el destino del Lienzo\n- **Qué**: decisión pendiente\n\n"
+                "## 🚫 NO hacer\n- No tocar X\n"
+            )
+        # Diario manual MÁS NUEVO que el último build (contexto desactualizado)
+        with open(os.path.join(diario, "2026-08-11.md"), "w", encoding="utf-8") as f:
+            f.write("---\ntype: nota-dia\npreserve: true\n---\n# Diario\n")
+        with open(os.path.join(state, "last_build.json"), "w", encoding="utf-8") as f:
+            f.write('{"clean": false, "timestamp": "2026-08-10T10:00:00"}')
+
+        nodo = Node(
+            id="n1",
+            type="FUTURO",
+            title="TODO (modulo_x.py:L10): refactor pendiente",
+            summary="deuda técnica",
+        )
+        brief_path = os.path.join(temp_dir, ".context-map", "CONTEXT.md")
+        generar_brief("TestConfiable", [nodo], [], 90, brief_path, project_dir=temp_dir)
+
+        with open(brief_path, encoding="utf-8") as f:
+            brief = f.read()
+
+        # Los pendientes manuales aparecen en el brief (el error que se cometió)
+        assert "Probar el flujo completo" in brief
+        assert "Decidir el destino del Lienzo" in brief
+        assert "backlog manual" in brief
+        # El TODO del código también aparece, pero etiquetado como deuda técnica
+        assert "deuda técnica" in brief
+        # Frescura: el diario es más nuevo que el build → aviso
+        assert "Estado del Contexto" in brief
+        assert "MÁS NUEVO" in brief
+        assert "ctxmap refresh" in brief
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)

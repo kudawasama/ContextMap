@@ -43,6 +43,30 @@ def generar_skill_contextmap(
 ctxmap refresh .     # = scan + build (preservando manuales) + check
 ```
 
+## 🧭 PONERSE EN CONTEXTO CORRECTAMENTE (protocolo de lectura obligatorio)
+
+Antes de responder sobre el estado del proyecto (o "¿qué quedó pendiente?"),
+lee EN ESTE ORDEN — el orden importa:
+
+1. **Este brief** (`.context-map/CONTEXT.md`) — qué es, por qué existe, qué cumple.
+2. **Sección "Estado del Contexto" del brief**: si avisa que el diario manual es
+   más nuevo que el build → el contexto está desactualizado → ejecuta
+   `ctxmap refresh .` ANTES de responder.
+3. **Pendientes REALES**:
+   - `.context-map/vault-{safe}/7.0-MANUAL/BACKLOG.md` (si existe) — pendientes
+     conversados con el usuario, con criterios de listo.
+   - `.context-map/vault-{safe}/7.0-MANUAL/Diario/` — el diario más reciente
+     (lo hecho, decidido y lo que falta).
+   - `5.0-BACKLOG/5.1-Tareas.md` — TODOs del código (deuda técnica).
+4. **Riesgos y propósito**: `4.0-RIESGOS/` y `1.0-PROPOSITO/` antes de proponer cambios.
+5. **Código real** antes de diagnosticar — nunca suponer rutas ni lógica.
+
+> ⚠️ **Regla anti-error**: NUNCA respondas "¿qué quedó pendiente?" basándote solo
+> en un documento suelto (auditoría, CHANGELOG, docs/). La fuente de verdad son
+> brief + backlog manual + diario. Y verifica que estás en el proyecto correcto:
+> el vault de ESTE proyecto es `{vault}/` — si el usuario pregunta por otro,
+> dilo ANTES de responder.
+
 ## 🔄 Actualizar NO es solo correr el script (flujo del agente)
 
 Cuando el usuario pida "actualiza el contexto" (o al terminar de trabajar),
