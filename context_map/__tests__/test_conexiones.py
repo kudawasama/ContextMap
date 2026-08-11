@@ -353,6 +353,42 @@ def test_grupos_grafo_por_tag_y_path() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_nota_dia_manual_no_se_pisa() -> None:
+    """La nota del día del agente (preserve) no se sobrescribe — solo se anexa."""
+    from datetime import datetime
+
+    from context_map.presentation.vault.consolidated.canvas import render_nota_dia
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_diario_")
+    try:
+        hoy = datetime.now().strftime("%Y-%m-%d")
+        nodo = _nodo("I1", titulo="Bot de prueba", concepto="DEVOPS", fecha=f"{hoy}T09:00:00")
+
+        # Primera generación: crea la nota
+        ruta = render_nota_dia(temp_dir, "Demo", [nodo])
+        assert ruta and os.path.exists(ruta)
+        with open(ruta, encoding="utf-8") as f:
+            primera = f.read()
+        assert "Bot de prueba" in primera
+
+        # El AGENTE la reescribe con alma (preserve: true + contenido propio)
+        con_alma = primera.replace("Nodos ingresados", "Memoria viva: lo conversado").replace(
+            "---", "---\nagente: true", 1
+        )
+        with open(ruta, "w", encoding="utf-8") as f:
+            f.write(con_alma)
+
+        # Segundo build: NO debe pisar la nota con alma
+        nodo2 = _nodo("I2", titulo="Nodo nuevo del scanner", concepto="DEVOPS", fecha=f"{hoy}T10:00:00")
+        render_nota_dia(temp_dir, "Demo", [nodo, nodo2])
+        with open(ruta, encoding="utf-8") as f:
+            final = f.read()
+        assert "Memoria viva: lo conversado" in final, "la nota del agente fue pisada"
+        assert "Nodo nuevo del scanner" in final, "no se anexó el nodo del scanner"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_version_check_normaliza_y_avisa() -> None:
     """El check de versiones compara semánticamente y avisa sin romper sin red."""
     from context_map.infrastructure import version_check as vc
@@ -498,6 +534,7 @@ if __name__ == "__main__":
         test_grupos_grafo_por_tag_y_path,
         test_tags_dominio_desde_yaml,
         test_version_check_normaliza_y_avisa,
+        test_nota_dia_manual_no_se_pisa,
         test_zona_knowledge_protegida,
         test_servidor_mcp_expone_herramientas,
         test_proposito_biblia_extrae_identidad,

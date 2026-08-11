@@ -193,6 +193,33 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
             partes.append(f"- **{n.title[:60]}**")
     partes.append("")
 
+    # Memoria viva: si la nota del día ya existe con preserve: true (escrita
+    # por el AGENTE con alma), NO la sobrescribimos — solo añadimos los nodos
+    # nuevos del scanner que falten, en una sección aparte.
+    if os.path.exists(ruta):
+        try:
+            with open(ruta, encoding="utf-8") as f:
+                existente = f.read()
+            if "preserve: true" in existente:
+                faltantes = [
+                    n for n in ingresados
+                    if (n.title or "")[:60] not in existente
+                ]
+                if faltantes:
+                    anexo = [
+                        "",
+                        "## 🤖 Ingresados por el scanner (autogenerado)",
+                        "",
+                    ]
+                    for n in faltantes:
+                        anexo.append(f"- **{n.title[:60]}**")
+                    anexo.append("")
+                    with open(ruta, "a", encoding="utf-8") as f:
+                        f.write("\n".join(anexo))
+                return ruta
+        except Exception:
+            pass  # si no se puede leer, regenerar normal
+
     with open(ruta, "w", encoding="utf-8") as f:
         f.write("\n".join(partes))
     return ruta
