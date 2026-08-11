@@ -7,6 +7,56 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.4.0] — 2026-08-11
+
+### ✨ Nuevo
+
+- **Servidor MCP (`ctxmap mcp`)**: expone las 9 herramientas como tools MCP
+  (refresh, scan, build, check, import_git, import_chat, import_sessions,
+  adapt, context) para Hermes/Claude/Cursor. Registrable con
+  `hermes mcp add ctxmap --command ctxmap --args mcp`.
+- **8.0-KNOWLEDGE (aprendizaje del agente)**: zona protegida con el
+  conocimiento accionable — cada nota con formato fijo (🎯 Lección · 🛠️ Cómo
+  se resolvió · 💬 Prompt específico · 📋 Instrucción específica · 🔗
+  Conexiones).
+- **Regla MEMORIA VIVA**: ContextMap es la memoria del proyecto — el agente
+  documenta AUTOMÁTICAMENTE lo conversado (nota del día + knowledge) sin
+  esperar a que se lo pidan. Regla en AGENTS.md, skill del vault y skill de
+  Hermes.
+- **Grupos de color del grafo**: `.obsidian/graph.json` → `colorGroups` por
+  tag, sección y dominio temático (funciona con frontmatter). Snippet CSS de
+  etiquetas autogenerado (`colored-tags.css`, se activa solo).
+- **Dominios temáticos por proyecto** (`.context-map/dominios.yaml`): define
+  los GRUPOS reales del contexto con palabras clave; cada nota se etiqueta
+  `grupo-<dominio>`. Incluye el dominio `raiz` (la esencia del proyecto).
+- **Aviso automático de actualizaciones**: `ctxmap check`/`build`/`refresh`
+  comparan la versión local con el último tag de GitHub (caché 24h) y avisan
+  si hay actualización pendiente con el comando para actualizar.
+- **Importador de sesiones de Hermes arreglado**: lee `state.db` moderno
+  (started_at/timestamp) y filtra por proyecto (`--project` — evita
+  contaminar el vault con sesiones de otros proyectos).
+- **AGENTS.md generado con memoria viva**: los proyectos nuevos nacen con la
+  regla completa (documenta automáticamente + nota del día + 8.0-KNOWLEDGE +
+  humaniza todos los archivos).
+
+### 🧹 Mejorado
+
+- **Vault humanizado completo**: filtro de TODOs del scanner fuera de las
+  ideas (`_es_todo_scanner`), riesgos deduplicados (`_clave_dedup_riesgo`),
+  historial compacto (mensajes de commits reales), batches de completadas
+  solo con ideas reales, etiquetas inline bajo los títulos.
+- **Nota del día protegida**: si el agente la escribió con alma (`preserve:
+  true`), el build NUNCA la pisa — el scanner solo anexa los nodos nuevos.
+
+### 🐛 Corregido
+
+- `_leer_dominios` sin pyyaml (el entorno del binario no lo traía) — mini-
+  parser de fallback, nunca rompe el build.
+- Importar sesiones sin filtro contaminaba el vault (88 nodos ajenos
+  eliminados del estado; el filtro por proyecto evita que vuelva).
+
+---
+
 ## [Unreleased]
 
 ### ✨ Nuevo
