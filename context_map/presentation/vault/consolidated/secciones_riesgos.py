@@ -5,7 +5,10 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node
-from context_map.presentation.vault.consolidated.common import _escribir_markdown, _linea_tags_inline
+from context_map.presentation.vault.consolidated.common import (
+    _escribir_markdown,
+    _linea_tags_inline,
+)
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
 
 
@@ -110,9 +113,7 @@ def _es_riesgo_real(n) -> bool:
     t = (n.title or "").strip().lower()
     if t.startswith("idea") or t.startswith("todo") or t.startswith("feature"):
         return False
-    if n.type == "IDEA":
-        return False
-    return True
+    return n.type != "IDEA"
 
 
 def _render_seccion_riesgos(

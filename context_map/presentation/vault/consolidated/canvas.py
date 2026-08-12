@@ -20,7 +20,6 @@ import uuid
 from datetime import date, datetime
 
 from context_map.core.models import Edge, Node
-
 from context_map.presentation.vault.consolidated.rutas import ruta_archivo_nodo
 
 

@@ -9,7 +9,6 @@ from context_map.core.models import Event, Node
 from context_map.core.parsing import (
     _dedup_events,
     events_to_model,
-    load_events_from_jsonl,
 )
 from context_map.core.parsing.clasificacion import _heuristic_event
 from context_map.core.storage import append_jsonl, load_jsonl

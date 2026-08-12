@@ -32,9 +32,7 @@ def _es_ruido_identidad(n: Node) -> bool:
         return True  # métrica repetitiva del scan
     if titulo.startswith("todo") or n.type == "FUTURO":
         return True
-    if titulo.startswith("entrypoint"):
-        return True
-    return False
+    return titulo.startswith("entrypoint")
 
 
 def _render_seccion_proposito(

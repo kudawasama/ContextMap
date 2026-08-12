@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+
 from context_map.application.cli.parser import create_parser
 
 

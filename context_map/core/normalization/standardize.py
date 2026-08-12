@@ -12,6 +12,7 @@ Proporciona funciones para:
 
 from __future__ import annotations
 
+import os
 import re
 
 from context_map.core.models import Node
@@ -474,9 +475,6 @@ def estandarizar_nodos(nodes: list[Node]) -> list[Node]:
     return [estandarizar_nodo(n) for n in nodes]
 
 
-import os
-
-
 def depurar_nodos_obsoletos(nodes: list[Node], project_root: str = ".") -> list[Node]:
     """Filtra y elimina nodos de RIESGO obsoletos cuyos archivos referenciados ya no existen.
 
@@ -501,7 +499,7 @@ def depurar_nodos_obsoletos(nodes: list[Node], project_root: str = ".") -> list[
                         existe = True
                         break
                     base = os.path.basename(fname)
-                    for root, dirs, files in os.walk(project_root):
+                    for _root, dirs, files in os.walk(project_root):
                         dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", "node_modules", ".context-map")]
                         if base in files:
                             existe = True

@@ -7,6 +7,7 @@ historial de cambios.
 
 from __future__ import annotations
 
+from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.auto import cmd_auto
 from context_map.application.commands.build import cmd_build
 from context_map.application.commands.importers import (
@@ -16,7 +17,6 @@ from context_map.application.commands.importers import (
     cmd_import_sessions,
 )
 from context_map.application.commands.ingest import cmd_ingest
-from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.refresh import cmd_refresh
 from context_map.application.commands.scan import cmd_scan
 from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do_sync

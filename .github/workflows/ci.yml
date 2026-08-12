@@ -21,9 +21,8 @@ jobs:
         run: uv run pytest -q
 
   lint:
-    name: Lint (ruff · informativo)
+    name: Lint (ruff · bloqueante)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

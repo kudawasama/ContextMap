@@ -24,9 +24,9 @@ from context_map.application.commands import (
     cmd_update,
     cmd_weekly,
 )
+from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.hook import cmd_hook_install
 from context_map.application.commands.ingest import cmd_ingest
-from context_map.application.commands.adapt import cmd_adapt
 from context_map.core.logging_setup import setup_logging
 
 

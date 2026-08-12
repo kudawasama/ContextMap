@@ -8,7 +8,6 @@ un consumo eficiente por parte de agentes de IA.
 from __future__ import annotations
 
 import os
-import shutil
 from datetime import datetime
 
 from context_map.core.models import Edge, Node

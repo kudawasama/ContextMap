@@ -153,9 +153,10 @@ def detectar_stack(target_dir: str = ".") -> StackInfo:
                         info.frameworks.append(fw)
                     break
 
-        if not info.test_runner:
-            if _existe(target_dir, "conftest.py") or os.path.isdir(os.path.join(target_dir, "tests")):
-                info.test_runner = "pytest"
+        if not info.test_runner and (
+            _existe(target_dir, "conftest.py") or os.path.isdir(os.path.join(target_dir, "tests"))
+        ):
+            info.test_runner = "pytest"
 
     # --- JavaScript/TypeScript ---
     if _existe(target_dir, "package.json"):
@@ -375,10 +376,11 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
         info.agentes.append("Aider")
     if os.path.isdir(os.path.join(target_dir, ".roo")):
         info.agentes.append("Roo Code")
-    if os.path.isdir(os.path.join(target_dir, ".github")):
-        # Copilot usa .github/copilot-instructions.md; el dir .github no implica Copilot
-        if _existe(target_dir, ".github/copilot-instructions.md"):
-            info.agentes.append("GitHub Copilot")
+    # Copilot usa .github/copilot-instructions.md; el dir .github no implica Copilot
+    if os.path.isdir(os.path.join(target_dir, ".github")) and _existe(
+        target_dir, ".github/copilot-instructions.md"
+    ):
+        info.agentes.append("GitHub Copilot")
 
     # Inferir agentes por archivos de reglas
     if "CLAUDE.md" in info.reglas_existentes:

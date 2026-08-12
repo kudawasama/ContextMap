@@ -97,8 +97,8 @@ def cmd_build(args) -> None:
 
     # Snippet CSS: etiquetas con color por contexto (se activa solo)
     from context_map.presentation.vault.consolidated.common import (
-        generar_snippet_etiquetas,
         generar_color_groups,
+        generar_snippet_etiquetas,
     )
 
     try:

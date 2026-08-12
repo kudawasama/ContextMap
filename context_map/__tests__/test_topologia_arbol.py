@@ -218,7 +218,7 @@ def test_topologia_arbol_estricto() -> None:
 
         # 3. Sin errores de topología (sin padre / enlaces rotos / índices mal)
         print(f"   Errores topología: {errores if errores else 'ninguno'}")
-        assert not errores, f"Violaciones de topología:\n" + "\n".join(errores)
+        assert not errores, "Violaciones de topología:\n" + "\n".join(errores)
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)

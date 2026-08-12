@@ -15,13 +15,13 @@ from __future__ import annotations
 import re
 
 from context_map.core.models import Node
-from context_map.presentation.vault.templates import _safe_filename
 
 # Misma lógica de nombre de archivo que secciones_ideas (DRY: importar helpers)
 from context_map.presentation.vault.consolidated.secciones_ideas import (
     _accion_nodo,
     _concepto_nodo,
 )
+from context_map.presentation.vault.templates import _safe_filename
 
 
 def _id_limpio(node: Node) -> str:

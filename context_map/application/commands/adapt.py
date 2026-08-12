@@ -9,8 +9,6 @@ de reglas correspondientes (AGENTS.md contextual, CLAUDE.md, .cursorrules,
 
 from __future__ import annotations
 
-import os
-
 from context_map.application.commands._helpers import project_name
 from context_map.domain.ecosystem import adaptar_ecosistema, detectar_ecosistema
 

@@ -8,6 +8,7 @@ eventos del grafo conceptual automáticamente sin saturar de ruido.
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime
 
 from context_map.core.models import Event
@@ -124,9 +125,6 @@ def _events_desde_estructura(est: EstructuraProyecto) -> list[Event]:
         )
 
     return eventos
-
-
-import re
 
 
 def _events_desde_contenido(

@@ -314,7 +314,6 @@ def _generar_opencode_json(project_name: str, eco: EcosistemaInfo) -> str:
 
 def _generar_hermes_config(project_name: str, eco: EcosistemaInfo) -> str:
     """Genera .hermes/config.yaml para el ecosistema Hermes."""
-    test = _test_command(eco)
     langs = ", ".join(eco.stack.lenguajes) or "No detectado"
     return f"""# Configuración del agente Hermes para {project_name}
 # Generado automáticamente por ContextMap — adaptado al stack detectado

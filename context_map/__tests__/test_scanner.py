@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import os
-from context_map.core.models import Event, Node
+from context_map.core.models import Node
 from context_map.domain.scanning.scanner import _events_desde_contenido
 from context_map.domain.synchronization.sync import _depurar_nodos_obsoletos
 from context_map.infrastructure.analyzers.content import InfoContenido

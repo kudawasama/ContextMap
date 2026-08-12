@@ -19,7 +19,6 @@ from context_map.application.commands._helpers import (
 from context_map.core.models import Node
 from context_map.core.storage import load_jsonl
 from context_map.domain.ingestion import crear_nodo_documento, extraer_texto
-from context_map.presentation.vault import render_obsidian_vault
 
 EXTENSIONES_SOPORTADAS: tuple[str, ...] = (".md", ".markdown", ".txt", ".text", ".pdf")
 
@@ -56,10 +55,10 @@ def _recolectar_archivos(target: str) -> list[str]:
 
 def _existe_titulo(titulo: str, nodos_existentes: list[Node]) -> bool:
     """Verifica si ya existe un nodo con el mismo título (dedup)."""
-    for n in nodos_existentes:
-        if n.title.strip().lower() == titulo.strip().lower():
-            return True
-    return False
+    return any(
+        n.title.strip().lower() == titulo.strip().lower()
+        for n in nodos_existentes
+    )
 
 
 def cmd_ingest(args) -> None:

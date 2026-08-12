@@ -535,7 +535,6 @@ def test_zona_knowledge_protegida() -> None:
 
 def test_tags_dominio_desde_yaml() -> None:
     """Los tags de dominio (grupos reales) se asignan desde dominios.yaml."""
-    import json
 
     from context_map.presentation.vault.consolidated.common import (
         _leer_dominios,

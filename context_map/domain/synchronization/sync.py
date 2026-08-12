@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 
 from context_map.core.models import Edge, Event, Node
 from context_map.core.normalization import dedup_nodes, estandarizar_nodo
@@ -114,9 +115,6 @@ def _encontrar_nodos_nuevos(
     return nuevos
 
 
-import re
-
-
 def _depurar_nodos_obsoletos(nodos: list[Node], project_root: str = ".") -> list[Node]:
     """Filtra y elimina nodos de RIESGO obsoletos cuyos archivos referenciados ya no existen.
 
@@ -142,7 +140,7 @@ def _depurar_nodos_obsoletos(nodos: list[Node], project_root: str = ".") -> list
                         existe = True
                         break
                     base = os.path.basename(fname)
-                    for root, dirs, files in os.walk(project_root):
+                    for _root, dirs, files in os.walk(project_root):
                         dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", "node_modules", ".context-map")]
                         if base in files:
                             existe = True

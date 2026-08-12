@@ -152,7 +152,7 @@ def test_adaptar_respeta_existentes() -> None:
         os.makedirs(os.path.join(temp_dir, ".claude"), exist_ok=True)
 
         eco = detectar_ecosistema(temp_dir)
-        generados = adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir)
 
         # CLAUDE.md no debe sobrescribirse sin --overwrite
         with open(claude_path, encoding="utf-8") as f:
@@ -245,7 +245,7 @@ def test_adaptar_merge_preserva_reglas_usuario() -> None:
             f.write("# Mi proyecto\n\n## Reglas del equipo\n- No tocar config sin preguntar\n- Commits en español\n")
 
         eco = detectar_ecosistema(temp_dir)
-        generados = adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
 
         with open(agents_path, encoding="utf-8") as f:
             contenido = f.read()

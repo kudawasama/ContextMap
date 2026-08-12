@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 from datetime import datetime
 
 from context_map.core.models import Edge, Node
@@ -20,15 +19,19 @@ from context_map.presentation.vault.consolidated.common import (
     _render_grafo_conexiones,
 )
 from context_map.presentation.vault.consolidated.secciones_backlog import _render_seccion_backlog
-from context_map.presentation.vault.consolidated.secciones_estructura import _render_seccion_estructura
-from context_map.presentation.vault.consolidated.secciones_historial import _render_seccion_historial
+from context_map.presentation.vault.consolidated.secciones_estructura import (
+    _render_seccion_estructura,
+)
+from context_map.presentation.vault.consolidated.secciones_historial import (
+    _render_seccion_historial,
+)
 from context_map.presentation.vault.consolidated.secciones_ideas import (
-    _render_nota_idea,
     _render_seccion_ideas,
 )
-from context_map.presentation.vault.consolidated.secciones_proposito import _render_seccion_proposito
+from context_map.presentation.vault.consolidated.secciones_proposito import (
+    _render_seccion_proposito,
+)
 from context_map.presentation.vault.consolidated.secciones_riesgos import (
-    _render_nota_riesgo,
     _render_seccion_riesgos,
 )
 

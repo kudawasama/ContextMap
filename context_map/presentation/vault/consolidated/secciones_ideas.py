@@ -17,8 +17,11 @@ import re
 
 from context_map.core.models import Node
 from context_map.core.normalization.standardize import inferir_concepto
-from context_map.presentation.vault.consolidated.common import _escribir_markdown, _linea_tags_inline
-from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
+from context_map.presentation.vault.consolidated.common import (
+    _escribir_markdown,
+    _linea_tags_inline,
+)
+from context_map.presentation.vault.templates import _normalize_tags
 
 ICONOS_STATUS = {"completado": "✅", "pendiente": "⏳", "activo": "🔄"}
 
