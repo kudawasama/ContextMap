@@ -33,6 +33,14 @@ def cmd_refresh(args) -> None:
     if not quiet:
         print(f"[refresh] Actualizando contexto de: {target}")
 
+    # Punto de control de versión (2026-08-11): antes de actualizar el CONTEXTO,
+    # verificar si el PROGRAMA (binario ctxmap) está desactualizado y solicitarlo.
+    # Aviso accionable y NO bloqueante: el agente/usuario decide actualizar.
+    if not quiet:
+        from context_map.infrastructure.version_check import aviso_pre_actualizacion
+
+        print(aviso_pre_actualizacion(), end="")
+
     try:
         if abs_target != old_cwd:
             os.chdir(abs_target)

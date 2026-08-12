@@ -161,3 +161,32 @@ def aviso_actualizacion(force: bool = False) -> str:
     except Exception as err:  # noqa: BLE001 — jamás romper el flujo por esto
         logger.debug("aviso de actualización omitido: %s", err)
     return ""
+
+
+def aviso_pre_actualizacion(force: bool = False) -> str:
+    """Aviso DESTACADO para ANTES de actualizar el contexto (punto de control).
+
+    A diferencia de ``aviso_actualizacion`` (que se muestra al final de los
+    comandos), este se usa al INICIO de ``refresh``: si el PROGRAMA (binario)
+    está desactualizado, se solicita actualizarlo antes de actualizar el
+    CONTEXTO del proyecto (lección: actualizar el programa ≠ actualizar el
+    contexto). El aviso es accionable y no bloqueante — jamás interrumpe.
+
+    Args:
+        force (bool): Ignorar la caché de 24h.
+
+    Returns:
+        str: Mensaje destacado o string vacío si no hay actualización.
+    """
+    try:
+        hay, local, remota = hay_actualizacion(force=force)
+        if hay:
+            return (
+                f"\n⬆️⚠️  ContextMap DESACTUALIZADO: tienes v{local}, la última es v{remota}.\n"
+                f"   Antes de actualizar el CONTEXTO, actualiza el PROGRAMA:\n"
+                f"   uv tool install --force \"git+https://github.com/kudawasama/ContextMap.git\" "
+                f"--with \"mcp>=1.2.0,<2.0.0\"\n"
+            )
+    except Exception as err:  # noqa: BLE001 — jamás romper el flujo por esto
+        logger.debug("aviso pre-actualización omitido: %s", err)
+    return ""
