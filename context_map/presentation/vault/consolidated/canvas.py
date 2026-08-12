@@ -14,6 +14,7 @@ Regla de oro: SOLO se referencian archivos que existen (sin nodos fantasma).
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
 from datetime import date, datetime
@@ -164,7 +165,14 @@ def render_plantillas(output_dir: str, project_name: str) -> str:
         str: Ruta de la plantilla generada.
     """
     ruta = os.path.join(output_dir, ".context-map", "plantillas", "nota-sesion.md")
-    os.makedirs(os.path.dirname(ruta), exist_ok=True)
+    # Fix CI (2026-08-12): si el directorio base no es escribible (p. ej. la
+    # raíz del sistema al renderizar en un temp dir de 2 niveles), las
+    # plantillas se omiten — son un extra opcional del vault.
+    try:
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+    except OSError as err:
+        logging.getLogger(__name__).warning("No se pudieron crear plantillas en %s: %s", output_dir, err)
+        return ""
     contenido = """---
 type: nota-manual
 preserve: true

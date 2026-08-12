@@ -235,11 +235,18 @@ def _render_hierarchical_vault(
     )
 
     project_root = os.path.dirname(os.path.dirname(output_dir))
-    render_canvas(output_dir, nodes, edges)
-    render_graph_json(output_dir, nodes)
-    render_plantillas(project_root, project_name)
-    render_nota_dia(project_root, project_name, nodes)
-    os.makedirs(os.path.join(output_dir, "adjuntos"), exist_ok=True)
+    # Fix CI (2026-08-12): los extras visuales (lienzo, plantillas, nota del
+    # día) son OPCIONALES — si el directorio base no es escribible (p. ej. la
+    # raíz del sistema al renderizar en un temp dir de 2 niveles), se omiten
+    # sin romper el vault. En Linux CI esto era PermissionError: '/.context-map'.
+    try:
+        render_canvas(output_dir, nodes, edges)
+        render_graph_json(output_dir, nodes)
+        render_plantillas(project_root, project_name)
+        render_nota_dia(project_root, project_name, nodes)
+        os.makedirs(os.path.join(output_dir, "adjuntos"), exist_ok=True)
+    except OSError as err:
+        logging.getLogger(__name__).warning("Extras visuales omitidos: %s", err)
 
     if preservados:
         target_backlog = os.path.join(output_dir, "5.0-BACKLOG")
