@@ -344,6 +344,52 @@ def test_todo_codigo_no_es_tarea() -> None:
     assert not _es_todo_codigo(limpio)  # TODO con texto legible SÍ es tarea
 
 
+def test_todo_keywords_y_docstrings_son_ruido() -> None:
+    """Etapa 6: strings literales, listas de keywords y docstrings de tipo NO son tareas.
+
+    Reproduce el ruido real del vault: TODOs de keywords.py (archivo ya
+    fusionado en standardize.py), la asignación ``pendiente_kw = [...]`` y el
+    docstring de tipo ``node (Node): Nodo de tipo FUTURO o TODO.``.
+    """
+    from context_map.presentation.vault.consolidated.secciones_backlog import _es_todo_codigo
+
+    kw = _nodo("F1", tipo="FUTURO", titulo='TODO (keywords.py:L123): "todo:",')
+    kw2 = _nodo("F2", tipo="FUTURO", titulo='TODO (keywords.py:L124): "fixme:",')
+    std = _nodo(
+        "F3", tipo="FUTURO",
+        titulo='TODO (standardize.py:L248): pendiente_kw = ["todo:", "fixme:", "por hacer"]',
+    )
+    gen = _nodo(
+        "F4", tipo="FUTURO",
+        titulo="TODO (generadores.py:L247): node (Node): Nodo de tipo FUTURO o TODO.",
+    )
+    limpio = _nodo("F5", tipo="FUTURO", titulo="TODO (engine.py:L20): Reintentar con backoff exponencial")
+
+    assert _es_todo_codigo(kw), "string literal 'todo:' debe filtrarse"
+    assert _es_todo_codigo(kw2), "string literal 'fixme:' debe filtrarse"
+    assert _es_todo_codigo(std), "asignación de lista pendiente_kw debe filtrarse"
+    assert _es_todo_codigo(gen), "docstring de tipo (Node) debe filtrarse"
+    assert not _es_todo_codigo(limpio), "tarea legible real NO debe filtrarse"
+
+
+def test_brief_tareas_no_lista_todos_de_codigo() -> None:
+    """Etapa 6: el brief (CONTEXT.md) filtra los TODOs de código ruidosos.
+
+    Antes el brief listaba ``futuros[:5]`` sin filtrar: TODOs como
+    ``keywords.py: \"todo:\",`` aparecían como deuda técnica del proyecto.
+    """
+    from context_map.presentation.briefs.brief import _tareas_pendientes
+
+    ruidoso = _nodo("F1", tipo="FUTURO", titulo='TODO (keywords.py:L123): "todo:",')
+    legible = _nodo(
+        "F2", tipo="FUTURO",
+        titulo="TODO (engine.py:L20): Reintentar con backoff exponencial",
+    )
+    seccion = _tareas_pendientes([ruidoso, legible])
+    assert "Reintentar con backoff" in seccion, "El TODO legible debe aparecer"
+    assert "keywords.py" not in seccion, "El TODO de código no debe aparecer"
+
+
 def test_importador_sesiones_state_db_moderno() -> None:
     """El importador lee el state.db moderno de Hermes (started_at/timestamp)."""
     import sqlite3

@@ -48,6 +48,8 @@ def _es_todo_codigo(n) -> bool:
         "if ", "for ", "=>", "\\n", "print(", "pass", "None", "True", "False",
         "await ", "async ", "yield ", "logger.", "add_argument", "rest(",
         "todos =", "texto =", "cursor.", "conn.",
+        # Etapa 6 (2026-08-11): strings literales, listas de keywords y tipos
+        '"', "= [", "if any(", "(Node)", "Nodo de tipo",
     )
     return any(m in t for m in marcas_codigo)
 

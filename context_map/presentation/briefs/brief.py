@@ -363,6 +363,12 @@ def _tareas_pendientes(nodes: list[Node], pendientes_manuales: list[str] | None 
         str: Sección de tareas pendientes en Markdown.
     """
     futuros = [n for n in nodes if n.type == "FUTURO"]
+    # Etapa 6 (2026-08-11): excluir TODOs con código crudo (mismo filtro del
+    # backlog 5.1) — los docstrings, strings literales y listas de keywords NO
+    # son deuda técnica del proyecto.
+    from context_map.presentation.vault.consolidated.secciones_backlog import _es_todo_codigo
+
+    futuros = [n for n in futuros if not _es_todo_codigo(n)]
     manuales = pendientes_manuales or []
 
     if not futuros and not manuales:
