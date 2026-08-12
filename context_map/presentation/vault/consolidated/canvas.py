@@ -30,6 +30,13 @@ def render_canvas(
 ) -> str:
     """Genera ``00-MAPA-MENTAL.canvas`` con el mapa mental conectado.
 
+    Fix 2026-08-11 (Etapa 2 — el lienzo estaba muerto: 55 tarjetas, 0 aristas,
+    duplicados). Ahora:
+    - Dedup por archivo: una tarjeta por nota (antes había duplicados).
+    - Agrupación por sección: columnas por carpeta raíz (1.0, 2.0, ... 8.0).
+    - Aristas REALES: edges del grafo + conexiones semánticas derivadas
+      (``conexiones_de_nodo``, igual que 00-CONEXIONES.md).
+
     Args:
         output_dir (str): Directorio raíz del vault.
         nodes (list[Node]): Nodos del mapa.
@@ -38,37 +45,73 @@ def render_canvas(
     Returns:
         str: Ruta del archivo generado.
     """
-    ids: dict[str, str] = {}
-    canvas_nodes: list[dict] = []
-    idx = 0
+    from context_map.presentation.vault.consolidated.rutas import (
+        conexiones_de_nodo,
+        ruta_archivo_nodo,
+    )
+
+    # 1. Dedup por archivo: un nodo (y una tarjeta) por ruta real
+    ruta_a_nodo: dict[str, Node] = {}
     for n in nodes:
         ruta = ruta_archivo_nodo(n)
-        if not ruta:
-            continue
+        if ruta:
+            ruta_a_nodo.setdefault(ruta, n)
+
+    def _columna(ruta: str) -> int:
+        """Columna por sección raíz: 1.0→1, 2.0→2, ... 8.0→8; resto→9."""
+        seccion = ruta.split("/")[0] if "/" in ruta else ""
+        if not seccion or seccion.startswith("adjuntos"):
+            return 9
+        try:
+            return int(seccion.split(".")[0])
+        except ValueError:
+            return 9
+
+    # 2. Posicionar: columna por sección, fila apilada dentro de la columna
+    ids: dict[str, str] = {}          # ruta → uuid
+    canvas_nodes: list[dict] = []
+    filas_por_col: dict[int, int] = {}
+    for ruta in sorted(ruta_a_nodo):
+        col = _columna(ruta)
+        fila = filas_por_col.get(col, 0)
+        filas_por_col[col] = fila + 1
         uid = str(uuid.uuid4())
-        ids[n.id] = uid
+        ids[ruta] = uid
         canvas_nodes.append({
             "id": uid,
             "type": "file",
             "file": ruta,
-            "x": 220 * (idx % 6),
-            "y": 180 * (idx // 6),
-            "width": 260,
-            "height": 60,
+            "x": 260 * col,
+            "y": 60 * fila,
+            "width": 240,
+            "height": 50,
         })
-        idx += 1
+
+    # 3. Aristas: edges reales del grafo + conexiones semánticas derivadas
+    pares: set[tuple[str, str]] = set()
+    for e in edges:
+        r_src = next((r for r, n in ruta_a_nodo.items() if n.id == e.source), None)
+        r_dst = next((r for r, n in ruta_a_nodo.items() if n.id == e.target), None)
+        if r_src and r_dst and r_src != r_dst:
+            pares.add(tuple(sorted((r_src, r_dst))))
+
+    nodos_unicos = list(ruta_a_nodo.values())
+    for ruta, n in ruta_a_nodo.items():
+        for rel in conexiones_de_nodo(n, nodos_unicos, limite=3):
+            r_rel = ruta_archivo_nodo(rel)
+            if r_rel and r_rel != ruta and r_rel in ids:
+                pares.add(tuple(sorted((ruta, r_rel))))
 
     canvas_edges: list[dict] = []
-    for e in edges:
-        if e.source in ids and e.target in ids:
-            canvas_edges.append({
-                "id": str(uuid.uuid4()),
-                "fromNode": ids[e.source],
-                "fromSide": "right",
-                "toNode": ids[e.target],
-                "toSide": "left",
-                "label": e.kind,
-            })
+    for r_src, r_dst in sorted(pares):
+        canvas_edges.append({
+            "id": str(uuid.uuid4()),
+            "fromNode": ids[r_src],
+            "fromSide": "right",
+            "toNode": ids[r_dst],
+            "toSide": "left",
+            "label": "",
+        })
 
     payload = {"nodes": canvas_nodes, "edges": canvas_edges}
     ruta_canvas = os.path.join(output_dir, "00-MAPA-MENTAL.canvas")

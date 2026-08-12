@@ -127,7 +127,48 @@ def test_canvas_es_json_valido_con_archivos_reales() -> None:
         for node in data["nodes"]:
             assert node["type"] == "file"
             assert os.path.exists(os.path.join(temp_dir, node["file"].replace("/", os.sep)))
-        assert data["edges"] == []
+        # Fix 2026-08-11: el canvas ahora dibuja las conexiones semánticas
+        # (I1 e I2 comparten concepto DEVOPS → arista real).
+        assert len(data["edges"]) >= 1, "El canvas debe conectar nodos relacionados"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_canvas_dedup_una_tarjeta_por_archivo() -> None:
+    """Fix Etapa 2: dos nodos que apuntan al MISMO archivo → una sola tarjeta."""
+    import json
+
+    from context_map.presentation.vault.consolidated.canvas import render_canvas
+    from context_map.presentation.vault.consolidated.rutas import ruta_archivo_nodo
+
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_canvas_fix_")
+    try:
+        nodos = [
+            _nodo("D1", titulo="Idea uno", concepto="DEVOPS"),
+            _nodo("D1", titulo="Idea uno", concepto="DEVOPS"),  # mismo id → misma ruta
+            _nodo("D2", titulo="Idea dos", concepto="DEVOPS"),
+        ]
+        rutas_creadas: set[str] = set()
+        for n in nodos:
+            ruta = ruta_archivo_nodo(n)
+            if ruta and ruta not in rutas_creadas:
+                p = os.path.join(temp_dir, ruta.replace("/", os.sep))
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("# x\n")
+                rutas_creadas.add(ruta)
+
+        render_canvas(temp_dir, nodos, [])
+        with open(os.path.join(temp_dir, "00-MAPA-MENTAL.canvas"), encoding="utf-8") as f:
+            data = json.load(f)
+
+        rutas_tarjeta = [n["file"] for n in data["nodes"]]
+        assert len(rutas_tarjeta) == len(set(rutas_tarjeta)), (
+            f"Hay tarjetas duplicadas: {rutas_tarjeta}"
+        )
+        assert len(data["nodes"]) == 2, f"Se esperaban 2 tarjetas únicas: {rutas_tarjeta}"
+        # I1↔I3 conectados por concepto DEVOPS
+        assert len(data["edges"]) >= 1, "El canvas debe conectar nodos relacionados"
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
