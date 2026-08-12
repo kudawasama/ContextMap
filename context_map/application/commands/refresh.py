@@ -59,6 +59,7 @@ def cmd_refresh(args) -> None:
             raw=False,
             clean=False,
             quiet=quiet,
+            aviso_pre=False,  # refresh ya imprime el aviso de versión al inicio
         )
         cmd_build(build_args)
 

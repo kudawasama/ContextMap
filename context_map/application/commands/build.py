@@ -49,6 +49,13 @@ def cmd_build(args) -> None:
     proj = project_name(args)
     ensure_dirs(proj)
 
+    # Punto de control de versión (2026-08-11): aviso pre-actualización.
+    # refresh pasa aviso_pre=False para no duplicar (él ya lo imprime al inicio).
+    if getattr(args, "aviso_pre", True) and not getattr(args, "quiet", False):
+        from context_map.infrastructure.version_check import aviso_pre_actualizacion
+
+        print(aviso_pre_actualizacion(), end="")
+
     # Resolver modo del vault y aplicar limpieza si se solicitó
     vault_mode = resolve_vault_mode(args)
     if getattr(args, "clean", False):
