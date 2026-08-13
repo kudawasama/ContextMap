@@ -138,6 +138,7 @@ def create_parser() -> argparse.ArgumentParser:
     sp_sync.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a consolidar")
     sp_sync.add_argument("--todos", action="store_true", help="Consolidar todos los proyectos con .context-map en ~/Proyectos, ~/Documents y ~/Desktop")
     sp_sync.add_argument("--db", default=None, help="Ruta a la BD personal (default: F: o ~/.context-map/personal)")
+    sp_sync.add_argument("--rutas", default="", help="Rutas adicionales separadas por ';' para --todos (ej. 'H:\\Mi unidad\\Desarrollo y Proyectos;D:\\proyectos')")
 
     sp_add = sp.add_parser("add", help="Registra una lección o decisión al vuelo")
     sp_add.add_argument("texto", help="Texto de la lección o decisión")

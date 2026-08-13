@@ -221,3 +221,74 @@ def test_sincronizar_proyecto_automatico_tolerante(tmp_path, monkeypatch) -> Non
         assert stats["eventos"] == 1
     finally:
         db.cerrar()
+
+
+def test_nombre_proyecto_usa_vault(tmp_path) -> None:
+    """Deriva el nombre del proyecto desde vault-<X> (no de la carpeta local)."""
+    from context_map.application.commands.personal import _nombre_proyecto_por_ruta
+
+    # Con vault-<Nombre>: usa el nombre del vault (consistente entre PCs)
+    con_vault = tmp_path / "carpeta-local"
+    (con_vault / ".context-map" / "vault-MiProyecto").mkdir(parents=True)
+    assert _nombre_proyecto_por_ruta(str(con_vault)) == "MiProyecto"
+
+    # Sin vault: fallback a la carpeta
+    sin_vault = tmp_path / "carpeta-sola"
+    sin_vault.mkdir(exist_ok=True)
+    assert _nombre_proyecto_por_ruta(str(sin_vault)) == "carpeta-sola"
+
+
+def test_sync_personal_rutas_adicionales(tmp_path, monkeypatch) -> None:
+    """El flag --rutas permite añadir carpetas fuera de las bases por defecto."""
+    from argparse import Namespace
+
+    import context_map.application.commands.personal as personal_mod
+    from context_map.application.commands.personal import _cmd_personal_sync
+    from context_map.core.personal import PersonalDB
+
+    proyecto = tmp_path / "MiProyectoGDrive"
+    (proyecto / ".context-map" / "raw").mkdir(parents=True)
+    (proyecto / ".context-map" / "chats").mkdir(parents=True)
+    (proyecto / ".context-map" / "raw" / "events.jsonl").write_text(
+        '{"type": "IDEA", "text": "Evento rutas", "timestamp": "2026-08-13T10:00:00", "source": "t"}\n',
+        encoding="utf-8",
+    )
+
+    ruta_db = str(tmp_path / "personal-rutas.db")
+    # Sin bases por defecto: solo la ruta extra del flag
+    monkeypatch.setattr(personal_mod, "_bases_por_defecto", lambda: [])
+    _cmd_personal_sync(Namespace(todos=True, target=".", rutas=str(proyecto), db=ruta_db))
+
+    db = PersonalDB(ruta_db)
+    try:
+        stats = db.estadisticas()
+        assert stats["proyectos"] == 1
+        assert stats["eventos"] == 1
+    finally:
+        db.cerrar()
+
+
+def test_export_sin_wikilinks_fantasma(tmp_path) -> None:
+    """El vault personal no debe enlazar [[proyectos]] que no existen como notas."""
+    from argparse import Namespace
+
+    from context_map.application.commands.personal import _cmd_personal_export
+    from context_map.core.personal import PersonalDB
+
+    ruta_db = str(tmp_path / "personal-export.db")
+    db = PersonalDB(ruta_db)
+    try:
+        db.cargar_eventos(
+            "ProyectoX",
+            [{"type": "IDEA", "text": "Algo", "timestamp": "", "source": "t"}],
+        )
+    finally:
+        db.cerrar()
+
+    destino = str(tmp_path / "vault-personal")
+    _cmd_personal_export(Namespace(destino=destino, db=ruta_db))
+
+    with open(os.path.join(destino, "00-INDICE.md"), encoding="utf-8") as f:
+        contenido = f.read()
+    assert "[[ProyectoX" not in contenido, "wikilink a nota inexistente (nodo fantasma)"
+    assert "ProyectoX" in contenido

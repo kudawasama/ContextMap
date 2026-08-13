@@ -90,16 +90,97 @@ def _rutas_proyecto(target_dir: str) -> tuple[str, str, str]:
 
 
 def _nombre_proyecto_por_ruta(target_dir: str) -> str:
-    """Deriva el nombre del proyecto desde su ruta.
+    """Deriva el nombre del proyecto desde su contexto.
+
+    Orden: nombre del vault (``vault-<X>``) > frontmatter ``project`` de
+    CONTEXT.md > carpeta base. Así el nombre es consistente entre PCs
+    (la carpeta local puede llamarse distinto, ej. PruebaContext vs ContextMap).
 
     Args:
         target_dir: Directorio raíz del proyecto.
 
     Returns:
-        str: Nombre del proyecto (carpeta base).
+        str: Nombre estable del proyecto.
     """
+    base = os.path.join(target_dir, ".context-map")
+    if os.path.isdir(base):
+        # 1. Vault: .context-map/vault-<Nombre>/
+        try:
+            for entrada in sorted(os.listdir(base)):
+                if entrada.startswith("vault-") and os.path.isdir(
+                    os.path.join(base, entrada)
+                ):
+                    return entrada[len("vault-"):]
+        except OSError:
+            pass
+        # 2. Frontmatter project: de CONTEXT.md
+        context_path = os.path.join(base, "CONTEXT.md")
+        if os.path.exists(context_path):
+            try:
+                with open(context_path, encoding="utf-8") as f:
+                    cabecera = f.read(3000)
+                m = re.search(r'^project:\s*["\']?([^"\'\n]+)', cabecera, re.MULTILINE)
+                if m:
+                    return m.group(1).strip()
+            except OSError:
+                pass
     nombre = os.path.basename(os.path.abspath(target_dir))
     return nombre or "Repo"
+
+
+def _bases_por_defecto() -> list[str]:
+    """Carpetas base que se escanean en ``sync --todos``.
+
+    Incluye las carpetas típicas del usuario y cualquier ``Mi unidad`` de
+    Google Drive montada (H:, G:, ...) que contenga ``Desarrollo y Proyectos``.
+
+    Returns:
+        list[str]: Rutas base a escanear (solo las que podrían existir).
+    """
+    bases = [
+        os.path.expanduser("~/Proyectos"),
+        os.path.expanduser("~/Documents"),
+        os.path.expanduser("~/Desktop"),
+    ]
+    # Google Drive (Mi unidad) en cualquier letra de unidad montada
+    for letra in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+        unidad = f"{letra}:"
+        if not os.path.isdir(unidad):
+            continue
+        mi_unidad = os.path.join(unidad, "Mi unidad")
+        if os.path.isdir(mi_unidad):
+            bases.append(os.path.join(mi_unidad, "Desarrollo y Proyectos"))
+            bases.append(mi_unidad)
+    return bases
+
+
+def _descubrir_proyectos(base_dir: str, profundidad: int = 4) -> list[tuple[str, str]]:
+    """Descubre proyectos con ``.context-map`` bajo ``base_dir`` (recursivo).
+
+    Una carpeta puede ser proyecto directo (tiene ``.context-map``) y a la vez
+    contener subproyectos (ej. ``H:\\...\\GitHub`` con ``.context-map`` propio y
+    ``Bot_AX_Contable`` adentro) — se incluyen ambos.
+
+    Args:
+        base_dir: Carpeta raíz a explorar.
+        profundidad: Máximo de niveles de descenso.
+
+    Returns:
+        list[tuple[str, str]]: Pares (nombre_proyecto, ruta).
+    """
+    encontrados: list[tuple[str, str]] = []
+    if os.path.isdir(os.path.join(base_dir, ".context-map")):
+        encontrados.append((_nombre_proyecto_por_ruta(base_dir), base_dir))
+    if profundidad <= 0:
+        return encontrados
+    try:
+        for entrada in sorted(os.listdir(base_dir)):
+            ruta = os.path.join(base_dir, entrada)
+            if os.path.isdir(ruta) and not entrada.startswith("."):
+                encontrados.extend(_descubrir_proyectos(ruta, profundidad - 1))
+    except OSError:
+        pass
+    return encontrados
 
 
 def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
@@ -170,20 +251,18 @@ def _cmd_personal_sync(args) -> None:
         proyectos: list[tuple[str, str]] = []
 
         if getattr(args, "todos", False):
-            # Escanear ~/Proyectos y ~/Documents por carpetas con .context-map
-            for base_dir in (
-                os.path.expanduser("~/Proyectos"),
-                os.path.expanduser("~/Documents"),
-                os.path.expanduser("~/Desktop"),
-            ):
+            # Bases por defecto (incluye Google Drive "Mi unidad") + --rutas
+            bases = _bases_por_defecto()
+            rutas_extra = [
+                r.strip()
+                for r in (getattr(args, "rutas", "") or "").split(";")
+                if r.strip()
+            ]
+            bases.extend(rutas_extra)
+            for base_dir in bases:
                 if not os.path.isdir(base_dir):
                     continue
-                for entrada in sorted(os.listdir(base_dir)):
-                    ruta = os.path.join(base_dir, entrada)
-                    if os.path.isdir(ruta) and os.path.isdir(
-                        os.path.join(ruta, ".context-map")
-                    ):
-                        proyectos.append((entrada, ruta))
+                proyectos.extend(_descubrir_proyectos(base_dir))
         else:
             target = getattr(args, "target", ".") or "."
             target = os.path.abspath(target)
@@ -310,11 +389,12 @@ def _cmd_personal_export(args) -> None:
 
         secciones: list[str] = ["# Vault Personal — ContextMap", ""]
 
-        # Índice por proyecto
+        # Índice por proyecto (sin wikilinks: no existen notas por proyecto,
+        # los [[...]] crearían nodos fantasma en Obsidian)
         proyectos = db.listar_proyectos()
         secciones.append("## Proyectos")
         for p in proyectos:
-            secciones.append(f"- [[{p}]]")
+            secciones.append(f"- **{p}**")
         secciones.append("")
 
         # Eventos por proyecto
@@ -370,7 +450,7 @@ def _cmd_personal_export(args) -> None:
             f.write("\n".join(secciones))
 
         print(f"personal: vault exportado en {destino}")
-        print(f"  archivos: {len(os.listdir(destino))} (índice + notas por proyecto)")
+        print(f"  archivos: {len(os.listdir(destino))} (índice único; abre 00-INDICE.md)")
     finally:
         db.cerrar()
 
