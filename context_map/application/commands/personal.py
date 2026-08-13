@@ -302,13 +302,16 @@ def _cmd_personal_sync(args) -> None:
             nuevos = db.cargar_eventos(nombre, eventos)
             total_nuevos += nuevos
 
+            # Contador POR PROYECTO (el acumulado global se muestra al final)
+            lecciones_proyecto = 0
             for leccion in _leer_lecciones_vault(vault_base, nombre):
                 if db.agregar_leccion(leccion):
                     total_lecciones += 1
+                    lecciones_proyecto += 1
 
             print(
                 f"sync {nombre}: {len(eventos)} eventos "
-                f"(+{nuevos} nuevos), lecciones +{total_lecciones}"
+                f"(+{nuevos} nuevos), lecciones +{lecciones_proyecto}"
             )
 
         stats = db.estadisticas()

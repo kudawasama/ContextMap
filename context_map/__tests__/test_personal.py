@@ -443,3 +443,47 @@ preserve: true
     assert "actualiza el contexto" in leccion.prompt
     assert "correr ctxmap refresh" in leccion.instruccion
     assert "memoria viva" in leccion.conexiones
+
+
+def test_sync_mensaje_lecciones_por_proyecto(tmp_path, monkeypatch, capsys) -> None:
+    """El mensaje de sync muestra las lecciones del PROYECTO actual (no el acumulado)."""
+    from argparse import Namespace
+
+    from context_map.application.commands.personal import _cmd_personal_sync
+
+    ruta_db = str(tmp_path / "personal-msg.db")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", ruta_db)
+
+    # Proyecto con knowledge (1 lección)
+    con_knowledge = tmp_path / "ConKnowledge"
+    (con_knowledge / ".context-map" / "vault-ConKnowledge" / "8.0-KNOWLEDGE").mkdir(parents=True)
+    (con_knowledge / ".context-map" / "vault-ConKnowledge" / "8.0-KNOWLEDGE" / "L1.md").write_text(
+        "# 🎯 Lección: La lección de ConKnowledge\n\n🛠️ Cómo se resolvió: así\n",
+        encoding="utf-8",
+    )
+    (con_knowledge / ".context-map" / "raw").mkdir(parents=True)
+    (con_knowledge / ".context-map" / "raw" / "events.jsonl").write_text(
+        '{"type": "IDEA", "text": "E1", "timestamp": "", "source": "t"}\n', encoding="utf-8"
+    )
+
+    # Proyecto SIN knowledge
+    sin_knowledge = tmp_path / "SinKnowledge"
+    (sin_knowledge / ".context-map" / "raw").mkdir(parents=True)
+    (sin_knowledge / ".context-map" / "raw" / "events.jsonl").write_text(
+        '{"type": "IDEA", "text": "E2", "timestamp": "", "source": "t"}\n', encoding="utf-8"
+    )
+
+    import context_map.application.commands.personal as personal_mod
+
+    monkeypatch.setattr(personal_mod, "_bases_por_defecto", lambda: [])
+    args = Namespace(
+        todos=True,
+        target=".",
+        rutas=f"{con_knowledge};{sin_knowledge}",
+        db=ruta_db,
+    )
+    _cmd_personal_sync(args)
+    out = capsys.readouterr().out
+
+    linea_sin = next((l for l in out.splitlines() if "sync SinKnowledge" in l), "")
+    assert "lecciones +0" in linea_sin, f"mensaje engañoso: {linea_sin}"
