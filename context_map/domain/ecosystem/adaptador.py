@@ -148,7 +148,23 @@ El contexto es la **memoria viva del proyecto**:
 
 ---
 
-## 4. Convención de Commits
+## 4. Contexto GLOBAL personal (multi-proyecto)
+
+Además del vault local, el usuario mantiene una **BD personal consolidada**
+(`ctxmap personal`) con eventos, lecciones y decisiones de TODOS sus
+proyectos. Cuando necesites contexto histórico global (decisiones pasadas,
+lecciones aprendidas, patrones), consúltala con pocos tokens (FTS5):
+
+```bash
+ctxmap personal query "términos" --limite 5
+```
+
+Complementa (no reemplaza) el vault local: con ella respondes con el
+historial completo del usuario, no solo de este proyecto.
+
+---
+
+## 5. Convención de Commits
 
 * Usar **Conventional Commits** en español (ej. `feat: ...`, `fix: ...`, `refactor: ...`, `docs: ...`).
 """
@@ -168,6 +184,7 @@ Este proyecto usa **ContextMap** para gobernanza de contexto. Antes de modificar
 1. Lee `.context-map/CONTEXT.md` (brief ejecutivo: métricas, riesgos, tareas).
 2. Explora el vault en `.context-map/vault-{{project_name}}/` para entender el grafo del proyecto.
 3. No supongas lógica: inspecciona el código fuente antes de proponer cambios.
+4. Para contexto histórico global (otros proyectos): `ctxmap personal query "términos" --limite 5` (BD personal FTS5, pocos tokens).
 
 ## Comandos de verificación
 
@@ -204,6 +221,7 @@ globs: **/*
 - **Idioma**: respuestas, comentarios y docstrings en Español Técnico Profesional.
 - **Commits**: Conventional Commits en español (`feat:`, `fix:`, `refactor:`, `docs:`).
 - **Arquitectura**: respetar la estructura modular existente; no inventar directorios nuevos.
+- **Contexto global**: `ctxmap personal query "términos"` para recuperar historial de otros proyectos (BD FTS5, pocos tokens).
 """
 
 

@@ -164,6 +164,39 @@ def context(target: str = ".", project: str = "") -> str:
     return _leer_brief(target, project)
 
 
+@_tool
+def personal_query(consulta: str, proyecto: str = "", limite: int = 5) -> str:
+    """Busca en la BD PERSONAL de ContextMap (FTS5): eventos, lecciones y decisiones de TODOS los proyectos del usuario. USAR para recuperar contexto histórico global con pocos tokens (ej. '¿qué hicimos con fair share?', 'lecciones sobre Vercel'). Complementa el vault local.
+
+    Args:
+        consulta: Términos a buscar (full-text).
+        proyecto: Filtrar por proyecto (opcional).
+        limite: Máximo de resultados (default 5).
+    """
+    from context_map.core.personal import PersonalDB
+
+    try:
+        db = PersonalDB()
+        try:
+            resultados = db.buscar(
+                consulta,
+                proyecto=proyecto or None,
+                limite=limite,
+            )
+            if not resultados:
+                return f"personal: sin resultados para '{consulta}'"
+            lineas = [f"personal: {len(resultados)} resultado(s) para '{consulta}':"]
+            for i, r in enumerate(resultados, 1):
+                proy = f" [{r.proyecto}]" if r.proyecto else " [personal]"
+                lineas.append(f"{i:2d}. ({r.tabla}){proy}")
+                lineas.append(f"    {r.texto}")
+            return "\n".join(lineas)
+        finally:
+            db.cerrar()
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR: {err} — ejecuta `ctxmap personal sync --todos` para crear la BD personal"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:

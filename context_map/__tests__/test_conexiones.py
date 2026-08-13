@@ -587,7 +587,7 @@ def test_servidor_mcp_expone_herramientas() -> None:
 
     assert mcp_server is not None
     # Las tools se definen como funciones en el módulo (decorador condicional)
-    for nombre in ("refresh", "scan", "build", "check", "import_git", "context"):
+    for nombre in ("refresh", "scan", "build", "check", "import_git", "context", "personal_query"):
         assert hasattr(mcp_server, nombre), f"falta tool {nombre}"
 
 

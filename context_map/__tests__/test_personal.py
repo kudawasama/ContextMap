@@ -292,3 +292,39 @@ def test_export_sin_wikilinks_fantasma(tmp_path) -> None:
         contenido = f.read()
     assert "[[ProyectoX" not in contenido, "wikilink a nota inexistente (nodo fantasma)"
     assert "ProyectoX" in contenido
+
+
+def test_mcp_personal_query_funcional(tmp_path, monkeypatch) -> None:
+    """La tool MCP personal_query consulta la BD personal (FTS5)."""
+    from context_map.infrastructure.mcp_server import personal_query
+
+    ruta_db = str(tmp_path / "personal-mcp.db")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", ruta_db)
+
+    from context_map.core.personal import PersonalDB
+
+    db = PersonalDB(ruta_db)
+    try:
+        db.cargar_eventos(
+            "MiProyecto",
+            [{"type": "IDEA", "text": "Obsidian como herramienta de notas", "timestamp": "", "source": "t"}],
+        )
+    finally:
+        db.cerrar()
+
+    salida = personal_query("obsidian")
+    assert "obsidian" in salida.lower() or "Obsidian" in salida
+    assert "MiProyecto" in salida
+    # Sin coincidencias: mensaje claro
+    assert "sin resultados" in personal_query("zzznoexiste")
+
+
+def test_agents_md_incluye_contexto_global_personal(tmp_path) -> None:
+    """Las reglas agénticas enseñan a consultar la BD personal (multi-IDE)."""
+    from context_map.domain.ecosystem.adaptador import _generar_agents_md
+    from context_map.domain.ecosystem.detector import detectar_ecosistema
+
+    eco = detectar_ecosistema(str(tmp_path))
+    contenido = _generar_agents_md("DemoProj", eco, "2026-08-13")
+    assert "Contexto GLOBAL personal" in contenido
+    assert "personal query" in contenido
