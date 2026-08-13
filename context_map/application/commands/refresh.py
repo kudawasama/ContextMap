@@ -47,6 +47,28 @@ def cmd_refresh(args) -> None:
 
         cmd_scan(args)
 
+        # Memoria viva automática (2026-08-13): importa las sesiones recientes
+        # de Hermes de ESTE proyecto como eventos — todo lo conversado queda
+        # registrado (diario del día + grafo + BD personal) sin pasos extra.
+        # Idempotente (dedup por hash) y tolerante (nunca rompe el refresh).
+        if not quiet:
+            print("[refresh] Importando sesiones recientes de Hermes...")
+        try:
+            from context_map.application.commands._helpers import project_name
+            from context_map.infrastructure.integrations.hermes import importar_sesiones
+
+            importados = importar_sesiones(
+                db_path=None,
+                limite=5,
+                output_path=os.path.join(".context-map", "raw", "events.jsonl"),
+                project=project_name(args),
+            )
+            if importados and not quiet:
+                print(f"[refresh] {importados} evento(s) de sesiones importados")
+        except Exception as err:  # noqa: BLE001
+            if not quiet:
+                print(f"[refresh] aviso: no se pudieron importar sesiones ({err})")
+
         # Clonar args para build con target="." y SIN --clean (preserva manuales).
         # Pitfall documentado: reutilizar el namespace original contamina
         # project_name() y genera vault con el nombre del target.
