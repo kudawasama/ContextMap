@@ -27,6 +27,7 @@ from context_map.application.commands import (
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.hook import cmd_hook_install
 from context_map.application.commands.ingest import cmd_ingest
+from context_map.application.commands.personal import cmd_personal
 from context_map.core.logging_setup import setup_logging
 
 
@@ -67,6 +68,7 @@ def main() -> None:
         "hook": cmd_hook_install,
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
+        "personal": cmd_personal,
         "mcp": cmd_mcp,
     }
 

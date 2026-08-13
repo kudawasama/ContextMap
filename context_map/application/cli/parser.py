@@ -128,4 +128,37 @@ def create_parser() -> argparse.ArgumentParser:
     s_adapt.add_argument("--overwrite", action="store_true", help="Sobrescribir reglas existentes")
     s_adapt.add_argument("--merge", action="store_true", help="Fusionar: anexa/actualiza bloque ContextMap preservando reglas del usuario")
 
+    s_personal = sub.add_parser(
+        "personal",
+        help="Base de datos personal consolidada (SQLite + FTS5, transportable en F:/pendrive)",
+    )
+    sp = s_personal.add_subparsers(dest="personal_cmd", help="Acciones personales")
+
+    sp_sync = sp.add_parser("sync", help="Consolida proyectos en la BD personal")
+    sp_sync.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a consolidar")
+    sp_sync.add_argument("--todos", action="store_true", help="Consolidar todos los proyectos con .context-map en ~/Proyectos, ~/Documents y ~/Desktop")
+    sp_sync.add_argument("--db", default=None, help="Ruta a la BD personal (default: F: o ~/.context-map/personal)")
+
+    sp_add = sp.add_parser("add", help="Registra una lección o decisión al vuelo")
+    sp_add.add_argument("texto", help="Texto de la lección o decisión")
+    sp_add.add_argument("--tipo", choices=["leccion", "decision"], default="leccion", help="Tipo de registro")
+    sp_add.add_argument("--proyecto", default=None, help="Proyecto asociado")
+    sp_add.add_argument("--contexto", default="", help="Contexto / cómo se resolvió")
+    sp_add.add_argument("--tags", default="", help="Etiquetas separadas por coma")
+    sp_add.add_argument("--db", default=None, help="Ruta a la BD personal")
+
+    sp_query = sp.add_parser("query", help="Busca con full-text (FTS5) en la BD personal")
+    sp_query.add_argument("consulta", help="Términos de búsqueda (sintaxis FTS5)")
+    sp_query.add_argument("--proyecto", default=None, help="Filtrar por proyecto")
+    sp_query.add_argument("--limite", type=int, default=10, help="Máximo de resultados (default: 10)")
+    sp_query.add_argument("--db", default=None, help="Ruta a la BD personal")
+
+    sp_export = sp.add_parser("export", help="Genera un vault personal Obsidian desde la BD")
+    sp_export.add_argument("--destino", default=None, help="Carpeta destino del vault personal (default: ~/.context-map/vault-Personal)")
+    sp_export.add_argument("--db", default=None, help="Ruta a la BD personal")
+
+    sp_backup = sp.add_parser("backup", help="Copia la BD personal a un pendrive/disco externo")
+    sp_backup.add_argument("--destino", required=True, help="Ruta destino (ej. /run/media/usb/personal.db)")
+    sp_backup.add_argument("--db", default=None, help="Ruta a la BD personal (default: la activa)")
+
     return p

@@ -20,6 +20,7 @@ from context_map.application.commands._helpers import (
     resolve_vault_mode,
     vault_dir,
 )
+from context_map.application.commands.personal import sincronizar_proyecto_automatico
 from context_map.core.models import Edge, Node
 from context_map.core.storage import load_jsonl, write_map
 from context_map.domain.analysis import analizar_readiness
@@ -80,6 +81,11 @@ def do_sync(
 
     print(f"sync: nodos {stats['nodos_existentes']} -> {stats['nodos_existentes'] + stats['nodos_agregados']}")
     print(f"vault ({mode}): {vault_path}")
+
+    # Conexión proyecto -> contexto global personal (tolerante: nunca falla)
+    target_dir = getattr(args, "target", ".") or "."
+    sincronizar_proyecto_automatico(proj_name or "Repo", str(target_dir))
+
     return nodes, edges
 
 
