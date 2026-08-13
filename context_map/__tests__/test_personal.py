@@ -485,5 +485,5 @@ def test_sync_mensaje_lecciones_por_proyecto(tmp_path, monkeypatch, capsys) -> N
     _cmd_personal_sync(args)
     out = capsys.readouterr().out
 
-    linea_sin = next((l for l in out.splitlines() if "sync SinKnowledge" in l), "")
+    linea_sin = next((linea for linea in out.splitlines() if "sync SinKnowledge" in linea), "")
     assert "lecciones +0" in linea_sin, f"mensaje engañoso: {linea_sin}"
