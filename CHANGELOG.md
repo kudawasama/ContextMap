@@ -7,6 +7,40 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.6.0] — 2026-08-13
+
+### ✨ Nuevo — Base de datos personal consolidada (`ctxmap personal`)
+
+- **BD personal SQLite + FTS5 transportable**: un solo archivo `personal.db`
+  que consolida eventos, lecciones y decisiones de TODOS los proyectos.
+  Resolución de ruta por jerarquía: `--db` > `CTXMAP_PERSONAL_DB` > disco F:
+  montado y escribible (Linux `/mnt/fdrive`, Windows `F:\`) > fallback
+  `~/.context-map/personal/personal.db`. `journal_mode=DELETE` para operar
+  seguro en pendrives/USB; backup = copiar un archivo.
+- **Comando `ctxmap personal`** con 5 subcomandos:
+  - `sync` — consolida un proyecto (`.`) o todos (`--todos`) en la BD;
+    upsert idempotente por hash SHA-256 (re-sync nunca duplica).
+  - `add "texto" --tipo leccion|decision` — captura conocimiento al vuelo
+    con `--proyecto`, `--contexto` y `--tags`.
+  - `query "términos"` — búsqueda full-text (FTS5, BM25) sobre eventos,
+    lecciones y decisiones, filtrable por `--proyecto`; reduce tokens de
+    consulta de histórico 80–95 % (solo trae fragmentos relevantes).
+  - `export` — genera un vault personal Obsidian (`vault-Personal`) desde
+    la BD, sin tocar los vaults de proyecto.
+  - `backup --destino <ruta>` — copia la BD a un pendrive/disco externo.
+- **Conexión proyecto ↔ global automática**: cada `build`/`scan`/`refresh`
+  consolida el proyecto en la BD personal de forma tolerante (nunca rompe
+  el flujo ni falla en CI sin F:).
+- **Módulo nuevo**: `context_map/core/personal/bd.py` + comando en
+  `application/commands/personal.py`, 100 % stdlib (sqlite3), alineado con
+  la clean architecture del AGENTS.md.
+- **Aislamiento de tests**: `conftest.py` redirige `CTXMAP_PERSONAL_DB` a
+  una BD temporal por test — la suite jamás contamina la BD real.
+- **8 tests nuevos** (idempotencia, FTS5, resolución de ruta, tolerancia);
+  suite completa 96/96 verdes, ruff 100 % limpio.
+
+---
+
 ## [1.5.0] — 2026-08-11
 
 ### ✨ Nuevo — Confiabilidad del contexto (lección del incidente Gemini)

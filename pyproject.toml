@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "context-map"
-version = "1.5.0"
+version = "1.6.0"
 description = "Mapa mental narrativo de proyectos para agentes de IA"
 readme = "README.md"
 license = "MIT"

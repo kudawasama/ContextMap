@@ -43,6 +43,13 @@ ctxmap auto .
 
 # Día a día: deja el contexto al día en 1 paso (scan + build preservando manuales + check)
 ctxmap refresh .
+
+# Contexto GLOBAL personal (v1.6.0+): BD SQLite+FTS5 consolidada de todos los proyectos
+ctxmap personal sync --todos     # consolida todos los proyectos con .context-map
+ctxmap personal query "términos" # búsqueda full-text en tu histórico (pocos tokens)
+ctxmap personal add "Lección: ..." --tipo leccion --proyecto X
+ctxmap personal export           # genera tu vault personal Obsidian
+ctxmap personal backup --destino /run/media/usb/personal.db  # llévala a un pendrive
 ```
 
 ---
