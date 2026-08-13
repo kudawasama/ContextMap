@@ -153,6 +153,7 @@ def create_parser() -> argparse.ArgumentParser:
     sp_query.add_argument("--proyecto", default=None, help="Filtrar por proyecto")
     sp_query.add_argument("--limite", type=int, default=10, help="Máximo de resultados (default: 10)")
     sp_query.add_argument("--db", default=None, help="Ruta a la BD personal")
+    sp_query.add_argument("--json", action="store_true", help="Salida JSON estructurada (para uso programático/agentes)")
 
     sp_export = sp.add_parser("export", help="Genera un vault personal Obsidian desde la BD")
     sp_export.add_argument("--destino", default=None, help="Carpeta destino del vault personal (default: ~/.context-map/vault-Personal)")

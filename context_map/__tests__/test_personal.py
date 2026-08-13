@@ -269,7 +269,7 @@ def test_sync_personal_rutas_adicionales(tmp_path, monkeypatch) -> None:
 
 
 def test_export_sin_wikilinks_fantasma(tmp_path) -> None:
-    """El vault personal no debe enlazar [[proyectos]] que no existen como notas."""
+    """Los wikilinks del vault personal apuntan a notas que EXISTEN (sin nodos fantasma)."""
     from argparse import Namespace
 
     from context_map.application.commands.personal import _cmd_personal_export
@@ -290,8 +290,13 @@ def test_export_sin_wikilinks_fantasma(tmp_path) -> None:
 
     with open(os.path.join(destino, "00-INDICE.md"), encoding="utf-8") as f:
         contenido = f.read()
-    assert "[[ProyectoX" not in contenido, "wikilink a nota inexistente (nodo fantasma)"
     assert "ProyectoX" in contenido
+    # Todo [[target]] del índice debe tener su archivo (0 nodos fantasma)
+    import re
+
+    targets = re.findall(r"\[\[([^\]|]+)", contenido)
+    for t in targets:
+        assert os.path.exists(os.path.join(destino, t + ".md")), f"nodo fantasma: {t}"
 
 
 def test_mcp_personal_query_funcional(tmp_path, monkeypatch) -> None:
@@ -343,3 +348,98 @@ def test_auto_agents_md_incluye_contexto_global_personal(tmp_path) -> None:
         contenido = f.read()
     assert "Contexto GLOBAL personal" in contenido
     assert "personal query" in contenido
+
+
+def test_export_crea_notas_reales_por_proyecto(tmp_path) -> None:
+    """El vault personal crea una nota REAL por proyecto y el índice las enlaza."""
+    from argparse import Namespace
+
+    from context_map.application.commands.personal import _cmd_personal_export
+    from context_map.core.personal import PersonalDB
+
+    ruta_db = str(tmp_path / "personal-export2.db")
+    db = PersonalDB(ruta_db)
+    try:
+        db.cargar_eventos(
+            "Proyecto X",
+            [{"type": "IDEA", "text": "Idea de Proyecto X", "timestamp": "2026-08-13T10:00:00", "source": "t"}],
+        )
+    finally:
+        db.cerrar()
+
+    destino = str(tmp_path / "vault-personal2")
+    _cmd_personal_export(Namespace(destino=destino, db=ruta_db))
+
+    archivos = os.listdir(destino)
+    assert "00-INDICE.md" in archivos
+    nota_proyecto = next((a for a in archivos if a.endswith(".md") and a != "00-INDICE.md"), None)
+    assert nota_proyecto, "debe existir una nota por proyecto"
+    # El wikilink del índice apunta a una nota que EXISTE (sin nodos fantasma)
+    with open(os.path.join(destino, "00-INDICE.md"), encoding="utf-8") as f:
+        indice = f.read()
+    nombre_base = nota_proyecto[:-3]
+    assert f"[[{nombre_base}" in indice, "el índice debe enlazar la nota real"
+
+
+def test_query_json_salida_estructurada(tmp_path, monkeypatch, capsys) -> None:
+    """`query --json` devuelve JSON estructurado (para uso programático)."""
+    from argparse import Namespace
+
+    from context_map.application.commands.personal import _cmd_personal_query
+    from context_map.core.personal import PersonalDB
+
+    ruta_db = str(tmp_path / "personal-query-json.db")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", ruta_db)
+    db = PersonalDB(ruta_db)
+    try:
+        db.cargar_eventos(
+            "ProyectoJson",
+            [{"type": "IDEA", "text": "Evento de prueba JSON", "timestamp": "", "source": "t"}],
+        )
+    finally:
+        db.cerrar()
+
+    _cmd_personal_query(Namespace(consulta="prueba", proyecto=None, limite=5, json=True, db=ruta_db))
+    out = capsys.readouterr().out.strip()
+
+    import json
+
+    datos = json.loads(out)
+    assert isinstance(datos, list) and len(datos) >= 1
+    assert datos[0]["proyecto"] == "ProyectoJson"
+    assert "Evento de prueba JSON" in datos[0]["texto"]
+
+
+def test_lecciones_parsea_campos_completos(tmp_path) -> None:
+    """Las lecciones de 8.0-KNOWLEDGE se parsean con los 5 campos del formato."""
+    from context_map.application.commands.personal import _leer_lecciones_vault
+
+    knowledge = tmp_path / ".context-map" / "vault-MiProyecto" / "8.0-KNOWLEDGE"
+    knowledge.mkdir(parents=True)
+    (knowledge / "Leccion-De-Prueba.md").write_text(
+        """---
+type: knowledge
+preserve: true
+---
+
+# 🎯 Lección: El contexto que no se actualiza muere
+
+🛠️ Cómo se resolvió: ejecutar refresh tras cada sesión
+
+💬 Prompt: actualiza el contexto de este proyecto
+
+📋 Instrucción: correr ctxmap refresh . al terminar
+
+🔗 Conexiones: memoria viva
+""",
+        encoding="utf-8",
+    )
+
+    lecciones = _leer_lecciones_vault(str(tmp_path / ".context-map"), "MiProyecto")
+    assert len(lecciones) == 1
+    leccion = lecciones[0]
+    assert "El contexto que no se actualiza" in leccion.leccion
+    assert "refresh" in leccion.como_se_resolvio
+    assert "actualiza el contexto" in leccion.prompt
+    assert "correr ctxmap refresh" in leccion.instruccion
+    assert "memoria viva" in leccion.conexiones

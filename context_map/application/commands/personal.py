@@ -222,14 +222,34 @@ def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
         if m_titulo:
             titulo = m_titulo.group(1).strip()
         cuerpo = re.sub(r"^---.*?---\s*", "", contenido, flags=re.DOTALL)
-        cuerpo = re.sub(r"^#\s+.+$", "", cuerpo, count=1, flags=re.MULTILINE).strip()
+
+        # Parsear los 5 campos del formato knowledge (2026-08-13): cada campo
+        # va desde su marca (emoji) hasta la siguiente marca o el final.
+        def _campo(marca: str, cuerpo_nota: str) -> str:
+            patron = rf"{re.escape(marca)}\s*:?\s*(.*?)(?=\n\s*(?:🎯|🛠️|💬|📋|🔗)|\Z)"
+            m = re.search(patron, cuerpo_nota, re.DOTALL)
+            return m.group(1).strip() if m else ""
+
+        leccion = _campo("🎯 Lección", cuerpo)
+        leccion = re.sub(r"^#\s*", "", leccion).strip() or titulo
+        como = _campo("🛠️ Cómo se resolvió", cuerpo)
+        prompt = _campo("💬 Prompt", cuerpo)
+        instruccion = _campo("📋 Instrucción", cuerpo)
+        conexiones = _campo("🔗 Conexiones", cuerpo)
+        if not como and not prompt and not instruccion:
+            # Fallback: nota sin el formato estructurado → cuerpo plano
+            cuerpo_limpio = re.sub(r"^#\s+.+$", "", cuerpo, count=1, flags=re.MULTILINE).strip()
+            como = cuerpo_limpio[:500]
+            conexiones = f"Origen: {nombre}"
 
         lecciones.append(
             Leccion(
-                leccion=titulo,
-                como_se_resolvio=cuerpo[:500],
+                leccion=leccion,
+                como_se_resolvio=como,
+                prompt=prompt,
+                instruccion=instruccion,
+                conexiones=conexiones,
                 proyecto=proyecto,
-                conexiones=f"Origen: {nombre}",
             )
         )
     return lecciones
@@ -359,6 +379,26 @@ def _cmd_personal_query(args) -> None:
             proyecto=getattr(args, "proyecto", None),
             limite=getattr(args, "limite", 10) or 10,
         )
+        if getattr(args, "json", False):
+            # Salida estructurada para uso programático / agentes
+            import json as _json
+
+            print(
+                _json.dumps(
+                    [
+                        {
+                            "tabla": r.tabla,
+                            "texto": r.texto,
+                            "proyecto": r.proyecto,
+                            "puntaje": r.puntaje,
+                        }
+                        for r in resultados
+                    ],
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return
         if not resultados:
             print(f"personal: sin resultados para '{args.consulta}'")
             return
@@ -374,8 +414,18 @@ def _cmd_personal_query(args) -> None:
         db.cerrar()
 
 
+def _slug(nombre: str) -> str:
+    """Convierte un nombre de proyecto en un slug seguro para nombre de archivo."""
+    slug = re.sub(r"[^\w\-]+", "-", nombre.strip()).strip("-")
+    return slug or "proyecto"
+
+
 def _cmd_personal_export(args) -> None:
     """Genera un vault personal Obsidian desde la BD.
+
+    Crea una nota REAL por proyecto (``<slug>.md`` con sus eventos) y un
+    ``00-INDICE.md`` cuyos wikilinks apuntan a esas notas — sin nodos
+    fantasma (los [[...]] siempre tienen su archivo).
 
     Args:
         args: Namespace con ``--destino`` y ``--db``.
@@ -389,31 +439,30 @@ def _cmd_personal_export(args) -> None:
 
         secciones: list[str] = ["# Vault Personal — ContextMap", ""]
 
-        # Índice por proyecto (sin wikilinks: no existen notas por proyecto,
-        # los [[...]] crearían nodos fantasma en Obsidian)
+        # Nota real por proyecto (con sus eventos)
         proyectos = db.listar_proyectos()
         secciones.append("## Proyectos")
-        for p in proyectos:
-            secciones.append(f"- **{p}**")
-        secciones.append("")
-
-        # Eventos por proyecto
         for nombre in proyectos:
+            slug = _slug(nombre)
+            ruta_nota = os.path.join(destino, f"{slug}.md")
             filas = db._conn.execute(
                 "SELECT tipo, texto, timestamp FROM eventos "
                 "JOIN proyectos ON proyectos.id = eventos.proyecto_id "
                 "WHERE proyectos.nombre = ? ORDER BY timestamp DESC LIMIT 50",
                 (nombre,),
             ).fetchall()
-            if not filas:
-                continue
-            secciones.append(f"## {nombre}")
-            for fila in filas:
-                tipo = fila["tipo"]
-                texto = str(fila["texto"])[:200]
-                ts = str(fila["timestamp"] or "")
-                secciones.append(f"- **[{tipo}]** {texto} _{ts}_")
-            secciones.append("")
+            lineas_nota = [f"# {nombre}", "", f"**Proyecto**: {nombre}", ""]
+            if filas:
+                lineas_nota.append(f"## Eventos ({len(filas)})")
+                for fila in filas:
+                    tipo = fila["tipo"]
+                    texto = str(fila["texto"])[:200]
+                    ts = str(fila["timestamp"] or "")
+                    lineas_nota.append(f"- **[{tipo}]** {texto} _{ts}_")
+            with open(ruta_nota, "w", encoding="utf-8") as f:
+                f.write("\n".join(lineas_nota))
+            secciones.append(f"- [[{slug}|{nombre}]]")
+        secciones.append("")
 
         # Lecciones
         filas_lec = db._conn.execute(
@@ -450,7 +499,7 @@ def _cmd_personal_export(args) -> None:
             f.write("\n".join(secciones))
 
         print(f"personal: vault exportado en {destino}")
-        print(f"  archivos: {len(os.listdir(destino))} (índice único; abre 00-INDICE.md)")
+        print(f"  archivos: {len(os.listdir(destino))} (índice + nota por proyecto)")
     finally:
         db.cerrar()
 
