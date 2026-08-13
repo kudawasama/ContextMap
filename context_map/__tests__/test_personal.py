@@ -328,3 +328,18 @@ def test_agents_md_incluye_contexto_global_personal(tmp_path) -> None:
     contenido = _generar_agents_md("DemoProj", eco, "2026-08-13")
     assert "Contexto GLOBAL personal" in contenido
     assert "personal query" in contenido
+
+
+def test_auto_agents_md_incluye_contexto_global_personal(tmp_path) -> None:
+    """El AGENTS.md generado por `ctxmap auto` (briefs.agents) incluye la BD personal."""
+    from context_map.presentation.briefs.agents import generar_instrucciones_agentes
+
+    ruta = generar_instrucciones_agentes(
+        "DemoProj",
+        str(tmp_path),
+        overwrite_if_exists=True,
+    )
+    with open(ruta, encoding="utf-8") as f:
+        contenido = f.read()
+    assert "Contexto GLOBAL personal" in contenido
+    assert "personal query" in contenido

@@ -134,7 +134,23 @@ El contexto es la **memoria viva del proyecto**:
 
 ---
 
-## 5. Convención de Commits
+## 5. Contexto GLOBAL personal (multi-proyecto)
+
+Además del vault local, el usuario mantiene una **BD personal consolidada**
+(`ctxmap personal`) con eventos, lecciones y decisiones de TODOS sus
+proyectos. Cuando necesites contexto histórico global (decisiones pasadas,
+lecciones aprendidas, patrones), consúltala con pocos tokens (FTS5):
+
+```bash
+ctxmap personal query "términos" --limite 5
+```
+
+Complementa (no reemplaza) el vault local: con ella respondes con el
+historial completo del usuario, no solo de este proyecto.
+
+---
+
+## 6. Convención de Commits
 
 * Usar **Conventional Commits** en español (ej. `feat: ...`, `fix: ...`, `refactor: ...`, `docs: ...`).
 """
