@@ -152,14 +152,18 @@ def test_busqueda_fts5() -> None:
 
 
 def test_resolver_ruta_bd_prioridad_env(monkeypatch) -> None:
-    """Verifica que la variable de entorno tiene prioridad sobre el default."""
+    """Verifica que la variable de entorno tiene prioridad sobre el default.
+
+    Compara contra ``os.path.abspath`` para ser cross-platform: en Linux
+    ``/tmp/custom.db`` se mantiene, en Windows se resuelve a ``C:\\tmp\\custom.db``.
+    """
     monkeypatch.delenv("CTXMAP_PERSONAL_DB", raising=False)
     ruta = resolver_ruta_bd("/tmp/custom.db")
-    assert ruta == "/tmp/custom.db"
+    assert ruta == os.path.abspath("/tmp/custom.db")
 
     monkeypatch.setenv("CTXMAP_PERSONAL_DB", "/mnt/pendrive/personal.db")
     ruta_env = resolver_ruta_bd()
-    assert ruta_env == "/mnt/pendrive/personal.db"
+    assert ruta_env == os.path.abspath("/mnt/pendrive/personal.db")
 
 
 def test_resolver_ruta_bd_ignora_mount_no_escribible(tmp_path, monkeypatch) -> None:
