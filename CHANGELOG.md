@@ -7,6 +7,41 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.7.0] — 2026-08-13
+
+### ✨ Nuevo — Contexto global personal operativo (BD + agentes multi-IDE)
+
+- **BD personal consolidada (`ctxmap personal`) completada**:
+  - `sync --todos` descubre proyectos de forma **recursiva** incluyendo
+    Google Drive (Mi unidad en cualquier letra de unidad) + flag `--rutas`
+    (adicionales separadas por ';') + proyecto directo y contenedor a la vez
+    (ej. `H:\...\GitHub`). Verificado: 8 proyectos · 1390 eventos.
+  - **Nombre consistente del proyecto**: `vault-<X>` > frontmatter `project`
+    > carpeta — un proyecto ya no se duplica con el nombre de la carpeta
+    local (ej. PruebaContext vs ContextMap).
+  - `export` sin wikilinks a notas inexistentes (sin nodos fantasma).
+- **Tool MCP `personal_query`**: el agente (Hermes) consulta la BD personal
+  (FTS5) con pocos tokens y filtro por proyecto, sin terminal.
+- **Adaptación multi-IDE** (el proyecto se adecúa al IDE): `adapt` enseña a
+  cada entorno a usar el CLI — AGENTS.md (sección "Contexto GLOBAL personal"),
+  CLAUDE.md (punto 4) y Cursor rules (bullet).
+- **Punto de control de versión**: `refresh`/`build` verifican el PROGRAMA
+  antes de actualizar el CONTEXTO y avisan con el comando exacto (idea del
+  usuario: "ContextMap siempre actualizado").
+- **CI/CD con GitHub Actions** (pytest bloqueante + ruff bloqueante) + badge
+  de estado — publicación 100% profesional.
+- **Lienzo arreglado** (`00-MAPA-MENTAL.canvas`): dedup por archivo,
+  agrupación por sección y aristas reales (18 tarjetas únicas · 34 aristas).
+- **Deuda técnica del scanner limpiada**: backlog (5.1) y brief (CONTEXT.md)
+  sin TODOs de código ruidosos.
+- **Extras visuales tolerantes a permisos** (fix Linux CI: `PermissionError
+  '/.context-map'`).
+- **Fix cross-platform**: test de resolución de ruta BD en Windows.
+
+Suite: 101/101 verdes · ruff 100 % limpio · CI verde.
+
+---
+
 ## [1.6.0] — 2026-08-13
 
 ### ✨ Nuevo — Base de datos personal consolidada (`ctxmap personal`)
