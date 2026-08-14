@@ -41,6 +41,162 @@ clasificadas, títulos legibles).
 | 7 | Métrica de memoria viva en `check` (R7) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | % sesiones recientes con eventos |
 | 8 | Validar consistencia del nombre del proyecto (R8) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso vault-<X> ≠ project ≠ repo |
 | 9 | Sugerir limpieza de temporales en refresh (R9) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso `piloto_*/scripts/debug` sin trackear |
+| 10 | Reconocer catálogo de reglas de negocio (R10) | 🟠 Media | ⬜ Pendiente | Nodos REGLA + sección en brief (fuente: references/reglas/) |
+
+---
+
+## ✅ ETAPA 10 — Reconocer catálogo de reglas de negocio (R10)
+
+> **Origen**: pregunta del usuario (2026-08-14) — ¿guardar las reglas de Gobernanza
+> en ContextMap? Respuesta: la fuente vive en el REPO del proyecto
+> (`references/reglas/reglas_registro.yaml` + normas generadas), NO en el vault
+> (que se regenera y no se versiona). ContextMap debe **reflejarlas**: detectar
+> el catálogo, crear nodos `REGLA` y mostrarlo en el brief.
+
+**Objetivo**: cuando un proyecto tiene un catálogo de reglas de negocio en
+`<repo>/references/reglas/reglas_registro.yaml` (convención Gobernanza), el
+scan/build lo detecta, registra los nodos `REGLA` (con ID jerárquico,
+categoría, prioridad, estado) y el brief añade una sección "Reglas de Negocio"
+con el conteo por categoría y la ruta de la fuente única de verdad.
+
+### Archivos
+- Modify: `context_map/domain/scanning/scanner.py` (detectar YAML de reglas)
+- Create: `context_map/domain/reglas/reglas.py` (parser del catálogo → nodos)
+- Modify: `context_map/presentation/briefs/generadores.py` (sección en brief)
+- Modify: `context_map/application/cli/parser.py` (flag `--reglas` en scan/build opcional)
+- Test: `context_map/__tests__/test_reglas_catalogo.py` (nuevo)
+
+### Task 10.1: test que falla (parser)
+```python
+"""El catálogo de reglas se parsea a nodos REGLA (R10, 2026-08-14)."""
+from __future__ import annotations
+
+from context_map.domain.reglas.reglas import parsear_catalogo
+
+
+def test_parsea_yaml_de_reglas(tmp_path):
+    yaml_path = tmp_path / "reglas_registro.yaml"
+    yaml_path.write_text("""
+version: 1.0
+proyecto: "MiProyecto"
+reglas:
+  - id: REG-ING-001
+    nombre: "DB activa"
+    categoria: REG-ING
+    categoria_nombre: "Ingesta DTE"
+    prioridad: critica
+    estado: implementada
+    norma: "REG-ING-001_db_activa.md"
+  - id: REG-ATR-001
+    nombre: "Atribución CC"
+    categoria: REG-ATR
+    categoria_nombre: "Atribución CC"
+    prioridad: critica
+    estado: implementada
+    norma: "REG-ATR-001_4_niveles.md"
+""", encoding="utf-8")
+    reglas = parsear_catalogo(str(yaml_path))
+    assert len(reglas) == 2
+    assert reglas[0]["id"] == "REG-ING-001"
+    assert reglas[0]["categoria_nombre"] == "Ingesta DTE"
+
+
+def test_sin_catalogo_devuelve_vacio(tmp_path):
+    assert parsear_catalogo(str(tmp_path / "no-existe.yaml")) == []
+```
+
+### Task 10.2: test que falla (scanner registra nodos)
+```python
+"""El scan registra nodos REGLA cuando existe el catálogo (R10)."""
+from __future__ import annotations
+
+from context_map.domain.reglas.reglas import nodos_regla_desde_catalogo
+
+
+def test_nodos_regla_desde_catalogo(tmp_path):
+    yaml_path = tmp_path / "reglas_registro.yaml"
+    yaml_path.write_text("""
+reglas:
+  - id: REG-ING-001
+    nombre: "DB activa"
+    categoria: REG-ING
+    categoria_nombre: "Ingesta DTE"
+    prioridad: critica
+    estado: implementada
+    norma: "REG-ING-001_db_activa.md"
+""", encoding="utf-8")
+    nodos = nodos_regla_desde_catalogo(str(yaml_path), "MiProyecto")
+    assert len(nodos) == 1
+    n = nodos[0]
+    assert n.type == "REGLA"
+    assert "REG-ING-001" in n.title
+    assert "DB activa" in n.title
+```
+
+### Task 10.3: test que falla (brief incluye sección)
+```python
+"""El brief añade la sección Reglas de Negocio (R10)."""
+from __future__ import annotations
+
+from context_map.domain.reglas.reglas import resumen_catalogo
+
+
+def test_resumen_catalogo_por_categoria(tmp_path):
+    yaml_path = tmp_path / "reglas_registro.yaml"
+    yaml_path.write_text("""
+reglas:
+  - id: REG-ING-001
+    nombre: "A"
+    categoria: REG-ING
+    categoria_nombre: "Ingesta DTE"
+    prioridad: critica
+    estado: implementada
+    norma: "a.md"
+  - id: REG-ATR-001
+    nombre: "B"
+    categoria: REG-ATR
+    categoria_nombre: "Atribución CC"
+    prioridad: critica
+    estado: implementada
+    norma: "b.md"
+""", encoding="utf-8")
+    resumen = resumen_catalogo(str(yaml_path))
+    assert resumen["total"] == 2
+    assert resumen["categorias"]["REG-ING"] == 1
+    assert resumen["categorias"]["REG-ATR"] == 1
+```
+
+### Task 10.4: implementación
+- `domain/reglas/reglas.py`:
+  - `parsear_catalogo(ruta) -> list[dict]` — lee YAML (usa `yaml.safe_load`
+    con fallback al mini-parser sin pyyaml, igual que dominios.yaml).
+  - `nodos_regla_desde_catalogo(ruta, proyecto) -> list[Node]` — crea nodos
+    `type="REGLA"` con `title=f"{id}: {nombre}"`, tags [categoría, prioridad,
+    estado], source "reglas", `created_at` estable (idempotente).
+  - `resumen_catalogo(ruta) -> dict` — total + conteo por categoría.
+- `scanning/scanner.py`: al escanear, buscar `references/reglas/reglas_registro.yaml`
+  (y `**/reglas_registro.yaml` en 2 niveles) y anexar los nodos REGLA.
+- `presentation/briefs/generadores.py`: si hay catálogo, sección
+  `## Reglas de Negocio` con total, categorías y ruta del YAML.
+- `standardize.py`: añadir `REGLA` al vocabulario de tipos conocidos (sin romper
+  la topología — los nodos REGLA se renderizan como hojas de 3.0-ESTRUCTURA).
+
+### Task 10.5: verificación
+```bash
+python -m pytest context_map/__tests__/test_reglas_catalogo.py -v   # 5 passed
+python -m context_map.cli scan . && python -m context_map.cli build --brief .
+grep -A4 "Reglas de Negocio" .context-map/CONTEXT.md                # sección visible
+python -m pytest -q                                                  # suite completa
+```
+
+### Task 10.6: commit
+```bash
+git add context_map/domain/reglas/ context_map/domain/scanning/scanner.py \
+        context_map/presentation/briefs/generadores.py \
+        context_map/core/normalization/standardize.py \
+        context_map/__tests__/test_reglas_catalogo.py
+git commit -m "feat(reglas): reconoce el catálogo de reglas de negocio — nodos REGLA + sección en brief (R10)"
+```
 
 ---
 
