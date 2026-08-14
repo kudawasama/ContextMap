@@ -181,14 +181,47 @@ def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
         elif msg.rol == "assistant":
             # Respuestas del asistente pueden tener análisis
             texto = msg.contenido[:200]
-            if any(kw in texto.lower() for kw in ["riesgo", "problema", "cuidado", "atención"]):
+            texto_low = texto.lower()
+            # Patrones de CIERRE (R6, auditoría 2026-08-14): mensajes que
+            # declaran una decisión tomada, un cambio implementado o una
+            # lección aprendida se clasifican con tipos específicos, ANTES
+            # de los genéricos (p. ej. "implementado" también contiene
+            # "implementar" y caería en IDEA).
+            if any(kw in texto_low for kw in ["lección", "leccion", "aprendizaje"]):
+                eventos.append({
+                    "type": "LECCION",
+                    "text": texto,
+                    "source": "chat",
+                    "tags": ["lección", sesion.titulo[:30]],
+                })
+            elif any(kw in texto_low for kw in [
+                "quedó implementado", "quedo implementado", "commit ",
+                "pusheado", "desplegado", "verificado en producción",
+            ]):
+                eventos.append({
+                    "type": "CORRECCION",
+                    "text": texto,
+                    "source": "chat",
+                    "tags": ["implementación", sesion.titulo[:30]],
+                })
+            elif any(kw in texto_low for kw in [
+                "regla definitiva", "decisión", "decision", "confirmado por el usuario",
+                "el usuario rechazó", "el usuario rechazo", "acordamos", "acordado",
+            ]):
+                eventos.append({
+                    "type": "DECISION",
+                    "text": texto,
+                    "source": "chat",
+                    "tags": ["decisión", sesion.titulo[:30]],
+                })
+            elif any(kw in texto_low for kw in ["riesgo", "problema", "cuidado", "atención"]):
                 eventos.append({
                     "type": "RIESGO",
                     "text": texto,
                     "source": "chat",
                     "tags": ["análisis", sesion.titulo[:30]],
                 })
-            elif any(kw in texto.lower() for kw in ["implementar", "crear", "agregar", "nueva"]):
+            elif any(kw in texto_low for kw in ["implementar", "crear", "agregar", "nueva"]):
                 eventos.append({
                     "type": "IDEA",
                     "text": texto,
