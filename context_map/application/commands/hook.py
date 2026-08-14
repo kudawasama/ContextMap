@@ -11,6 +11,35 @@ import os
 import stat
 
 
+def _script_hook() -> str:
+    """Genera el script del pre-commit hook de ContextMap.
+
+    Prioriza el código local del repo (``python -m context_map.cli``) antes que
+    el binario global ``ctxmap``, que puede estar desactualizado. Usa
+    ``build --brief`` (SIN ``--clean``) para NO destruir las notas manuales del
+    vault (zona protegida ``.manual/`` y notas con ``preserve: true``), e
+    incluye ``--import-sessions`` (R2, 2026-08-14): cada commit importa las
+    sesiones recientes de Hermes del proyecto como memoria viva.
+
+    Returns:
+        str: Contenido del script pre-commit.
+    """
+    return """#!/bin/sh
+# ContextMap Auto-Sync Pre-Commit Hook
+# Prioriza el código local del repo (python -m context_map.cli) antes que
+# el binario global 'ctxmap', que puede estar desactualizado.
+# Se usa build --brief (SIN --clean) para NO destruir las notas manuales
+# del vault (zona protegida .manual/ y notas con preserve: true).
+# --import-sessions: cada commit registra la memoria viva (sesiones de Hermes).
+if python -m context_map.cli build --brief --quiet --import-sessions 2>/dev/null; then
+    exit 0
+fi
+if command -v ctxmap >/dev/null 2>&1; then
+    ctxmap build --brief --quiet --import-sessions
+fi
+"""
+
+
 def cmd_hook_install(args=None) -> None:
     """Instala el hook pre-commit de ContextMap en el directorio objetivo."""
     target_dir = getattr(args, "target", ".") if args else "."
@@ -24,19 +53,7 @@ def cmd_hook_install(args=None) -> None:
     os.makedirs(hooks_dir, exist_ok=True)
     hook_file = os.path.join(hooks_dir, "pre-commit")
 
-    script_content = """#!/bin/sh
-# ContextMap Auto-Sync Pre-Commit Hook
-# Prioriza el código local del repo (python -m context_map.cli) antes que
-# el binario global 'ctxmap', que puede estar desactualizado.
-# Se usa build --brief (SIN --clean) para NO destruir las notas manuales
-# del vault (zona protegida .manual/ y notas con preserve: true).
-if python -m context_map.cli build --brief --quiet 2>/dev/null; then
-    exit 0
-fi
-if command -v ctxmap >/dev/null 2>&1; then
-    ctxmap build --brief --quiet
-fi
-"""
+    script_content = _script_hook()
 
     try:
         with open(hook_file, "w", encoding="utf-8", newline="\n") as f:

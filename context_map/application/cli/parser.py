@@ -55,6 +55,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
     s_build.add_argument("--raw", action="store_true", help="Alias para --mode raw")
     s_build.add_argument("--clean", action="store_true", help="Eliminar contenido previo antes de reconstruir")
+    s_build.add_argument("--import-sessions", action="store_true", dest="import_sessions",
+                         help="Importar sesiones recientes de Hermes antes del build (memoria viva)")
     s_build.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
     s_scan = sub.add_parser("scan", help="Escanea proyecto y genera eventos")

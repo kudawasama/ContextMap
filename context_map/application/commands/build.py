@@ -56,6 +56,27 @@ def cmd_build(args) -> None:
 
         print(aviso_pre_actualizacion(), end="")
 
+    # Memoria viva por commit (R2, 2026-08-14): si se pide --import-sessions
+    # (el pre-commit hook lo usa), importa las sesiones recientes de Hermes
+    # del proyecto antes de construir — idempotente y tolerante, nunca rompe
+    # el build (misma lógica que refresh).
+    if getattr(args, "import_sessions", False):
+        try:
+            from context_map.application.commands._helpers import project_name as _pn
+            from context_map.infrastructure.integrations.hermes import importar_sesiones
+
+            importados = importar_sesiones(
+                db_path=None,
+                limite=5,
+                output_path=os.path.join(".context-map", "raw", "events.jsonl"),
+                project=_pn(args),
+            )
+            if importados and not getattr(args, "quiet", False):
+                print(f"[build] {importados} evento(s) de sesiones importados")
+        except Exception as err:  # noqa: BLE001 — nunca romper el build por el import
+            if not getattr(args, "quiet", False):
+                print(f"[build] aviso: no se pudieron importar sesiones ({err})")
+
     # Resolver modo del vault y aplicar limpieza si se solicitó
     vault_mode = resolve_vault_mode(args)
     if getattr(args, "clean", False):
