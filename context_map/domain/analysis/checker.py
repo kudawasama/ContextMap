@@ -8,8 +8,11 @@ analizando indicadores de documentación, tests, configuración y CI/CD.
 from __future__ import annotations
 
 import os
+import subprocess
 from dataclasses import dataclass, field
+from datetime import datetime
 
+from context_map.infrastructure.integrations.hermes import leer_sesiones
 from context_map.presentation.vault.preservar import ZONAS_MANUALES
 
 
@@ -49,6 +52,7 @@ class ResultadoReadiness:
     veredicto: str = "unknown"
     gaps: list[str] = field(default_factory=list)
     sugerencias: list[str] = field(default_factory=list)
+    frescura: dict[str, object] = field(default_factory=dict)
 
 
 def _verificar_archivo(ruta: str, nombres: list[str]) -> bool:
@@ -174,6 +178,14 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
     if not any(s.nombre == "AGENTS.md/CLAUDE.md" and s.presente for s in senales):
         resultado.sugerencias.append("Crear AGENTS.md con instrucciones para agentes")
 
+    # Frescura del contexto (R1, auditoría 2026-08-14): si hay commits o
+    # sesiones de Hermes posteriores al último build, la memoria viva está
+    # atrasada y el siguiente agente quedaría ciego. El aviso es accionable.
+    actividad = _ultima_actividad(ruta_raiz)
+    resultado.frescura = actividad
+    if actividad["aviso"]:
+        resultado.sugerencias.append(str(actividad["aviso"]))
+
     if resultado.score >= 80:
         resultado.veredicto = "ready"
     elif resultado.score >= 50:
@@ -255,6 +267,132 @@ def _salud_vault(ruta_raiz: str) -> dict[str, object]:
     }
 
 
+def _ejecutar_git(ruta: str, args: list[str]) -> str:
+    """Ejecuta un comando git en la ruta y devuelve la salida (o vacío).
+
+    Args:
+        ruta (str): Directorio del repo.
+        args (list[str]): Argumentos del comando git.
+
+    Returns:
+        str: Salida estándar del comando, o cadena vacía si falla.
+    """
+    try:
+        result = subprocess.run(
+            ["git"] + args,
+            cwd=ruta,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=10,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _timestamp_build(ruta_raiz: str) -> float | None:
+    """Lee el timestamp del último build desde ``state/last_build.json``.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        float | None: Epoch del último build, o None si no existe.
+    """
+    import json as _json
+
+    last_build = os.path.join(ruta_raiz, ".context-map", "state", "last_build.json")
+    if not os.path.isfile(last_build):
+        return None
+    try:
+        with open(last_build, encoding="utf-8") as f:
+            info = _json.load(f)
+        ts = info.get("timestamp")
+        if not ts:
+            return None
+        return datetime.fromisoformat(ts).timestamp()
+    except Exception:
+        return None
+
+
+def _ultima_actividad(ruta_raiz: str) -> dict[str, object]:
+    """Detecta actividad posterior al último build (commits y sesiones).
+
+    Compara el timestamp de ``last_build.json`` contra el último commit de git
+    y las sesiones recientes de Hermes del proyecto. Si el build nunca existió,
+    avisa con un mensaje de bootstrap.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        dict[str, object]: Con ``commits_posteriores`` (int) y ``aviso`` (str).
+    """
+    ts_build = _timestamp_build(ruta_raiz)
+    if ts_build is None:
+        return {
+            "commits_posteriores": 0,
+            "aviso": "⚠️ Nunca se ha hecho build del contexto: ejecuta `ctxmap refresh .` para inicializarlo.",
+        }
+
+    # Último commit: `git log -1 --format=%ct` devuelve epoch del commit.
+    salida = _ejecutar_git(ruta_raiz, ["log", "-1", "--format=%ct"])
+    commits_posteriores = 0
+    if salida.isdigit():
+        commits_posteriores = 1 if int(salida) > ts_build else 0
+
+    n_sesiones = _sesiones_posteriores(ruta_raiz)
+
+    aviso = ""
+    partes = []
+    if commits_posteriores:
+        partes.append(f"{commits_posteriores} commit(s) posterior(es) al último build")
+    if n_sesiones:
+        partes.append(f"{n_sesiones} sesión(es) de Hermes sin importar")
+    if partes:
+        aviso = (
+            "⚠️ Contexto desactualizado: " + " y ".join(partes)
+            + ". Ejecuta `ctxmap refresh .` para registrar la memoria viva."
+        )
+    return {"commits_posteriores": commits_posteriores, "aviso": aviso}
+
+
+def _sesiones_posteriores(ruta_raiz: str) -> int:
+    """Cuenta sesiones de Hermes iniciadas después del último build.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        int: Número de sesiones recientes sin importar (0 si no se puede saber).
+    """
+    ts_build = _timestamp_build(ruta_raiz)
+    if ts_build is None:
+        return 0
+    try:
+        sesiones = leer_sesiones(db_path=None, limite=50)
+    except Exception:
+        return 0
+
+    n = 0
+    for s in sesiones:
+        inicio = getattr(s, "fecha_inicio", "") or ""
+        try:
+            ts = float(inicio)
+        except ValueError:
+            try:
+                ts = datetime.fromisoformat(inicio).timestamp()
+            except ValueError:
+                continue
+        if ts > ts_build:
+            n += 1
+    return n
+
+
 def formatear_readiness(resultado: ResultadoReadiness) -> str:
     """Formatea el resultado del análisis de readiness como Markdown legible.
 
@@ -299,6 +437,16 @@ def formatear_readiness(resultado: ResultadoReadiness) -> str:
             "- 💡 Consejo: crea tus notas de sesión/decisiones en "
             "`.context-map/vault-*/.manual/` — el build JAMÁS las borra."
         )
+
+    # Frescura del contexto (R1, auditoría 2026-08-14)
+    if resultado.frescura.get("aviso"):
+        lineas.extend(["", "## Frescura del Contexto", ""])
+        lineas.append(f"- {resultado.frescura['aviso']}")
+        if resultado.frescura.get("commits_posteriores"):
+            lineas.append(
+                "- 🔄 Corre `ctxmap refresh .` para importar los commits "
+                "y sesiones recientes (memoria viva automática)."
+            )
 
     if resultado.gaps:
         lineas.extend(["", "## Faltante", ""])
