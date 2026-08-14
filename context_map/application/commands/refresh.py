@@ -19,6 +19,39 @@ from context_map.application.commands.scan import cmd_scan
 from context_map.application.commands.tools import cmd_check
 
 
+def _detectar_temporales(target: str) -> list[str]:
+    """Detecta carpetas temporales típicas sin trackear en la raíz.
+
+    R9 (auditoría 2026-08-14): artefactos como ``piloto_*`` (experimentos)
+    o ``scripts/debug/`` (scripts de diagnóstico) suelen quedar fuera del
+    control de versiones y ensucian la raíz. El AGENTS.md exige raíz limpia.
+
+    Args:
+        target (str): Ruta del proyecto.
+
+    Returns:
+        list[str]: Rutas relativas de carpetas temporales detectadas.
+    """
+    temporales: list[str] = []
+    try:
+        if not os.path.isdir(target):
+            return temporales
+        # Carpetas piloto_* / tmp_* en la raíz.
+        for nombre in os.listdir(target):
+            ruta = os.path.join(target, nombre)
+            if os.path.isdir(ruta) and (
+                nombre.startswith("piloto_") or nombre.startswith("tmp_")
+            ):
+                temporales.append(nombre)
+        # scripts/debug/ en la raíz.
+        debug_dir = os.path.join(target, "scripts", "debug")
+        if os.path.isdir(debug_dir):
+            temporales.append("scripts/debug")
+    except Exception:
+        return []
+    return sorted(temporales)
+
+
 def cmd_refresh(args) -> None:
     """Orquesta scan + build (sin clean) + check en un solo paso.
 
@@ -87,6 +120,16 @@ def cmd_refresh(args) -> None:
 
         check_args = types.SimpleNamespace(target=".", json=False)
         cmd_check(check_args)
+
+        # Sugerencia de limpieza (R9): carpetas temporales sin trackear.
+        if not quiet:
+            temporales = _detectar_temporales(target)
+            if temporales:
+                print()
+                print("── Limpieza sugerida ──")
+                for t in temporales:
+                    print(f"  · {t} (sin trackear — ¿mover a _legacy/ o eliminar?)")
+                print("────────────────────────")
 
         if not quiet:
             print(f"[refresh] [OK] Contexto actualizado para {target}")
