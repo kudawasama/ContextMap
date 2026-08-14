@@ -53,6 +53,8 @@ class ResultadoReadiness:
     gaps: list[str] = field(default_factory=list)
     sugerencias: list[str] = field(default_factory=list)
     frescura: dict[str, object] = field(default_factory=dict)
+    cobertura_memoria: dict[str, int] = field(default_factory=dict)
+    nombre_fragmentado: str = ""
 
 
 def _verificar_archivo(ruta: str, nombres: list[str]) -> bool:
@@ -185,6 +187,14 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
     resultado.frescura = actividad
     if actividad["aviso"]:
         resultado.sugerencias.append(str(actividad["aviso"]))
+
+    # Métrica de memoria viva (R7) y consistencia del nombre (R8).
+    resultado.cobertura_memoria = _cobertura_memoria_viva(ruta_raiz)
+    resultado.nombre_fragmentado = _inconsistencia_nombre(
+        ruta_raiz, os.path.basename(os.path.abspath(ruta_raiz)),
+    )
+    if resultado.nombre_fragmentado:
+        resultado.sugerencias.append(resultado.nombre_fragmentado)
 
     if resultado.score >= 80:
         resultado.veredicto = "ready"
@@ -393,6 +403,113 @@ def _sesiones_posteriores(ruta_raiz: str) -> int:
     return n
 
 
+def _contar_eventos_events_jsonl(ruta_raiz: str) -> int:
+    """Cuenta los eventos importados en ``.context-map/raw/events.jsonl``.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        int: Número de líneas JSON válidas, o 0 si no existe el archivo.
+    """
+    ruta = os.path.join(ruta_raiz, ".context-map", "raw", "events.jsonl")
+    if not os.path.isfile(ruta):
+        return 0
+    n = 0
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            for linea in f:
+                if linea.strip():
+                    n += 1
+    except Exception:
+        return 0
+    return n
+
+
+def _cobertura_memoria_viva(ruta_raiz: str) -> dict[str, int]:
+    """Mide la cobertura de memoria viva: eventos vs sesiones sin importar.
+
+    R7 (auditoría 2026-08-14): el porcentaje es una aproximación del
+    contexto registrado — eventos ya importados vs sesiones recientes que
+    aún no generan eventos. No es exacto (una sesión genera varios eventos),
+    pero da la señal de cuánto se está capturando.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        dict[str, int]: Con ``eventos``, ``sesiones`` y ``porcentaje``.
+    """
+    eventos = _contar_eventos_events_jsonl(ruta_raiz)
+    sesiones = _sesiones_posteriores(ruta_raiz)
+    porcentaje = 0
+    if eventos or sesiones:
+        total = eventos + sesiones
+        porcentaje = int(round(eventos / total * 100)) if total else 0
+    return {"eventos": eventos, "sesiones": sesiones, "porcentaje": porcentaje}
+
+
+def _inconsistencia_nombre(ruta_raiz: str, proyecto_actual: str) -> str:
+    """Detecta si el nombre del proyecto está fragmentado (R8).
+
+    Compara tres etiquetas que deberían coincidir: la carpeta ``vault-<X>``,
+    el campo ``project`` del frontmatter de ``CONTEXT.md`` y el nombre de la
+    carpeta del repo. Cuando difieren, la BD personal (``ctxmap personal``)
+    duplica eventos bajo nombres distintos.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+        proyecto_actual (str): Nombre del proyecto según project_name().
+
+    Returns:
+        str: Aviso con las etiquetas en conflicto, o "" si son consistentes.
+    """
+    context_dir = os.path.join(ruta_raiz, ".context-map")
+    if not os.path.isdir(context_dir):
+        return ""
+
+    vaults = [
+        d[len("vault-"):]
+        for d in os.listdir(context_dir)
+        if d.startswith("vault-") and os.path.isdir(os.path.join(context_dir, d))
+    ]
+    nombre_vault = vaults[0] if len(vaults) == 1 else ""
+
+    nombre_project = ""
+    context_md = os.path.join(context_dir, "CONTEXT.md")
+    if os.path.isfile(context_md):
+        try:
+            with open(context_md, encoding="utf-8") as f:
+                for linea in f:
+                    linea = linea.strip()
+                    if linea.startswith("project:"):
+                        nombre_project = (
+                            linea.split(":", 1)[1].strip().strip('"').strip("'")
+                        )
+                        break
+        except Exception:
+            pass
+
+    nombre_repo = os.path.basename(os.path.abspath(ruta_raiz))
+    # Normalizar para comparar (sin espacios ni sufijos comunes).
+    def _norm(v: str) -> str:
+        return v.strip().replace(" ", "-").lower()
+
+    etiquetas = {"vault": nombre_vault, "project": nombre_project, "repo": nombre_repo}
+    unicas = {_norm(v) for v in etiquetas.values() if v}
+
+    if len(unicas) <= 1:
+        return ""
+
+    # El proyecto_actual (de project_name) puede ser "Repo" (default) → no contar.
+    detalle = " · ".join(f"{k}='{v}'" for k, v in etiquetas.items() if v)
+    return (
+        f"⚠️ Nombre del proyecto fragmentado ({detalle}): el vault, el CONTEXT.md "
+        "y la carpeta del repo no coinciden — la BD personal puede duplicar "
+        "eventos. Unifica a un solo nombre (idealmente el del repo)."
+    )
+
+
 def formatear_readiness(resultado: ResultadoReadiness) -> str:
     """Formatea el resultado del análisis de readiness como Markdown legible.
 
@@ -447,6 +564,25 @@ def formatear_readiness(resultado: ResultadoReadiness) -> str:
                 "- 🔄 Corre `ctxmap refresh .` para importar los commits "
                 "y sesiones recientes (memoria viva automática)."
             )
+
+    # Métrica de memoria viva (R7)
+    if resultado.cobertura_memoria:
+        cm = resultado.cobertura_memoria
+        lineas.extend(["", "## Memoria Viva", ""])
+        lineas.append(
+            f"- 📊 Cobertura estimada: **{cm['porcentaje']}%** "
+            f"({cm['eventos']} eventos registrados / {cm['sesiones']} sesiones sin importar)"
+        )
+        if cm["sesiones"] and cm["porcentaje"] < 50:
+            lineas.append(
+                "- 💡 Hay sesiones recientes sin importar — el contexto pierde "
+                "memoria viva. Corre `ctxmap refresh .` (o el pre-commit ya lo hará)."
+            )
+
+    # Consistencia del nombre (R8)
+    if resultado.nombre_fragmentado:
+        lineas.extend(["", "## Nombre del Proyecto", ""])
+        lineas.append(f"- {resultado.nombre_fragmentado}")
 
     if resultado.gaps:
         lineas.extend(["", "## Faltante", ""])
