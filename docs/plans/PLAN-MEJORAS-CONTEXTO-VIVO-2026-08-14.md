@@ -38,9 +38,9 @@ clasificadas, títulos legibles).
 | 4 | Títulos legibles en el diario (R5) | 🟠 Media | ✅ Completa (`d2730f5`) | Sin truncado a 60 chars |
 | 5 | Clasificar decisiones/lecciones en sesiones (R6) | 🟠 Media | ✅ Completa (`0b8f9b3`) | Nodos DECISION/CORRECCION/LECCION sugeridos |
 | 6 | Comando `ctxmap wrap` (fin de sesión) (R3) | 🟠 Media | ✅ Completa (`9470146`) | refresh + resumen "registrado vs sin importar" |
-| 7 | Métrica de memoria viva en `check` (R7) | 🟡 Baja | ⬜ Pendiente | % sesiones recientes con eventos |
-| 8 | Validar consistencia del nombre del proyecto (R8) | 🟡 Baja | ⬜ Pendiente | Aviso vault-<X> ≠ project ≠ repo |
-| 9 | Sugerir limpieza de temporales en refresh (R9) | 🟡 Baja | ⬜ Pendiente | Aviso `piloto_*/scripts/debug` sin trackear |
+| 7 | Métrica de memoria viva en `check` (R7) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | % sesiones recientes con eventos |
+| 8 | Validar consistencia del nombre del proyecto (R8) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso vault-<X> ≠ project ≠ repo |
+| 9 | Sugerir limpieza de temporales en refresh (R9) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso `piloto_*/scripts/debug` sin trackear |
 
 ---
 
