@@ -41,7 +41,7 @@ clasificadas, títulos legibles).
 | 7 | Métrica de memoria viva en `check` (R7) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | % sesiones recientes con eventos |
 | 8 | Validar consistencia del nombre del proyecto (R8) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso vault-<X> ≠ project ≠ repo |
 | 9 | Sugerir limpieza de temporales en refresh (R9) | 🟡 Baja | ✅ Completa (`cdfe3c8`) | Aviso `piloto_*/scripts/debug` sin trackear |
-| 10 | Reconocer catálogo de reglas de negocio (R10) | 🟠 Media | ⬜ Pendiente | Nodos REGLA + sección en brief (fuente: references/reglas/) |
+| 10 | Reconocer catálogo de reglas de negocio (R10) | 🟠 Media | ✅ Completa (`ea88ece`) | Nodos REGLA + sección en brief (fuente: references/reglas/) |
 
 ---
 
