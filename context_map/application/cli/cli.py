@@ -23,6 +23,7 @@ from context_map.application.commands import (
     cmd_sync_migrate,
     cmd_update,
     cmd_weekly,
+    cmd_wrap,
 )
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.hook import cmd_hook_install
@@ -56,6 +57,7 @@ def main() -> None:
         "build": cmd_build,
         "scan": cmd_scan,
         "refresh": cmd_refresh,
+        "wrap": cmd_wrap,
         "check": cmd_check,
         "import-git": cmd_import_git,
         "import-sessions": cmd_import_sessions,

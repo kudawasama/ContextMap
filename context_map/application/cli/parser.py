@@ -35,6 +35,14 @@ def create_parser() -> argparse.ArgumentParser:
     s_refresh.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_refresh.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
+    s_wrap = sub.add_parser(
+        "wrap",
+        help="Cierre de sesión: refresh + resumen de memoria viva registrada vs pendiente",
+    )
+    s_wrap.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_wrap.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_wrap.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
+
     sub.add_parser(
         "mcp",
         help="Arranca el servidor MCP (stdio) que expone las herramientas de ctxmap como tools",

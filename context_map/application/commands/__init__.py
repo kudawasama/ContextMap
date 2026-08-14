@@ -29,6 +29,7 @@ from context_map.application.commands.tools import (
     cmd_weekly,
 )
 from context_map.application.commands.update import cmd_update
+from context_map.application.commands.wrap import cmd_wrap
 
 __all__ = [
     "cmd_auto",
@@ -51,4 +52,5 @@ __all__ = [
     "cmd_adapt",
     "cmd_refresh",
     "cmd_personal",
+    "cmd_wrap",
 ]
