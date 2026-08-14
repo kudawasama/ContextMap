@@ -15,7 +15,7 @@ from typing import Any
 
 NODE_TYPES: set[str] = {
     "IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO",
-    "DOCUMENTO",
+    "DOCUMENTO", "REGLA",
 }
 
 

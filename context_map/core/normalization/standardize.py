@@ -251,7 +251,7 @@ def inferir_status(node: Node) -> str:
         return "pendiente"
 
     # Elementos de estructura, documentación o código existente son completados
-    if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO"):
+    if node.type in ("BASE", "CORRECCION", "HITO", "PRUEBA", "CAMBIO", "REGLA"):
         return "completado"
 
     if node.source == "scanner" and any(

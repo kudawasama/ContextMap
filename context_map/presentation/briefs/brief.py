@@ -46,6 +46,7 @@ def generar_brief(
     version = _detectar_version(project_dir)
     pendientes_manuales = _extraer_pendientes_manuales(project_name, project_dir)
     frescura = _chequear_frescura(project_name, project_dir)
+    reglas = _reglas_negocio(project_dir)
 
     sections = [
         _header(project_name),
@@ -59,6 +60,10 @@ def generar_brief(
         _comandos_utiles(),
         _footer(),
     ]
+
+    # Reglas de negocio (R10): sección propia si el proyecto tiene catálogo.
+    if reglas:
+        sections.insert(4, reglas)
 
     brief = "\n\n".join(sections)
 
@@ -313,6 +318,44 @@ def _resumen_ejecutivo(name: str, stats: dict[str, Any], score: int, version: st
 **Nodos totales**: {total}
 **Distribución**: {tipos}
 **Readiness**: {score}/100{version_line}
+"""
+
+
+def _reglas_negocio(project_dir: str) -> str:
+    """Sección del brief con el resumen del catálogo de reglas de negocio.
+
+    R10 (auditoría 2026-08-14): si el proyecto tiene el catálogo en
+    ``references/reglas/reglas_registro.yaml`` (convención Gobernanza), el
+    brief lo refleja: total, conteo por categoría y la ruta de la fuente
+    única de verdad (que vive en el repo, versionada).
+
+    Args:
+        project_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        str: Sección en Markdown, o string vacío si no hay catálogo.
+    """
+    try:
+        from context_map.domain.reglas.reglas import buscar_y_resumir
+
+        resumen = buscar_y_resumir(project_dir)
+    except Exception:
+        return ""
+
+    if not resumen or resumen["total"] == 0:
+        return ""
+
+    categorias = resumen.get("categorias", {})
+    detalle = " · ".join(
+        f"{k} {v}" for k, v in sorted(categorias.items())
+    ) if categorias else "sin categorías"
+
+    return f"""## Reglas de Negocio
+
+- 📜 **{resumen['total']} reglas** · {detalle}
+- 🔗 Fuente única de verdad: `{resumen.get('ruta', '')}` (versionada en el repo, con tests y auditor)
+- ⚠️ Las reglas se cumplen SIEMPRE: si una contradice el código, el catálogo manda.
+
 """
 
 

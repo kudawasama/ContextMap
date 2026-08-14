@@ -11,7 +11,7 @@ import re
 
 from context_map.core.models import Event
 
-JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO"}
+JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO", "REGLA"}
 
 # Patrones determinísticos para clasificación heurística del tipo de evento
 _LINE_PATTERNS: list[tuple[str | re.Pattern[str], str]] = [

@@ -240,7 +240,50 @@ def escanear_y_generar_eventos(
     ev_est = _events_desde_estructura(estructura)
     ev_cont = _events_desde_contenido(contenidos, ruta_raiz=ruta_raiz)
 
-    return ev_est + ev_cont
+    # Catálogo de reglas de negocio (R10, 2026-08-14): si el proyecto tiene
+    # references/reglas/reglas_registro.yaml (convención Gobernanza), cada
+    # regla genera un evento REGLA — el grafo y el brief reflejan las reglas
+    # sin duplicar la fuente (que vive en el repo, versionada).
+    ev_reglas = _events_desde_reglas(ruta_raiz)
+
+    return ev_est + ev_cont + ev_reglas
+
+
+def _events_desde_reglas(ruta_raiz: str) -> list[Event]:
+    """Genera eventos REGLA desde el catálogo de reglas del proyecto.
+
+    Args:
+        ruta_raiz (str): Ruta raíz del proyecto.
+
+    Returns:
+        list[Event]: Un evento REGLA por regla del catálogo (vacío si no hay).
+    """
+    try:
+        from context_map.domain.reglas.reglas import _buscar_catalogo, parsear_catalogo
+
+        catalogo = _buscar_catalogo(ruta_raiz)
+        if not catalogo:
+            return []
+        reglas = parsear_catalogo(catalogo)
+        eventos: list[Event] = []
+        for i, r in enumerate(reglas):
+            regla_id = str(r.get("id", f"REG-{i:03d}"))
+            nombre = str(r.get("nombre", ""))
+            categoria = str(r.get("categoria", ""))
+            prioridad = str(r.get("prioridad", ""))
+            estado = str(r.get("estado", ""))
+            title = f"{regla_id}: {nombre}" if nombre else regla_id
+            eventos.append(Event(
+                type="REGLA",
+                text=title,
+                timestamp=_ahora(),
+                source="reglas",
+                tags=[t for t in (categoria, prioridad, estado) if t],
+                meta={"catalogo": catalogo, "id": regla_id},
+            ))
+        return eventos
+    except Exception:  # noqa: BLE001 — las reglas son opcionales, nunca rompen el scan
+        return []
 
 
 def guardar_eventos_escaneados(eventos: list[Event], output_path: str) -> int:
