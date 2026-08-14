@@ -238,34 +238,40 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
     for n in ingresados:
         ruta_nodo = ruta_archivo_nodo(n)
         if ruta_nodo:
-            partes.append(f"- [[{ruta_nodo}|{n.title[:60]}]]")
+            partes.append(f"- [[{ruta_nodo}|{n.title}]]")
         else:
-            partes.append(f"- **{n.title[:60]}**")
+            partes.append(f"- **{n.title}**")
     partes.append("")
 
     # Memoria viva: si la nota del día ya existe con preserve: true (escrita
     # por el AGENTE con alma), NO la sobrescribimos — solo añadimos los nodos
-    # nuevos del scanner que falten, en una sección aparte.
+    # nuevos del scanner que falten, consolidados en UNA sola sección
+    # autogenerada (R4, 2026-08-14: antes cada build anexaba un bloque nuevo
+    # y el diario acumulaba ruido; ahora se reemplaza la sección existente).
+    # Los títulos se escriben COMPLETOS, sin truncar a 60 chars (R5).
     if os.path.exists(ruta):
         try:
             with open(ruta, encoding="utf-8") as f:
                 existente = f.read()
             if "preserve: true" in existente:
+                marcador = "## 🤖 Ingresados por el scanner (autogenerado)"
+                # Parte escrita por el AGENTE: todo lo anterior al marcador.
+                parte_agente = existente.split(marcador)[0] if marcador in existente else existente
                 faltantes = [
                     n for n in ingresados
-                    if (n.title or "")[:60] not in existente
+                    if (n.title or "") not in parte_agente
                 ]
                 if faltantes:
                     anexo = [
                         "",
-                        "## 🤖 Ingresados por el scanner (autogenerado)",
+                        marcador,
                         "",
                     ]
                     for n in faltantes:
-                        anexo.append(f"- **{n.title[:60]}**")
+                        anexo.append(f"- **{n.title}**")
                     anexo.append("")
-                    with open(ruta, "a", encoding="utf-8") as f:
-                        f.write("\n".join(anexo))
+                    with open(ruta, "w", encoding="utf-8") as f:
+                        f.write(parte_agente.rstrip() + "\n" + "\n".join(anexo))
                 return ruta
         except Exception:
             pass  # si no se puede leer, regenerar normal
