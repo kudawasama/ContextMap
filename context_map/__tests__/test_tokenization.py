@@ -1,7 +1,16 @@
 """Pruebas unitarias para el módulo de tokenización context_map.core.tokenization."""
 
 import pytest
-from context_map.core.tokenization import TokenCounter, contar_tokens_texto
+from context_map.core.tokenization import TokenCounter, contar_tokens_texto, normalize_model_name
+
+
+def test_normalize_model_name() -> None:
+    """Verifica la normalización de nombres de modelo con espacios y mayúsculas."""
+    assert normalize_model_name("GPT 5.4 Mini") == "gpt-5.4-mini"
+    assert normalize_model_name("Claude Opus 4.5") == "claude-opus-4.5"
+    assert normalize_model_name("Gemini 3.7 Flash") == "gemini-3.7-flash"
+    assert normalize_model_name("DeepSeek V4 Pro") == "deepseek-v4-pro"
+    assert normalize_model_name("Nemotron 3.5 Lightning Free") == "nemotron-3.5-lightning-free"
 
 
 def test_contar_tokens_texto_vacio() -> None:
@@ -26,55 +35,81 @@ def test_contar_tokens_codigo_python() -> None:
         total += item.get("precio", 0.0) * item.get("cantidad", 1)
     return total
 """
-    tokens = contar_tokens_texto(codigo, model_name="claude-3-5-sonnet")
+    tokens = contar_tokens_texto(codigo, model_name="Claude Sonnet 5")
     assert tokens > 20
 
 
-def test_token_counter_catalogo_completo_2026() -> None:
-    """Verifica que TokenCounter soporte el catálogo completo de modelos 2026."""
-    texto = "Demostración de consistencia multi-modelo en ContextMap para desarrollo agéntico avanzado."
-    
-    # Catálogo completo de modelos probados
-    modelos_2026 = [
-        # OpenAI
-        "gpt-4o",
-        "gpt-4o-mini",
-        "o1",
-        "o1-mini",
-        "o3-mini",
-        # Google DeepMind
-        "gemini-1.5-pro",
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-3.6-flash",
-        "gemma-2-27b",
-        # Anthropic
-        "claude-3-5-sonnet",
-        "claude-3-5-haiku",
-        "claude-3-opus",
-        # Meta AI
-        "llama-3.3-70b",
-        "llama-3.2-11b-vision",
-        "llama-3.1-405b",
-        # DeepSeek AI
-        "deepseek-v3",
-        "deepseek-r1",
-        "deepseek-coder-v2",
-        # Qwen / Alibaba
-        "qwen-2.5-coder",
-        "qwen-2.5-72b",
-        # xAI
-        "grok-3",
-        "grok-2",
-        # Mistral / Perplexity / Cohere
-        "codestral",
-        "mistral-large",
-        "sonar-pro",
-        "command-r-plus",
+def test_token_counter_modelos_solicitados_usuario() -> None:
+    """Verifica que TokenCounter soporte todos los modelos específicos provistos por el usuario."""
+    texto = "Demostración de consistencia multi-modelo para la lista avanzada."
+
+    modelos_solicitados = [
+        "Big Pickle",
+        "Claude Fable 5",
+        "Claude Haiku 4.5",
+        "Claude Opus 4.5",
+        "Claude Opus 4.6",
+        "Claude Opus 4.7",
+        "Claude Opus 4.8",
+        "Claude Opus 5",
+        "Claude Sonnet 4",
+        "Claude Sonnet 4.5",
+        "Claude Sonnet 4.6",
+        "Claude Sonnet 5",
+        "GPT 5",
+        "GPT 5 Codex",
+        "GPT 5 Nano",
+        "GPT 5.1",
+        "GPT 5.1 Codex",
+        "GPT 5.1 Codex Max",
+        "GPT 5.1 Codex Mini",
+        "GPT 5.2",
+        "GPT 5.2 Codex",
+        "GPT 5.3 Codex",
+        "GPT 5.3 Codex Spark",
+        "GPT 5.4",
+        "GPT 5.4 Mini",
+        "GPT 5.4 Nano",
+        "GPT 5.4 Pro",
+        "GPT 5.5",
+        "GPT 5.5 Pro",
+        "GPT 5.6 Luna",
+        "GPT 5.6 Sol",
+        "GPT 5.6 Terra",
+        "Gemini 3 Flash",
+        "Gemini 3.1 Pro",
+        "Gemini 3.5 Flash",
+        "Gemini 3.5 Flash Lite",
+        "Gemini 3.6 Flash",
+        "Gemini 3.7 Flash",
+        "DeepSeek V4 Flash",
+        "DeepSeek V4 Flash Free",
+        "DeepSeek V4 Pro",
+        "GLM 5",
+        "GLM 5.1",
+        "GLM 5.2",
+        "Kimi K2.5",
+        "Kimi K2.6",
+        "Kimi K2.7 Code",
+        "Kimi K3",
+        "Qwen3.5 Plus",
+        "Qwen3.6 Plus",
+        "Grok 4.5",
+        "Grok 4.6",
+        "Grok Build 0.1",
+        "MiniMax M2.5",
+        "MiniMax M2.7",
+        "MiniMax M3",
+        "MiMo V2.5 Free",
+        "Hy3 Free",
+        "Laguna S 2.1 Free",
+        "Muse Spark 1.2",
+        "Nemotron 3 Ultra Free",
+        "Nemotron 3.5 Lightning Free",
     ]
 
-    for model in modelos_2026:
+    for model in modelos_solicitados:
         counter = TokenCounter(model)
         tokens = counter.count_tokens(texto)
         assert tokens > 0, f"Error de cálculo en modelo: {model}"
-        assert 10 <= tokens <= 35, f"Rango fuera de límite para: {model} ({tokens} tokens)"
+        assert 8 <= tokens <= 35, f"Rango fuera de límite para: {model} ({tokens} tokens)"

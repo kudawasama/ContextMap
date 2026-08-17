@@ -1,19 +1,35 @@
 """Módulo de tokenización y estimación oficial de consumo de tokens por modelo para ContextMap.
 
-Soporta el catálogo completo de LLMs líderes y de código abierto (2026):
-- **OpenAI**: GPT-4o, GPT-4o-mini, o1, o1-mini, o1-pro, o3, o3-mini, GPT-4-turbo, GPT-3.5.
-- **Google DeepMind**: Gemini 1.5 Pro/Flash, Gemini 2.0 Flash/Pro/Lite/Thinking, Gemini 2.5, Gemini 3.0, Gemini 3.5, Gemini 3.6 Flash, Gemma 2.
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude 3.5 Opus, Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku.
-- **Meta AI**: Llama 3.3 (70B), Llama 3.2 (1B/3B/11B/90B), Llama 3.1 (8B/70B/405B), Llama 3.
-- **DeepSeek AI**: DeepSeek-V3, DeepSeek-R1, DeepSeek-Coder-V2, DeepSeek-R1-Distill.
-- **Qwen (Alibaba)**: Qwen 2.5, Qwen 2.5 Coder, Qwen 2.5 Math, Qwen Max.
-- **xAI**: Grok 3, Grok 2, Grok 2 Mini, Grok Beta.
-- **Mistral AI**: Mistral Large 2, Codestral, Pixtral, Mixtral 8x22B.
-- **Cohere / Perplexity**: Command R+, Sonar Pro, Sonar Reasoning.
+Soporta el catálogo completo de LLMs líderes y de última generación (2026 / Next-Gen):
+- **OpenAI**: GPT-4o, GPT-4o-mini, o1, o3-mini, GPT-5, GPT-5.1, GPT-5.2, GPT-5.3 Codex, GPT-5.4 (Mini/Pro/Nano), GPT-5.5 (Pro), GPT-5.6 (Luna/Sol/Terra).
+- **Google DeepMind**: Gemini 1.5/2.0, Gemini 3 Flash, Gemini 3.1 Pro, Gemini 3.5/3.6/3.7 Flash, Gemma 2.
+- **Anthropic**: Claude 3.5 Sonnet/Haiku/Opus, Claude Fable 5, Claude Haiku 4.5, Claude Opus 4.5 - 5, Claude Sonnet 4 - 5.
+- **DeepSeek AI**: DeepSeek V3, DeepSeek R1, DeepSeek V4 Flash, DeepSeek V4 Flash Free, DeepSeek V4 Pro.
+- **Moonshot AI & Z.ai**: Kimi K2.5, K2.6, K2.7 Code, K3, GLM 5, GLM 5.1, GLM 5.2.
+- **Alibaba & xAI**: Qwen 2.5, Qwen 3.5 Plus, Qwen 3.6 Plus, Grok 3, Grok 4.5, Grok 4.6, Grok Build 0.1.
+- **MiniMax, Xiaomi, NVIDIA & Stealth**: MiniMax M2.5/M2.7/M3, MiMo V2.5 Free, Nemotron 3 Ultra, Nemotron 3.5 Lightning, Big Pickle, Laguna S 2.1, Muse Spark 1.2, Hy3 Free.
 """
 
 import re
 from typing import Dict, Optional
+
+
+def normalize_model_name(name: str) -> str:
+    """Normaliza un nombre de modelo convirtiéndolo a minúsculas y estandarizando separadores.
+
+    Args:
+        name: Nombre del modelo con espacios, guiones o mayúsculas.
+
+    Returns:
+        Identificador canónico (ej. "GPT 5.4 Mini" -> "gpt-5.4-mini").
+    """
+    if not name:
+        return ""
+    cleaned = name.lower().strip()
+    # Reemplazar espacios y guiones bajos por guiones normales
+    cleaned = re.sub(r"[\s\_]+", "-", cleaned)
+    return cleaned
+
 
 # Intentar importación soft de tiktoken si está disponible en el entorno
 try:
@@ -30,7 +46,51 @@ class TokenCounter:
 
     # Ratios oficiales promedio (caracteres por token) basados en las especificaciones de cada tokenizador
     _RATIOS_OFICIALES: Dict[str, float] = {
-        # OpenAI Family (o200k_base / cl100k_base)
+        # --- Stealth / Emerging Labs ---
+        "big-pickle": 3.7,
+        "hy3-free": 3.7,
+        "laguna-s-2.1-free": 3.7,
+        "muse-spark-1.2": 3.7,
+        # --- Anthropic Claude Family (Next-Gen 4 / 4.5 / 5) ---
+        "claude-fable-5": 3.5,
+        "claude-haiku-4.5": 3.5,
+        "claude-opus-4.5": 3.5,
+        "claude-opus-4.6": 3.5,
+        "claude-opus-4.7": 3.5,
+        "claude-opus-4.8": 3.5,
+        "claude-opus-5": 3.5,
+        "claude-sonnet-4": 3.5,
+        "claude-sonnet-4.5": 3.5,
+        "claude-sonnet-4.6": 3.5,
+        "claude-sonnet-5": 3.5,
+        "claude-3-5-sonnet": 3.5,
+        "claude-3-5-haiku": 3.5,
+        "claude-3-5-opus": 3.5,
+        "claude-3-opus": 3.5,
+        "claude-3-sonnet": 3.5,
+        "claude-3-haiku": 3.5,
+        "claude-2.1": 3.5,
+        # --- OpenAI Family (GPT-4o, o1, o3, GPT-5.x) ---
+        "gpt-5": 3.7,
+        "gpt-5-codex": 3.5,
+        "gpt-5-nano": 3.7,
+        "gpt-5.1": 3.7,
+        "gpt-5.1-codex": 3.5,
+        "gpt-5.1-codex-max": 3.5,
+        "gpt-5.1-codex-mini": 3.5,
+        "gpt-5.2": 3.7,
+        "gpt-5.2-codex": 3.5,
+        "gpt-5.3-codex": 3.5,
+        "gpt-5.3-codex-spark": 3.5,
+        "gpt-5.4": 3.7,
+        "gpt-5.4-mini": 3.7,
+        "gpt-5.4-nano": 3.7,
+        "gpt-5.4-pro": 3.7,
+        "gpt-5.5": 3.7,
+        "gpt-5.5-pro": 3.7,
+        "gpt-5.6-luna": 3.7,
+        "gpt-5.6-sol": 3.7,
+        "gpt-5.6-terra": 3.7,
         "gpt-4o": 3.7,
         "gpt-4o-mini": 3.7,
         "gpt-4o-realtime": 3.7,
@@ -44,66 +104,53 @@ class TokenCounter:
         "o3": 3.7,
         "o3-mini": 3.7,
         "o3-high": 3.7,
-        # Anthropic Claude Family (Anthropic BPE ~3.5 chars/token)
-        "claude-3-5-sonnet": 3.5,
-        "claude-3-5-haiku": 3.5,
-        "claude-3-5-opus": 3.5,
-        "claude-3-opus": 3.5,
-        "claude-3-sonnet": 3.5,
-        "claude-3-haiku": 3.5,
-        "claude-2.1": 3.5,
-        # Google Gemini Family (SentencePiece 256k vocab)
-        "gemini-1.5-pro": 3.8,
-        "gemini-1.5-flash": 4.0,
-        "gemini-1.5-flash-8b": 4.0,
+        # --- Google Gemini Family (3.x / 2.x / 1.5) ---
+        "gemini-3-flash": 4.0,
+        "gemini-3.1-pro": 3.8,
+        "gemini-3.5-flash": 4.0,
+        "gemini-3.5-flash-lite": 4.0,
+        "gemini-3.6-flash": 4.0,
+        "gemini-3.7-flash": 4.0,
         "gemini-2.0-flash": 4.0,
         "gemini-2.0-flash-lite": 4.0,
         "gemini-2.0-pro": 3.8,
-        "gemini-2.0-flash-thinking": 4.0,
-        "gemini-2.5-flash": 4.0,
-        "gemini-3.0-pro": 3.8,
-        "gemini-3.5-flash": 4.0,
-        "gemini-3.5-pro": 3.8,
-        "gemini-3.6-flash": 4.0,
-        "gemini-flash": 4.0,
+        "gemini-1.5-pro": 3.8,
+        "gemini-1.5-flash": 4.0,
         "gemma-2": 3.8,
-        "gemma-2-9b": 3.8,
-        "gemma-2-27b": 3.8,
-        # Meta Llama Family (Tiktoken 128k BPE ~3.7 chars/token)
-        "llama-3": 3.7,
-        "llama-3.1": 3.7,
-        "llama-3.1-405b": 3.7,
-        "llama-3.2": 3.7,
-        "llama-3.2-vision": 3.7,
-        "llama-3.3": 3.7,
-        "llama-3.3-70b": 3.7,
-        # DeepSeek Family (DeepSeek 100k BPE ~3.6 chars/token)
+        # --- DeepSeek AI Family (V3, R1, V4) ---
+        "deepseek-v4-flash": 3.6,
+        "deepseek-v4-flash-free": 3.6,
+        "deepseek-v4-pro": 3.6,
         "deepseek-v3": 3.6,
         "deepseek-r1": 3.6,
-        "deepseek-r1-distill": 3.6,
         "deepseek-coder": 3.5,
-        "deepseek-coder-v2": 3.5,
-        # Qwen Family (Alibaba ~3.6 chars/token)
-        "qwen-2.5": 3.6,
+        # --- Z.ai GLM Family ---
+        "glm-5": 3.6,
+        "glm-5.1": 3.6,
+        "glm-5.2": 3.6,
+        # --- Moonshot AI Kimi Family ---
+        "kimi-k2.5": 3.6,
+        "kimi-k2.6": 3.6,
+        "kimi-k2.7-code": 3.5,
+        "kimi-k3": 3.6,
+        # --- Alibaba Qwen Family ---
+        "qwen-3.5-plus": 3.6,
+        "qwen-3.6-plus": 3.6,
         "qwen-2.5-coder": 3.5,
-        "qwen-2.5-72b": 3.6,
-        "qwen-max": 3.6,
-        # xAI Grok Family (~3.7 chars/token)
+        "qwen-2.5": 3.6,
+        # --- xAI Grok Family ---
+        "grok-4.5": 3.7,
+        "grok-4.6": 3.7,
+        "grok-build-0.1": 3.7,
         "grok-3": 3.7,
         "grok-2": 3.7,
-        "grok-2-mini": 3.7,
-        "grok-beta": 3.7,
-        # Mistral Family (SentencePiece 32k/128k ~3.8 chars/token)
-        "mistral-large": 3.8,
-        "mistral-small": 3.8,
-        "codestral": 3.5,
-        "pixtral": 3.8,
-        "mixtral-8x7b": 3.8,
-        "mixtral-8x22b": 3.8,
-        # Cohere & Perplexity Family
-        "command-r-plus": 3.8,
-        "sonar-pro": 3.7,
-        "sonar-reasoning": 3.7,
+        # --- MiniMax, Xiaomi, NVIDIA ---
+        "minimax-m2.5": 3.7,
+        "minimax-m2.7": 3.7,
+        "minimax-m3": 3.7,
+        "mimo-v2.5-free": 3.7,
+        "nemotron-3-ultra-free": 3.7,
+        "nemotron-3.5-lightning-free": 3.7,
         # Default Fallback
         "default": 3.7,
     }
@@ -112,9 +159,9 @@ class TokenCounter:
         """Inicializa el contador de tokens para un modelo específico.
 
         Args:
-            model_name: Identificador del modelo (ej. "gpt-4o", "claude-3-5-sonnet", "gemini-3.6-flash", "deepseek-r1", "llama-3.3", "qwen-2.5-coder", "grok-3").
+            model_name: Nombre o identificador del modelo (ej. "GPT 5.4 Mini", "Claude Opus 4.5", "Gemini 3.7 Flash", "DeepSeek V4 Pro", "GLM 5.2", "Kimi K2.7 Code").
         """
-        self.model_name = model_name.lower().strip()
+        self.model_name = normalize_model_name(model_name)
 
     def count_tokens(self, text: str) -> int:
         """Calcula el número exacto (OpenAI) o altamente fiel de tokens para cualquier modelo.
@@ -163,28 +210,26 @@ class TokenCounter:
 
         # 2. Resolución dinámica inteligente por coincidencia de patrones y prefijos
         if ratio is None:
-            if "flash" in m or "lite" in m:
-                ratio = 4.0  # Ratios Gemini Flash / Flash-Lite / Mini
+            if "flash" in m or "lite" in m or "nano" in m or "mini" in m:
+                ratio = 4.0 if "flash" in m else 3.7
             elif "gemini" in m or "gemma" in m:
-                ratio = 3.8  # Familia Gemini Pro / Gemma
-            elif "claude" in m or "anthropic" in m:
-                ratio = 3.5  # Familia Anthropic Claude
-            elif "deepseek" in m:
-                ratio = 3.6  # Familia DeepSeek V3/R1/Coder
-            elif "qwen" in m or "alibaba" in m:
-                ratio = 3.6  # Familia Qwen
+                ratio = 3.8
+            elif "claude" in m or "anthropic" in m or "fable" in m:
+                ratio = 3.5
+            elif "deepseek" in m or "glm" in m or "kimi" in m or "qwen" in m:
+                ratio = 3.5 if "code" in m or "codex" in m else 3.6
             elif "llama" in m or "meta" in m:
-                ratio = 3.7  # Familia Meta Llama
-            elif "grok" in m or "xai" in m:
-                ratio = 3.7  # Familia xAI Grok
+                ratio = 3.7
+            elif "grok" in m or "xai" in m or "minimax" in m or "mimo" in m or "nemotron" in m:
+                ratio = 3.7
             elif "mistral" in m or "mixtral" in m or "codestral" in m or "pixtral" in m:
-                ratio = 3.5 if "code" in m else 3.8  # Familia Mistral AI
+                ratio = 3.5 if "code" in m else 3.8
             elif "command" in m or "cohere" in m:
-                ratio = 3.8  # Familia Cohere Command
+                ratio = 3.8
             elif "sonar" in m or "perplexity" in m:
-                ratio = 3.7  # Familia Perplexity Sonar
+                ratio = 3.7
             elif "gpt" in m or "o1" in m or "o3" in m or "openai" in m:
-                ratio = 3.7  # Familia OpenAI
+                ratio = 3.5 if "codex" in m else 3.7
             else:
                 ratio = self._RATIOS_OFICIALES["default"]
 
