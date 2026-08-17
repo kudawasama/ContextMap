@@ -197,8 +197,44 @@ def personal_query(consulta: str, proyecto: str = "", limite: int = 5) -> str:
         return f"ERROR: {err} — ejecuta `ctxmap personal sync --todos` para crear la BD personal"
 
 
+@_tool
+def export(
+    target: str = ".",
+    format: str = "xml",
+    output: str = "",
+    brief_only: bool = False,
+    model: str = "gpt-4o",
+) -> str:
+    """Exporta todo el contexto del proyecto en formato XML, JSON o Markdown portable (estilo Repomix) para chats web.
+
+    Args:
+        target: Ruta del proyecto.
+        format: Formato de salida ('xml', 'json', 'markdown').
+        output: Ruta opcional del archivo de salida.
+        brief_only: Exportar únicamente el brief ejecutivo.
+        model: Modelo de destino para estimación de tokens (gpt-4o, claude-3-5-sonnet, gemini-1.5-pro).
+    """
+    from pathlib import Path
+    from context_map.application.commands.export import exportar_contexto
+
+    try:
+        p = Path(target).resolve()
+        out = Path(output).resolve() if output else None
+        res_path = exportar_contexto(
+            project_path=p,
+            format_type=format,
+            output_file=out,
+            brief_only=brief_only,
+            model_name=model,
+        )
+        return f"export: [OK] Contexto exportado exitosamente a {res_path}"
+    except Exception as err:
+        return f"ERROR en export: {err}"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:
         raise SystemExit("mcp no instalado. Ejecuta: pip install mcp  (o: uv pip install mcp)")
     _fastmcp.run()
+

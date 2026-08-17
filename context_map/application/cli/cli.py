@@ -5,6 +5,8 @@ Despacha el comando solicitado al handler correspondiente.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from context_map.application.cli.parser import create_parser
 from context_map.application.commands import (
     cmd_auto,
@@ -32,11 +34,32 @@ from context_map.application.commands.personal import cmd_personal
 from context_map.core.logging_setup import setup_logging
 
 
+from context_map.application.commands.export import exportar_contexto
+
+
 def cmd_mcp(args=None) -> None:
     """Arranca el servidor MCP de ContextMap (stdio)."""
     from context_map.infrastructure.mcp_server import run
 
     run()
+
+
+def cmd_export(args) -> None:
+    """Ejecuta la exportación portable del contexto en formato XML/JSON/Markdown."""
+    project_path = Path(getattr(args, "target", ".")).resolve()
+    fmt = getattr(args, "format", "xml")
+    out = Path(args.output).resolve() if getattr(args, "output", None) else None
+    brief_only = bool(getattr(args, "brief_only", False))
+    model_name = getattr(args, "model", "gpt-4o")
+
+    out_path = exportar_contexto(
+        project_path=project_path,
+        format_type=fmt,
+        output_file=out,
+        brief_only=brief_only,
+        model_name=model_name,
+    )
+    print(f"[export] [OK] Contexto exportado exitosamente en ({fmt.upper()}): {out_path}")
 
 
 def main() -> None:
@@ -71,6 +94,7 @@ def main() -> None:
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
         "personal": cmd_personal,
+        "export": cmd_export,
         "mcp": cmd_mcp,
     }
 

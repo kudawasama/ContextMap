@@ -132,6 +132,25 @@ def create_parser() -> argparse.ArgumentParser:
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
     sub.add_parser("doctor", help="Diagnostica el entorno y repara problemas conocidos")
 
+    s_export = sub.add_parser(
+        "export",
+        help="Exporta el contexto en formato portable (XML/JSON/Markdown) para chats web de LLMs",
+    )
+    s_export.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_export.add_argument(
+        "--format",
+        choices=["xml", "json", "markdown"],
+        default="xml",
+        help="Formato de salida ('xml', 'json', 'markdown')",
+    )
+    s_export.add_argument("--output", default=None, help="Ruta del archivo de salida (por defecto: contextmap_export.xml)")
+    s_export.add_argument("--brief-only", action="store_true", help="Exportar únicamente el brief ejecutivo")
+    s_export.add_argument(
+        "--model",
+        default="gpt-4o",
+        help="Modelo de destino para estimación de tokens (gpt-4o, claude-3-5-sonnet, gemini-1.5-pro)",
+    )
+
     s_adapt = sub.add_parser("adapt", help="Detecta stack/IDE y genera reglas agénticas adaptadas")
     s_adapt.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a analizar")
     s_adapt.add_argument("--project", default="Repo", help="Nombre del proyecto")
