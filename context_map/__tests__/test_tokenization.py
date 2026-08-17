@@ -31,16 +31,25 @@ def test_contar_tokens_codigo_python() -> None:
 
 
 def test_token_counter_modelos_variados() -> None:
-    """Verifica que la clase TokenCounter responda adecuadamente para distintos modelos."""
-    texto = "Demostración de consistencia multi-modelo."
-    counter_gpt = TokenCounter("gpt-4o")
-    counter_claude = TokenCounter("claude-3-5-sonnet")
-    counter_gemini = TokenCounter("gemini-1.5-pro")
+    """Verifica que la clase TokenCounter responda adecuadamente para distintos modelos principales."""
+    texto = "Demostración de consistencia multi-modelo en ContextMap para desarrollo agéntico."
+    modelos = [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o1-mini",
+        "claude-3-5-sonnet",
+        "claude-3-5-haiku",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash",
+        "gemini-3.6-flash",
+        "deepseek-r1",
+        "deepseek-v3",
+        "llama-3.1",
+        "mistral-large",
+    ]
 
-    t1 = counter_gpt.count_tokens(texto)
-    t2 = counter_claude.count_tokens(texto)
-    t3 = counter_gemini.count_tokens(texto)
-
-    assert t1 > 0
-    assert t2 > 0
-    assert t3 > 0
+    for model in modelos:
+        counter = TokenCounter(model)
+        tokens = counter.count_tokens(texto)
+        assert tokens > 0, f"Error en modelo: {model}"
+        assert 10 <= tokens <= 35, f"Rango fuera de lugar para: {model} ({tokens} tokens)"

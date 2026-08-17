@@ -38,6 +38,8 @@ from context_map.core.storage import (
     write_map,
 )
 
+from context_map.core.tokenization import TokenCounter, contar_tokens_texto
+
 __all__ = [
     "Node",
     "Edge",
@@ -61,4 +63,6 @@ __all__ = [
     "estandarizar_nodos",
     "generar_summary",
     "generar_contexto_narrativo",
+    "TokenCounter",
+    "contar_tokens_texto",
 ]
