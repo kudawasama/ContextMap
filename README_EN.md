@@ -4,6 +4,9 @@
 
 **Narrative Mental Map of Projects for AI Agents**
 
+[![English Version](https://img.shields.io/badge/Read_in-English_🇬🇧-0052CC?style=for-the-badge&logo=googletranslate&logoColor=white)](README_EN.md)
+[![Versión en Español](https://img.shields.io/badge/Versión_en-Español_🇪🇸-D00000?style=for-the-badge&logo=googletranslate&logoColor=white)](README.md)
+
 *Capture the soul of your project, establish automated governance, and keep living context available for any AI Agent (`Antigravity`, `Cursor`, `Claude Code`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
 [![Release](https://img.shields.io/badge/version-v1.9.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
@@ -12,12 +15,11 @@
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
 [![MCP Powered](https://img.shields.io/badge/MCP-11%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
-🌐 **Languages:**  
-[ 🇪🇸 **Español** ](README.md) | [ 🇬🇧 **English Version** ](README_EN.md)
-
 [🚀 Quick Start](#-10-second-quick-start) • [✨ Key Features](#-key-features) • [🤖 Autonomous Self-Maintenance](#-autonomous-self-maintenance-v190) • [⚖️ Comparison](#️-functional-comparison-contextmap-vs-top-market-tools) • [📜 Release History](#-release-history) • [💻 CLI Reference](#-complete-cli-commands)
 
 </div>
+
+> 🇪🇸 **¿Hablante de Español?** Haz clic en la insignia **`Versión en Español 🇪🇸`** arriba o lee la documentación completa en Español en 👉 [**README.md**](README.md).
 
 ---
 

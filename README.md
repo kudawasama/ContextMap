@@ -4,6 +4,9 @@
 
 **Mapa mental narrativo de proyectos para agentes de IA**
 
+[![English Version](https://img.shields.io/badge/Read_in-English_🇬🇧-0052CC?style=for-the-badge&logo=googletranslate&logoColor=white)](README_EN.md)
+[![Versión en Español](https://img.shields.io/badge/Versión_en-Español_🇪🇸-D00000?style=for-the-badge&logo=googletranslate&logoColor=white)](README.md)
+
 *Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA (`Antigravity`, `Cursor`, `Claude`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
 [![Release](https://img.shields.io/badge/version-v1.9.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
@@ -12,12 +15,11 @@
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
 [![MCP Powered](https://img.shields.io/badge/MCP-11%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
-🌐 **Languages / Idiomas:**  
-[ 🇪🇸 **Español** ](README.md) | [ 🇬🇧 **English Version** ](README_EN.md)
-
 [🚀 Inicio Rápido](#-inicio-rápido-en-10-segundos) • [✨ Características Clave](#-características-clave) • [🤖 Auto-Mantenimiento](#-auto-mantenimiento-autónomo-v190) • [⚖️ Comparativa](#️-comparativa-funcional-contextmap-vs-herramientas-top-del-mercado) • [📜 Historial de Versiones](#-historial-de-versiones-releases) • [💻 Comandos CLI](#-lista-completa-de-comandos-cli)
 
 </div>
+
+> 🇬🇧 **English Speaker?** Click the **`Read in English 🇬🇧`** badge above or read the full English documentation at 👉 [**README_EN.md**](README_EN.md).
 
 ---
 
