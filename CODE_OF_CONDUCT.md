@@ -1,39 +1,51 @@
-# 📜 Código de Conducta de la Comunidad ContextMap
+# 📜 ContextMap Community Code of Conduct
 
-## Nuestro Compromiso
+## Our Pledge
+
+In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to make participation in the **ContextMap** project a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
+
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+
+---
+
+## Our Standards
+
+Examples of behavior that contributes to a positive environment:
+
+* Demonstrating empathy and kindness towards other people.
+* Being respectful of differing opinions, viewpoints, and experiences.
+* Giving and gracefully accepting constructive feedback.
+* Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience.
+* Focusing on what is best not just for us as individuals, but for the overall community.
+
+Examples of unacceptable behavior:
+
+* The use of sexualized language or imagery, and sexual attention or advances of any kind.
+* Trolling, insulting or derogatory comments, and personal or political attacks.
+* Public or private harassment.
+* Publishing others' private information, such as a physical or email address, without explicit permission.
+* Other conduct which could reasonably be considered inappropriate in a professional setting.
+
+---
+
+## Enforcement & Contact
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project team at `cespedes.jac@gmail.com`. All complaints will be reviewed and investigated promptly and fairly.
+
+---
+---
+
+## 🇪🇸 Código de Conducta en Español
+
+### Nuestro Compromiso
 
 En el interés de fomentar un ambiente abierto y acogedor, nos comprometemos a hacer que la participación en el proyecto **ContextMap** sea una experiencia libre de acoso para todos, independientemente de la edad, dimensión corporal, discapacidad visible o invisible, etnicidad, características sexogenéricas, identidad y expresión de género, nivel de experiencia, educación, estatus socioeconómico, nacionalidad, apariencia personal, raza, religión o identidad u orientación sexual.
 
-Nos comprometemos a actuar e interactuar de maneras que contribuyan a una comunidad abierta, acogedora, diversa, inclusiva y saludable.
-
 ---
 
-## Nuestros Estándares
+### Nuestros Estándares
 
 Ejemplos de comportamiento que contribuyen a crear un ambiente positivo:
-
 * Demostrar empatía y amabilidad hacia otras personas.
 * Respetar las diferentes opiniones, puntos de vista y experiencias.
 * Dar y aceptar adecuadamente retroalimentación constructiva.
-* Aceptar la responsabilidad y disculparse con quienes se hayan visto afectados por nuestros errores, y aprender de la experiencia.
-* Enfocarse en lo que es mejor no solo para nosotros como individuos, sino para toda la comunidad.
-
-Ejemplos de comportamiento inaceptable:
-
-* El uso de lenguaje o imágenes sexuales y atención o avances sexuales no deseados.
-* Comentarios insultantes o despectivos (*trolling*), y ataques personales o políticos.
-* El acoso público o privado.
-* Publicar información privada de terceros, como direcciones físicas o electrónicas, sin su permiso explícito.
-* Otra conducta que razonablemente pueda considerarse inapropiada en un entorno profesional.
-
----
-
-## Alcance y Aplicación
-
-Este Código de Conducta se aplica tanto dentro de los espacios del proyecto como en espacios públicos cuando un individuo representa al proyecto o su comunidad.
-
----
-
-## Contacto y Reportes
-
-Los casos de comportamiento abusivo, acosador o inaceptable de otro modo pueden ser reportados al equipo mantenedor del proyecto en `cespedes.jac@gmail.com`. Todas las quejas serán revisadas e investigadas de manera oportuna y justa.

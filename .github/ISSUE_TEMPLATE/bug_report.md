@@ -1,31 +1,29 @@
 ---
-name: 🐛 Reporte de Error (Bug Report)
-about: Reporta un error o fallo inesperado para ayudarnos a corregirlo
+name: 🐛 Bug Report / Reporte de Error
+about: Create a report to help us improve ContextMap
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-## 🐛 Descripción del Problema
-Una descripción clara y concisa de lo que es el error.
+## 🐛 Description / Descripción
+A clear and concise description of what the bug is. / Una descripción clara y concisa de lo que es el error.
 
-## 🔄 Pasos para Reproducir
-Pasos para reproducir el comportamiento:
-1. Ir a '...'
-2. Ejecutar el comando '...'
-3. Ver el error
+## 🔄 Steps to Reproduce / Pasos para Reproducir
+1. Go to / Ir a '...'
+2. Run command / Ejecutar comando '...'
+3. See error / Ver el error
 
-## 🎯 Comportamiento Esperado
-Una descripción clara y concisa de lo que esperabas que sucediera.
+## 🎯 Expected Behavior / Comportamiento Esperado
+A clear and concise description of what you expected to happen.
 
-## 💻 Entorno de Ejecución
-- **Sistema Operativo:** [ej. Windows 11 / Ubuntu 24.04 / macOS Sequoia]
-- **Versión de Python:** [ej. 3.11.5]
-- **Versión de ContextMap:** [ej. 1.9.0]
-- **IDE / Agente de IA:** [ej. Antigravity / Cursor / Claude Code / Hermes]
+## 💻 Environment / Entorno
+- **OS:** [e.g. Windows 11 / Ubuntu 24.04 / macOS Sequoia]
+- **Python Version:** [e.g. 3.11.5]
+- **ContextMap Version:** [e.g. 1.9.0]
+- **AI Agent / IDE:** [e.g. Antigravity / Cursor / Claude Code / Hermes]
 
-## 📋 Traza de Error (Logs)
-Si es posible, pega aquí el traceback o salida del comando:
-```
-// Pega los logs aquí
+## 📋 Error Logs / Traza de Error
+```text
+// Paste logs here / Pega los logs aquí
 ```

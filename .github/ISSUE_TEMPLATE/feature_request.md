@@ -1,19 +1,19 @@
 ---
-name: 🚀 Solicitud de Funcionalidad (Feature Request)
-about: Sugiere una idea o mejora para ContextMap
+name: 🚀 Feature Request / Solicitud de Funcionalidad
+about: Suggest an idea or improvement for ContextMap
 title: '[FEAT] '
 labels: enhancement
 assignees: ''
 ---
 
-## 💡 ¿Tu propuesta está relacionada con un problema?
-Una descripción clara de cuál es el problema o necesidad (ej. "Me gustaría poder exportar el contexto a...").
+## 💡 Is your feature request related to a problem? / ¿Está relacionada con un problema?
+A clear description of what the problem is (e.g. "I'd like to export context to...").
 
-## 🎨 Solución Propuesta
-Una descripción clara de lo que te gustaría que sucediera o cómo imaginas la nueva característica.
+## 🎨 Proposed Solution / Solución Propuesta
+A clear description of what you want to happen or how you imagine the feature.
 
-## ⚖️ Alternativas Consideradas
-Cualquier solución o alternativa que hayas considerado.
+## ⚖️ Alternatives Considered / Alternativas Consideradas
+Any alternative solutions or features you've considered.
 
-## 📝 Contexto Adicional
-Añade cualquier otro contexto o capturas de pantalla sobre la propuesta de funcionalidad aquí.
+## 📝 Additional Context / Contexto Adicional
+Add any other context or screenshots about the feature request here.
