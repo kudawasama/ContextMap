@@ -204,21 +204,29 @@ ctxmap adapt . --merge               # Anexa el bloque ContextMap preservando re
 
 ---
 
-## ⚖️ Comparativa: ContextMap vs Otros Generadores
+## ⚖️ Comparativa Funcional: ContextMap vs Herramientas Top del Mercado
 
-| Característica | Otros Generadores | ContextMap |
-| :--- | :---: | :---: |
-| Escaneo técnico de archivos | ✅ | ✅ |
-| Resumen ejecutivo para IA (`CONTEXT.md`) | ✅ | ✅ |
-| Gobernanza multi-IDE automática (`AGENTS.md`) | ❌ | **✅** |
-| Score de Readiness del Proyecto (0-100) | ❌ | **✅** |
-| Servidor MCP nativo con 9 Tools (`ctxmap mcp`) | ❌ | **✅** |
-| Vault Obsidian con Graph View en Árbol Púro | ❌ | **✅** |
-| Sub-clústeres por estado (Completadas/Pendientes/Futuras) | ❌ | **✅** |
-| Captura del "Por qué" y "Para qué" (Notas con Alma) | ❌ | **✅** |
-| Zona Protegida Indestructible (`7.0-MANUAL/` & `8.0-KNOWLEDGE/`) | ❌ | **✅** |
-| Base de Datos Personal Consolidada Multi-Proyecto | ❌ | **✅** |
-| Comando único de sincronización diaria (`ctxmap refresh .`) | ❌ | **✅** |
+En el ecosistema de IA para desarrollo (2026), existen 3 enfoques principales para dar contexto a los LLMs. A continuación se compara **ContextMap** con las herramientas líderes de cada categoría (**Repomix**, **Aider Repo Map** y los indizadores internos de IDEs como **Cursor/Windsurf**):
+
+| Característica / Capacidad | Concatenadores (`Repomix` / `Gitingest`) | Repo Maps (`Aider`) | Indexadores IDE (`Cursor` / `Windsurf`) | **ContextMap** |
+| :--- | :---: | :---: | :---: | :---: |
+| **Enfoque Principal** | Dump plano a texto/XML | Mapa sintáctico AST + PageRank | Embeddings vectoriales | **Gobernanza + Memoria Viva + Vault** |
+| **Consumo de Tokens** | 🔴 Masivo (archivo gigante) | 🟢 Eficiente | 🟡 Medio | 🟢 **Ultra-eficiente (`CONTEXT.md` / MCP)** |
+| **Bóveda Visual Interactiva (Obsidian Vault)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Grafo en árbol, Canvas, Dataview)** |
+| **Captura del "Por Qué" y "Para Qué" (Alma)** | ❌ No (solo código) | ❌ No (solo firmas) | ❌ No | **✅ Sí (Notas narrativas polimórficas)** |
+| **Gobernanza Multi-IDE (`AGENTS.md` + 10 IDEs)** | ❌ No | ❌ No | 🟡 Solo propio IDE | **✅ Sí (Portable entre todos los IDEs)** |
+| **Memoria Viva Indestructible (`7.0-MANUAL/`)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Jamás se borra con el build)** |
+| **Aprendizaje del Agente (`8.0-KNOWLEDGE/`)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Formato de lecciones accionables)** |
+| **Servidor MCP Nativo (9 Tools stdio)** | ❌ No | ❌ No | 🟡 Limitado | **✅ Sí (`ctxmap mcp` para cualquier agente)** |
+| **Base de Datos Personal Multi-Proyecto** | ❌ No | ❌ No | ❌ No | **✅ Sí (SQLite + FTS5 transportable)** |
+| **Readiness Index del Sistema (Score 0-100)** | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap check .`)** |
+| **Sincronización Diaria en 1 Paso** | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap refresh .`)** |
+
+### 🔍 ¿Por qué ContextMap es una categoría superior?
+* **Repomix / Gitingest:** Útiles para un análisis puntual pegando código en un chat web, pero consumen presupuestos masivos de tokens y carecen de memoria.
+* **Aider Repo Map:** Excelente para el CLI de Aider extrayendo firmas sintácticas, pero no genera documentación visual para humanos ni guarda el trasfondo de decisiones conversadas.
+* **Cursor / Windsurf:** Indizan vectores en su propio entorno cerrado, perdiendo todo el contexto si cambias de agente o IDE.
+* **ContextMap:** Unifica la **Gobernanza Agéntica Universal**, la **Memoria Viva Indestructible** y una **Bóveda Obsidian Interconectada**, garantizando que tu proyecto mantenga su historia e identidad sin importar la herramienta de IA que utilices.
 
 ---
 
