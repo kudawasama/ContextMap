@@ -1,17 +1,20 @@
-"""Diagnóstico y salud del entorno de ContextMap.
-
+"""Diagnóstico, salud y auto-reparación (Self-Healing) del entorno de ContextMap.
 
 Proporciona chequeos determinísticos sobre dependencias de sistema (Git),
-directorios temporales de actualización y estado de vaults generados.
+consistencia de vaults, preservación de notas manuales y auto-reparación.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
+
+from context_map.presentation.briefs.extractors import vault_nombre
+from context_map.presentation.vault.preservar import ZONAS_MANUALES
 
 logger = logging.getLogger(__name__)
 
@@ -55,38 +58,22 @@ class DoctorReport:
 
     @property
     def failed(self) -> list[DoctorCheck]:
-        """Obtiene los chequeos con estado FAIL.
-
-        Returns:
-            List[DoctorCheck]: Lista de fallos.
-        """
+        """Obtiene los chequeos con estado FAIL."""
         return [c for c in self.checks if c.status == "FAIL"]
 
     @property
     def warnings(self) -> list[DoctorCheck]:
-        """Obtiene los chequeos con estado WARN.
-
-        Returns:
-            List[DoctorCheck]: Lista de advertencias.
-        """
+        """Obtiene los chequeos con estado WARN."""
         return [c for c in self.checks if c.status == "WARN"]
 
     @property
     def ok(self) -> bool:
-        """Indica si el sistema está completamente libre de fallos.
-
-        Returns:
-            bool: True si no existen fallos, False de lo contrario.
-        """
+        """Indica si el sistema está completamente libre de fallos."""
         return len(self.failed) == 0
 
 
 def _safe_rmtree(path: str) -> None:
-    """Elimina directorios con tolerancia a bloqueos de sistema en Windows.
-
-    Args:
-        path (str): Ruta del directorio a borrar.
-    """
+    """Elimina directorios con tolerancia a bloqueos de sistema en Windows."""
     if os.path.isdir(path):
         shutil.rmtree(path, ignore_errors=True)
         if os.path.isdir(path):
@@ -107,23 +94,12 @@ def _safe_rmtree(path: str) -> None:
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    """Ejecuta un comando de sistema en subprocess capturando stdout y stderr.
-
-    Args:
-        cmd (list[str]): Comando y sus argumentos.
-
-    Returns:
-        subprocess.CompletedProcess[str]: Resultado de la ejecución.
-    """
+    """Ejecuta un comando de sistema en subprocess capturando stdout y stderr."""
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
-def check_update_dir(report: DoctorReport) -> None:
-    """Verifica el directorio temporal de actualización `~/.context-map-update`.
-
-    Args:
-        report (DoctorReport): Reporte donde se adjuntará el resultado.
-    """
+def check_update_dir(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica el directorio temporal de actualización `~/.context-map-update`."""
     update_dir = os.path.join(os.path.expanduser("~"), ".context-map-update")
     check = DoctorCheck(name="update_dir")
 
@@ -141,27 +117,23 @@ def check_update_dir(report: DoctorReport) -> None:
         return
 
     check.status = "FAIL"
-    check.message = (
-        "~/.context-map-update existe pero no es un repo git válido."
-    )
+    check.message = "~/.context-map-update existe pero no es un repo git válido."
 
-    try:
-        _safe_rmtree(update_dir)
-        check.fix_applied = True
-        check.fix_message = "Se eliminó ~/.context-map-update para reparar."
-    except Exception as exc:
-        logger.warning("No se pudo eliminar ~/.context-map-update: %s", exc)
-        check.fix_message = f"No se pudo eliminar el directorio: {exc}"
+    if fix:
+        try:
+            _safe_rmtree(update_dir)
+            check.fix_applied = True
+            check.fix_message = "Se eliminó ~/.context-map-update corrupto para reparar."
+            check.status = "OK"
+        except Exception as exc:
+            logger.warning("No se pudo eliminar ~/.context-map-update: %s", exc)
+            check.fix_message = f"No se pudo eliminar el directorio: {exc}"
 
     report.add(check)
 
 
-def check_git_available(report: DoctorReport) -> None:
-    """Verifica que el ejecutable `git` esté disponible en el PATH.
-
-    Args:
-        report (DoctorReport): Reporte de salida.
-    """
+def check_git_available(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica que el ejecutable `git` esté disponible en el PATH."""
     git_ok = _run(["git", "--version"])
     check = DoctorCheck(name="git_cli")
 
@@ -175,14 +147,9 @@ def check_git_available(report: DoctorReport) -> None:
     report.add(check)
 
 
-def check_vault_default(report: DoctorReport) -> None:
-    """Verifica la existencia del vault predeterminado en `.context-map/`.
-
-    Args:
-        report (DoctorReport): Reporte de salida.
-    """
-    cwd = os.getcwd()
-    context_dir = os.path.join(cwd, ".context-map")
+def check_vault_default(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica la existencia y salud de vaults en `.context-map/`."""
+    context_dir = os.path.join(project_dir, ".context-map")
     check = DoctorCheck(name="vault_default")
 
     vaults = []
@@ -203,26 +170,152 @@ def check_vault_default(report: DoctorReport) -> None:
     report.add(check)
 
 
+def check_project_name_consistency(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica la consistencia entre el nombre del repo, vault y CONTEXT.md."""
+    check = DoctorCheck(name="name_consistency")
+    context_dir = os.path.join(project_dir, ".context-map")
+
+    if not os.path.isdir(context_dir):
+        check.status = "OK"
+        check.message = "Sin directorio .context-map/ aún."
+        report.add(check)
+        return
+
+    repo_name = os.path.basename(os.path.abspath(project_dir))
+    expected_vault = vault_nombre(repo_name)
+    vpath = os.path.join(context_dir, expected_vault)
+
+    vaults = [
+        d for d in os.listdir(context_dir)
+        if d.startswith("vault-") and os.path.isdir(os.path.join(context_dir, d))
+    ]
+
+    inconsistente = False
+    if len(vaults) > 1 or (len(vaults) == 1 and vaults[0] != expected_vault):
+        inconsistente = True
+
+    if not inconsistente:
+        check.status = "OK"
+        check.message = f"Nombre del proyecto único y consistente: '{repo_name}' ({expected_vault})."
+        report.add(check)
+        return
+
+    check.status = "WARN"
+    check.message = f"Vaults inconsistentes o duplicados ({', '.join(vaults)} vs esperado '{expected_vault}')."
+
+    if fix:
+        legacy_dir = os.path.join(context_dir, "_legacy")
+        os.makedirs(legacy_dir, exist_ok=True)
+        reparaciones = []
+        for v in vaults:
+            if v != expected_vault:
+                src = os.path.join(context_dir, v)
+                dst = os.path.join(legacy_dir, v)
+                try:
+                    if os.path.exists(dst):
+                        _safe_rmtree(dst)
+                    shutil.move(src, dst)
+                    reparaciones.append(f"Movido vault desalineado '{v}' a '_legacy/{v}'")
+                except Exception as e:
+                    reparaciones.append(f"No se pudo mover '{v}': {e}")
+        if reparaciones:
+            check.fix_applied = True
+            check.fix_message = "; ".join(reparaciones)
+            check.status = "OK"
+
+    report.add(check)
+
+
+def check_manual_notes_preservation(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica que las notas en zonas manuales tengan 'preserve: true' en su frontmatter."""
+    check = DoctorCheck(name="manual_notes_preservation")
+    context_dir = os.path.join(project_dir, ".context-map")
+
+    if not os.path.isdir(context_dir):
+        check.status = "OK"
+        check.message = "Sin directorio .context-map/ aún."
+        report.add(check)
+        return
+
+    notas_sin_preserve = []
+    for raiz, _, archivos in os.walk(context_dir):
+        es_manual = any(z in raiz.replace("\\", "/") for z in ZONAS_MANUALES)
+        if not es_manual:
+            continue
+        for fname in archivos:
+            if not fname.endswith(".md"):
+                continue
+            fpath = os.path.join(raiz, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if "preserve: true" not in content and "preserve:true" not in content:
+                    notas_sin_preserve.append(fpath)
+            except Exception:
+                continue
+
+    if not notas_sin_preserve:
+        check.status = "OK"
+        check.message = "Todas las notas manuales tienen 'preserve: true' activo."
+        report.add(check)
+        return
+
+    check.status = "WARN"
+    check.message = f"{len(notas_sin_preserve)} nota(s) manual(es) sin 'preserve: true'."
+
+    if fix:
+        reparadas = 0
+        for fpath in notas_sin_preserve:
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if content.startswith("---"):
+                    new_content = content.replace("---", "---\npreserve: true", 1)
+                else:
+                    new_content = f"---\npreserve: true\n---\n\n{content}"
+                with open(fpath, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                reparadas += 1
+            except Exception:
+                continue
+        check.fix_applied = True
+        check.fix_message = f"Inyectado 'preserve: true' en {reparadas} nota(s) manual(es)."
+        check.status = "OK"
+
+    report.add(check)
+
+
 CHECKS = [
     check_git_available,
     check_update_dir,
     check_vault_default,
+    check_project_name_consistency,
+    check_manual_notes_preservation,
 ]
 
 
-def run(cwd: str = "") -> DoctorReport:
-    """Ejecuta todos los chequeos de diagnóstico y retorna el reporte consolidado.
+def run(cwd: str = "", fix: bool = False) -> DoctorReport:
+    """Ejecuta los chequeos de diagnóstico y retorna el reporte consolidado.
 
     Args:
         cwd (str): Directorio de trabajo opcional para la ejecución.
+        fix (bool): Si es True, aplica auto-reparaciones automáticas.
 
     Returns:
         DoctorReport: Reporte consolidado de salud.
     """
-    if cwd:
-        os.chdir(cwd)
-
+    project_dir = cwd or "."
     report = DoctorReport()
     for fn in CHECKS:
-        fn(report)
+        fn(report, fix=fix, project_dir=project_dir)
     return report
+
+
+def diagnosticar_salud(project_dir: str = ".") -> DoctorReport:
+    """Diagnostica la salud del proyecto sin modificar archivos."""
+    return run(cwd=project_dir, fix=False)
+
+
+def reparar_salud(project_dir: str = ".") -> DoctorReport:
+    """Diagnostica y auto-repara (Self-Healing) las anomalías encontradas."""
+    return run(cwd=project_dir, fix=True)

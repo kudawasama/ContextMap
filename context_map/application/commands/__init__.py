@@ -10,6 +10,8 @@ from __future__ import annotations
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.auto import cmd_auto
 from context_map.application.commands.build import cmd_build
+from context_map.application.commands.doctor_cmd import cmd_doctor
+from context_map.application.commands.hook import cmd_hook
 from context_map.application.commands.importers import (
     cmd_import_antigravity,
     cmd_import_chat,
@@ -24,11 +26,11 @@ from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do
 from context_map.application.commands.tools import (
     cmd_brief,
     cmd_check,
-    cmd_doctor,
     cmd_init,
     cmd_weekly,
 )
 from context_map.application.commands.update import cmd_update
+from context_map.application.commands.watch import cmd_watch
 from context_map.application.commands.wrap import cmd_wrap
 
 __all__ = [
@@ -53,4 +55,6 @@ __all__ = [
     "cmd_refresh",
     "cmd_personal",
     "cmd_wrap",
+    "cmd_watch",
+    "cmd_hook",
 ]

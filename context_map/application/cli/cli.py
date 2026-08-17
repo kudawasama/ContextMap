@@ -14,6 +14,7 @@ from context_map.application.commands import (
     cmd_build,
     cmd_check,
     cmd_doctor,
+    cmd_hook,
     cmd_import_antigravity,
     cmd_import_chat,
     cmd_import_git,
@@ -24,17 +25,15 @@ from context_map.application.commands import (
     cmd_sync,
     cmd_sync_migrate,
     cmd_update,
+    cmd_watch,
     cmd_weekly,
     cmd_wrap,
 )
 from context_map.application.commands.adapt import cmd_adapt
-from context_map.application.commands.hook import cmd_hook_install
+from context_map.application.commands.export import exportar_contexto
 from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.personal import cmd_personal
 from context_map.core.logging_setup import setup_logging
-
-
-from context_map.application.commands.export import exportar_contexto
 
 
 def cmd_mcp(args=None) -> None:
@@ -60,6 +59,16 @@ def cmd_export(args) -> None:
         model_name=model_name,
     )
     print(f"[export] [OK] Contexto exportado exitosamente en ({fmt.upper()}): {out_path}")
+
+
+def _dispatch_cmd(cmd_func, args) -> None:
+    """Invoca el handler del comando convirtiendo args de Namespace a dict si es necesario."""
+    if hasattr(args, "__dict__"):
+        arg_dict = vars(args)
+        arg_dict["target_dir"] = getattr(args, "target", ".")
+        cmd_func(arg_dict)
+    else:
+        cmd_func(args)
 
 
 def main() -> None:
@@ -89,8 +98,9 @@ def main() -> None:
         "weekly": cmd_weekly,
         "brief": cmd_brief,
         "update": cmd_update,
-        "doctor": cmd_doctor,
-        "hook": cmd_hook_install,
+        "doctor": lambda a: _dispatch_cmd(cmd_doctor, a),
+        "hook": lambda a: _dispatch_cmd(cmd_hook, a),
+        "watch": lambda a: _dispatch_cmd(cmd_watch, a),
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
         "personal": cmd_personal,

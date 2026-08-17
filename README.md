@@ -6,16 +6,16 @@
 
 *Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA (`Antigravity`, `Cursor`, `Claude`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
-[![Release](https://img.shields.io/badge/version-v1.8.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
+[![Release](https://img.shields.io/badge/version-v1.9.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
-[![MCP Powered](https://img.shields.io/badge/MCP-9%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
+[![MCP Powered](https://img.shields.io/badge/MCP-11%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
 🌐 **Languages / Idiomas:**  
 [ 🇪🇸 **Español** ](README.md) | [ 🇬🇧 **English Version** ](README_EN.md)
 
-[🚀 Inicio Rápido](#-inicio-rápido-en-10-segundos) • [✨ Características Clave](#-características-clave) • [🏛️ Gobernanza Multi-IDE](#️-gobernanza-multi-ide) • [🔌 Servidor MCP](#-2-servidor-mcp-nativo-model-context-protocol) • [📊 Vault & Obsidian](#-vista-de-grafo-y-vault-obsidian) • [💻 Comandos CLI](#-lista-completa-de-comandos-cli)
+[🚀 Inicio Rápido](#-inicio-rápido-en-10-segundos) • [✨ Características Clave](#-características-clave) • [🤖 Auto-Mantenimiento](#-auto-mantenimiento-autónomo-v190) • [⚖️ Comparativa](#️-comparativa-funcional-contextmap-vs-herramientas-top-del-mercado) • [📜 Historial de Versiones](#-historial-de-versiones-releases) • [💻 Comandos CLI](#-lista-completa-de-comandos-cli)
 
 </div>
 
@@ -25,7 +25,7 @@
 <summary><b>🇬🇧 English Speaker? Click here for a quick summary or read the full English documentation!</b></summary>
 
 ### 🗺️ ContextMap — Narrative Mental Map for AI Agents
-ContextMap creates an interconnected **Obsidian Vault** and **AI Executive Brief (`CONTEXT.md`)** to manage context, multi-IDE rules, and living memory for your software projects across agents like `Antigravity`, `Cursor`, `Claude Code`, `Copilot`, `Hermes`, and `Gemini`.
+ContextMap creates an interconnected **Obsidian Vault** and **AI Executive Brief (`CONTEXT.md`)** to manage context, multi-IDE rules, living memory, and autonomous self-maintenance for your software projects across agents like `Antigravity`, `Cursor`, `Claude Code`, `Copilot`, `Hermes`, and `Gemini`.
 
 - 📖 **Full English Documentation:** See [**README_EN.md**](README_EN.md)
 - ⚡ **Quick Install:** `uv tool install git+https://github.com/kudawasama/ContextMap.git`
@@ -45,7 +45,7 @@ Construye una bóveda interconectada en **Obsidian** ([Graph View en Árbol Estr
 - **¿Qué está implementado vs. pendiente?** (Grafo desduplicado de ideas, bases y cambios).
 - **¿Qué decisiones de arquitectura se han tomado?** (Memoria viva de conversaciones pasadas e historias de commit).
 
-> 🚫 **No es un simple generador de documentación pasiva.** Es un sistema vivo de **Gobernanza Agéntica**, **Memoria Permanente** y **Readiness**.
+> 🚫 **No es un simple generador de documentación pasiva.** Es un sistema vivo de **Gobernanza Agéntica**, **Memoria Permanente**, **Readiness** y **Auto-Mantenimiento Autónomo**.
 
 ---
 
@@ -90,19 +90,24 @@ Cada nota del vault se enriquece automáticamente con una estructura narrativa s
 * 🧪 **PRUEBAS**: Funcionalidad validada, criterios de aceptación y comando `pytest`.
 * 📄 **DOCUMENTOS**: Ingesta extractiva de PDFs, Markdown y textos con citas referenciadas.
 
-### 🔌 2. Servidor MCP Nativo (Model Context Protocol)
-Expone **9 herramientas MCP** nativas vía stdio (`ctxmap mcp`) para que agentes compatibles como **Hermes Agent**, **Claude Desktop** o **Cursor** ejecuten `refresh`, `scan`, `build`, `check` o `context` directamente sin shell:
+### 🤖 2. Auto-Mantenimiento Autónomo (v1.9.0)
+* 🏥 **Self-Healing (`ctxmap doctor --fix`)**: Diagnostica y auto-repara inconsistencias de vaults, fragmentación de nombres de proyecto y metadatos sin perder notas manuales.
+* 👀 **Watcher Daemon (`ctxmap watch .`)**: Proceso en segundo plano que escucha cambios en el código (`.py`, `.md`, `.json`, etc.) y aplica parches incrementales desbouncheados (500ms).
+* ⚓ **Git Hooks Transparentes (`ctxmap hook install`)**: Inyecta scripts `pre-commit` y `post-commit` para sincronizar el mapa y el brief en cada commit.
+
+### 🔌 3. Servidor MCP Nativo (11 Tools stdio)
+Expone **11 herramientas MCP** nativas vía stdio (`ctxmap mcp`) para que agentes compatibles como **Hermes Agent**, **Claude Desktop** o **Cursor** ejecuten `refresh`, `scan`, `build`, `check`, `doctor` o `install_hooks` directamente sin shell:
 
 ```bash
 # Conectar a Hermes Agent:
 hermes mcp add ctxmap --command ctxmap --args mcp
 ```
 
-### 🛡️ 3. Zona Protegida y Memoria Viva (`7.0-MANUAL/` & `8.0-KNOWLEDGE/`)
+### 🛡️ 4. Zona Protegida y Memoria Viva (`7.0-MANUAL/` & `8.0-KNOWLEDGE/`)
 * **`7.0-MANUAL/`**: Alberga notas de sesión, diarios (`Diario/YYYY-MM-DD.md`) y acuerdos sostenidos con el usuario. El motor de build **jamás las borra** (`preserve: true`).
 * **`8.0-KNOWLEDGE/`**: Aprendizajes accionables reutilizables documentados por la IA: Lección · Cómo se resolvió · Prompt específico · Instrucción previa · Conexiones.
 
-### 📦 4. Base de Datos Personal Consolidada Multi-Proyecto (`ctxmap personal`)
+### 📦 5. Base de Datos Personal Consolidada Multi-Proyecto (`ctxmap personal`)
 Consolida en un único archivo **SQLite + FTS5** (`~/.context-map/personal/personal.db`) todos los eventos, lecciones y decisiones de **todos** tus proyectos, transportable en pendrive o Google Drive:
 
 ```bash
@@ -130,57 +135,62 @@ ContextMap genera e inyecta reglas contextuales específicas para el stack de tu
 
 ---
 
-## 📊 Vista de Grafo y Vault Obsidian
+## ⚖️ Comparativa Funcional: ContextMap vs Herramientas Top del Mercado
 
-ContextMap organiza la bóveda bajo una **Topología Estricta en Árbol** que garantiza un Graph View limpio en Obsidian:
+En el ecosistema de herramientas de contexto para IA (2026), existen 4 soluciones populares. A continuación se compara **ContextMap** frente a las alternativas web y CLI más utilizadas:
 
-```
-.context-map/vault-ContextMap/
-├── 00-INDICE.md                          # Dashboard central MOC (Nivel 0)
-├── 1.0-PROPOSITO/                        # Propósito, valor y límites
-├── 2.0-IDEAS/                            # Ideas agrupadas por concepto y estado
-│   ├── 2.1-Ideas-Pendientes/             # Tareas pendientes por implementar
-│   ├── 2.2-Ideas-Futuras/                # Roadmap e iniciativas activas
-│   └── 2.3-Ideas-Completas-e-Implementadas/ # Ideas validadas en código
-├── 3.0-ESTRUCTURA/                       # Componentes base y fundamentos
-├── 4.0-RIESGOS/                          # Matrices de gravedad y zonas de complejidad
-├── 5.0-BACKLOG/                          # Sprint backlog
-├── 6.0-HISTORIAL/                        # Historial de commits y cambios
-├── 7.0-MANUAL/                           # Zona protegida: Diario y backlog manual
-└── 8.0-KNOWLEDGE/                        # Zona protegida: Aprendizajes del agente
-```
+| Característica / Capacidad | Concatenadores CLI (`Repomix`) | Ingestores Web (`Gitingest`) | Repo Maps (`Aider`) | Indexadores IDE (`Cursor` / `Windsurf`) | **ContextMap v1.9.0** |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Enfoque Principal** | Dump a archivo XML/MD | URL GitHub a prompt | Mapa AST + PageRank | RAG Vectorial local | **Gobernanza + Memoria Viva + Vault + Auto-Mantenimiento** |
+| **Consumo de Tokens** | 🔴 Masivo (repos entero) | 🔴 Masivo | 🟢 Eficiente | 🟡 Medio | 🟢 **Ultra-eficiente (`CONTEXT.md` / MCP)** |
+| **Bóveda Visual Interactiva (Obsidian Vault)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (Grafo en árbol estricto, Canvas, Dataview)** |
+| **Captura del "Por Qué" y "Para Qué" (Alma)** | ❌ No (solo código) | ❌ No | ❌ No (solo firmas) | ❌ No | **✅ Sí (Notas narrativas polimórficas)** |
+| **Gobernanza Multi-IDE (`AGENTS.md` + 10 IDEs)** | ❌ No | ❌ No | ❌ No | 🟡 Solo propio IDE | **✅ Sí (Portable entre 10+ IDEs)** |
+| **Memoria Viva Indestructible (`7.0-MANUAL/`)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (`preserve: true`, jamás se borra)** |
+| **Aprendizaje del Agente (`8.0-KNOWLEDGE/`)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (Formato de lecciones accionables)** |
+| **Servidor MCP Nativo (stdio)** | ❌ No | ❌ No | ❌ No | 🟡 Propietario | **✅ Sí (`ctxmap mcp`, 11 Tools stdio)** |
+| **Base de Datos Personal Multi-Proyecto** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (SQLite + FTS5 transportable)** |
+| **Readiness Index del Sistema (Score 0-100)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap check .`)** |
+| **Conteo Exacto de Tokens por Modelo** | ✅ Sí (`tiktoken`) | 🟡 Aproximado | ❌ No | 🟡 Interno | **✅ Sí (`tiktoken` + fallback)** |
+| **Escáner Preventivo de Secretos / Credenciales** | ✅ Sí | ❌ No | ❌ No | ❌ No | **✅ Sí (`security.py`)** |
+| **Exportación Portable XML/JSON/Markdown** | ✅ Sí | ✅ Sí | ❌ No | ❌ No | **✅ Sí (`ctxmap export`)** |
+| **Daemon Watcher de Monitoreo Activo** | ❌ No | ❌ No | ❌ No | ✅ Sí (Background) | **✅ Sí (`ctxmap watch .`)** |
+| **Self-Healing y Auto-Reparación de Vault** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap doctor --fix`)** |
+| **Instalador Transparente de Git Hooks** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap hook install`)** |
+
+### 🔍 ¿Por qué ContextMap es superior a la competencia?
+* **Repomix & Gitingest:** Útiles para volcar un archivo plano de texto o copiar un repo de GitHub a un chat web, pero consumen presupuestos masivos de tokens y carecen de memoria de decisiones pasadas.
+* **Aider Repo Map:** Excelente para el CLI de Aider extrayendo firmas sintácticas, pero no genera documentación visual para humanos ni guarda el trasfondo de decisiones conversadas.
+* **Indexadores de Cursor / Windsurf:** Indizan vectores en su propio entorno cerrado, perdiendo todo el contexto si cambias de agente o IDE.
+* **ContextMap:** Unifica la **Gobernanza Agéntica Universal**, la **Memoria Viva Indestructible**, el **Auto-Mantenimiento Autónomo** y una **Bóveda Obsidian Interconectada**, garantizando que tu proyecto mantenga su historia e identidad en cualquier IDE o modelo.
 
 ---
 
-## 🏗️ Arquitectura del Sistema (Clean Architecture)
+## 📜 Historial de Versiones (Releases)
 
-El código fuente de ContextMap está estructurado bajo principios estrictos de desacoplamiento y modularidad:
+### 🚀 v1.9.0 — Auto-Mantenimiento Autónomo & Self-Healing *(Versión Actual)*
+- **Self-Healing (`ctxmap doctor --fix`)**: Diagnóstico y auto-reparación determinística de vault, unificación de nombres de proyectos y preservación de notas manuales.
+- **Daemon Watcher (`ctxmap watch .`)**: Monitoreo en segundo plano con debouncing (500ms) que detecta cambios de código y sincroniza incrementalmente.
+- **Git Hooks Integrados (`ctxmap hook install`)**: Inyección transparente de `pre-commit` y `post-commit` para sincronizar código y brief en cada commit.
+- **Nuevas Tools MCP**: Adición de `doctor` e `install_hooks` en el servidor MCP stdio (11 herramientas en total).
 
-```
-context_map/
-├── core/                        # Dominio fundamental
-│   ├── models/                  # Dataclasses (Node, Edge, Event)
-│   ├── normalization/           # Estandarización semántica (mappings, inference, cleaning)
-│   ├── parsing/                 # Parser de eventos y deserializador JSONL
-│   ├── storage/                 # Persistencia JSONL y snapshots
-│   └── generators/              # Generadores narrativos y de alma
-├── domain/                      # Lógica de negocio
-│   ├── scanning/                # Escáner estático AST y detectores
-│   ├── synchronization/         # Sincronización incremental del grafo
-│   ├── ingestion/               # Ingesta de Markdown, TXT y PDFs
-│   ├── ecosystem/               # Adaptador agéntico (rules_templates)
-│   ├── analysis/                # Evaluador de Readiness (check 0-100)
-│   └── health/                  # Diagnóstico y mantenimiento (doctor)
-├── application/                 # Orquestación y CLI
-│   ├── cli/                     # Parser de argumentos CLI
-│   └── commands/                # Comandos (refresh, build, scan, personal, wrap)
-├── infrastructure/              # Integraciones externas
-│   ├── integrations/            # Git, Hermes, Antigravity, MCP Server
-│   └── analyzers/               # Analizadores estáticos AST
-└── presentation/                # Generación visual del Vault
-    ├── vault/                   # Generador de Vault Obsidian (atomic, consolidated, notas_ideas)
-    └── briefs/                  # Generador de CONTEXT.md para Agentes
-```
+### 📦 v1.8.0 — Tokenización, Escáner de Seguridad y Exportador Portable
+- **Tokenización (`core/tokenization.py`)**: Conteo exacto de tokens por modelo (`gpt-4o`, `claude-3-5-sonnet`, `gemini-1.5-pro`) con `tiktoken` y fallback sintáctico.
+- **Escáner Preventivo de Secretos (`domain/scanning/security.py`)**: Detección de claves AWS, API keys de OpenAI/Anthropic, GitHub tokens y credenciales DB.
+- **Exportador Portable (`ctxmap export`)**: Generación de contextos planos en formato XML (compatible Repomix), JSON o Markdown.
+- **Internacionalización**: Documentación bilingüe [`README_EN.md`](README_EN.md).
+
+### 🏛️ v1.7.0 — Gobernanza Multi-IDE y Servidor MCP Nativo
+- **Adaptador Multi-IDE (`ctxmap adapt`)**: Inyección de reglas para 10+ editores y agentes (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, etc.).
+- **Servidor MCP Nativo (`ctxmap mcp`)**: Servidor stdio FastMCP para integración con Hermes Agent y Claude Desktop.
+
+### 🧠 v1.6.0 — Memoria Viva Protegida y Base de Datos Personal SQLite
+- **Protección de Notas Manuales (`preserve: true`)**: Conservación estricta de `7.0-MANUAL/` y `8.0-KNOWLEDGE/`.
+- **BD Personal Multi-Proyecto (`ctxmap personal`)**: Motor SQLite + FTS5 para consolidación e inspección transversal de proyectos.
+
+### 📊 v1.5.0 — Vault Jerárquico Obsidian y Graph View Puro
+- Topología estricta en árbol (1 enlace padre `⬅` por nota, 0 nodos fantasma, 0 enlaces rotos).
+- Dashboards MOC, Canvas interactivas y snippets visuales de etiquetas de colores (`colored-tags.css`).
 
 ---
 
@@ -190,8 +200,20 @@ context_map/
 # 🚀 Día a día (recomendado): mantén el contexto al día en 1 solo paso
 ctxmap refresh .                      # scan + build (preservando manuales) + check
 
+# 👀 Monitoreo en segundo plano
+ctxmap watch .                        # Daemon escuchador de cambios en tiempo real
+
+# 🏥 Diagnóstico y Self-Healing
+ctxmap doctor . --fix                 # Diagnostica y auto-repara el proyecto y el vault
+
+# ⚓ Instalación de Git Hooks
+ctxmap hook install                   # Inyecta pre-commit y post-commit transparentes
+
 # 🔄 Cierre de sesión de trabajo
 ctxmap wrap                           # refresh + resumen de memoria viva registrada
+
+# 📦 Exportación de Contexto Portable (Repomix compatible)
+ctxmap export . --format xml          # Exporta contexto plano en XML, JSON o Markdown
 
 # 🤖 Servidor MCP
 ctxmap mcp                            # Arranca el servidor MCP stdio
@@ -220,40 +242,6 @@ ctxmap adapt . --merge               # Anexa el bloque ContextMap preservando re
 
 ---
 
-## ⚖️ Comparativa Funcional: ContextMap vs Herramientas Top del Mercado
-
-En el ecosistema de IA para desarrollo (2026), existen 3 enfoques principales para dar contexto a los LLMs. A continuación se compara **ContextMap** con las herramientas líderes de cada categoría (**Repomix**, **Aider Repo Map** y los indizadores internos de IDEs como **Cursor/Windsurf**):
-
-| Característica / Capacidad | Concatenadores (`Repomix` / `Gitingest`) | Repo Maps (`Aider`) | Indexadores IDE (`Cursor` / `Windsurf`) | **ContextMap** |
-| :--- | :---: | :---: | :---: | :---: |
-| **Enfoque Principal** | Dump plano a texto/XML | Mapa sintáctico AST + PageRank | Embeddings vectoriales | **Gobernanza + Memoria Viva + Vault** |
-| **Consumo de Tokens** | 🔴 Masivo (archivo gigante) | 🟢 Eficiente | 🟡 Medio | 🟢 **Ultra-eficiente (`CONTEXT.md` / MCP)** |
-| **Bóveda Visual Interactiva (Obsidian Vault)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Grafo en árbol, Canvas, Dataview)** |
-| **Captura del "Por Qué" y "Para Qué" (Alma)** | ❌ No (solo código) | ❌ No (solo firmas) | ❌ No | **✅ Sí (Notas narrativas polimórficas)** |
-| **Gobernanza Multi-IDE (`AGENTS.md` + 10 IDEs)** | ❌ No | ❌ No | 🟡 Solo propio IDE | **✅ Sí (Portable entre todos los IDEs)** |
-| **Memoria Viva Indestructible (`7.0-MANUAL/`)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Jamás se borra con el build)** |
-| **Aprendizaje del Agente (`8.0-KNOWLEDGE/`)** | ❌ No | ❌ No | ❌ No | **✅ Sí (Formato de lecciones accionables)** |
-| **Servidor MCP Nativo (9 Tools stdio)** | ❌ No | ❌ No | 🟡 Limitado | **✅ Sí (`ctxmap mcp` para cualquier agente)** |
-| **Base de Datos Personal Multi-Proyecto** | ❌ No | ❌ No | ❌ No | **✅ Sí (SQLite + FTS5 transportable)** |
-| **Readiness Index del Sistema (Score 0-100)** | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap check .`)** |
-| **Sincronización Diaria en 1 Paso** | ❌ No | ❌ No | ❌ No | **✅ Sí (`ctxmap refresh .`)** |
-
-### 🔍 ¿Por qué ContextMap es una categoría superior?
-* **Repomix / Gitingest:** Útiles para un análisis puntual pegando código en un chat web, pero consumen presupuestos masivos de tokens y carecen de memoria.
-* **Aider Repo Map:** Excelente para el CLI de Aider extrayendo firmas sintácticas, pero no genera documentación visual para humanos ni guarda el trasfondo de decisiones conversadas.
-* **Cursor / Windsurf:** Indizan vectores en su propio entorno cerrado, perdiendo todo el contexto si cambias de agente o IDE.
-* **ContextMap:** Unifica la **Gobernanza Agéntica Universal**, la **Memoria Viva Indestructible** y una **Bóveda Obsidian Interconectada**, garantizando que tu proyecto mantenga su historia e identidad sin importar la herramienta de IA que utilices.
-
----
-
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia **MIT** — consulta el archivo [LICENSE](LICENSE) para más detalles.
-
----
-
-<div align="center">
-
-**Creado con ❤️ por [kudawasama](https://github.com/kudawasama)**
-
-</div>
+MIT © [kudawasama](https://github.com/kudawasama)

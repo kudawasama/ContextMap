@@ -1,68 +1,49 @@
-"""Comando de instalación de Git Pre-Commit Hook.
-
-
-Inyecta un script pre-commit ejecutable en .git/hooks/ para sincronizar
-automáticamente la bóveda de Obsidian y briefs antes de cada commit.
-"""
+"""Comando CLI 'hook' para gestionar la instalación de Git Hooks."""
 
 from __future__ import annotations
 
-import os
-import stat
+from typing import Any, Dict
+
+from context_map.domain.ecosystem.hooks import PRE_COMMIT_SCRIPT, desinstalar_git_hooks, instalar_git_hooks
 
 
 def _script_hook() -> str:
-    """Genera el script del pre-commit hook de ContextMap.
-
-    Prioriza el código local del repo (``python -m context_map.cli``) antes que
-    el binario global ``ctxmap``, que puede estar desactualizado. Usa
-    ``build --brief`` (SIN ``--clean``) para NO destruir las notas manuales del
-    vault (zona protegida ``.manual/`` y notas con ``preserve: true``), e
-    incluye ``--import-sessions`` (R2, 2026-08-14): cada commit importa las
-    sesiones recientes de Hermes del proyecto como memoria viva.
-
-    Returns:
-        str: Contenido del script pre-commit.
-    """
-    return """#!/bin/sh
-# ContextMap Auto-Sync Pre-Commit Hook
-# Prioriza el código local del repo (python -m context_map.cli) antes que
-# el binario global 'ctxmap', que puede estar desactualizado.
-# Se usa build --brief (SIN --clean) para NO destruir las notas manuales
-# del vault (zona protegida .manual/ y notas con preserve: true).
-# --import-sessions: cada commit registra la memoria viva (sesiones de Hermes).
-if python -m context_map.cli build --brief --quiet --import-sessions 2>/dev/null; then
-    exit 0
-fi
-if command -v ctxmap >/dev/null 2>&1; then
-    ctxmap build --brief --quiet --import-sessions
-fi
-"""
+    """Retorna el contenido del pre-commit script para retrocompatibilidad."""
+    return PRE_COMMIT_SCRIPT
 
 
 def cmd_hook_install(args=None) -> None:
-    """Instala el hook pre-commit de ContextMap en el directorio objetivo."""
+    """Alias de retrocompatibilidad para cmd_hook."""
     target_dir = getattr(args, "target", ".") if args else "."
-    git_dir = os.path.join(target_dir, ".git")
-
-    if not os.path.exists(git_dir) or not os.path.isdir(git_dir):
+    res = instalar_git_hooks(target_dir, force=True)
+    if res.get("status") == "FAIL":
         print(f"[X] No se encontró un directorio .git en '{target_dir}'. Inicializa git antes de instalar el hook.")
-        return
+    else:
+        print(f"[OK] Pre-commit hook de ContextMap instalado en: {target_dir}/.git/hooks/pre-commit")
 
-    hooks_dir = os.path.join(git_dir, "hooks")
-    os.makedirs(hooks_dir, exist_ok=True)
-    hook_file = os.path.join(hooks_dir, "pre-commit")
 
-    script_content = _script_hook()
+def cmd_hook(args: Dict[str, Any]) -> None:
+    """Manejador del comando CLI `ctxmap hook`.
 
-    try:
-        with open(hook_file, "w", encoding="utf-8", newline="\n") as f:
-            f.write(script_content)
+    Args:
+        args (Dict[str, Any]): Argumentos parseados de CLI.
+    """
+    target_dir = args.get("target_dir") or args.get("target") or "."
+    action = args.get("action") or "install"
+    force = bool(args.get("force", False))
 
-        # Otorgar permisos de ejecución en entornos Unix/Linux/macOS/Git Bash
-        current_perm = os.stat(hook_file).st_mode
-        os.chmod(hook_file, current_perm | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
-        print(f"[OK] Pre-commit hook de ContextMap instalado en: {hook_file}")
-    except Exception as err:
-        print(f"[X] Error al instalar pre-commit hook: {err}")
+    if action == "uninstall":
+        res = desinstalar_git_hooks(target_dir)
+        print(f"⚓ [hooks] Desinstalando Git Hooks en {target_dir}:")
+        for k, v in res.items():
+            if k != "status":
+                print(f"  - {k}: {v}")
+    else:
+        res = instalar_git_hooks(target_dir, force=force)
+        if res.get("status") == "FAIL":
+            print(f"❌ [hooks] Error: {res.get('message')}")
+            return
+        print(f"⚓ [hooks] Instalación de Git Hooks en {target_dir}:")
+        for k, v in res.items():
+            if k != "status":
+                print(f"  - {k}: {v}")

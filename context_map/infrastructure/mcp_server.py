@@ -232,6 +232,45 @@ def export(
         return f"ERROR en export: {err}"
 
 
+@_tool
+def doctor(target: str = ".", fix: bool = False) -> str:
+    """Diagnostica y auto-repara (Self-Healing) la salud del proyecto y la topología de la bóveda.
+
+    Args:
+        target: Ruta del proyecto.
+        fix: Si es True, aplica reparaciones automáticas en el vault, notas y metadatos.
+    """
+    from context_map.domain.health.doctor import diagnosticar_salud, reparar_salud
+
+    try:
+        report = reparar_salud(target) if fix else diagnosticar_salud(target)
+        status = "OK" if report.ok else "WARN/FAIL"
+        resumen = f"doctor: [{status}] {len(report.checks)} chequeos ejecutados."
+        detalles = [f" - {c.name}: {c.status} ({c.message})" for c in report.checks]
+        return "\n".join([resumen] + detalles)
+    except Exception as err:
+        return f"ERROR en doctor: {err}"
+
+
+@_tool
+def install_hooks(target: str = ".", force: bool = False) -> str:
+    """Instala Git Hooks transparentes (pre-commit y post-commit) para auto-sincronización.
+
+    Args:
+        target: Ruta del proyecto Git.
+        force: Sobrescribir hooks existentes.
+    """
+    from context_map.domain.ecosystem.hooks import instalar_git_hooks
+
+    try:
+        res = instalar_git_hooks(target, force=force)
+        if res.get("status") == "FAIL":
+            return f"install_hooks: ERROR — {res.get('message')}"
+        return f"install_hooks: [OK] pre-commit={res.get('pre-commit')}, post-commit={res.get('post-commit')}"
+    except Exception as err:
+        return f"ERROR en install_hooks: {err}"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:

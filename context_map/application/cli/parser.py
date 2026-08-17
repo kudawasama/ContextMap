@@ -73,8 +73,9 @@ def create_parser() -> argparse.ArgumentParser:
     s_scan.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
     s_hook = sub.add_parser("hook", help="Gestión e instalación de Git pre-commit hooks")
-    s_hook.add_argument("action", nargs="?", default="install", help="Acción a realizar ('install')")
+    s_hook.add_argument("action", nargs="?", choices=["install", "uninstall"], default="install", help="Acción: install o uninstall")
     s_hook.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_hook.add_argument("--force", action="store_true", help="Sobrescribir hooks existentes")
 
     s_sync = sub.add_parser("sync", help="Sync incremental (use --migrate para migración)")
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")
@@ -130,7 +131,15 @@ def create_parser() -> argparse.ArgumentParser:
     s_antigravity.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
 
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
-    sub.add_parser("doctor", help="Diagnostica el entorno y repara problemas conocidos")
+    
+    s_doctor = sub.add_parser("doctor", help="Diagnóstico y auto-reparación (Self-Healing) del proyecto")
+    s_doctor.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a diagnosticar")
+    s_doctor.add_argument("--fix", action="store_true", help="Auto-reparar anomalías e inconsistencias encontradas")
+    s_doctor.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+
+    s_watch = sub.add_parser("watch", help="Daemon escuchador en segundo plano para sincronización continua")
+    s_watch.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a monitorear")
+    s_watch.add_argument("--debounce-ms", type=int, default=500, help="Tiempo en ms a esperar tras modificaciones (default: 500)")
 
     s_export = sub.add_parser(
         "export",
