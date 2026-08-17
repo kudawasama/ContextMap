@@ -5,6 +5,7 @@ Despacha el comando solicitado al handler correspondiente.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from context_map.application.cli.parser import create_parser
@@ -71,8 +72,21 @@ def _dispatch_cmd(cmd_func, args) -> None:
         cmd_func(args)
 
 
+def _configurar_utf8_consola() -> None:
+    """Fuerza la codificación UTF-8 en stdout y stderr para evitar fallos de encodificación en Windows."""
+    if sys.platform == "win32":
+        try:
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            if hasattr(sys.stderr, "reconfigure"):
+                sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 def main() -> None:
     """Punto de entrada principal de la CLI."""
+    _configurar_utf8_consola()
     p = create_parser()
     args = p.parse_args()
 
