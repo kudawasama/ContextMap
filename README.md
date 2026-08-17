@@ -12,9 +12,25 @@
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
 [![MCP Powered](https://img.shields.io/badge/MCP-9%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
-[🚀 Inicio Rápido](#-inicio-rápido) • [✨ Características Clave](#-características-clave) • [🏛️ Gobernanza Multi-IDE](#️-gobernanza-multi-ide) • [🔌 Servidor MCP](#-servidor-mcp-ctxmap-mcp) • [📊 Vault & Obsidian](#-vista-de-grafo-y-vault-obsidian) • [💻 Comandos CLI](#-lista-completa-de-comandos)
+🌐 **Languages / Idiomas:**  
+[ 🇪🇸 **Español** ](README.md) | [ 🇬🇧 **English Version** ](README_EN.md)
+
+[🚀 Inicio Rápido](#-inicio-rápido-en-10-segundos) • [✨ Características Clave](#-características-clave) • [🏛️ Gobernanza Multi-IDE](#️-gobernanza-multi-ide) • [🔌 Servidor MCP](#-2-servidor-mcp-nativo-model-context-protocol) • [📊 Vault & Obsidian](#-vista-de-grafo-y-vault-obsidian) • [💻 Comandos CLI](#-lista-completa-de-comandos-cli)
 
 </div>
+
+---
+
+<details>
+<summary><b>🇬🇧 English Speaker? Click here for a quick summary or read the full English documentation!</b></summary>
+
+### 🗺️ ContextMap — Narrative Mental Map for AI Agents
+ContextMap creates an interconnected **Obsidian Vault** and **AI Executive Brief (`CONTEXT.md`)** to manage context, multi-IDE rules, and living memory for your software projects across agents like `Antigravity`, `Cursor`, `Claude Code`, `Copilot`, `Hermes`, and `Gemini`.
+
+- 📖 **Full English Documentation:** See [**README_EN.md**](README_EN.md)
+- ⚡ **Quick Install:** `uv tool install git+https://github.com/kudawasama/ContextMap.git`
+- 💬 **Initialize:** Tell your AI Agent: *"Initialize ContextMap for this project"* or run `ctxmap auto .`
+</details>
 
 ---
 
