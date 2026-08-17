@@ -18,13 +18,13 @@
 
 # GitHub Copilot — Instrucciones para ContextMap
 
-> Generado automáticamente por **ContextMap** (2026-08-14).
+> Generado automáticamente por **ContextMap** (2026-08-17).
 
 ## Antes de sugerir código
 
 - Revisa `.context-map/CONTEXT.md` para entender el proyecto (stack, riesgos, tareas).
 - Respeta la arquitectura modular existente.
-- Usa convenciones del proyecto: docstrings en español, type hints estrictos.
+- Usa convenciones del proyecto: docstrings en español, type hints strictly.
 
 ## Verificación
 
