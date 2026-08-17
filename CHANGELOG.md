@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.9.0] — 2026-08-17
+
+### ✨ Nuevo — Auto-Mantenimiento Autónomo & Self-Healing
+
+- **Self-Healing (`ctxmap doctor --fix`)**: Diagnóstico y auto-reparación determinística de vault, unificación de nombres de proyectos y metadatos sin perder notas manuales.
+- **Daemon Watcher (`ctxmap watch .`)**: Monitoreo en segundo plano con debouncing (500ms) que detecta cambios de código y sincroniza incrementalmente en tiempo real.
+- **Git Hooks Transparentes (`ctxmap hook install`)**: Inyección automática de `pre-commit` y `post-commit` para sincronizar código y brief en cada commit.
+- **Servidor MCP Ampliado**: Nuevas herramientas `doctor` e `install_hooks` en el servidor MCP stdio (11 herramientas stdio en total).
+- **Suite de Pruebas**: 160/160 tests unitarios pasados exitosamente al 100% verde.
+
+---
+
+## [1.8.0] — 2026-08-17
+
+### ✨ Nuevo — Tokenización, Escáner de Seguridad y Exportador Portable
+
+- **Módulo de Tokenización (`core/tokenization.py`)**: Conteo exacto de tokens por modelo (`gpt-4o`, `claude-3-5-sonnet`, `gemini-1.5-pro`) con `tiktoken` y fallback sintáctico.
+- **Escáner Preventivo de Secretos (`domain/scanning/security.py`)**: Detección de claves AWS, API keys de OpenAI/Anthropic, GitHub tokens y credenciales DB.
+- **Exportador Portable (`ctxmap export`)**: Generador de volcados planos en formato XML (compatible Repomix), JSON o Markdown.
+- **Internacionalización**: Documentación bilingüe [`README_EN.md`](README_EN.md).
+
+---
+
 ## [1.7.0] — 2026-08-13
 
 ### ✨ Nuevo — Contexto global personal operativo (BD + agentes multi-IDE)

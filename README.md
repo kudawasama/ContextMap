@@ -168,29 +168,7 @@ En el ecosistema de herramientas de contexto para IA (2026), existen 4 solucione
 
 ## 📜 Historial de Versiones (Releases)
 
-### 🚀 v1.9.0 — Auto-Mantenimiento Autónomo & Self-Healing *(Versión Actual)*
-- **Self-Healing (`ctxmap doctor --fix`)**: Diagnóstico y auto-reparación determinística de vault, unificación de nombres de proyectos y preservación de notas manuales.
-- **Daemon Watcher (`ctxmap watch .`)**: Monitoreo en segundo plano con debouncing (500ms) que detecta cambios de código y sincroniza incrementalmente.
-- **Git Hooks Integrados (`ctxmap hook install`)**: Inyección transparente de `pre-commit` y `post-commit` para sincronizar código y brief en cada commit.
-- **Nuevas Tools MCP**: Adición de `doctor` e `install_hooks` en el servidor MCP stdio (11 herramientas en total).
-
-### 📦 v1.8.0 — Tokenización, Escáner de Seguridad y Exportador Portable
-- **Tokenización (`core/tokenization.py`)**: Conteo exacto de tokens por modelo (`gpt-4o`, `claude-3-5-sonnet`, `gemini-1.5-pro`) con `tiktoken` y fallback sintáctico.
-- **Escáner Preventivo de Secretos (`domain/scanning/security.py`)**: Detección de claves AWS, API keys de OpenAI/Anthropic, GitHub tokens y credenciales DB.
-- **Exportador Portable (`ctxmap export`)**: Generación de contextos planos en formato XML (compatible Repomix), JSON o Markdown.
-- **Internacionalización**: Documentación bilingüe [`README_EN.md`](README_EN.md).
-
-### 🏛️ v1.7.0 — Gobernanza Multi-IDE y Servidor MCP Nativo
-- **Adaptador Multi-IDE (`ctxmap adapt`)**: Inyección de reglas para 10+ editores y agentes (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, etc.).
-- **Servidor MCP Nativo (`ctxmap mcp`)**: Servidor stdio FastMCP para integración con Hermes Agent y Claude Desktop.
-
-### 🧠 v1.6.0 — Memoria Viva Protegida y Base de Datos Personal SQLite
-- **Protección de Notas Manuales (`preserve: true`)**: Conservación estricta de `7.0-MANUAL/` y `8.0-KNOWLEDGE/`.
-- **BD Personal Multi-Proyecto (`ctxmap personal`)**: Motor SQLite + FTS5 para consolidación e inspección transversal de proyectos.
-
-### 📊 v1.5.0 — Vault Jerárquico Obsidian y Graph View Puro
-- Topología estricta en árbol (1 enlace padre `⬅` por nota, 0 nodos fantasma, 0 enlaces rotos).
-- Dashboards MOC, Canvas interactivas y snippets visuales de etiquetas de colores (`colored-tags.css`).
+Para consultar el historial completo de versiones, cambios, notas de release y novedades desde la v1.0.0 hasta la **v1.9.0**, por favor revisa el archivo [**CHANGELOG.md**](CHANGELOG.md).
 
 ---
 

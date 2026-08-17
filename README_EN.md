@@ -149,29 +149,7 @@ In the AI developer tooling ecosystem (2026), there are 4 main approaches for pr
 
 ## 📜 Release History
 
-### 🚀 v1.9.0 — Autonomous Self-Maintenance & Self-Healing *(Current Release)*
-- **Self-Healing (`ctxmap doctor --fix`)**: Deterministic diagnosis and auto-repair for vault structure, project name unification, and manual notes metadata.
-- **Watcher Daemon (`ctxmap watch .`)**: Background process with debouncing (500ms) for real-time file event detection and incremental sync.
-- **Integrated Git Hooks (`ctxmap hook install`)**: Automated injection of `pre-commit` and `post-commit` scripts for lockstep code and context updates.
-- **New MCP Tools**: Added `doctor` and `install_hooks` to stdio MCP server (11 tools total).
-
-### 📦 v1.8.0 — Tokenization, Security Scanner & Portable Exporter
-- **Tokenization (`core/tokenization.py`)**: Exact token counting per model (`gpt-4o`, `claude-3-5-sonnet`, `gemini-1.5-pro`) with `tiktoken` soft-import and fallback.
-- **Preventive Secrets Scanner (`domain/scanning/security.py`)**: Automatic scanning for AWS keys, OpenAI/Anthropic keys, GitHub tokens, and DB credentials.
-- **Portable Exporter (`ctxmap export`)**: Generates flat context dumps in XML (Repomix compatible), JSON, or Markdown.
-- **Bilingual Docs**: Added [README_EN.md](README_EN.md).
-
-### 🏛️ v1.7.0 — Multi-IDE Governance & Native MCP Server
-- **Multi-IDE Adapter (`ctxmap adapt`)**: Rule generation for 10+ AI tools (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `GEMINI.md`, etc.).
-- **Native MCP Server (`ctxmap mcp`)**: FastMCP stdio server for Hermes Agent and Claude Desktop integration.
-
-### 🧠 v1.6.0 — Protected Living Memory & Personal SQLite DB
-- **Manual Notes Protection (`preserve: true`)**: Strict preservation of `7.0-MANUAL/` and `8.0-KNOWLEDGE/`.
-- **Personal Multi-Project DB (`ctxmap personal`)**: SQLite + FTS5 engine for cross-project memory search.
-
-### 📊 v1.5.0 — Obsidian Hierarchical Vault & Pure Graph View
-- Strict tree topology (1 parent `⬅` link per note, zero ghost nodes, zero broken links).
-- Interactive Canvas, MOC dashboards, and custom tag colors (`colored-tags.css`).
+To view the complete version history, release notes, and changelog from v1.0.0 to **v1.9.0**, please visit the [**CHANGELOG.md**](CHANGELOG.md) file.
 
 ---
 
