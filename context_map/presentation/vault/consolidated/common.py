@@ -16,42 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 _COLORES_GRAFO: dict[str, str] = {
-    # Colores VIVOS para grupos del graph view (se distinguen entre sí)
-    "riesgo": "#ef4444",
-    "ideas": "#eab308",
-    "pendiente": "#eab308",
-    "activo": "#3b82f6",
-    "completado": "#22c55e",
-    "cambio": "#f97316",
-    "correccion": "#f97316",
-    "base": "#94a3b8",
-    "prueba": "#94a3b8",
-    "futuro": "#8b5cf6",
-    "manual": "#14b8a6",
-    "historia": "#f59e0b",
-    "backlog": "#d97706",
-    "gobierno": "#059669",
-    "mcp": "#2563eb",
-    "indice": "#64748b",
-    "mejora": "#10b981",
-    "DEVOPS": "#6366f1",
-    "UI": "#ec4899",
-    "ETL": "#06b6d4",
-    "TESTING": "#22c55e",
-    "TUI": "#8b5cf6",
-    "GENERAL": "#94a3b8",
-    "BASEDEDATOS": "#0891b2",
-    "REPORTES": "#f97316",
-    "context-map": "#9b6e12",
+    "riesgo": "#ef4444",      # Rojo advertencia
+    "idea": "#eab308",        # Ámbar idea
+    "documento": "#0ea5e9",   # Celeste documento
+    "base": "#94a3b8",        # Gris arquitectura
+    "cambio": "#f97316",      # Naranja modificación
+    "manual": "#14b8a6",      # Teal memoria viva
 }
 
 _PATH_GRAFO: dict[str, str] = {
-    "00-INDICE": "#64748b",
     "1.0-PROPOSITO": "#0ea5e9",
     "2.0-IDEAS": "#eab308",
-    "2.1-Ideas-Pendientes": "#f59e0b",
-    "2.2-Ideas-Futuras": "#3b82f6",
-    "2.3-Ideas-Completas-e-Implementadas": "#22c55e",
     "3.0-ESTRUCTURA": "#8b5cf6",
     "4.0-RIESGOS": "#ef4444",
     "5.0-BACKLOG": "#d97706",
