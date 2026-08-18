@@ -106,6 +106,7 @@ para escribir las notas con alma) está en
 4. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
 5. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
+6. **Captura Autónoma del Dominio**: Al inicializar o ponerse en contexto en un proyecto, el Agente debe inspeccionar los submódulos de lógica nuclear (algoritmos, ecuaciones implícitas, reglas de negocio) y documentar lo descubierto en la memoria viva (`7.0-MANUAL/DOMINIO.md` o notas del Vault), ejecutando `ctxmap refresh .` para que el proyecto quede completamente interpretado.
 
 ---
 

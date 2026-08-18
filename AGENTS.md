@@ -67,6 +67,8 @@ Cualquier agente que tome una tarea en este proyecto **DEBE** seguir estos pasos
    Inspeccionar `.context-map/vault-ContextMap/2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
 6. **No Suponer Rutas o Lógica**:
    Inspeccionar el código fuente antes de formular hipótesis de cambio.
+7. **Captura Autónoma del Dominio**:
+   Al inicializar o ponerse en contexto en un proyecto, inspeccionar los submódulos de lógica nuclear (algoritmos, ecuaciones implícitas, reglas de negocio) y documentar lo descubierto en `7.0-MANUAL/DOMINIO.md` o en las notas del Vault, ejecutando `ctxmap refresh .` para que el brief y el Vault contengan el alma matemática y funcional del sistema.
 
 > ⚠️ **NUNCA respondas "¿qué quedó pendiente?" basándote solo en un documento
 > suelto (auditoría, CHANGELOG, docs/)** — cruza SIEMPRE el brief + backlog manual

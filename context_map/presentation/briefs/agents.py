@@ -74,6 +74,7 @@ notas con alma) está en **[.context-map/contextmap-skill.md](file:///.context-m
 7. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
 8. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
+9. **Captura Autónoma del Dominio**: Al inicializar o ponerse en contexto en un proyecto, el Agente debe inspeccionar los submódulos de lógica nuclear (algoritmos, ecuaciones implícitas, reglas de negocio) y documentar lo descubierto en la memoria viva (`.context-map/vault-{project_name}/7.0-MANUAL/DOMINIO.md` o notas del Vault), ejecutando `ctxmap refresh .` para que el proyecto quede completamente interpretado.
 
 > ⚠️ **NUNCA respondas "¿qué quedó pendiente?" basándote solo en un documento
 > suelto (auditoría, CHANGELOG, etc.)** — cruza SIEMPRE el brief + backlog manual

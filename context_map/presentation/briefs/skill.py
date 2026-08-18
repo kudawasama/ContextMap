@@ -109,6 +109,9 @@ siempre el contexto (nunca borres información real ni notas con historia):
 - **7.0-MANUAL/**: zona protegida — escribe aquí la historia conversada
   (decisiones, porqués, ideas) con `preserve: true`.
 
+### 🧠 Captura Autónoma de Ecuaciones y Reglas del Dominio (Regla de Oro)
+Al inicializar ContextMap en un nuevo repositorio, el Agente no debe limitarse a la lista estática de archivos. Debe leer los submódulos nucleares del negocio (algoritmos, ecuaciones estadísticas/matemáticas implícitas, reglas de negocio) y redactar una nota viva en `{vault}/7.0-MANUAL/DOMINIO.md` con las fórmulas y conceptos clave, ejecutando `ctxmap refresh .` para que el brief y el Vault contengan el alma matemática y funcional del sistema.
+
 > Regla de oro: el script propone, el AGENTE dispone — y el agente humaniza
 > TODO el vault, no solo 7.0-MANUAL. Guardar siempre el contexto: nada se
 > borra si tiene historia; lo tosco se REDACTa, no se elimina.
