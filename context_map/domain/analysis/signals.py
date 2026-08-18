@@ -86,7 +86,7 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
             nombre="Tests",
             peso=9,
             presente=verificar_directorio(
-                ruta_raiz, ["tests", "test", "__tests__", "spec", "specs"]
+                ruta_raiz, ["tests", "test", "__tests__", "spec", "specs", "context_map/__tests__", "context_map/tests"]
             )
             or verificar_archivo(ruta_raiz, ["test.py", "tests.py"]),
             detalle="Directorio o archivo con pruebas automatizadas.",
