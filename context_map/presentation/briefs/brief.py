@@ -24,6 +24,7 @@ from context_map.presentation.briefs.sections import (
     aviso_frescura,
     comandos_utiles,
     como_trabajar_aqui,
+    eficiencia_tokenizacion,
     estado_proyecto,
     footer,
     header,
@@ -77,6 +78,9 @@ def generar_brief(
 
     if reglas:
         sec_list.insert(4, reglas)
+
+    texto_temp = "\n\n".join([s for s in sec_list if s])
+    sec_list.insert(4, eficiencia_tokenizacion(texto_temp))
 
     brief_text = "\n\n".join([s for s in sec_list if s])
 

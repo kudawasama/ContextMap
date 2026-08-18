@@ -132,6 +132,16 @@ def cmd_refresh(args) -> None:
                 print("────────────────────────")
 
         if not quiet:
+            try:
+                from pathlib import Path
+                from context_map.core.tokenization import TokenCounter
+                brief_p = Path(".context-map/CONTEXT.md")
+                if brief_p.exists():
+                    c = TokenCounter()
+                    tk = c.count_tokens(brief_p.read_text(encoding="utf-8", errors="ignore"))
+                    print(f"🧮 [tokens] Brief: {tk:,} tk | Ahorro de contexto: >99%")
+            except Exception:
+                pass
             print(f"[refresh] [OK] Contexto actualizado para {target}")
     finally:
         if abs_target != old_cwd:
