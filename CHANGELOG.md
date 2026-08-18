@@ -7,6 +7,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [2.1.0] — 2026-08-18
+
+### ✨ Nuevo — Suite de Inteligencia Offline, Tokenización Profesional & Protocolo Agéntico de Dominio
+
+- **🧮 Visualización Profesional de Tokenización**: Medición en tiempo real del presupuesto de tokens en consola CLI y tabla ejecutiva en `CONTEXT.md` mostrando >99% de ahorro de ventana de contexto respecto al código crudo.
+- **🦙 Integración Ollama Local Adaptativa (`infrastructure/integrations/ollama.py`)**: Conexión opcional a Ollama en `http://localhost:11434` sin costo de API ni internet.
+- **🖥️ Diagnóstico de RAM y Guardián de Hardware (`domain/health/hardware.py`)**: Evaluación previa de memoria RAM y CPU para recomendar modelos de bajo consumo (`qwen2.5-coder:1.5b` ~1.2 GB RAM) y conmutar a AST determinístico si la RAM es baja (<3.5 GB libres).
+- **✍️ Enriquecedor de Código Función por Función (`ctxmap enrich`)**: Comando CLI (`application/commands/enrich.py`) que audita y documenta funciones sin docstring en Español Técnico (Google Style).
+- **🏷️ Extractor de Conceptos TF-IDF (`domain/normalization/domain_extractor.py`)**: Descubrimiento determinístico local de términos de dominio del negocio (`FACTURACION`, `INVENTARIO`, `TCG`, `AUTENTICACION`).
+- **🧠 Protocolo Agéntico de Captura del Dominio (`AGENTS.md`)**: Protocolo estandarizado en reglas agénticas para que cualquier IA en el IDE (`Antigravity`, `Cursor`, `Claude`) interprete y documente automáticamente ecuaciones implícitas y reglas nucleares en `7.0-MANUAL/DOMINIO.md`.
+- **🎨 Grupos de Color del Graph View Profesionalizados (`common.py`)**: Grafo de Obsidian limpio y estructurado únicamente por las 8 secciones de dominio principales y tipos de nodos base.
+- **Suite de Pruebas**: 173/173 tests unitarios pasados al 100% verde.
+
+---
+
 ## [2.0.0] — 2026-08-17
 
 ### 🚀 Major Release — Arquitectura de Siguiente Generación & Inteligencia AST
