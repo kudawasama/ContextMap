@@ -10,6 +10,7 @@
 *Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA (`Antigravity`, `Cursor`, `Claude`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
 [![Release](https://img.shields.io/badge/version-v2.1.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
+[![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
@@ -30,7 +31,7 @@
 ContextMap creates an interconnected **Obsidian Vault** and **AI Executive Brief (`CONTEXT.md`)** to manage context, multi-IDE rules, living memory, and autonomous self-maintenance for your software projects across agents like `Antigravity`, `Cursor`, `Claude Code`, `Copilot`, `Hermes`, and `Gemini`.
 
 - 📖 **Full English Documentation:** See [**README_EN.md**](README_EN.md)
-- ⚡ **Quick Install:** `uv tool install git+https://github.com/kudawasama/ContextMap.git`
+- ⚡ **PyPI Install:** `pip install context-map-ai` or `uv tool install context-map-ai`
 - 💬 **Initialize:** Tell your AI Agent: *"Initialize ContextMap for this project"* or run `ctxmap auto .`
 </details>
 
@@ -53,14 +54,17 @@ Construye una bóveda interconectada en **Obsidian** ([Graph View en Árbol Estr
 
 ## ⚡ Inicio Rápido en 10 Segundos
 
-### 1. Instalación Global (con `uv`)
+### 1. Instalación Global (con `pip` o `uv`)
 
 ```bash
-# Recomendado: instalación directa en 1 comando (requiere https://docs.astral.sh/uv/)
-uv tool install git+https://github.com/kudawasama/ContextMap.git
+# Opción 1: Desde PyPI oficial (recomendado con pip)
+pip install context-map-ai
 
-# O con pip desde un clon local:
-# git clone https://github.com/kudawasama/ContextMap.git && cd ContextMap && pip install -e .
+# Opción 2: Instalación aislada global con uv (ultra-rápido)
+uv tool install context-map-ai
+
+# Opción 3: Desde el repositorio en GitHub
+uv tool install git+https://github.com/kudawasama/ContextMap.git
 ```
 
 ### 2. Poner en Contexto un Proyecto

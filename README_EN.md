@@ -10,6 +10,7 @@
 *Capture the soul of your project, establish automated governance, and keep living context available for any AI Agent (`Antigravity`, `Cursor`, `Claude Code`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
 [![Release](https://img.shields.io/badge/version-v2.1.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
+[![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
@@ -25,14 +26,14 @@
 
 ## 💡 What is ContextMap and why does it exist?
 
-When working with AI Agents in your IDE (`Antigravity`, `Cursor`, `Claude Code`, `Copilot`, etc.), AI models frequently forget past architectural decisions, miss core project rules, or propose blind refactorings that break your codebase.
+When working with AI Agents in your IDE (`Antigravity`, `Cursor`, `Claude Code`, `Copilot`, etc.), AI often forgets past decisions, ignores strict architecture constraints, or proposes blind refactors that break the system.
 
 **ContextMap solves this by creating a living memory for your project:**
 It builds an interconnected **Obsidian Vault** ([Strict Tree Graph View](file:///.context-map/vault-ContextMap/)) and an AI Executive Brief ([`CONTEXT.md`](file:///.context-map/CONTEXT.md)) that teach any AI Agent:
-- **Why does the project exist?** (Purpose, business domain, and scope).
-- **What risks does it face?** (Static complexity hotspots, warnings, and fragile areas).
+- **Why does the project exist?** (Purpose, business, and identity).
+- **What risks does it face?** (Static complexity, code alerts, and sensitive zones).
 - **What is implemented vs. pending?** (Deduplicated graph of ideas, bases, and changes).
-- **What architectural decisions were made?** (Living memory of past sessions and commit history).
+- **What architecture decisions were made?** (Living memory of past conversations and commit histories).
 
 > 🚫 **ContextMap is not just a passive doc generator.** It is an active system for **Agentic Governance**, **Permanent Memory**, **Readiness Assessment**, and **Autonomous Self-Maintenance**.
 
@@ -40,14 +41,17 @@ It builds an interconnected **Obsidian Vault** ([Strict Tree Graph View](file://
 
 ## ⚡ 10-Second Quick Start
 
-### 1. Global Installation (with `uv`)
+### 1. Global Installation (via `pip` or `uv`)
 
 ```bash
-# Recommended: 1-command direct install (requires https://docs.astral.sh/uv/)
-uv tool install git+https://github.com/kudawasama/ContextMap.git
+# Option 1: Official PyPI Package (Recommended via pip)
+pip install context-map-ai
 
-# Or with pip from local clone:
-# git clone https://github.com/kudawasama/ContextMap.git && cd ContextMap && pip install -e .
+# Option 2: Global isolated tool via uv
+uv tool install context-map-ai
+
+# Option 3: Direct from GitHub repository
+uv tool install git+https://github.com/kudawasama/ContextMap.git
 ```
 
 ### 2. Contextualize a Project
