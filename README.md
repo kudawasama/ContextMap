@@ -222,6 +222,17 @@ ctxmap adapt . --merge               # Anexa el bloque ContextMap preservando re
 
 ---
 
+## 🛡️ Insignia para tu Proyecto
+
+Si utilizas ContextMap para la gobernanza de contexto en tu repositorio, puedes añadir nuestra insignia oficial a tu `README.md`:
+
+```markdown
+[![ContextMap Verified](https://img.shields.io/badge/ContextMap-100%2F100_Ready-blue?style=for-the-badge&logo=obsidian)](https://github.com/kudawasama/ContextMap)
+```
+
+---
+
 ## 📄 Licencia
 
 MIT © [kudawasama](https://github.com/kudawasama)
+

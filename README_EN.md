@@ -192,6 +192,17 @@ ctxmap check .                        # Audits Readiness Score (0-100)
 
 ---
 
+## 🛡️ Badge for your Project
+
+If you use ContextMap for context governance in your repository, feel free to add our official badge to your `README.md`:
+
+```markdown
+[![ContextMap Verified](https://img.shields.io/badge/ContextMap-100%2F100_Ready-blue?style=for-the-badge&logo=obsidian)](https://github.com/kudawasama/ContextMap)
+```
+
+---
+
 ## 📄 License
 
 MIT © [kudawasama](https://github.com/kudawasama)
+
