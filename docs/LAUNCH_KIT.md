@@ -12,7 +12,7 @@ Guía completa con plantillas listas para publicar y masificar **ContextMap** en
    - **Name:** ContextMap
    - **Description:** Narrative Mental Map & Context Governance for AI Agents (Obsidian Vault, CLI, 11 Tools).
    - **Repository:** `https://github.com/kudawasama/ContextMap`
-   - **Command:** `uvx context-map mcp` o `python -m context_map.cli mcp`
+   - **Command:** `uvx context-map-ai mcp` o `python -m context_map.cli mcp`
 
 ### B. Smithery.ai
 1. Visita [Smithery.ai](https://smithery.ai/).
