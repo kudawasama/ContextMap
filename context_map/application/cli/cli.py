@@ -29,6 +29,7 @@ from context_map.application.commands import (
     cmd_watch,
     cmd_weekly,
     cmd_wrap,
+    cmd_enrich,
 )
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.export import exportar_contexto
@@ -119,6 +120,7 @@ def main() -> None:
         "adapt": cmd_adapt,
         "personal": cmd_personal,
         "export": cmd_export,
+        "enrich": cmd_enrich,
         "mcp": cmd_mcp,
     }
 

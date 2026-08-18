@@ -466,11 +466,12 @@ def test_grupos_grafo_por_tag_y_path() -> None:
             graph = json.load(f)
         grupos = {g["query"]: g for g in graph["colorGroups"]}
         assert "tag:#riesgo" in grupos
-        assert "tag:#DEVOPS" in grupos
+        assert "tag:#idea" in grupos
+        assert "tag:#documento" in grupos
         assert "path:4.0-RIESGOS" in grupos
         assert "path:7.0-MANUAL" in grupos
         # colores distintos para grupos distintos
-        assert grupos["tag:#riesgo"]["color"]["rgb"] != grupos["tag:#DEVOPS"]["color"]["rgb"]
+        assert grupos["tag:#riesgo"]["color"]["rgb"] != grupos["tag:#idea"]["color"]["rgb"]
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 

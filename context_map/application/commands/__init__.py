@@ -32,8 +32,10 @@ from context_map.application.commands.tools import (
 from context_map.application.commands.update import cmd_update
 from context_map.application.commands.watch import cmd_watch
 from context_map.application.commands.wrap import cmd_wrap
+from context_map.application.commands.enrich import cmd_enrich
 
 __all__ = [
+    "cmd_enrich",
     "cmd_auto",
     "cmd_build",
     "cmd_sync",

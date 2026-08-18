@@ -48,6 +48,11 @@ def create_parser() -> argparse.ArgumentParser:
         help="Arranca el servidor MCP (stdio) que expone las herramientas de ctxmap como tools",
     )
 
+    s_enrich = sub.add_parser("enrich", help="Enriquece el código con docstrings función por función usando Ollama local o AST")
+    s_enrich.add_argument("path", nargs="?", default=".", help="Ruta del archivo o directorio a enriquecer")
+    s_enrich.add_argument("--model", default=None, help="Modelo de Ollama preferido (ej. qwen2.5-coder:1.5b)")
+    s_enrich.add_argument("--dry-run", action="store_true", help="Solo muestra la vista previa sin modificar archivos")
+
     sub.add_parser("init", help="Crea estructura .context-map/")
 
     s_build = sub.add_parser("build", help="Genera vault completo")
