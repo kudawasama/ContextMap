@@ -7,6 +7,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [2.0.0] — 2026-08-17
+
+### 🚀 Major Release — Arquitectura de Siguiente Generación & Inteligencia AST
+
+- **Complejidad Ciclomática AST (`domain/analyzers/cyclomatic.py`)**: Cálculo sintáctico de la complejidad de McCabe por función/método con alertas preventivas en `4.0-RIESGOS` al superar 10 ramas lógicas.
+- **Escaneo Incremental con Caché SHA-256 (`domain/scanning/cache.py`)**: Sistema de almacenamiento en caché `.context-map/cache.json` que omite re-analizar archivos no modificados, logrando un escaneo 10 veces más rápido.
+- **Diagramas Mermaid Dinámicos por Submódulo (`presentation/vault/`)**: Generación de diagramas de arquitectura interactivos `mermaid` en `3.0-ESTRUCTURA` para visualizar capas y paquetes.
+- **Documentación Interactiva MkDocs (`mkdocs.yml`)**: Sitio web oficial con tema MkDocs Material y despliegue automático mediante GitHub Actions.
+- **Soporte de Tokenización Universal**: Integración del catálogo completo de 60+ modelos LLM de 2026 (OpenAI GPT-5.x, Claude 4.5/5, Gemini 3.x Flash, DeepSeek V4, GLM 5, Kimi K2.5-K3, Qwen 3.5/3.6, Grok 4.5/4.6, MiniMax M3, Nemotron, etc.).
+
+---
+
 ## [1.9.0] — 2026-08-17
 
 ### ✨ Nuevo — Auto-Mantenimiento Autónomo & Self-Healing

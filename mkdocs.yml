@@ -1,0 +1,63 @@
+site_name: ContextMap — Narrative Mental Map for AI Agents
+site_description: Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA.
+site_author: kudawasama
+site_url: https://kudawasama.github.io/ContextMap/
+
+repo_name: kudawasama/ContextMap
+repo_url: https://github.com/kudawasama/ContextMap
+
+theme:
+  name: material
+  language: es
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+
+nav:
+  - 🏠 Inicio: README.md
+  - 🇬🇧 English Docs: README_EN.md
+  - 📜 Historial (Changelog): CHANGELOG.md
+  - 🤝 Contribuir: CONTRIBUTING.md
+  - 📜 Código de Conducta: CODE_OF_CONDUCT.md

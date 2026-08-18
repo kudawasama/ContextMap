@@ -9,7 +9,7 @@
 
 *Capture the soul of your project, establish automated governance, and keep living context available for any AI Agent (`Antigravity`, `Cursor`, `Claude Code`, `Hermes`, `Copilot`, `Windsurf`, `Gemini`).*
 
-[![Release](https://img.shields.io/badge/version-v1.9.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
+[![Release](https://img.shields.io/badge/version-v2.0.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Readiness](https://img.shields.io/badge/Readiness-100%2F100-brightgreen.svg?style=for-the-badge)](file:///.context-map/CONTEXT.md)
