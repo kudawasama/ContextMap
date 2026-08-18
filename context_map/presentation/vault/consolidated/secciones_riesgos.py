@@ -149,12 +149,15 @@ def _render_seccion_riesgos(
         "",
     ])
     if clasificados["RIESGO"]:
+        from context_map.domain.normalization.similarity import deduplicar_elementos_similares
+
         partes.append("## Riesgos Identificados")
         partes.append("")
         seen_riesgo_idx: set[str] = set()
-        for n in clasificados["RIESGO"]:
-            if not _es_riesgo_real(n):
-                continue  # IDEA/TODO mal clasificado como riesgo
+        riesgos_filtrados = [n for n in clasificados["RIESGO"] if _es_riesgo_real(n)]
+        riesgos_unicos = deduplicar_elementos_similares(riesgos_filtrados, lambda r: r.title, umbral=0.85)
+
+        for n in riesgos_unicos:
             key = _clave_dedup_riesgo(n)
             if key in seen_riesgo_idx:
                 continue  # mismo riesgo con paths en distinto orden
