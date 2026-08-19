@@ -119,12 +119,37 @@ def project_name(args) -> str:
 
 
 def ensure_dirs(_proj: str | None = None) -> None:
-    """Crea el árbol de directorios de .context-map/.
-
-    NOTA: el vault se crea bajo demanda en build/sync, no acá.
-    """
+    """Crea el árbol de directorios de .context-map/ y plantilla de dominios.yaml si no existe."""
     for path in [STATE_DIR, MAPS_DIR, HISTORY_DIR, CHATS_DIR, RAW_DIR]:
         os.makedirs(path, exist_ok=True)
+
+    dominios_file = os.path.join(CONTEXT_DIR, "dominios.yaml")
+    if not os.path.exists(dominios_file):
+        try:
+            default_template = (
+                "# Dominios temáticos del proyecto (grupos profesionales del contexto)\n"
+                "# Cada nota se etiqueta automáticamente con grupo-<dominio> según las\n"
+                "# palabras clave que aparecen en su título o resumen.\n\n"
+                "raiz:\n"
+                "  - proposito\n"
+                "  - que es\n"
+                "  - identidad\n"
+                "  - esencia\n"
+                "  - objetivo\n\n"
+                "gobierno:\n"
+                "  - gobierno\n"
+                "  - verificar\n"
+                "  - corregir\n"
+                "  - regla\n\n"
+                "vault:\n"
+                "  - vault\n"
+                "  - obsidian\n"
+                "  - nota manual\n"
+            )
+            with open(dominios_file, "w", encoding="utf-8") as f:
+                f.write(default_template)
+        except Exception as err:
+            logger.debug("No se pudo auto-crear dominios.yaml por defecto: %s", err)
 
 
 def resolve_vault_mode(args) -> str:
