@@ -5,6 +5,16 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — 2026-08-19
+
+### 🗜️ Nuevo — Paquetes de Contexto Portátiles Offline, Escáner de Auditoría AST & Fallback de Modelos
+
+- **🗜️ Empaquetado y Desempaquetado Portátil (`ctxmap pack` / `ctxmap unpack`)**: Nuevo sistema para comprimir la memoria viva completa de cualquier proyecto en un archivo único binario `.ctxpack` con manifiesto de integridad (`pack_manifest.json`) y restaurarlo 100% offline en cualquier equipo.
+- **🛡️ Escáner Sintáctico AST de Auditoría Local (`domain/analyzers/ast_audit.py`)**: Motor determinístico de análisis estático que detecta ejecuciones dinámicas inseguras (`eval/exec`), concatenaciones de SQL dinámicas, bloques `except Exception: pass` silenciosos, desuso de administradores de contexto en archivos y credenciales hardcodadas.
+- **🦙 Fallback Inteligente de Modelos Ollama (`infrastructure/integrations/ollama.py`)**: Auto-resolución de modelos locales instalados vía API `/api/tags` para seleccionar automáticamente modelos disponibles (`coder`, `qwen`, `llama`, `deepseek`, `phi`) sin fallar por modelos ausentes.
+- **⚙️ Generación Automática de Plantilla `dominios.yaml` (`application/commands/_helpers.py`)**: Creación transparente de la plantilla por defecto de agrupamiento temático para Obsidian.
+- **Suite de Pruebas**: 176/176 tests unitarios pasados al 100% verde.
+
 ---
 
 ## [2.1.0] — 2026-08-18

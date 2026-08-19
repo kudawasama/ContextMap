@@ -60,7 +60,7 @@ def crear_paquete_contexto(
         "project": proj,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "node_count": total_nodos,
-        "generator": "ContextMap-v2.1.0",
+        "generator": "ContextMap-v2.2.0",
     }
 
     # Escribir manifiesto temporal en .context-map/pack_manifest.json
