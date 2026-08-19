@@ -30,6 +30,8 @@ from context_map.application.commands import (
     cmd_weekly,
     cmd_wrap,
     cmd_enrich,
+    cmd_pack,
+    cmd_unpack,
 )
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.export import exportar_contexto
@@ -121,6 +123,8 @@ def main() -> None:
         "personal": cmd_personal,
         "export": cmd_export,
         "enrich": cmd_enrich,
+        "pack": cmd_pack,
+        "unpack": cmd_unpack,
         "mcp": cmd_mcp,
     }
 

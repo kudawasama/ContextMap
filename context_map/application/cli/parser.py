@@ -206,4 +206,12 @@ def create_parser() -> argparse.ArgumentParser:
     sp_backup.add_argument("--destino", required=True, help="Ruta destino (ej. /run/media/usb/personal.db)")
     sp_backup.add_argument("--db", default=None, help="Ruta a la BD personal (default: la activa)")
 
+    p_pack = sub.add_parser("pack", help="Empaqueta el contexto en un archivo comprimido .ctxpack portátil")
+    p_pack.add_argument("target", nargs="?", default=".", help="Ruta del proyecto (default: .)")
+    p_pack.add_argument("--output", "-o", default=None, help="Ruta del archivo de salida .ctxpack")
+
+    p_unpack = sub.add_parser("unpack", help="Desempaqueta un archivo .ctxpack y restaura el contexto")
+    p_unpack.add_argument("archive", help="Ruta del archivo .ctxpack")
+    p_unpack.add_argument("target", nargs="?", default=".", help="Directorio destino para la restauración (default: .)")
+
     return p
