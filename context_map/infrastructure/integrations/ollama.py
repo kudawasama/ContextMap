@@ -23,7 +23,34 @@ class OllamaLocalClient:
         """
         self.host = host.rstrip("/")
         self.hardware = evaluar_hardware_pc()
-        self.model_name = model_name or self.hardware.modelo_recomendado
+        sugerido = model_name or self.hardware.modelo_recomendado
+        self.model_name = self._resolver_modelo_instalado(sugerido)
+
+    def _resolver_modelo_instalado(self, modelo_deseado: str) -> str:
+        """Selecciona el modelo deseado si está instalado o hace fallback al mejor disponible.
+
+        Args:
+            modelo_deseado: Nombre del modelo preferido.
+
+        Returns:
+            Nombre del modelo final a utilizar.
+        """
+        instalados = self.listar_modelos_instalados()
+        if not instalados:
+            return modelo_deseado
+
+        # Coincidencia exacta
+        for m in instalados:
+            if m.lower() == modelo_deseado.lower() or m.lower().startswith(modelo_deseado.lower()):
+                return m
+
+        # Fallback preferencial a modelos de código / ligeros
+        for m in instalados:
+            m_lower = m.lower()
+            if any(k in m_lower for k in ["coder", "qwen", "llama", "deepseek", "phi", "mistral"]):
+                return m
+
+        return instalados[0]
 
     def esta_disponible(self) -> bool:
         """Comprueba si el servidor local de Ollama está activo y respondiendo.
