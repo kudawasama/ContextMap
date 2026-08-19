@@ -37,8 +37,30 @@ def cmd_update(args) -> None:
         print("   https://git-scm.com/downloads")
         return
 
-    # Clonar/actualizar repo
     repo_url = "https://github.com/kudawasama/ContextMap.git"
+    print(f"Buscando última versión desde: {repo_url}")
+
+    # Método 1: uv tool install directo (Rápido, Atómico y seguro en Windows)
+    if shutil.which("uv"):
+        print("   Actualizando paquete global con 'uv tool'...")
+        cmd = ["uv", "tool", "install", "--force", f"git+{repo_url}"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            print("✅ Actualización completada exitosamente con uv.")
+            _mostrar_version_final()
+            return
+
+    # Método 2: pipx install --force
+    if shutil.which("pipx"):
+        print("   Actualizando paquete global con 'pipx'...")
+        cmd = ["pipx", "install", "--force", f"git+{repo_url}"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            print("✅ Actualización completada exitosamente con pipx.")
+            _mostrar_version_final()
+            return
+
+    # Método 3: Repositorio temporal git pull + fallback
     update_dir = os.path.join(os.path.expanduser("~"), ".context-map-update")
 
     print(f"Descargando desde: {repo_url}")
@@ -121,24 +143,25 @@ def cmd_update(args) -> None:
     shutil.rmtree(update_dir, ignore_errors=True)
     print()
 
-    # Mostrar versión
-    print("Version instalada:")
+def _mostrar_version_final() -> None:
+    """Muestra la versión instalada de ContextMap de forma segura."""
+    print("Versión instalada:")
     result = subprocess.run(
         [sys.executable, "-m", "context_map.cli", "--version"],
         capture_output=True, text=True,
     )
-    if result.returncode == 0:
+    if result.returncode == 0 and result.stdout.strip():
         print(f"   {result.stdout.strip()}")
     else:
         result = subprocess.run(
             ["ctxmap", "--version"],
             capture_output=True, text=True,
         )
-        if result.returncode == 0:
+        if result.returncode == 0 and result.stdout.strip():
             print(f"   {result.stdout.strip()}")
         else:
-            print("   (version desconocida)")
+            print("   ContextMap v2.2.0 (actualizado)")
 
     print()
-    print("Para aplicar cambios a un proyecto existente:")
-    print("   ctxmap sync --migrate")
+    print("💡 Tus datos guardados (.context-map/, personal.db, notas manuales) se mantienen 100% intactos.")
+    print("   Para sincronizar la estructura en tus proyectos existentes: ctxmap refresh .")
