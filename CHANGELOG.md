@@ -5,6 +5,18 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] — 2026-08-21
+
+### 🛡️ Novedades y Mejoras — Escáner de Secretos Avanzado, Entropía Shannon, Opt-Out Ollama & Automatización Release
+
+- **feat(`security`)**: Detección ampliada de credenciales con soporte para Slack tokens (`xoxb-`), Stripe keys (`sk_live_`, `sk_test_`), Twilio SIDs (`AC`, `SK`), SendGrid (`SG.`), npm access tokens (`npm_`) y webhooks de Discord.
+- **feat(`security`)**: Análisis matemático de alta entropía de Shannon (`calcular_entropia_shannon`) en asignaciones de variables sensibles para detectar llaves criptográficas no estructuradas.
+- **feat(`ollama`)**: Soporte de opt-out mediante flag `--no-ollama` en `ctxmap enrich` y variable de entorno `CTXMAP_NO_OLLAMA=1` para forzar análisis puramente offline y estático AST.
+- **feat(`ci/cd`)**: Creación automática de GitHub Releases (`softprops/action-gh-release@v2`) con notas generadas al publicar tags en `publish.yml`, y principio de mínimo privilegio en permisos de `docs.yml`.
+- **feat(`personal`)**: Soporte para la variable `CTXMAP_GDRIVE_ROOTS` en `personal sync` y optimización de búsqueda acotada de unidades en Windows.
+
+---
+
 ## [2.2.2] — 2026-08-21
 
 ### 🔧 Correcciones y Hardening — Saneamiento Técnico y Parche

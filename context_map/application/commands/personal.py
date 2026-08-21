@@ -142,15 +142,38 @@ def _bases_por_defecto() -> list[str]:
         os.path.expanduser("~/Documents"),
         os.path.expanduser("~/Desktop"),
     ]
-    # Google Drive (Mi unidad) en cualquier letra de unidad montada
-    for letra in "CDEFGHIJKLMNOPQRSTUVWXYZ":
-        unidad = f"{letra}:"
-        if not os.path.isdir(unidad):
-            continue
-        mi_unidad = os.path.join(unidad, "Mi unidad")
-        if os.path.isdir(mi_unidad):
-            bases.append(os.path.join(mi_unidad, "Desarrollo y Proyectos"))
-            bases.append(mi_unidad)
+
+    # 1. Rutas configuradas explícitamente vía variable de entorno
+    gdrive_env = os.environ.get("CTXMAP_GDRIVE_ROOTS", "").strip()
+    if gdrive_env:
+        for r in gdrive_env.split(";" if ";" in gdrive_env else ","):
+            r_limpia = r.strip()
+            if r_limpia and os.path.isdir(r_limpia):
+                bases.append(r_limpia)
+        return bases
+
+    # 2. Rutas estándar conocidas de Google Drive
+    for ruta_estandar in [
+        os.path.expanduser("~/Google Drive/Mi unidad"),
+        os.path.expanduser("~/GoogleDrive/Mi unidad"),
+        "G:\\Mi unidad",
+        "H:\\Mi unidad",
+    ]:
+        if os.path.isdir(ruta_estandar):
+            bases.append(os.path.join(ruta_estandar, "Desarrollo y Proyectos"))
+            bases.append(ruta_estandar)
+
+    # 3. Búsqueda acotada en letras de unidad montadas en Windows si no se halló en las estándar
+    if os.name == "nt" and not any("Mi unidad" in b for b in bases):
+        for letra in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+            unidad = f"{letra}:\\"
+            if not os.path.isdir(unidad):
+                continue
+            mi_unidad = os.path.join(unidad, "Mi unidad")
+            if os.path.isdir(mi_unidad):
+                bases.append(os.path.join(mi_unidad, "Desarrollo y Proyectos"))
+                bases.append(mi_unidad)
+
     return bases
 
 

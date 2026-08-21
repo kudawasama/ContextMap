@@ -5,23 +5,37 @@ y resúmenes con verificación previa de RAM y compatibilidad de hardware.
 """
 
 import json
+import os
 import urllib.error
 import urllib.request
 
 from context_map.domain.health.hardware import evaluar_hardware_pc
 
 
+def ollama_desactivado() -> bool:
+    """True si el usuario ha desactivado explícitamente Ollama mediante entorno."""
+    val = os.environ.get("CTXMAP_NO_OLLAMA", "").strip().lower()
+    return val in ("1", "true", "yes", "on")
+
+
 class OllamaLocalClient:
     """Cliente HTTP local para la API de Ollama (http://localhost:11434)."""
 
-    def __init__(self, host: str = "http://localhost:11434", model_name: str | None = None) -> None:
+    def __init__(
+        self,
+        host: str = "http://localhost:11434",
+        model_name: str | None = None,
+        opt_out: bool = False,
+    ) -> None:
         """Inicializa el cliente de Ollama local.
 
         Args:
             host: URL base del servidor Ollama.
             model_name: Modelo preferido (opcional). Si es None, se usa la sugerencia del hardware.
+            opt_out: Si es True, desactiva la conexión a Ollama forzando fallback local.
         """
         self.host = host.rstrip("/")
+        self.opt_out = opt_out or ollama_desactivado()
         self.hardware = evaluar_hardware_pc()
         sugerido = model_name or self.hardware.modelo_recomendado
         self.model_name = self._resolver_modelo_instalado(sugerido)
@@ -35,6 +49,9 @@ class OllamaLocalClient:
         Returns:
             Nombre del modelo final a utilizar.
         """
+        if self.opt_out:
+            return modelo_deseado
+
         instalados = self.listar_modelos_instalados()
         if not instalados:
             return modelo_deseado
@@ -58,7 +75,7 @@ class OllamaLocalClient:
         Returns:
             True si Ollama responde en localhost; False en caso contrario.
         """
-        if not self.hardware.es_apto_para_ollama:
+        if self.opt_out or not self.hardware.es_apto_para_ollama:
             return False
 
         try:
@@ -75,6 +92,9 @@ class OllamaLocalClient:
         Returns:
             Lista de nombres de modelos disponibles (ej. ["qwen2.5-coder:1.5b", "llama3.2:3b"]).
         """
+        if self.opt_out:
+            return []
+
         try:
             url = f"{self.host}/api/tags"
             req = urllib.request.Request(url, method="GET")

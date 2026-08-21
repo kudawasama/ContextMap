@@ -60,6 +60,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_enrich.add_argument("path", nargs="?", default=".", help="Ruta del archivo o directorio a enriquecer")
     s_enrich.add_argument("--model", default=None, help="Modelo de Ollama preferido (ej. qwen2.5-coder:1.5b)")
     s_enrich.add_argument("--dry-run", action="store_true", help="Solo muestra la vista previa sin modificar archivos")
+    s_enrich.add_argument("--no-ollama", action="store_true", help="Desactiva Ollama y utiliza exclusivamente inferencia AST offline")
 
     sub.add_parser("init", help="Crea estructura .context-map/")
 

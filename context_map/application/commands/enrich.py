@@ -65,15 +65,21 @@ def cmd_enrich(args: argparse.Namespace) -> int:
     hw = evaluar_hardware_pc()
     print(f"[enrich] Hardware: {hw.mensaje_diagnostico}")
 
-    # 2. Inicializar cliente Ollama si es apto
+    # 2. Inicializar cliente Ollama si es apto y no se solicitó opt-out
+    no_ollama = getattr(args, "no_ollama", False)
     ollama_client: OllamaLocalClient | None = None
-    if hw.es_apto_para_ollama:
-        client = OllamaLocalClient(model_name=getattr(args, "model", None) or hw.modelo_recomendado)
+    if hw.es_apto_para_ollama and not no_ollama:
+        client = OllamaLocalClient(
+            model_name=getattr(args, "model", None) or hw.modelo_recomendado,
+            opt_out=no_ollama,
+        )
         if client.esta_disponible():
             ollama_client = client
             print(f"[enrich] Ollama local activo con modelo '{client.model_name}'")
         else:
-            print("[enrich] Ollama no activo en localhost:11434. Se utiliza inferencia sintáctica AST offline.")
+            print("[enrich] Ollama no activo en localhost:11434 o desactivado. Se utiliza inferencia sintáctica AST offline.")
+    elif no_ollama:
+        print("[enrich] Ollama desactivado por flag --no-ollama. Se utiliza inferencia sintáctica AST offline.")
 
     # 3. Recorrer archivos .py y enriquecer función por función
     archivos_procesados = 0

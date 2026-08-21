@@ -37,10 +37,10 @@ def _render_versiones(project_name: str, fecha_actual: str, historial_dir: str, 
     try:
         result = subprocess.run(
             ["git", "tag", "--sort=-creatordate"],
-            capture_output=True, text=True, cwd=project_root,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
             timeout=10
         )
-        all_tags_list = [t.strip() for t in result.stdout.split("\n")
+        all_tags_list = [t.strip() for t in (result.stdout or "").split("\n")
                          if t.strip() and "desktop.ini" not in t]
 
         if all_tags_list:
@@ -51,32 +51,32 @@ def _render_versiones(project_name: str, fecha_actual: str, historial_dir: str, 
             for tag in all_tags_list:
                 date_result = subprocess.run(
                     ["git", "log", "-1", "--format=%ai", tag],
-                    capture_output=True, text=True, cwd=project_root,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
                     timeout=10
                 )
-                tag_date = date_result.stdout.strip()[:10] if date_result.stdout.strip() else "?"
+                tag_date = (date_result.stdout or "").strip()[:10] if (date_result.stdout or "").strip() else "?"
 
                 msg_result = subprocess.run(
                     ["git", "tag", "-l", tag, "--format=%(contents)"],
-                    capture_output=True, text=True, cwd=project_root,
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
                     timeout=10
                 )
-                tag_msg = msg_result.stdout.strip()
+                tag_msg = (msg_result.stdout or "").strip()
 
                 if prev_tag:
                     log_result = subprocess.run(
                         ["git", "log", "--oneline", f"{tag}..{prev_tag}"],
-                        capture_output=True, text=True, cwd=project_root,
+                        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
                         timeout=10
                     )
                 else:
                     log_result = subprocess.run(
                         ["git", "log", "--oneline", tag],
-                        capture_output=True, text=True, cwd=project_root,
+                        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
                         timeout=10
                     )
 
-                commits = log_result.stdout.strip()
+                commits = (log_result.stdout or "").strip()
                 commit_lines = [c for c in commits.split("\n") if c.strip()]
                 commit_count = len(commit_lines)
 
@@ -101,10 +101,10 @@ def _render_versiones(project_name: str, fecha_actual: str, historial_dir: str, 
 
             log_result = subprocess.run(
                 ["git", "log", "--oneline", "--format=%ai | %s"],
-                capture_output=True, text=True, cwd=project_root,
+                capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=project_root,
                 timeout=10
             )
-            all_commits = log_result.stdout.strip().split("\n")
+            all_commits = (log_result.stdout or "").strip().split("\n")
 
             meses: dict[str, list[str]] = defaultdict(list)
             for line in all_commits:
