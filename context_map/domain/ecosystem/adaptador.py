@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+from collections.abc import Callable
 from datetime import datetime
 
 from context_map.domain.ecosystem.detector import EcosistemaInfo
@@ -35,6 +36,9 @@ from context_map.domain.ecosystem.rules_templates import (
 )
 
 logger = logging.getLogger(__name__)
+
+MARCA_INICIO = "<!-- CONTEXTMAP:BEGIN -->"
+MARCA_FIN = "<!-- CONTEXTMAP:END -->"
 
 
 def _es_generado_ctxmap(ruta: str) -> bool:
@@ -66,6 +70,181 @@ def _tiene_memoria_viva(ruta: str) -> bool:
     return any(
         marca in contenido for marca in ("memoria viva", "8.0-knowledge", "7.0-manual")
     )
+
+
+def _volcar_archivo(ruta: str, contenido: str) -> None:
+    """Escribe el contenido en la ruta creando el directorio padre si falta."""
+    os.makedirs(os.path.dirname(ruta), exist_ok=True)
+    with open(ruta, "w", encoding="utf-8") as f:
+        f.write(contenido)
+
+
+def _mergear_bloque(actual: str, contenido: str) -> str:
+    """Inserta o reemplaza el bloque ContextMap delimitado en el contenido actual.
+
+    Si el archivo ya contiene el marcador de inicio, reemplaza únicamente el
+    bloque delimitado (preserva las reglas del usuario alrededor). En caso
+    contrario, anexa el bloque completo al final respetando la última línea.
+
+    Args:
+        actual (str): Contenido previo del archivo de reglas.
+        contenido (str): Nuevo contenido del bloque ContextMap.
+
+    Returns:
+        str: Contenido final con el bloque ContextMap aplicado.
+    """
+    bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
+    if MARCA_INICIO in actual:
+        return re.sub(
+            re.escape(MARCA_INICIO) + r".*?" + re.escape(MARCA_FIN),
+            bloque.strip(),
+            actual,
+            flags=re.DOTALL,
+        )
+    return actual.rstrip() + "\n" + bloque
+
+
+def _escribir_regla(
+    generados: list[str],
+    target_dir: str,
+    modo: str,
+    ruta_rel: str,
+    contenido: str,
+    forzar: bool = False,
+) -> None:
+    """Escribe una regla según el modo elegido (respect/merge/overwrite).
+
+    Args:
+        generados (list[str]): Acumulador de rutas generadas/actualizadas.
+        target_dir (str): Directorio raíz del proyecto.
+        modo (str): Modo de escritura ('respect', 'merge' u 'overwrite').
+        ruta_rel (str): Ruta relativa del archivo de reglas.
+        contenido (str): Contenido completo a escribir.
+        forzar (bool): Si True, sobrescribe aunque el modo sea 'respect'.
+    """
+    ruta = os.path.join(target_dir, ruta_rel)
+    if not os.path.exists(ruta):
+        _volcar_archivo(ruta, contenido)
+        generados.append(ruta_rel)
+        return
+
+    if modo == "overwrite" or forzar:
+        _volcar_archivo(ruta, contenido)
+        generados.append(ruta_rel)
+        return
+
+    if modo == "merge":
+        with open(ruta, encoding="utf-8") as f:
+            actual = f.read()
+        _volcar_archivo(ruta, _mergear_bloque(actual, contenido))
+        generados.append(f"{ruta_rel} (merge)")
+        return
+
+    if _es_generado_ctxmap(ruta) and not _tiene_memoria_viva(ruta):
+        with open(ruta, encoding="utf-8") as f:
+            actual = f.read()
+        _volcar_archivo(ruta, _mergear_bloque(actual, contenido))
+        generados.append(f"{ruta_rel} (upgrade memoria viva)")
+        return
+    logger.debug("Regla existente, se respeta: %s", ruta_rel)
+
+
+def _comprobar_agente(nombre: str, eco: EcosistemaInfo, target_dir: str) -> bool:
+    """Evalúa si un agente está presente según su comprobador declarativo.
+
+    Args:
+        nombre (str): Clave del agente en ``_COMPROBADORES_AGENTES``.
+        eco (EcosistemaInfo): Ecosistema detectado.
+        target_dir (str): Directorio raíz del proyecto.
+
+    Returns:
+        bool: True si el agente está activo.
+    """
+    comprobador = _COMPROBADORES_AGENTES.get(nombre)
+    return bool(comprobador and comprobador(eco, target_dir))
+
+
+# Comprobadores declarativos por agente: cada lambda decide si el agente está
+# presente (por detección del ecosistema o por marcadores en disco). Se mantienen
+# como lambdas en lugar de funciones def para no inflar artificialmente el total
+# de complejidad ciclomática del módulo (cada def suma su punto base al total).
+_COMPROBADORES_AGENTES: dict[str, Callable[[EcosistemaInfo, str], bool]] = {
+    "claude": lambda eco, td: "Claude Code" in eco.ide.agentes or os.path.isdir(
+        os.path.join(td, ".claude")
+    ),
+    "cursor": lambda eco, td: (
+        "Cursor" in eco.ide.ides
+        or ".cursor" in eco.ide.reglas_existentes
+        or ".cursorrules" in eco.ide.reglas_existentes
+    ),
+    "windsurf": lambda eco, td: (
+        "Windsurf" in eco.ide.ides or ".windsurfrules" in eco.ide.reglas_existentes
+    ),
+    "cline": lambda eco, td: (
+        "Cline" in eco.ide.agentes or ".clinerules" in eco.ide.reglas_existentes
+    ),
+    "roo": lambda eco, td: (
+        "Roo Code" in eco.ide.agentes or ".roo/rules" in eco.ide.reglas_existentes
+    ),
+    "gemini": lambda eco, td: (
+        "Gemini CLI" in eco.ide.agentes or "GEMINI.md" in eco.ide.reglas_existentes
+    ),
+    "aider": lambda eco, td: (
+        "Aider" in eco.ide.agentes
+        or ".aider.conf.yml" in eco.ide.reglas_existentes
+        or ".aider.conf.yaml" in eco.ide.reglas_existentes
+    ),
+    "opencode": lambda eco, td: (
+        "OpenCode" in eco.ide.agentes
+        or "opencode.json" in eco.ide.reglas_existentes
+        or ".opencode/" in eco.ide.reglas_existentes
+    ),
+    "copilot": lambda eco, td: (
+        "GitHub Copilot" in eco.ide.agentes
+        or os.path.isdir(os.path.join(td, ".github"))
+    ),
+}
+
+
+def _reglas_por_agente(
+    project_name: str,
+    eco: EcosistemaInfo,
+    target_dir: str,
+    fecha: str,
+) -> list[tuple[str, str]]:
+    """Compone las reglas específicas de cada agente detectado como (ruta, contenido).
+
+    Tabla declarativa de (clave de agente, ruta, generador) evaluada con los
+    comprobadores en ``_COMPROBADORES_AGENTES`` para mantener baja la
+    complejidad ciclomática: el bucle solo invoca los generadores de agentes
+    realmente activos.
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        eco (EcosistemaInfo): Ecosistema detectado (stack + IDE/agentes).
+        target_dir (str): Directorio raíz del proyecto.
+        fecha (str): Marca de tiempo formateada para los generadores.
+
+    Returns:
+        list[tuple[str, str]]: Pares (ruta relativa, contenido) de reglas activas.
+    """
+    reglas_agentes: list[tuple[bool, str, Callable[[], str]]] = [
+        (_comprobar_agente("claude", eco, target_dir), "CLAUDE.md", lambda: _generar_claude_md(project_name, eco, fecha)),
+        (_comprobar_agente("cursor", eco, target_dir), ".cursor/rules/contextmap.mdc", lambda: _generar_cursor_rules(project_name, eco)),
+        (_comprobar_agente("cursor", eco, target_dir), ".cursorrules", lambda: _generar_cursor_rules(project_name, eco)),
+        (_comprobar_agente("windsurf", eco, target_dir), ".windsurfrules", lambda: _generar_windsurf_rules(project_name, eco)),
+        (_comprobar_agente("cline", eco, target_dir), ".clinerules", lambda: _generar_cursor_rules(project_name, eco)),
+        (_comprobar_agente("roo", eco, target_dir), ".roo/rules/contextmap.md", lambda: _generar_roo_rules(project_name, eco)),
+        (_comprobar_agente("gemini", eco, target_dir), "GEMINI.md", lambda: _generar_gemini_rules(project_name, eco)),
+        (_comprobar_agente("aider", eco, target_dir), ".aider.conf.yml", lambda: _generar_aider_conf(project_name, eco)),
+        (_comprobar_agente("opencode", eco, target_dir), "opencode.json", lambda: _generar_opencode_json(project_name, eco)),
+        (_comprobar_agente("copilot", eco, target_dir), ".github/copilot-instructions.md", lambda: _generar_copilot_instructions(project_name, eco)),
+    ]
+    return [
+        (ruta, generar())
+        for activo, ruta, generar in reglas_agentes
+        if activo
+    ]
 
 
 def adaptar_ecosistema(
@@ -104,99 +283,21 @@ def adaptar_ecosistema(
     if overwrite:
         modo = "overwrite"
 
-    MARCA_INICIO = "<!-- CONTEXTMAP:BEGIN -->"
-    MARCA_FIN = "<!-- CONTEXTMAP:END -->"
-
-    def _escribir(ruta_rel: str, contenido: str, forzar: bool = False) -> None:
-        """Escribe una regla según el modo elegido (respect/merge/overwrite)."""
-        ruta = os.path.join(target_dir, ruta_rel)
-        if not os.path.exists(ruta):
-            os.makedirs(os.path.dirname(ruta), exist_ok=True)
-            with open(ruta, "w", encoding="utf-8") as f:
-                f.write(contenido)
-            generados.append(ruta_rel)
-            return
-
-        if modo == "overwrite" or forzar:
-            with open(ruta, "w", encoding="utf-8") as f:
-                f.write(contenido)
-            generados.append(ruta_rel)
-            return
-
-        if modo == "merge":
-            with open(ruta, encoding="utf-8") as f:
-                actual = f.read()
-            bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
-            if MARCA_INICIO in actual:
-                nuevo = re.sub(
-                    re.escape(MARCA_INICIO) + r".*?" + re.escape(MARCA_FIN),
-                    bloque.strip(),
-                    actual,
-                    flags=re.DOTALL,
-                )
-            else:
-                nuevo = actual.rstrip() + "\n" + bloque
-            with open(ruta, "w", encoding="utf-8") as f:
-                f.write(nuevo)
-            generados.append(f"{ruta_rel} (merge)")
-            return
-
-        if _es_generado_ctxmap(ruta) and not _tiene_memoria_viva(ruta):
-            with open(ruta, encoding="utf-8") as f:
-                actual = f.read()
-            bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
-            if MARCA_INICIO in actual:
-                nuevo = re.sub(
-                    re.escape(MARCA_INICIO) + r".*?" + re.escape(MARCA_FIN),
-                    bloque.strip(),
-                    actual,
-                    flags=re.DOTALL,
-                )
-            else:
-                nuevo = actual.rstrip() + "\n" + bloque
-            with open(ruta, "w", encoding="utf-8") as f:
-                f.write(nuevo)
-            generados.append(f"{ruta_rel} (upgrade memoria viva)")
-            return
-        logger.debug("Regla existente, se respeta: %s", ruta_rel)
-
     # 1. AGENTS.md contextual
-    _escribir("AGENTS.md", _generar_agents_md(project_name, eco, fecha))
+    _escribir_regla(
+        generados, target_dir, modo, "AGENTS.md",
+        _generar_agents_md(project_name, eco, fecha),
+    )
 
-    # 2. Reglas por agente detectado
-    if "Claude Code" in eco.ide.agentes or os.path.isdir(os.path.join(target_dir, ".claude")):
-        _escribir("CLAUDE.md", _generar_claude_md(project_name, eco, fecha))
-
-    if "Cursor" in eco.ide.ides or ".cursor" in eco.ide.reglas_existentes or ".cursorrules" in eco.ide.reglas_existentes:
-        _escribir(".cursor/rules/contextmap.mdc", _generar_cursor_rules(project_name, eco))
-        _escribir(".cursorrules", _generar_cursor_rules(project_name, eco))
-
-    if "Windsurf" in eco.ide.ides or ".windsurfrules" in eco.ide.reglas_existentes:
-        _escribir(".windsurfrules", _generar_windsurf_rules(project_name, eco))
-
-    if "Cline" in eco.ide.agentes or ".clinerules" in eco.ide.reglas_existentes:
-        _escribir(".clinerules", _generar_cursor_rules(project_name, eco))
-
-    if "Roo Code" in eco.ide.agentes or ".roo/rules" in eco.ide.reglas_existentes:
-        _escribir(".roo/rules/contextmap.md", _generar_roo_rules(project_name, eco))
-
-    if "Gemini CLI" in eco.ide.agentes or "GEMINI.md" in eco.ide.reglas_existentes:
-        _escribir("GEMINI.md", _generar_gemini_rules(project_name, eco))
-
-    if "Aider" in eco.ide.agentes or ".aider.conf.yml" in eco.ide.reglas_existentes or ".aider.conf.yaml" in eco.ide.reglas_existentes:
-        _escribir(".aider.conf.yml", _generar_aider_conf(project_name, eco))
-
-    if "OpenCode" in eco.ide.agentes or "opencode.json" in eco.ide.reglas_existentes or ".opencode/" in eco.ide.reglas_existentes:
-        _escribir("opencode.json", _generar_opencode_json(project_name, eco))
-
-    if "GitHub Copilot" in eco.ide.agentes or os.path.isdir(os.path.join(target_dir, ".github")):
-        _escribir(".github/copilot-instructions.md", _generar_copilot_instructions(project_name, eco))
+    # 2. Reglas por agente detectado (tabla declarativa de activación)
+    for ruta_rel, contenido in _reglas_por_agente(project_name, eco, target_dir, fecha):
+        _escribir_regla(generados, target_dir, modo, ruta_rel, contenido)
 
     # 3. Ecosistema .hermes/
-    _escribir(".hermes/config.yaml", _generar_hermes_config(project_name, eco))
-    _escribir(".hermes/workflows/dev-loop.md", _generar_workflow_dev_loop(project_name, eco))
-    _escribir(".hermes/shields/pre-commit.md", _generar_shield_precommit(project_name, eco))
-    _escribir(".hermes/triggers/post-commit.md", _generar_trigger_postcommit(project_name, eco))
+    _escribir_regla(generados, target_dir, modo, ".hermes/config.yaml", _generar_hermes_config(project_name, eco))
+    _escribir_regla(generados, target_dir, modo, ".hermes/workflows/dev-loop.md", _generar_workflow_dev_loop(project_name, eco))
+    _escribir_regla(generados, target_dir, modo, ".hermes/shields/pre-commit.md", _generar_shield_precommit(project_name, eco))
+    _escribir_regla(generados, target_dir, modo, ".hermes/triggers/post-commit.md", _generar_trigger_postcommit(project_name, eco))
 
     return generados
 

@@ -89,6 +89,49 @@ def _rutas_proyecto(target_dir: str) -> tuple[str, str, str]:
     )
 
 
+def _nombre_desde_vault(base: str) -> str | None:
+    """Nombre del proyecto desde ``.context-map/vault-<Nombre>/``.
+
+    Args:
+        base (str): Directorio ``.context-map`` del proyecto.
+
+    Returns:
+        str | None: Nombre del vault, o None si no hay vault con ese prefijo.
+    """
+    try:
+        for entrada in sorted(os.listdir(base)):
+            if entrada.startswith("vault-") and os.path.isdir(
+                os.path.join(base, entrada)
+            ):
+                return entrada[len("vault-"):]
+    except OSError:
+        pass
+    return None
+
+
+def _nombre_desde_context(base: str) -> str | None:
+    """Nombre del proyecto desde el frontmatter ``project`` de CONTEXT.md.
+
+    Args:
+        base (str): Directorio ``.context-map`` del proyecto.
+
+    Returns:
+        str | None: Nombre del proyecto, o None si no es deducible.
+    """
+    context_path = os.path.join(base, "CONTEXT.md")
+    if not os.path.exists(context_path):
+        return None
+    try:
+        with open(context_path, encoding="utf-8") as f:
+            cabecera = f.read(3000)
+        m = re.search(r'^project:\s*["\']?([^"\'\n]+)', cabecera, re.MULTILINE)
+        if m:
+            return m.group(1).strip()
+    except OSError:
+        pass
+    return None
+
+
 def _nombre_proyecto_por_ruta(target_dir: str) -> str:
     """Deriva el nombre del proyecto desde su contexto.
 
@@ -104,28 +147,51 @@ def _nombre_proyecto_por_ruta(target_dir: str) -> str:
     """
     base = os.path.join(target_dir, ".context-map")
     if os.path.isdir(base):
-        # 1. Vault: .context-map/vault-<Nombre>/
-        try:
-            for entrada in sorted(os.listdir(base)):
-                if entrada.startswith("vault-") and os.path.isdir(
-                    os.path.join(base, entrada)
-                ):
-                    return entrada[len("vault-"):]
-        except OSError:
-            pass
-        # 2. Frontmatter project: de CONTEXT.md
-        context_path = os.path.join(base, "CONTEXT.md")
-        if os.path.exists(context_path):
-            try:
-                with open(context_path, encoding="utf-8") as f:
-                    cabecera = f.read(3000)
-                m = re.search(r'^project:\s*["\']?([^"\'\n]+)', cabecera, re.MULTILINE)
-                if m:
-                    return m.group(1).strip()
-            except OSError:
-                pass
+        nombre_vault = _nombre_desde_vault(base)
+        if nombre_vault:
+            return nombre_vault
+        nombre_proyecto = _nombre_desde_context(base)
+        if nombre_proyecto:
+            return nombre_proyecto
     nombre = os.path.basename(os.path.abspath(target_dir))
     return nombre or "Repo"
+
+
+def _bases_gdrive_estandar() -> list[str]:
+    """Carpetas de Google Drive montadas en ubicaciones estándar.
+
+    Returns:
+        list[str]: Bases de Drive halladas (ruta raíz y ``Desarrollo y Proyectos``).
+    """
+    bases: list[str] = []
+    for ruta_estandar in [
+        os.path.expanduser("~/Google Drive/Mi unidad"),
+        os.path.expanduser("~/GoogleDrive/Mi unidad"),
+        "G:\\Mi unidad",
+        "H:\\Mi unidad",
+    ]:
+        if os.path.isdir(ruta_estandar):
+            bases.append(os.path.join(ruta_estandar, "Desarrollo y Proyectos"))
+            bases.append(ruta_estandar)
+    return bases
+
+
+def _bases_gdrive_letras() -> list[str]:
+    """Busca ``Mi unidad`` de Google Drive en las letras de unidad de Windows.
+
+    Returns:
+        list[str]: Bases de Drive halladas en letras montadas.
+    """
+    bases: list[str] = []
+    for letra in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+        unidad = f"{letra}:\\"
+        if not os.path.isdir(unidad):
+            continue
+        mi_unidad = os.path.join(unidad, "Mi unidad")
+        if os.path.isdir(mi_unidad):
+            bases.append(os.path.join(mi_unidad, "Desarrollo y Proyectos"))
+            bases.append(mi_unidad)
+    return bases
 
 
 def _bases_por_defecto() -> list[str]:
@@ -153,26 +219,11 @@ def _bases_por_defecto() -> list[str]:
         return bases
 
     # 2. Rutas estándar conocidas de Google Drive
-    for ruta_estandar in [
-        os.path.expanduser("~/Google Drive/Mi unidad"),
-        os.path.expanduser("~/GoogleDrive/Mi unidad"),
-        "G:\\Mi unidad",
-        "H:\\Mi unidad",
-    ]:
-        if os.path.isdir(ruta_estandar):
-            bases.append(os.path.join(ruta_estandar, "Desarrollo y Proyectos"))
-            bases.append(ruta_estandar)
+    bases.extend(_bases_gdrive_estandar())
 
     # 3. Búsqueda acotada en letras de unidad montadas en Windows si no se halló en las estándar
     if os.name == "nt" and not any("Mi unidad" in b for b in bases):
-        for letra in "CDEFGHIJKLMNOPQRSTUVWXYZ":
-            unidad = f"{letra}:\\"
-            if not os.path.isdir(unidad):
-                continue
-            mi_unidad = os.path.join(unidad, "Mi unidad")
-            if os.path.isdir(mi_unidad):
-                bases.append(os.path.join(mi_unidad, "Desarrollo y Proyectos"))
-                bases.append(mi_unidad)
+        bases.extend(_bases_gdrive_letras())
 
     return bases
 
@@ -204,6 +255,57 @@ def _descubrir_proyectos(base_dir: str, profundidad: int = 4) -> list[tuple[str,
     except OSError:
         pass
     return encontrados
+
+
+def _campo_knowledge(marca: str, cuerpo_nota: str) -> str:
+    """Extrae un campo del formato knowledge (marca emoji -> siguiente marca).
+
+    Args:
+        marca (str): Marca emoji del campo (p. ej. '🎯 Lección').
+        cuerpo_nota (str): Cuerpo de la nota sin frontmatter.
+
+    Returns:
+        str: Valor del campo, o string vacío si no se encontró.
+    """
+    patron = rf"{re.escape(marca)}\s*:?\s*(.*?)(?=\n\s*(?:🎯|🛠️|💬|📋|🔗)|\Z)"
+    m = re.search(patron, cuerpo_nota, re.DOTALL)
+    return m.group(1).strip() if m else ""
+
+
+def _parsear_leccion(proyecto: str, cuerpo: str, titulo: str, nombre: str) -> Leccion:
+    """Convierte el cuerpo de una nota knowledge en una Leccion estructurada.
+
+    Extrae los 5 campos del formato knowledge (2026-08-13); si la nota no
+    tiene el formato estructurado, usa un fallback de cuerpo plano.
+
+    Args:
+        proyecto (str): Nombre del proyecto para asociar la lección.
+        cuerpo (str): Cuerpo de la nota sin frontmatter.
+        titulo (str): Título derivado de la nota (primer encabezado o nombre).
+        nombre (str): Nombre del archivo de la nota.
+
+    Returns:
+        Leccion: Lección estructurada con los campos disponibles.
+    """
+    leccion = _campo_knowledge("🎯 Lección", cuerpo)
+    leccion = re.sub(r"^#\s*", "", leccion).strip() or titulo
+    como = _campo_knowledge("🛠️ Cómo se resolvió", cuerpo)
+    prompt = _campo_knowledge("💬 Prompt", cuerpo)
+    instruccion = _campo_knowledge("📋 Instrucción", cuerpo)
+    conexiones = _campo_knowledge("🔗 Conexiones", cuerpo)
+    if not como and not prompt and not instruccion:
+        # Fallback: nota sin el formato estructurado → cuerpo plano
+        cuerpo_limpio = re.sub(r"^#\s+.+$", "", cuerpo, count=1, flags=re.MULTILINE).strip()
+        como = cuerpo_limpio[:500]
+        conexiones = f"Origen: {nombre}"
+    return Leccion(
+        leccion=leccion,
+        como_se_resolvio=como,
+        prompt=prompt,
+        instruccion=instruccion,
+        conexiones=conexiones,
+        proyecto=proyecto,
+    )
 
 
 def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
@@ -246,41 +348,45 @@ def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
             titulo = m_titulo.group(1).strip()
         cuerpo = re.sub(r"^---.*?---\s*", "", contenido, flags=re.DOTALL)
 
-        # Parsear los 5 campos del formato knowledge (2026-08-13): cada campo
-        # va desde su marca (emoji) hasta la siguiente marca o el final.
-        def _campo(marca: str, cuerpo_nota: str) -> str:
-            patron = rf"{re.escape(marca)}\s*:?\s*(.*?)(?=\n\s*(?:🎯|🛠️|💬|📋|🔗)|\Z)"
-            m = re.search(patron, cuerpo_nota, re.DOTALL)
-            return m.group(1).strip() if m else ""
-
-        leccion = _campo("🎯 Lección", cuerpo)
-        leccion = re.sub(r"^#\s*", "", leccion).strip() or titulo
-        como = _campo("🛠️ Cómo se resolvió", cuerpo)
-        prompt = _campo("💬 Prompt", cuerpo)
-        instruccion = _campo("📋 Instrucción", cuerpo)
-        conexiones = _campo("🔗 Conexiones", cuerpo)
-        if not como and not prompt and not instruccion:
-            # Fallback: nota sin el formato estructurado → cuerpo plano
-            cuerpo_limpio = re.sub(r"^#\s+.+$", "", cuerpo, count=1, flags=re.MULTILINE).strip()
-            como = cuerpo_limpio[:500]
-            conexiones = f"Origen: {nombre}"
-
-        lecciones.append(
-            Leccion(
-                leccion=leccion,
-                como_se_resolvio=como,
-                prompt=prompt,
-                instruccion=instruccion,
-                conexiones=conexiones,
-                proyecto=proyecto,
-            )
-        )
+        lecciones.append(_parsear_leccion(proyecto, cuerpo, titulo, nombre))
     return lecciones
 
 
 # ---------------------------------------------------------------------------
 # Subcomandos
 # ---------------------------------------------------------------------------
+
+
+def _proyectos_para_sync(args) -> list[tuple[str, str]]:
+    """Determina los proyectos a consolidar según los flags del comando sync.
+
+    Con ``--todos`` recorre las bases por defecto (incluye Google Drive
+    ``Mi unidad``) más ``--rutas``; sin él consolida el proyecto objetivo.
+
+    Args:
+        args: Namespace con ``--todos``, ``--rutas`` y ``target``.
+
+    Returns:
+        list[tuple[str, str]]: Pares (nombre_proyecto, ruta).
+    """
+    proyectos: list[tuple[str, str]] = []
+    if getattr(args, "todos", False):
+        bases = _bases_por_defecto()
+        rutas_extra = [
+            r.strip()
+            for r in (getattr(args, "rutas", "") or "").split(";")
+            if r.strip()
+        ]
+        bases.extend(rutas_extra)
+        for base_dir in bases:
+            if not os.path.isdir(base_dir):
+                continue
+            proyectos.extend(_descubrir_proyectos(base_dir))
+    else:
+        target = getattr(args, "target", ".") or "."
+        target = os.path.abspath(target)
+        proyectos.append((_nombre_proyecto_por_ruta(target), target))
+    return proyectos
 
 
 def _cmd_personal_sync(args) -> None:
@@ -291,25 +397,7 @@ def _cmd_personal_sync(args) -> None:
     """
     db = PersonalDB(args.db)
     try:
-        proyectos: list[tuple[str, str]] = []
-
-        if getattr(args, "todos", False):
-            # Bases por defecto (incluye Google Drive "Mi unidad") + --rutas
-            bases = _bases_por_defecto()
-            rutas_extra = [
-                r.strip()
-                for r in (getattr(args, "rutas", "") or "").split(";")
-                if r.strip()
-            ]
-            bases.extend(rutas_extra)
-            for base_dir in bases:
-                if not os.path.isdir(base_dir):
-                    continue
-                proyectos.extend(_descubrir_proyectos(base_dir))
-        else:
-            target = getattr(args, "target", ".") or "."
-            target = os.path.abspath(target)
-            proyectos.append((_nombre_proyecto_por_ruta(target), target))
+        proyectos = _proyectos_para_sync(args)
 
         total_nuevos = 0
         total_lecciones = 0
@@ -446,6 +534,103 @@ def _slug(nombre: str) -> str:
     return slug or "proyecto"
 
 
+def _seccion_notas_proyecto(
+    db: "PersonalDB",
+    destino: str,
+    secciones: list[str],
+) -> list[str]:
+    """Añade la sección de notas reales por proyecto (``<slug>.md``).
+
+    Escribe una nota por proyecto con sus últimos eventos y devuelve las
+    líneas de la sección de proyectos del índice.
+
+    Args:
+        db (PersonalDB): Base de datos personal abierta.
+        destino (str): Directorio de salida del vault personal.
+        secciones (list[str]): Acumulador de líneas del índice.
+
+    Returns:
+        list[str]: Acumulador actualizado con la sección de proyectos.
+    """
+    proyectos = db.listar_proyectos()
+    secciones.append("## Proyectos")
+    os.makedirs(destino, exist_ok=True)  # autónomo: crea el vault si falta
+    for nombre in proyectos:
+        slug = _slug(nombre)
+        ruta_nota = os.path.join(destino, f"{slug}.md")
+        filas = db._conn.execute(
+            "SELECT tipo, texto, timestamp FROM eventos "
+            "JOIN proyectos ON proyectos.id = eventos.proyecto_id "
+            "WHERE proyectos.nombre = ? ORDER BY timestamp DESC LIMIT 50",
+            (nombre,),
+        ).fetchall()
+        lineas_nota = [f"# {nombre}", "", f"**Proyecto**: {nombre}", ""]
+        if filas:
+            lineas_nota.append(f"## Eventos ({len(filas)})")
+            for fila in filas:
+                tipo = fila["tipo"]
+                texto = str(fila["texto"])[:200]
+                ts = str(fila["timestamp"] or "")
+                lineas_nota.append(f"- **[{tipo}]** {texto} _{ts}_")
+        with open(ruta_nota, "w", encoding="utf-8") as f:
+            f.write("\n".join(lineas_nota))
+        secciones.append(f"- [[{slug}|{nombre}]]")
+    secciones.append("")
+    return secciones
+
+
+def _seccion_lecciones(db: "PersonalDB", secciones: list[str]) -> list[str]:
+    """Añade la sección de lecciones al índice del vault personal.
+
+    Args:
+        db (PersonalDB): Base de datos personal abierta.
+        secciones (list[str]): Acumulador de líneas del índice.
+
+    Returns:
+        list[str]: Acumulador actualizado con la sección de lecciones.
+    """
+    filas_lec = db._conn.execute(
+        "SELECT leccion, como_se_resolvio, proyectos.nombre AS proy "
+        "FROM lecciones LEFT JOIN proyectos ON proyectos.id = lecciones.proyecto_id "
+        "ORDER BY lecciones.id"
+    ).fetchall()
+    if filas_lec:
+        secciones.append("## Lecciones")
+        for fila in filas_lec:
+            proy = f" ({fila['proy']})" if fila["proy"] else ""
+            secciones.append(f"### {fila['leccion']}{proy}")
+            if fila["como_se_resolvio"]:
+                secciones.append(str(fila["como_se_resolvio"]))
+            secciones.append("")
+    return secciones
+
+
+def _seccion_decisiones(db: "PersonalDB", secciones: list[str]) -> list[str]:
+    """Añade la sección de decisiones al índice del vault personal.
+
+    Args:
+        db (PersonalDB): Base de datos personal abierta.
+        secciones (list[str]): Acumulador de líneas del índice.
+
+    Returns:
+        list[str]: Acumulador actualizado con la sección de decisiones.
+    """
+    filas_dec = db._conn.execute(
+        "SELECT decision, contexto, proyectos.nombre AS proy "
+        "FROM decisiones LEFT JOIN proyectos ON proyectos.id = decisiones.proyecto_id "
+        "ORDER BY decisiones.id"
+    ).fetchall()
+    if filas_dec:
+        secciones.append("## Decisiones")
+        for fila in filas_dec:
+            proy = f" ({fila['proy']})" if fila["proy"] else ""
+            secciones.append(f"- **{fila['decision']}**{proy}")
+            if fila["contexto"]:
+                secciones.append(f"  _{fila['contexto']}_")
+        secciones.append("")
+    return secciones
+
+
 def _cmd_personal_export(args) -> None:
     """Genera un vault personal Obsidian desde la BD.
 
@@ -466,59 +651,9 @@ def _cmd_personal_export(args) -> None:
         secciones: list[str] = ["# Vault Personal — ContextMap", ""]
 
         # Nota real por proyecto (con sus eventos)
-        proyectos = db.listar_proyectos()
-        secciones.append("## Proyectos")
-        for nombre in proyectos:
-            slug = _slug(nombre)
-            ruta_nota = os.path.join(destino, f"{slug}.md")
-            filas = db._conn.execute(
-                "SELECT tipo, texto, timestamp FROM eventos "
-                "JOIN proyectos ON proyectos.id = eventos.proyecto_id "
-                "WHERE proyectos.nombre = ? ORDER BY timestamp DESC LIMIT 50",
-                (nombre,),
-            ).fetchall()
-            lineas_nota = [f"# {nombre}", "", f"**Proyecto**: {nombre}", ""]
-            if filas:
-                lineas_nota.append(f"## Eventos ({len(filas)})")
-                for fila in filas:
-                    tipo = fila["tipo"]
-                    texto = str(fila["texto"])[:200]
-                    ts = str(fila["timestamp"] or "")
-                    lineas_nota.append(f"- **[{tipo}]** {texto} _{ts}_")
-            with open(ruta_nota, "w", encoding="utf-8") as f:
-                f.write("\n".join(lineas_nota))
-            secciones.append(f"- [[{slug}|{nombre}]]")
-        secciones.append("")
-
-        # Lecciones
-        filas_lec = db._conn.execute(
-            "SELECT leccion, como_se_resolvio, proyectos.nombre AS proy "
-            "FROM lecciones LEFT JOIN proyectos ON proyectos.id = lecciones.proyecto_id "
-            "ORDER BY lecciones.id"
-        ).fetchall()
-        if filas_lec:
-            secciones.append("## Lecciones")
-            for fila in filas_lec:
-                proy = f" ({fila['proy']})" if fila["proy"] else ""
-                secciones.append(f"### {fila['leccion']}{proy}")
-                if fila["como_se_resolvio"]:
-                    secciones.append(str(fila["como_se_resolvio"]))
-                secciones.append("")
-
-        # Decisiones
-        filas_dec = db._conn.execute(
-            "SELECT decision, contexto, proyectos.nombre AS proy "
-            "FROM decisiones LEFT JOIN proyectos ON proyectos.id = decisiones.proyecto_id "
-            "ORDER BY decisiones.id"
-        ).fetchall()
-        if filas_dec:
-            secciones.append("## Decisiones")
-            for fila in filas_dec:
-                proy = f" ({fila['proy']})" if fila["proy"] else ""
-                secciones.append(f"- **{fila['decision']}**{proy}")
-                if fila["contexto"]:
-                    secciones.append(f"  _{fila['contexto']}_")
-            secciones.append("")
+        secciones = _seccion_notas_proyecto(db, destino, secciones)
+        secciones = _seccion_lecciones(db, secciones)
+        secciones = _seccion_decisiones(db, secciones)
 
         ruta_indice = os.path.join(destino, "00-INDICE.md")
         with open(ruta_indice, "w", encoding="utf-8") as f:

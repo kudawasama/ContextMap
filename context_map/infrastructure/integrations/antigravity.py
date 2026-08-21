@@ -115,6 +115,47 @@ def _leer_mensajes_json(conversation_id: str, ruta_brain: str) -> list[MensajeAn
     return sorted(mensajes, key=lambda m: m.timestamp)
 
 
+def _decodificar_blob(datos: object) -> str:
+    """Decodifica un BLOB en texto UTF-8 (tolerante a errores).
+
+    Args:
+        datos (object): BLOB o None.
+
+    Returns:
+        str: Texto decodificado, o string vacío si no hay datos.
+    """
+    if not datos:
+        return ""
+    try:
+        return datos.decode("utf-8", errors="ignore")
+    except Exception as err:
+        logger.debug("No se pudo decodificar BLOB: %s", err)
+        return ""
+
+
+def _es_mensaje_step(row) -> MensajeAntigravity | None:
+    """Convierte una fila de ``steps`` en un MensajeAntigravity.
+
+    Args:
+        row: Fila con (idx, step_type, status, task_details, step_payload).
+
+    Returns:
+        MensajeAntigravity | None: Mensaje si la fila tiene contenido, o None.
+    """
+    idx, step_type, status, task_details, step_payload = row
+    content = _decodificar_blob(task_details) + _decodificar_blob(step_payload)
+    if not content:
+        return None
+    return MensajeAntigravity(
+        id=f"step-{idx}",
+        conversation_id="",
+        sender="antigravity" if step_type == 1 else "user",
+        content=content[:1000],  # Limitar tamaño
+        timestamp="",
+        title=f"Step {idx}",
+    )
+
+
 def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
     """Lee mensajes desde una base de datos SQLite."""
     mensajes: list[MensajeAntigravity] = []
@@ -142,31 +183,8 @@ def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
         """).fetchall()
 
         for row in rows:
-            idx, step_type, status, task_details, step_payload = row
-
-            # Los datos están en formato BLOB (protobuf), intentar extraer texto
-            content = ""
-            if task_details:
-                try:
-                    content = task_details.decode("utf-8", errors="ignore")
-                except Exception as err:
-                    logger.debug("No se pudo decodificar task_details: %s", err)
-
-            if step_payload:
-                try:
-                    content += step_payload.decode("utf-8", errors="ignore")
-                except Exception as err:
-                    logger.debug("No se pudo decodificar step_payload: %s", err)
-
-            if content:
-                msg = MensajeAntigravity(
-                    id=f"step-{idx}",
-                    conversation_id="",
-                    sender="antigravity" if step_type == 1 else "user",
-                    content=content[:1000],  # Limitar tamaño
-                    timestamp="",
-                    title=f"Step {idx}",
-                )
+            msg = _es_mensaje_step(row)
+            if msg:
                 mensajes.append(msg)
 
         conn.close()
@@ -175,6 +193,53 @@ def _leer_conversacion_sqlite(db_path: str) -> list[MensajeAntigravity]:
         logger.warning("No se pudo leer la base SQLite %s: %s", db_path, err)
 
     return mensajes
+
+
+def _cargar_mensajes_conversacion(
+    item: str,
+    brain_dir: str,
+    conversations_dir: str,
+) -> list[MensajeAntigravity]:
+    """Carga los mensajes de una conversación (JSON, con fallback SQLite).
+
+    Args:
+        item (str): Id de la conversación (carpeta en brain/).
+        brain_dir (str): Directorio ``brain`` de Antigravity.
+        conversations_dir (str): Directorio ``conversations`` de Antigravity.
+
+    Returns:
+        list[MensajeAntigravity]: Mensajes encontrados (JSON o SQLite).
+    """
+    mensajes = _leer_mensajes_json(item, brain_dir)
+    if mensajes or not os.path.exists(conversations_dir):
+        return mensajes
+    db_path = os.path.join(conversations_dir, f"{item}.db")
+    if os.path.exists(db_path):
+        return _leer_conversacion_sqlite(db_path)
+    return mensajes
+
+
+def _construir_conversacion(item: str, mensajes: list[MensajeAntigravity]) -> ConversacionAntigravity:
+    """Construye una ConversacionAntigravity desde sus mensajes.
+
+    Args:
+        item (str): Id de la conversación.
+        mensajes (list[MensajeAntigravity]): Mensajes de la conversación.
+
+    Returns:
+        ConversacionAntigravity: Conversación con fechas y proyecto detectados.
+    """
+    timestamps = [m.timestamp for m in mensajes if m.timestamp]
+    fecha_inicio = min(timestamps) if timestamps else ""
+    fecha_fin = max(timestamps) if timestamps else ""
+    proyecto = _detectar_proyecto(mensajes)
+    return ConversacionAntigravity(
+        id=item,
+        mensajes=mensajes,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        proyecto=proyecto,
+    )
 
 
 def leer_conversaciones_antigravity(
@@ -203,32 +268,11 @@ def leer_conversaciones_antigravity(
             if not os.path.isdir(item_path):
                 continue
 
-            # Leer mensajes JSON
-            mensajes = _leer_mensajes_json(item, brain_dir)
-
-            # Si no hay mensajes JSON, intentar SQLite
-            if not mensajes and os.path.exists(conversations_dir):
-                db_path = os.path.join(conversations_dir, f"{item}.db")
-                if os.path.exists(db_path):
-                    mensajes = _leer_conversacion_sqlite(db_path)
+            # Leer mensajes JSON (con fallback SQLite)
+            mensajes = _cargar_mensajes_conversacion(item, brain_dir, conversations_dir)
 
             if mensajes:
-                # Obtener fechas
-                timestamps = [m.timestamp for m in mensajes if m.timestamp]
-                fecha_inicio = min(timestamps) if timestamps else ""
-                fecha_fin = max(timestamps) if timestamps else ""
-
-                # Determinar proyecto del contexto
-                proyecto = _detectar_proyecto(mensajes)
-
-                conv = ConversacionAntigravity(
-                    id=item,
-                    mensajes=mensajes,
-                    fecha_inicio=fecha_inicio,
-                    fecha_fin=fecha_fin,
-                    proyecto=proyecto,
-                )
-                conversaciones.append(conv)
+                conversaciones.append(_construir_conversacion(item, mensajes))
 
     return conversaciones
 
@@ -237,92 +281,230 @@ def _detectar_proyecto(mensajes: list[MensajeAntigravity]) -> str:
     """Detecta el proyecto del contexto de la conversación."""
     for msg in mensajes:
         # Buscar rutas de proyecto en los argumentos de herramientas
-        if msg.tool_args:
-            try:
-                args = json.loads(msg.tool_args)
-                cwd = args.get("Cwd", "")
-                if cwd:
-                    # Extraer nombre del proyecto
-                    parts = cwd.replace("\\", "/").split("/")
-                    if len(parts) >= 2:
-                        return str(parts[-1])
-            except (json.JSONDecodeError, ValueError, TypeError) as err:
-                logger.debug("Tool args no parseables: %s", err)
+        proyecto_tool = _proyecto_desde_tool(msg)
+        if proyecto_tool:
+            return proyecto_tool
 
         # Buscar en el contenido
-        if "CotanoPet" in msg.content:
-            return "CotanoPet"
-        elif "Bot_AX" in msg.content:
-            return "Bot_AX_Contable"
-        elif "AlgorFut" in msg.content:
-            return "AlgorFut"
-        elif "ContextMap" in msg.content or "context-map" in msg.content:
-            return "ContextMap"
+        proyecto_contenido = _proyecto_desde_contenido(msg.content)
+        if proyecto_contenido:
+            return proyecto_contenido
 
     return ""
 
 
+_PROYECTOS_CONOCIDOS: list[tuple[str, str]] = [
+    ("CotanoPet", "CotanoPet"),
+    ("Bot_AX", "Bot_AX_Contable"),
+    ("AlgorFut", "AlgorFut"),
+]
+
+
+def _proyecto_desde_contenido(contenido: str) -> str:
+    """Detecta un proyecto conocido mencionado en el contenido del mensaje.
+
+    Args:
+        contenido (str): Contenido del mensaje.
+
+    Returns:
+        str: Nombre del proyecto detectado, o string vacío.
+    """
+    if not contenido:
+        return ""
+    for marca, proyecto in _PROYECTOS_CONOCIDOS:
+        if marca in contenido:
+            return proyecto
+    if "ContextMap" in contenido or "context-map" in contenido:
+        return "ContextMap"
+    return ""
+
+
+def _proyecto_desde_tool(msg: MensajeAntigravity) -> str:
+    """Extrae el proyecto desde el argumento ``Cwd`` de una herramienta.
+
+    Args:
+        msg (MensajeAntigravity): Mensaje a analizar.
+
+    Returns:
+        str: Nombre del proyecto desde Cwd, o string vacío.
+    """
+    if not msg.tool_args:
+        return ""
+    try:
+        args = json.loads(msg.tool_args)
+        cwd = args.get("Cwd", "")
+        if cwd:
+            parts = cwd.replace("\\", "/").split("/")
+            if len(parts) >= 2:
+                return str(parts[-1])
+    except (json.JSONDecodeError, ValueError, TypeError) as err:
+        logger.debug("Tool args no parseables: %s", err)
+    return ""
+
+
+# Reglas de clasificación por tipo de acción: (criterio, tipo) evaluadas en orden.
+_REGLAS_CLASIFICACION: list[tuple[str, str]] = [
+    ("run_command", "COMANDO"),
+    ("write_file", "CREACION"),
+    ("create_file", "CREACION"),
+    ("edit_file", "EDICION"),
+    ("patch", "EDICION"),
+    ("read_file", "LECTURA"),
+    ("search", "LECTURA"),
+]
+
+# Reglas de clasificación por contenido: (marcas de texto, tipo).
+_REGLAS_CLASIFICACION_CONTENIDO: list[tuple[tuple[str, ...], str]] = [
+    (("error", "fallo"), "ERROR"),
+    (("fix", "correc"), "CORRECCION"),
+    (("feat", "add"), "IDEA"),
+    (("test",), "PRUEBA"),
+    (("todo", "pendiente"), "FUTURO"),
+]
+
+
 def clasificar_mensaje(msg: MensajeAntigravity) -> str:
-    """Clasifica un mensaje de Antigravity."""
+    """Clasifica un mensaje de Antigravity por tipo de acción.
+
+    Args:
+        msg (MensajeAntigravity): Mensaje a clasificar.
+
+    Returns:
+        str: Tipo semántico del mensaje (COMANDO, CREACION, EDICION...).
+    """
     content_lower = msg.content.lower()
 
-    # Clasificar por tipo de acción
-    if msg.tool_name == "run_command":
-        return "COMANDO"
-    elif msg.tool_name in ("write_file", "create_file"):
-        return "CREACION"
-    elif msg.tool_name in ("edit_file", "patch"):
-        return "EDICION"
-    elif msg.tool_name in ("read_file", "search"):
-        return "LECTURA"
-    elif "error" in content_lower or "fallo" in content_lower:
-        return "ERROR"
-    elif "fix" in content_lower or "correc" in content_lower:
-        return "CORRECCION"
-    elif "feat" in content_lower or "add" in content_lower:
-        return "IDEA"
-    elif "test" in content_lower:
-        return "PRUEBA"
-    elif "todo" in content_lower or "pendiente" in content_lower:
-        return "FUTURO"
-    else:
-        return "CAMBIO"
+    # Clasificar por tool_name primero (tabla de reglas)
+    for tool, tipo in _REGLAS_CLASIFICACION:
+        if msg.tool_name == tool:
+            return tipo
+
+    # Clasificar por contenido (tabla de marcas de texto)
+    for marcas, tipo in _REGLAS_CLASIFICACION_CONTENIDO:
+        if any(marca in content_lower for marca in marcas):
+            return tipo
+    return "CAMBIO"
+
+
+_PATRONES_RUIDO: list[str] = [
+    "checking if",
+    "notice all your",
+    "the agent",
+    "background tasks",
+    "validation log",
+    "has been stopped",
+    "has completed",
+    "without warnings",
+    "conversa",  # Mensajes truncados
+]
+
+
+def _ruido_por_patron(content_lower: str, title_lower: str) -> bool:
+    """True si el mensaje contiene algún patrón de ruido conocido.
+
+    Args:
+        content_lower (str): Contenido en minúsculas.
+        title_lower (str): Título en minúsculas.
+
+    Returns:
+        bool: True si coincide algún patrón.
+    """
+    return any(p in content_lower or p in title_lower for p in _PATRONES_RUIDO)
+
+
+def _es_contenido_corrupto(content: str) -> bool:
+    """True si el contenido tiene demasiados caracteres de control (datos corruptos).
+
+    Args:
+        content (str): Contenido del mensaje.
+
+    Returns:
+        bool: True si el contenido parece corrupto.
+    """
+    if not content:
+        return False
+    control_chars = sum(1 for c in content if ord(c) < 32 or ord(c) > 126)
+    return control_chars > 5
 
 
 def es_mensaje_ruido(msg: MensajeAntigravity) -> bool:
-    """Determina si un mensaje es ruido (no informativo)."""
+    """Determina si un mensaje es ruido (no informativo).
+
+    Args:
+        msg (MensajeAntigravity): Mensaje a evaluar.
+
+    Returns:
+        bool: True si el mensaje debe descartarse como ruido.
+    """
     content_lower = msg.content.lower() if msg.content else ""
     title_lower = msg.title.lower() if msg.title else ""
 
-    # Patrones de ruido
-    ruido = [
-        "checking if",
-        "notice all your",
-        "the agent",
-        "background tasks",
-        "validation log",
-        "has been stopped",
-        "has completed",
-        "without warnings",
-        "conversa",  # Mensajes truncados
-    ]
-
-    for patron in ruido:
-        if patron in content_lower or patron in title_lower:
-            return True
-
-    # Mensajes muy cortos (menos de 10 chars)
-    if msg.content and len(msg.content.strip()) < 10:
+    if _ruido_por_patron(content_lower, title_lower):
         return True
+    if msg.content and len(msg.content.strip()) < 10:
+        return True  # Mensajes muy cortos (menos de 10 chars)
+    if _es_contenido_corrupto(msg.content):
+        return True  # Detectar caracteres de control (datos corruptos)
+    return bool(not msg.title or not msg.title.strip())  # Títulos vacíos
 
-    # Detectar caracteres de control (datos corruptos)
-    if msg.content:
-        control_chars = sum(1 for c in msg.content if ord(c) < 32 or ord(c) > 126)
-        if control_chars > 5:
-            return True
 
-    # Títulos vacíos o con solo espacios
-    return bool(not msg.title or not msg.title.strip())
+def _evento_conversacion(conv: ConversacionAntigravity, ide: bool) -> Event:
+    """Crea el evento BASE de una conversación de Antigravity.
+
+    Args:
+        conv (ConversacionAntigravity): Conversación importada.
+        ide (bool): True si es Antigravity IDE, False si es 2.0.
+
+    Returns:
+        Event: Evento BASE con la información de la conversación.
+    """
+    nombre_herramienta = "Antigravity IDE" if ide else "Antigravity 2.0"
+    return Event(
+        type="BASE",
+        text=f"Conversación en {nombre_herramienta}: {conv.proyecto or 'general'} "
+             f"({len(conv.mensajes)} mensajes)",
+        timestamp=conv.fecha_inicio,
+        source="antigravity-ide" if ide else "antigravity-2",
+        tags=["antigravity", conv.proyecto.lower()] if conv.proyecto else ["antigravity"],
+    )
+
+
+def _eventos_mensajes(conv: ConversacionAntigravity, ide: bool) -> list[Event]:
+    """Convierte los mensajes significativos de una conversación en eventos.
+
+    Descarta ruido y clasifica cada mensaje por tipo de acción; cada evento
+    conserva el id de conversación, la herramienta y el proyecto en ``meta``.
+
+    Args:
+        conv (ConversacionAntigravity): Conversación importada.
+        ide (bool): True si es Antigravity IDE, False si es 2.0.
+
+    Returns:
+        list[Event]: Eventos por mensaje significativo.
+    """
+    eventos: list[Event] = []
+    for msg in conv.mensajes[:20]:  # Últimos 20 mensajes
+        if es_mensaje_ruido(msg):
+            continue
+
+        tipo = clasificar_mensaje(msg)
+        texto = msg.content[:200] if msg.content else msg.title
+        if msg.tool_name:
+            texto = f"[{msg.tool_name}] {texto}"
+
+        eventos.append(Event(
+            type=tipo,
+            text=texto,
+            timestamp=msg.timestamp,
+            source="antigravity-ide" if ide else "antigravity-2",
+            tags=["antigravity", tipo.lower()],
+            meta={
+                "conversation_id": conv.id,
+                "tool": msg.tool_name,
+                "project": conv.proyecto,
+            },
+        ))
+    return eventos
 
 
 def importar_antigravity(
@@ -343,44 +525,11 @@ def importar_antigravity(
     conversaciones = leer_conversaciones_antigravity(ide, limite)
     eventos = []
 
-    nombre_herramienta = "Antigravity IDE" if ide else "Antigravity 2.0"
-
     for conv in conversaciones:
         # Evento BASE de la conversación
-        eventos.append(Event(
-            type="BASE",
-            text=f"Conversación en {nombre_herramienta}: {conv.proyecto or 'general'} "
-                 f"({len(conv.mensajes)} mensajes)",
-            timestamp=conv.fecha_inicio,
-            source="antigravity-ide" if ide else "antigravity-2",
-            tags=["antigravity", conv.proyecto.lower()] if conv.proyecto else ["antigravity"],
-        ))
-
+        eventos.append(_evento_conversacion(conv, ide))
         # Clasificar y agregar eventos por mensaje significativo
-        for msg in conv.mensajes[:20]:  # Últimos 20 mensajes
-            # Filtrar ruido
-            if es_mensaje_ruido(msg):
-                continue
-
-            tipo = clasificar_mensaje(msg)
-
-            # Crear evento con contexto
-            texto = msg.content[:200] if msg.content else msg.title
-            if msg.tool_name:
-                texto = f"[{msg.tool_name}] {texto}"
-
-            eventos.append(Event(
-                type=tipo,
-                text=texto,
-                timestamp=msg.timestamp,
-                source="antigravity-ide" if ide else "antigravity-2",
-                tags=["antigravity", tipo.lower()],
-                meta={
-                    "conversation_id": conv.id,
-                    "tool": msg.tool_name,
-                    "project": conv.proyecto,
-                },
-            ))
+        eventos.extend(_eventos_mensajes(conv, ide))
 
     # Guardar eventos
     if output_path and eventos:
