@@ -24,7 +24,8 @@ def version_local() -> str:
     """Versión local de ContextMap.
 
     Usa los metadatos del paquete instalado; si corre desde el repo sin
-    instalar, lee ``pyproject.toml``.
+    instalar, lee ``pyproject.toml``. Prueba ambos nombres de distribución
+    (``context-map`` histórico y ``context-map-ai`` actual).
 
     Returns:
         str: Versión local (ej. "1.3.0").
@@ -32,7 +33,13 @@ def version_local() -> str:
     try:
         import importlib.metadata as md
 
-        return md.version("context-map")
+        for nombre in ("context-map", "context-map-ai"):
+            try:
+                v = md.version(nombre)
+                if v:
+                    return v
+            except Exception:
+                continue
     except Exception:
         pass
     try:
