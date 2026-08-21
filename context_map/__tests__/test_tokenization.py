@@ -1,6 +1,5 @@
 """Pruebas unitarias para el módulo de tokenización context_map.core.tokenization."""
 
-import pytest
 from context_map.core.tokenization import TokenCounter, contar_tokens_texto, normalize_model_name
 
 

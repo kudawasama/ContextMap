@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from context_map.domain.synchronization.watcher import iniciar_watcher
 
 
-def cmd_watch(args: Dict[str, Any]) -> None:
+def cmd_watch(args: dict[str, Any]) -> None:
     """Manejador del comando CLI `ctxmap watch`.
 
     Args:

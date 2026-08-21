@@ -1,11 +1,10 @@
 """Pruebas unitarias para el módulo context_map.domain.normalization.similarity."""
 
-import pytest
 from context_map.domain.normalization.similarity import (
+    deduplicar_elementos_similares,
     distancia_levenshtein,
     similitud_jaccard_ngramas,
     son_textos_similares,
-    deduplicar_elementos_similares,
 )
 
 

@@ -7,7 +7,6 @@ módulos y funciones sin requerir servicios en la nube.
 import re
 from collections import Counter
 from pathlib import Path
-from typing import List, Set
 
 
 class DomainConceptExtractor:
@@ -39,7 +38,7 @@ class DomainConceptExtractor:
             if len(p_lower) >= 4 and p_lower not in self._PALABRAS_RESERVADAS:
                 self.contador_terminos[p_lower.upper()] += 1
 
-    def obtener_conceptos_dominantes(self, top_n: int = 5) -> List[str]:
+    def obtener_conceptos_dominantes(self, top_n: int = 5) -> list[str]:
         """Recupera los N conceptos de negocio más relevantes identificados.
 
         Args:
@@ -51,7 +50,7 @@ class DomainConceptExtractor:
         return [termino for termino, _ in self.contador_terminos.most_common(top_n)]
 
 
-def extraer_conceptos_proyecto(project_dir: Path, top_n: int = 5) -> List[str]:
+def extraer_conceptos_proyecto(project_dir: Path, top_n: int = 5) -> list[str]:
     """Extrae los conceptos de negocio dominantes de un directorio de proyecto.
 
     Args:

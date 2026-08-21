@@ -6,7 +6,6 @@ analizando librerías importadas, tipos de retorno, decoradores y estructuras si
 
 import ast
 from pathlib import Path
-from typing import List, Optional, Set
 
 
 class ASTSummaryExtractor:
@@ -38,10 +37,10 @@ class ASTSummaryExtractor:
             code_text: Cadena de texto con el código Python a analizar.
         """
         self.code_text = code_text
-        self.imports: Set[str] = set()
-        self.funciones: List[str] = []
-        self.clases: List[str] = []
-        self.docstring_modulo: Optional[str] = None
+        self.imports: set[str] = set()
+        self.funciones: list[str] = []
+        self.clases: list[str] = []
+        self.docstring_modulo: str | None = None
         self._analizar_ast()
 
     def _analizar_ast(self) -> None:
@@ -81,18 +80,18 @@ class ASTSummaryExtractor:
                 return primera_linea
 
         # 2. Inferencia basada en librerías importadas
-        roles_detectados: List[str] = []
+        roles_detectados: list[str] = []
         for lib, desc in self._MAPPING_LIBRERIAS.items():
             if lib in self.imports:
                 roles_detectados.append(desc)
 
-        componentes: List[str] = []
+        componentes: list[str] = []
         if self.clases:
             componentes.append(f"clases ({', '.join(self.clases[:3])})")
         if self.funciones:
             componentes.append(f"funciones ({', '.join(self.funciones[:3])})")
 
-        partes_resumen: List[str] = []
+        partes_resumen: list[str] = []
 
         if roles_detectados:
             partes_resumen.append(f"Módulo enfocado en {', '.join(roles_detectados[:2])}.")

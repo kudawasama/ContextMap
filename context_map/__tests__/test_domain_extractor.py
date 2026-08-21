@@ -1,8 +1,6 @@
 """Pruebas unitarias para el módulo context_map.domain.normalization.domain_extractor."""
 
-import pytest
-from pathlib import Path
-from context_map.domain.normalization.domain_extractor import DomainConceptExtractor, extraer_conceptos_proyecto
+from context_map.domain.normalization.domain_extractor import DomainConceptExtractor
 
 
 def test_domain_concept_extractor() -> None:

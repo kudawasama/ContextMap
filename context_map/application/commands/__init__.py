@@ -11,6 +11,7 @@ from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.auto import cmd_auto
 from context_map.application.commands.build import cmd_build
 from context_map.application.commands.doctor_cmd import cmd_doctor
+from context_map.application.commands.enrich import cmd_enrich
 from context_map.application.commands.hook import cmd_hook
 from context_map.application.commands.importers import (
     cmd_import_antigravity,
@@ -19,6 +20,7 @@ from context_map.application.commands.importers import (
     cmd_import_sessions,
 )
 from context_map.application.commands.ingest import cmd_ingest
+from context_map.application.commands.pack import cmd_pack, cmd_unpack
 from context_map.application.commands.personal import cmd_personal
 from context_map.application.commands.refresh import cmd_refresh
 from context_map.application.commands.scan import cmd_scan
@@ -32,8 +34,6 @@ from context_map.application.commands.tools import (
 from context_map.application.commands.update import cmd_update
 from context_map.application.commands.watch import cmd_watch
 from context_map.application.commands.wrap import cmd_wrap
-from context_map.application.commands.enrich import cmd_enrich
-from context_map.application.commands.pack import cmd_pack, cmd_unpack
 
 __all__ = [
     "cmd_pack",

@@ -14,6 +14,44 @@ import sys
 from context_map.application.commands._helpers import safe_rmtree
 
 
+def _ultimo_tag_remoto(repo_url: str) -> str | None:
+    """Resuelve el tag de release más reciente (vX.Y.Z) del repositorio remoto.
+
+    Fijar la instalación a un tag (en vez de HEAD) reduce el riesgo de
+    supply chain: no se ejecuta código arbitrario del último commit sin
+    revisar, solo releases versionados.
+
+    Args:
+        repo_url: URL del repositorio git.
+
+    Returns:
+        str | None: Nombre del tag más nuevo (ej. "v2.2.1") o None si no se pudo resolver.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "ls-remote", "--tags", repo_url],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            return None
+        tags: list[str] = []
+        for linea in result.stdout.splitlines():
+            # Ignorar las referencias anotadas (^{}) para no duplicar tags
+            if "refs/tags/" not in linea or "^{}" in linea:
+                continue
+            nombre = linea.split("refs/tags/", 1)[-1].strip()
+            # Solo tags de versión semántica (v1.2.3, v2.2.1, ...)
+            if nombre.startswith("v") and nombre[1:2].isdigit():
+                tags.append(nombre)
+        if not tags:
+            return None
+        from context_map.infrastructure.version_check import _normalizar
+
+        return max(tags, key=lambda t: _normalizar(t))
+    except Exception:
+        return None
+
+
 def cmd_update(args) -> None:
     """Actualiza ContextMap a la última versión desde GitHub.
 
@@ -40,10 +78,19 @@ def cmd_update(args) -> None:
     repo_url = "https://github.com/kudawasama/ContextMap.git"
     print(f"Buscando última versión desde: {repo_url}")
 
+    # Fijar la instalación al último tag de release (supply-chain hardening),
+    # con fallback a HEAD si no se puede resolver el tag.
+    tag = _ultimo_tag_remoto(repo_url)
+    ref = f"{repo_url}@{tag}" if tag else repo_url
+    if tag:
+        print(f"   Release detectado: {tag} (instalación fijada a este tag)")
+    else:
+        print("   (No se pudo resolver el último tag; se usará HEAD)")
+
     # Método 1: uv tool install directo (Rápido, Atómico y seguro en Windows)
     if shutil.which("uv"):
         print("   Actualizando paquete global con 'uv tool'...")
-        cmd = ["uv", "tool", "install", "--force", f"git+{repo_url}"]
+        cmd = ["uv", "tool", "install", "--force", f"git+{ref}"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode == 0:
             print("✅ Actualización completada exitosamente con uv.")
@@ -53,7 +100,7 @@ def cmd_update(args) -> None:
     # Método 2: pipx install --force
     if shutil.which("pipx"):
         print("   Actualizando paquete global con 'pipx'...")
-        cmd = ["pipx", "install", "--force", f"git+{repo_url}"]
+        cmd = ["pipx", "install", "--force", f"git+{ref}"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode == 0:
             print("✅ Actualización completada exitosamente con pipx.")
@@ -108,6 +155,17 @@ def cmd_update(args) -> None:
     print("Repositorio actualizado")
     print()
 
+    # Fijar el checkout al release detectado antes de instalar (si aplica)
+    if tag:
+        checkout = subprocess.run(
+            ["git", "-C", update_dir, "checkout", tag],
+            capture_output=True, text=True, timeout=30,
+        )
+        if checkout.returncode == 0:
+            print(f"   Checkout fijado a {tag}")
+        else:
+            print(f"   (No se pudo fijar checkout a {tag}: {checkout.stderr.strip()})")
+
     # Instalar como herramienta global (uv tool o pipx)
     print("Instalando nueva version...")
     if shutil.which("uv"):
@@ -146,21 +204,26 @@ def cmd_update(args) -> None:
 def _mostrar_version_final() -> None:
     """Muestra la versión instalada de ContextMap de forma segura."""
     print("Versión instalada:")
-    result = subprocess.run(
-        [sys.executable, "-m", "context_map.cli", "--version"],
-        capture_output=True, text=True,
-    )
-    if result.returncode == 0 and result.stdout.strip():
-        print(f"   {result.stdout.strip()}")
-    else:
+    try:
+        from context_map.infrastructure.version_check import version_local
+
+        print(f"   {version_local()}")
+    except Exception:
         result = subprocess.run(
-            ["ctxmap", "--version"],
+            [sys.executable, "-m", "context_map.cli", "--version"],
             capture_output=True, text=True,
         )
         if result.returncode == 0 and result.stdout.strip():
             print(f"   {result.stdout.strip()}")
         else:
-            print("   ContextMap v2.2.0 (actualizado)")
+            result = subprocess.run(
+                ["ctxmap", "--version"],
+                capture_output=True, text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                print(f"   {result.stdout.strip()}")
+            else:
+                print("   ContextMap (versión desconocida)")
 
     print()
     print("💡 Tus datos guardados (.context-map/, personal.db, notas manuales) se mantienen 100% intactos.")

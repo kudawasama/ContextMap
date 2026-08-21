@@ -33,7 +33,7 @@ def version_local() -> str:
     try:
         import importlib.metadata as md
 
-        for nombre in ("context-map", "context-map-ai"):
+        for nombre in ("context-map-ai", "context-map"):
             try:
                 v = md.version(nombre)
                 if v:
@@ -163,7 +163,7 @@ def aviso_actualizacion(force: bool = False) -> str:
             return (
                 f"\n⬆️ Hay una actualización disponible: v{remota} (tienes {local}).\n"
                 f"   Actualiza con: uv tool install --force "
-                f"git+https://github.com/kudawasama/ContextMap.git"
+                f"git+https://github.com/kudawasama/ContextMap.git@v{remota}"
             )
     except Exception as err:  # noqa: BLE001 — jamás romper el flujo por esto
         logger.debug("aviso de actualización omitido: %s", err)
@@ -191,7 +191,7 @@ def aviso_pre_actualizacion(force: bool = False) -> str:
             return (
                 f"\n⬆️⚠️  ContextMap DESACTUALIZADO: tienes v{local}, la última es v{remota}.\n"
                 f"   Antes de actualizar el CONTEXTO, actualiza el PROGRAMA:\n"
-                f"   uv tool install --force \"git+https://github.com/kudawasama/ContextMap.git\" "
+                f"   uv tool install --force \"git+https://github.com/kudawasama/ContextMap.git@v{remota}\" "
                 f"--with \"mcp>=1.2.0,<2.0.0\"\n"
             )
     except Exception as err:  # noqa: BLE001 — jamás romper el flujo por esto

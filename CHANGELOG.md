@@ -5,6 +5,19 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] — 2026-08-21
+
+### 🔧 Correcciones — Saneamiento de release
+
+- **fix: flag `--version` real**: `ctxmap --version` ahora imprime la versión instalada (antes no existía y `update` mostraba un mensaje hardcodeado).
+- **fix: detección de versión con el paquete renombrado**: `version_check` prioriza `context-map-ai` (nombre canónico actual) sobre el heredado `context-map`, eliminando avisos falsos de actualización.
+- **fix: lint (ruff) 100% limpio**: corregidos 11 errores (`F811` redefinición en `brief.py`, `F841` variables sin usar, `SIM102/105/108`).
+- **style: ruff --fix e isort** aplicados en todo el paquete (anotaciones modernas `dict`/`| None` y orden de imports).
+
+Suite: 176/176 tests verdes · ruff limpio.
+
+---
+
 ## [2.2.0] — 2026-08-19
 
 ### 🗜️ Nuevo — Paquetes de Contexto Portátiles Offline, Escáner de Auditoría AST & Fallback de Modelos

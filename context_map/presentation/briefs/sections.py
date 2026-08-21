@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from context_map.core.models import Node
 from context_map.presentation.briefs.extractors import vault_nombre

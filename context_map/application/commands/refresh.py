@@ -134,6 +134,7 @@ def cmd_refresh(args) -> None:
         if not quiet:
             try:
                 from pathlib import Path
+
                 from context_map.core.tokenization import TokenCounter
                 brief_p = Path(".context-map/CONTEXT.md")
                 if brief_p.exists():

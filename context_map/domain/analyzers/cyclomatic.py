@@ -7,7 +7,6 @@ para identificar zonas de alto riesgo de mantenibilidad.
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 
 @dataclass
@@ -68,7 +67,7 @@ class _CicloVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) -> List[MetricaFuncion]:
+def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) -> list[MetricaFuncion]:
     """Calcula la complejidad ciclomática de McCabe para cada función en el código fuente.
 
     Args:
@@ -86,7 +85,7 @@ def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) 
     except SyntaxError:
         return []
 
-    resultados: List[MetricaFuncion] = []
+    resultados: list[MetricaFuncion] = []
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -105,7 +104,7 @@ def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) 
     return resultados
 
 
-def analizar_archivo_ciclomatico(file_path: Path, umbral_alto: int = 10) -> List[MetricaFuncion]:
+def analizar_archivo_ciclomatico(file_path: Path, umbral_alto: int = 10) -> list[MetricaFuncion]:
     """Analiza un archivo Python en disco y retorna sus métricas ciclomáticas.
 
     Args:

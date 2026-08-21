@@ -8,7 +8,6 @@ import subprocess
 from datetime import datetime
 
 from context_map.domain.analysis.models import ResultadoReadiness, SenalReadiness
-from context_map.infrastructure.integrations.hermes import leer_sesiones
 from context_map.presentation.vault.preservar import ZONAS_MANUALES
 
 

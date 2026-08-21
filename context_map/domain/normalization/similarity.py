@@ -4,7 +4,8 @@ Proporciona algoritmos locales (Levenshtein + Jaccard n-gramas) sin dependencias
 pesadas ni llamadas a APIs para fusionar notas de riesgo e ideas redundantes.
 """
 
-from typing import List, Callable, TypeVar, Set, Tuple
+from collections.abc import Callable
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -39,7 +40,7 @@ def distancia_levenshtein(s1: str, s2: str) -> int:
     return v1[len(s2)]
 
 
-def _obtener_ngramas(texto: str, n: int = 3) -> Set[str]:
+def _obtener_ngramas(texto: str, n: int = 3) -> set[str]:
     """Genera el conjunto de n-gramas de caracteres para un texto."""
     texto_limpio = texto.lower().strip()
     if len(texto_limpio) < n:
@@ -106,10 +107,10 @@ def son_textos_similares(s1: str, s2: str, umbral: float = 0.8) -> bool:
 
 
 def deduplicar_elementos_similares(
-    elementos: List[T],
+    elementos: list[T],
     obtener_texto_fn: Callable[[T], str],
     umbral: float = 0.8,
-) -> List[T]:
+) -> list[T]:
     """Deduplica una lista de objetos reteniendo solo el primero de cada grupo de similares.
 
     Args:
@@ -120,7 +121,7 @@ def deduplicar_elementos_similares(
     Returns:
         Lista filtrada deduplicada.
     """
-    unicos: List[T] = []
+    unicos: list[T] = []
 
     for item in elementos:
         texto_item = obtener_texto_fn(item)

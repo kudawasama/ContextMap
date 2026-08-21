@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 
+from context_map.infrastructure.version_check import version_local
+
 
 def create_parser() -> argparse.ArgumentParser:
     """Construye y configura el parser principal con sus subcomandos.
@@ -20,6 +22,12 @@ def create_parser() -> argparse.ArgumentParser:
         description="Mapa mental narrativo de proyectos para agentes de IA",
     )
     p.add_argument("-v", "--verbose", action="store_true", help="Logs detallados (nivel DEBUG)")
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"ContextMap v{version_local()}",
+        help="Muestra la versión instalada y sale",
+    )
     sub = p.add_subparsers(dest="cmd", help="Comandos disponibles")
 
     s_auto = sub.add_parser("auto", help="Automatización completa en 1 paso (scan + git + build)")
@@ -136,7 +144,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_antigravity.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
 
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
-    
+
     s_doctor = sub.add_parser("doctor", help="Diagnóstico y auto-reparación (Self-Healing) del proyecto")
     s_doctor.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a diagnosticar")
     s_doctor.add_argument("--fix", action="store_true", help="Auto-reparar anomalías e inconsistencias encontradas")

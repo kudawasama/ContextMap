@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+from typing import Any
 
 from context_map.domain.health.doctor import diagnosticar_salud, reparar_salud
 
 
-def cmd_doctor(args: Dict[str, Any]) -> None:
+def cmd_doctor(args: dict[str, Any]) -> None:
     """Manejador del comando CLI `ctxmap doctor`.
 
     Args:
@@ -18,10 +18,7 @@ def cmd_doctor(args: Dict[str, Any]) -> None:
     fix = bool(args.get("fix", False))
     as_json = bool(args.get("json", False))
 
-    if fix:
-        report = reparar_salud(target_dir)
-    else:
-        report = diagnosticar_salud(target_dir)
+    report = reparar_salud(target_dir) if fix else diagnosticar_salud(target_dir)
 
     if as_json:
         data = {

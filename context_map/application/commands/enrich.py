@@ -4,13 +4,13 @@ Analiza archivos Python mediante AST y genera docstrings formales en Español T�
 (Google Style) utilizando Ollama local si está disponible o inferencia AST estática.
 """
 
-import ast
 import argparse
+import ast
 from pathlib import Path
-from typing import List, Optional
+
+from context_map.domain.analyzers.ast_summary import ASTSummaryExtractor
 from context_map.domain.health.hardware import evaluar_hardware_pc
 from context_map.infrastructure.integrations.ollama import OllamaLocalClient
-from context_map.domain.analyzers.ast_summary import ASTSummaryExtractor
 
 
 def cmd_enrich(args: argparse.Namespace) -> int:
@@ -23,7 +23,6 @@ def cmd_enrich(args: argparse.Namespace) -> int:
         Código de salida 0 (éxito) o 1 (error).
     """
     ruta_target = Path(args.path).resolve() if hasattr(args, "path") and args.path else Path(".").resolve()
-    dry_run = getattr(args, "dry_run", False)
 
     print(f"[enrich] Analizando directorio: {ruta_target}")
 
@@ -32,7 +31,7 @@ def cmd_enrich(args: argparse.Namespace) -> int:
     print(f"[enrich] Hardware: {hw.mensaje_diagnostico}")
 
     # 2. Inicializar cliente Ollama si es apto
-    ollama_client: Optional[OllamaLocalClient] = None
+    ollama_client: OllamaLocalClient | None = None
     if hw.es_apto_para_ollama:
         client = OllamaLocalClient(model_name=getattr(args, "model", None) or hw.modelo_recomendado)
         if client.esta_disponible():
@@ -57,7 +56,6 @@ def cmd_enrich(args: argparse.Namespace) -> int:
         except Exception:
             continue
 
-        modificado = False
         lineas = contenido.splitlines()
 
         for node in ast.walk(tree):

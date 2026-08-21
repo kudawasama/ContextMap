@@ -1,6 +1,5 @@
 """Pruebas unitarias para el módulo context_map.domain.analyzers.ast_summary."""
 
-import pytest
 from context_map.domain.analyzers.ast_summary import ASTSummaryExtractor
 
 

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
-from context_map.domain.ecosystem.hooks import PRE_COMMIT_SCRIPT, desinstalar_git_hooks, instalar_git_hooks
+from context_map.domain.ecosystem.hooks import (
+    PRE_COMMIT_SCRIPT,
+    desinstalar_git_hooks,
+    instalar_git_hooks,
+)
 
 
 def _script_hook() -> str:
@@ -22,7 +26,7 @@ def cmd_hook_install(args=None) -> None:
         print(f"[OK] Pre-commit hook de ContextMap instalado en: {target_dir}/.git/hooks/pre-commit")
 
 
-def cmd_hook(args: Dict[str, Any]) -> None:
+def cmd_hook(args: dict[str, Any]) -> None:
     """Manejador del comando CLI `ctxmap hook`.
 
     Args:

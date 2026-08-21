@@ -8,7 +8,6 @@ lo registrado (eventos en events.jsonl) vs lo que queda sin importar
 from __future__ import annotations
 
 import json
-import os
 
 from context_map.application.commands.wrap import cmd_wrap
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from context_map.domain.ecosystem.hooks import desinstalar_git_hooks, instalar_git_hooks
 
 
