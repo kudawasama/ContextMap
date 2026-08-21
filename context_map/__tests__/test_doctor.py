@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import os
-from context_map.domain.health.doctor import diagnosticar_salud, reparar_salud, run
+
+from context_map.domain.health.doctor import diagnosticar_salud, reparar_salud
 from context_map.presentation.briefs.extractors import vault_nombre
 
 
@@ -13,7 +14,7 @@ def test_doctor_diagnosticar_salud(tmp_path, monkeypatch):
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
     monkeypatch.setattr("os.path.expanduser", lambda path: str(fake_home) if "~" in path else os.path.expanduser(path))
-    
+
     report = diagnosticar_salud(str(tmp_path))
     assert report.ok
     assert len(report.checks) >= 4

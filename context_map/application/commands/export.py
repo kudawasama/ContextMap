@@ -1,9 +1,8 @@
 """Comando de exportación portable (XML/JSON/Markdown) para chats web de LLMs."""
 
 import json
-from pathlib import Path
-from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from xml.dom import minidom
 
 from context_map.core.models import Node
@@ -16,7 +15,7 @@ from context_map.presentation.briefs.brief import generar_brief
 def exportar_contexto(
     project_path: Path,
     format_type: str = "xml",
-    output_file: Optional[Path] = None,
+    output_file: Path | None = None,
     brief_only: bool = False,
     model_name: str = "gpt-4o",
 ) -> Path:
@@ -42,7 +41,7 @@ def exportar_contexto(
         output_file = project_path / f"contextmap_export.{ext}"
 
     # Cargar nodos y edges del mapa
-    nodos: List[Node] = []
+    nodos: list[Node] = []
     edges: list = []
     graph_file = project_path / ".context-map" / "maps" / "graph.jsonl"
     edges_file = project_path / ".context-map" / "maps" / "edges.jsonl"
@@ -50,7 +49,7 @@ def exportar_contexto(
     if graph_file.exists():
         records = load_jsonl(str(graph_file))
         nodos = [Node.from_dict(r) for r in records if isinstance(r, dict)]
-    
+
     if edges_file.exists():
         edges = load_jsonl(str(edges_file))
 
@@ -87,7 +86,7 @@ def exportar_contexto(
         output_file.write_text(json.dumps(data_json, indent=2, ensure_ascii=False), encoding="utf-8")
 
     elif fmt == "markdown":
-        parts: List[str] = [
+        parts: list[str] = [
             f"# ContextMap Export: {project_path.name}",
             f"> **Target Model:** {model_name} | **Brief Tokens:** {tokens_brief} | **Nodes:** {len(nodos)}",
             "",

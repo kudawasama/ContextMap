@@ -11,7 +11,6 @@ Soporta el catálogo completo de LLMs líderes y de última generación (2026 / 
 """
 
 import re
-from typing import Dict, Optional
 
 
 def normalize_model_name(name: str) -> str:
@@ -45,7 +44,7 @@ class TokenCounter:
     """Calculador y estimador oficial de tokens para el catálogo completo de modelos de lenguaje del mercado."""
 
     # Ratios oficiales promedio (caracteres por token) basados en las especificaciones de cada tokenizador
-    _RATIOS_OFICIALES: Dict[str, float] = {
+    _RATIOS_OFICIALES: dict[str, float] = {
         # --- Stealth / Emerging Labs ---
         "big-pickle": 3.7,
         "hy3-free": 3.7,
@@ -218,9 +217,7 @@ class TokenCounter:
                 ratio = 3.5
             elif "deepseek" in m or "glm" in m or "kimi" in m or "qwen" in m:
                 ratio = 3.5 if "code" in m or "codex" in m else 3.6
-            elif "llama" in m or "meta" in m:
-                ratio = 3.7
-            elif "grok" in m or "xai" in m or "minimax" in m or "mimo" in m or "nemotron" in m:
+            elif "llama" in m or "meta" in m or "grok" in m or "xai" in m or "minimax" in m or "mimo" in m or "nemotron" in m:
                 ratio = 3.7
             elif "mistral" in m or "mixtral" in m or "codestral" in m or "pixtral" in m:
                 ratio = 3.5 if "code" in m else 3.8

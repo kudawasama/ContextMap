@@ -10,9 +10,9 @@ import json
 from types import SimpleNamespace
 
 from context_map.domain.analysis.checker import (
-    analizar_readiness,
     _sesiones_posteriores,
     _ultima_actividad,
+    analizar_readiness,
 )
 
 

@@ -136,7 +136,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_antigravity.add_argument("--limit", type=int, default=5, help="Máximo de conversaciones")
 
     sub.add_parser("update", help="Actualiza ContextMap a la última versión")
-    
+
     s_doctor = sub.add_parser("doctor", help="Diagnóstico y auto-reparación (Self-Healing) del proyecto")
     s_doctor.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a diagnosticar")
     s_doctor.add_argument("--fix", action="store_true", help="Auto-reparar anomalías e inconsistencias encontradas")

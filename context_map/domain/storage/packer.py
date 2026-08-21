@@ -11,16 +11,16 @@ import logging
 import os
 import tarfile
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def crear_paquete_contexto(
     target_dir: str = ".",
-    output_path: Optional[str] = None,
-    project_name: Optional[str] = None,
-) -> Tuple[str, int, Dict[str, Any]]:
+    output_path: str | None = None,
+    project_name: str | None = None,
+) -> tuple[str, int, dict[str, Any]]:
     """Empaqueta la estructura .context-map/ del proyecto en un archivo .ctxpack.
 
     Args:
@@ -50,7 +50,7 @@ def crear_paquete_contexto(
     graph_jsonl = os.path.join(context_dir, "state", "graph.jsonl")
     if os.path.isfile(graph_jsonl):
         try:
-            with open(graph_jsonl, "r", encoding="utf-8") as f:
+            with open(graph_jsonl, encoding="utf-8") as f:
                 total_nodos = sum(1 for line in f if line.strip())
         except Exception:
             pass
@@ -100,7 +100,7 @@ def crear_paquete_contexto(
 def desempaquetar_contexto(
     archive_path: str,
     target_dir: str = ".",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Desempaqueta un archivo .ctxpack en el directorio destino.
 
     Args:
@@ -116,7 +116,7 @@ def desempaquetar_contexto(
     abs_target = os.path.abspath(target_dir)
     os.makedirs(abs_target, exist_ok=True)
 
-    manifest: Dict[str, Any] = {}
+    manifest: dict[str, Any] = {}
 
     with tarfile.open(archive_path, "r:gz") as tar:
         # Intentar leer pack_manifest.json

@@ -1,7 +1,6 @@
 """Pruebas unitarias para el módulo context_map.domain.health.hardware."""
 
-import pytest
-from context_map.domain.health.hardware import evaluar_hardware_pc, EspecificacionesHardware
+from context_map.domain.health.hardware import EspecificacionesHardware, evaluar_hardware_pc
 
 
 def test_evaluar_hardware_pc() -> None:

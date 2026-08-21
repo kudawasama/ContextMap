@@ -197,7 +197,7 @@ def nodos_regla_desde_catalogo(ruta: str, proyecto: str) -> list[Node]:
             status="completado" if estado == "implementada" else "vigente",
             tags=tags,
             source="reglas",
-            created_at=f"2026-08-14T00:00:00",
+            created_at="2026-08-14T00:00:00",
             evidence=[os.path.abspath(ruta)] if ruta else [],
             concept=categoria_nombre or categoria,
         ))

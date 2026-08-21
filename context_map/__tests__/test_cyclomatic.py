@@ -1,6 +1,5 @@
 """Pruebas unitarias para el módulo context_map.domain.analyzers.cyclomatic."""
 
-import pytest
 from context_map.domain.analyzers.cyclomatic import calcular_complejidad_ciclomatica
 
 

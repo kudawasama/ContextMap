@@ -11,13 +11,29 @@ from typing import TYPE_CHECKING
 
 from context_map.core.generators.narrative_templates import (
     contexto_base as _contexto_base,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_cambio_correccion as _contexto_cambio_correccion,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_documento as _contexto_documento,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_futuro as _contexto_futuro,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_hito as _contexto_hito,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_idea as _contexto_idea,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_prueba as _contexto_prueba,
+)
+from context_map.core.generators.narrative_templates import (
     contexto_riesgo as _contexto_riesgo,
+)
+from context_map.core.generators.narrative_templates import (
     titulo_limpio as _titulo_limpio,
 )
 

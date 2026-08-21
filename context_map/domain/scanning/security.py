@@ -2,14 +2,13 @@
 
 import re
 from pathlib import Path
-from typing import Dict, List
 
 
 class SecurityScanner:
     """Detector de patrones de credenciales, llaves API y secretos en código fuente."""
 
     # Patrones de expresiones regulares para identificar secretos conocidos
-    PATRONES_SECRETOS: Dict[str, str] = {
+    PATRONES_SECRETOS: dict[str, str] = {
         "AWS Access Key ID": r"(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
         "AWS Secret Key": r"(?i)aws_secret_access_key\s*=\s*['\"][A-Za-z0-9/\+=]{40}['\"]",
         "OpenAI API Key": r"sk-[a-zA-Z0-9]{32,64}",
@@ -22,7 +21,7 @@ class SecurityScanner:
     }
 
     @classmethod
-    def escanear_contenido(cls, text: str, rel_path: str = "") -> List[Dict[str, str]]:
+    def escanear_contenido(cls, text: str, rel_path: str = "") -> list[dict[str, str]]:
         """Inspecciona una cadena de texto en busca de patrones de secretos.
 
         Args:
@@ -35,7 +34,7 @@ class SecurityScanner:
         if not text:
             return []
 
-        hallazgos: List[Dict[str, str]] = []
+        hallazgos: list[dict[str, str]] = []
         lineas = text.splitlines()
 
         for nombre_regla, patron in cls.PATRONES_SECRETOS.items():
@@ -60,7 +59,7 @@ class SecurityScanner:
         return hallazgos
 
 
-def escanear_secretos_archivo(file_path: Path, content: str, project_root: Path) -> List[Dict[str, str]]:
+def escanear_secretos_archivo(file_path: Path, content: str, project_root: Path) -> list[dict[str, str]]:
     """Función de utilidad para escanear un archivo individual.
 
     Args:

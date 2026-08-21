@@ -5,16 +5,16 @@ y resúmenes con verificación previa de RAM y compatibilidad de hardware.
 """
 
 import json
-import urllib.request
 import urllib.error
-from typing import List, Optional, Dict, Any
-from context_map.domain.health.hardware import evaluar_hardware_pc, EspecificacionesHardware
+import urllib.request
+
+from context_map.domain.health.hardware import evaluar_hardware_pc
 
 
 class OllamaLocalClient:
     """Cliente HTTP local para la API de Ollama (http://localhost:11434)."""
 
-    def __init__(self, host: str = "http://localhost:11434", model_name: Optional[str] = None) -> None:
+    def __init__(self, host: str = "http://localhost:11434", model_name: str | None = None) -> None:
         """Inicializa el cliente de Ollama local.
 
         Args:
@@ -69,7 +69,7 @@ class OllamaLocalClient:
         except Exception:
             return False
 
-    def listar_modelos_instalados(self) -> List[str]:
+    def listar_modelos_instalados(self) -> list[str]:
         """Obtiene la lista de modelos de lenguaje instalados localmente en Ollama.
 
         Returns:
@@ -84,7 +84,7 @@ class OllamaLocalClient:
         except Exception:
             return []
 
-    def generar_docstring_funcion(self, nombre_funcion: str, codigo_funcion: str) -> Optional[str]:
+    def generar_docstring_funcion(self, nombre_funcion: str, codigo_funcion: str) -> str | None:
         """Genera un docstring formal en español técnico (Google Style) para una función.
 
         Args:

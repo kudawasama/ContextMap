@@ -1,7 +1,7 @@
 """Pruebas unitarias para el módulo context_map.domain.scanning.cache."""
 
-import pytest
 from pathlib import Path
+
 from context_map.domain.scanning.cache import ScanCacheManager
 
 

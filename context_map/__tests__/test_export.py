@@ -1,7 +1,7 @@
 """Pruebas unitarias para el comando de exportación portable XML/JSON/Markdown."""
 
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from context_map.application.commands.export import exportar_contexto
 

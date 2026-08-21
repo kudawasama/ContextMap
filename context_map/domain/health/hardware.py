@@ -4,11 +4,10 @@ Detecta la memoria RAM total y libre del PC para recomendar modelos de Ollama de
 consumo de memoria y prevenir bloqueos del sistema.
 """
 
+import ctypes
 import os
 import sys
-import ctypes
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass
@@ -20,7 +19,7 @@ class EspecificacionesHardware:
     cpu_cores: int
     es_apto_para_ollama: bool
     modelo_recomendado: str
-    modelos_compatibles: List[str]
+    modelos_compatibles: list[str]
     mensaje_diagnostico: str
 
 

@@ -7,7 +7,7 @@ para omitir el re-procesamiento AST de archivos sin cambios entre ejecuciones.
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 
 class ScanCacheManager:
@@ -22,7 +22,7 @@ class ScanCacheManager:
         self.project_dir = Path(project_dir).resolve()
         self.cache_dir = self.project_dir / ".context-map"
         self.cache_file = self.cache_dir / "cache.json"
-        self._cache_data: Dict[str, Dict[str, Any]] = {}
+        self._cache_data: dict[str, dict[str, Any]] = {}
         self._cargar_cache()
 
     def _cargar_cache(self) -> None:
@@ -84,7 +84,7 @@ class ScanCacheManager:
 
         return cached_entry.get("sha256") != hash_actual
 
-    def actualizar_entrada(self, file_path: Path, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def actualizar_entrada(self, file_path: Path, metadata: dict[str, Any] | None = None) -> None:
         """Actualiza la entrada de un archivo en la caché con su hash actual y metadatos opcionales.
 
         Args:
@@ -94,14 +94,14 @@ class ScanCacheManager:
         try:
             rel_path = str(file_path.resolve().relative_to(self.project_dir))
             hash_actual = self.calcular_hash_archivo(file_path)
-            entry: Dict[str, Any] = {"sha256": hash_actual}
+            entry: dict[str, Any] = {"sha256": hash_actual}
             if metadata:
                 entry.update(metadata)
             self._cache_data[rel_path] = entry
         except Exception:
             pass
 
-    def obtener_metadatos(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def obtener_metadatos(self, file_path: Path) -> dict[str, Any] | None:
         """Recupera los metadatos cacheados de un archivo si no ha sido modificado.
 
         Args:

@@ -1,6 +1,7 @@
 """Pruebas unitarias para el detector preventivo de secretos en el código fuente."""
 
 from pathlib import Path
+
 from context_map.domain.scanning.security import SecurityScanner, escanear_secretos_archivo
 
 

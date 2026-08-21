@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Callable, Optional
+from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def _ejecutar_refresco_default(project_dir: str) -> None:
 def iniciar_watcher(
     project_dir: str = ".",
     debounce_ms: int = 500,
-    callback: Optional[Callable[[str], None]] = None,
+    callback: Callable[[str], None] | None = None,
     max_iterations: int = 0,
 ) -> None:
     """Inicia el escuchador de eventos en el sistema de archivos con debouncing.

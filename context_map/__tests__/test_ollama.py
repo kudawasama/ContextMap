@@ -1,6 +1,5 @@
 """Pruebas unitarias para el módulo context_map.infrastructure.integrations.ollama."""
 
-import pytest
 from context_map.infrastructure.integrations.ollama import OllamaLocalClient
 
 

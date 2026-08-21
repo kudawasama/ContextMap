@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -247,7 +246,7 @@ def check_manual_notes_preservation(report: DoctorReport, fix: bool = False, pro
                 continue
             fpath = os.path.join(raiz, fname)
             try:
-                with open(fpath, "r", encoding="utf-8") as f:
+                with open(fpath, encoding="utf-8") as f:
                     content = f.read()
                 if "preserve: true" not in content and "preserve:true" not in content:
                     notas_sin_preserve.append(fpath)
@@ -267,7 +266,7 @@ def check_manual_notes_preservation(report: DoctorReport, fix: bool = False, pro
         reparadas = 0
         for fpath in notas_sin_preserve:
             try:
-                with open(fpath, "r", encoding="utf-8") as f:
+                with open(fpath, encoding="utf-8") as f:
                     content = f.read()
                 if content.startswith("---"):
                     new_content = content.replace("---", "---\npreserve: true", 1)

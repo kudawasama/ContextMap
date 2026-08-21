@@ -13,7 +13,6 @@ from __future__ import annotations
 import ast
 import os
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -38,7 +37,7 @@ class AuditVisitor(ast.NodeVisitor):
 
     def __init__(self, filepath: str) -> None:
         self.filepath = filepath
-        self.alertas: List[AlertaAuditoria] = []
+        self.alertas: list[AlertaAuditoria] = []
 
     def visit_Call(self, node: ast.Call) -> None:
         # Detectar eval() y exec()
@@ -113,7 +112,7 @@ class AuditVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def auditar_archivo_python(filepath: str) -> List[AlertaAuditoria]:
+def auditar_archivo_python(filepath: str) -> list[AlertaAuditoria]:
     """Audita un archivo Python individual mediante análisis AST.
 
     Args:
@@ -126,7 +125,7 @@ def auditar_archivo_python(filepath: str) -> List[AlertaAuditoria]:
         return []
 
     try:
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
             tree = ast.parse(f.read(), filename=filepath)
         visitor = AuditVisitor(filepath)
         visitor.visit(tree)
@@ -135,7 +134,7 @@ def auditar_archivo_python(filepath: str) -> List[AlertaAuditoria]:
         return []
 
 
-def auditar_proyecto_python(target_dir: str = ".") -> List[AlertaAuditoria]:
+def auditar_proyecto_python(target_dir: str = ".") -> list[AlertaAuditoria]:
     """Escanea y audita sintácticamente todos los archivos Python del proyecto.
 
     Args:
@@ -144,7 +143,7 @@ def auditar_proyecto_python(target_dir: str = ".") -> List[AlertaAuditoria]:
     Returns:
         Lista consolidada de AlertaAuditoria del proyecto.
     """
-    alertas: List[AlertaAuditoria] = []
+    alertas: list[AlertaAuditoria] = []
     for raiz, _, archivos in os.walk(target_dir):
         if any(ign in raiz for ign in [".git", "venv", ".venv", "__pycache__", ".context-map"]):
             continue

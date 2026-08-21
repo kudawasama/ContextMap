@@ -8,7 +8,6 @@ en menos de 30 segundos.
 from __future__ import annotations
 
 import os
-from typing import List
 
 from context_map.core.models import Edge, Node
 from context_map.presentation.briefs.extractors import (
@@ -18,6 +17,8 @@ from context_map.presentation.briefs.extractors import (
     extraer_pendientes_manuales,
     extraer_proposito,
     reglas_negocio,
+)
+from context_map.presentation.briefs.extractors import (
     reglas_negocio as _reglas_negocio,
 )
 from context_map.presentation.briefs.sections import (

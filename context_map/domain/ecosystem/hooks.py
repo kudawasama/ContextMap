@@ -75,13 +75,13 @@ def instalar_git_hooks(project_dir: str = ".", force: bool = False) -> dict[str,
     for name, content in hooks.items():
         hpath = os.path.join(hooks_dir, name)
         if os.path.exists(hpath) and not force:
-            with open(hpath, "r", encoding="utf-8", errors="ignore") as f:
+            with open(hpath, encoding="utf-8", errors="ignore") as f:
                 existing = f.read()
             if "ContextMap" in existing:
                 resultados[name] = "ya instalado"
                 continue
 
-            resultados[name] = f"omitido (archivo existe, usa --force para sobrescribir)"
+            resultados[name] = "omitido (archivo existe, usa --force para sobrescribir)"
             continue
 
         try:
@@ -118,7 +118,7 @@ def desinstalar_git_hooks(project_dir: str = ".") -> dict[str, str]:
             continue
 
         try:
-            with open(hpath, "r", encoding="utf-8", errors="ignore") as f:
+            with open(hpath, encoding="utf-8", errors="ignore") as f:
                 existing = f.read()
             if "ContextMap" in existing:
                 os.remove(hpath)
