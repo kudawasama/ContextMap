@@ -18,9 +18,6 @@ from context_map.presentation.briefs.extractors import (
     extraer_proposito,
     reglas_negocio,
 )
-from context_map.presentation.briefs.extractors import (
-    reglas_negocio as _reglas_negocio,
-)
 from context_map.presentation.briefs.sections import (
     aviso_frescura,
     comandos_utiles,

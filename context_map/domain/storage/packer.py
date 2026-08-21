@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import tarfile
+from contextlib import suppress
 from datetime import datetime
 from typing import Any
 
@@ -88,10 +89,8 @@ def crear_paquete_contexto(
 
     finally:
         if os.path.isfile(manifest_path):
-            try:
+            with suppress(Exception):
                 os.remove(manifest_path)
-            except Exception:
-                pass
 
     tamanio = os.path.getsize(output_path)
     return output_path, tamanio, manifest
@@ -139,9 +138,7 @@ def desempaquetar_contexto(
     # Limpiar manifiesto extraído de .context-map/ si quedó en disco
     extracted_manifest = os.path.join(abs_target, ".context-map", "pack_manifest.json")
     if os.path.isfile(extracted_manifest):
-        try:
+        with suppress(Exception):
             os.remove(extracted_manifest)
-        except Exception:
-            pass
 
     return manifest

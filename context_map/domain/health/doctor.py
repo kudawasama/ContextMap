@@ -182,7 +182,6 @@ def check_project_name_consistency(report: DoctorReport, fix: bool = False, proj
 
     repo_name = os.path.basename(os.path.abspath(project_dir))
     expected_vault = vault_nombre(repo_name)
-    vpath = os.path.join(context_dir, expected_vault)
 
     vaults = [
         d for d in os.listdir(context_dir)

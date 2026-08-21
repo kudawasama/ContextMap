@@ -146,21 +146,26 @@ def cmd_update(args) -> None:
 def _mostrar_version_final() -> None:
     """Muestra la versión instalada de ContextMap de forma segura."""
     print("Versión instalada:")
-    result = subprocess.run(
-        [sys.executable, "-m", "context_map.cli", "--version"],
-        capture_output=True, text=True,
-    )
-    if result.returncode == 0 and result.stdout.strip():
-        print(f"   {result.stdout.strip()}")
-    else:
+    try:
+        from context_map.infrastructure.version_check import version_local
+
+        print(f"   {version_local()}")
+    except Exception:
         result = subprocess.run(
-            ["ctxmap", "--version"],
+            [sys.executable, "-m", "context_map.cli", "--version"],
             capture_output=True, text=True,
         )
         if result.returncode == 0 and result.stdout.strip():
             print(f"   {result.stdout.strip()}")
         else:
-            print("   ContextMap v2.2.0 (actualizado)")
+            result = subprocess.run(
+                ["ctxmap", "--version"],
+                capture_output=True, text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                print(f"   {result.stdout.strip()}")
+            else:
+                print("   ContextMap (versión desconocida)")
 
     print()
     print("💡 Tus datos guardados (.context-map/, personal.db, notas manuales) se mantienen 100% intactos.")

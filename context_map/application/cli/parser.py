@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 
+from context_map.infrastructure.version_check import version_local
+
 
 def create_parser() -> argparse.ArgumentParser:
     """Construye y configura el parser principal con sus subcomandos.
@@ -20,6 +22,12 @@ def create_parser() -> argparse.ArgumentParser:
         description="Mapa mental narrativo de proyectos para agentes de IA",
     )
     p.add_argument("-v", "--verbose", action="store_true", help="Logs detallados (nivel DEBUG)")
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"ContextMap v{version_local()}",
+        help="Muestra la versión instalada y sale",
+    )
     sub = p.add_subparsers(dest="cmd", help="Comandos disponibles")
 
     s_auto = sub.add_parser("auto", help="Automatización completa en 1 paso (scan + git + build)")

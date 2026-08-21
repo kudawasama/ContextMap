@@ -42,8 +42,6 @@ def test_doctor_reparar_vaults_desalineados(tmp_path):
     (ctx_dir / "vault-Viejo").mkdir(parents=True)
     (ctx_dir / "vault-Viejo" / "nota.md").write_text("# Nota", encoding="utf-8")
 
-    repo_name = os.path.basename(os.path.abspath(str(tmp_path)))
-    # El vault esperado para tmp_path será vault-<repo_name>
-
-    report = reparar_salud(str(tmp_path))
+    # El vault esperado para tmp_path será vault-<nombre del directorio>
+    reparar_salud(str(tmp_path))
     assert os.path.isdir(ctx_dir / "_legacy" / "vault-Viejo")

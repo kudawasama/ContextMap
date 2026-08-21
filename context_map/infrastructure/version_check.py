@@ -33,7 +33,7 @@ def version_local() -> str:
     try:
         import importlib.metadata as md
 
-        for nombre in ("context-map", "context-map-ai"):
+        for nombre in ("context-map-ai", "context-map"):
             try:
                 v = md.version(nombre)
                 if v:

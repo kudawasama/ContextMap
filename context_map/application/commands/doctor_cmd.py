@@ -18,10 +18,7 @@ def cmd_doctor(args: dict[str, Any]) -> None:
     fix = bool(args.get("fix", False))
     as_json = bool(args.get("json", False))
 
-    if fix:
-        report = reparar_salud(target_dir)
-    else:
-        report = diagnosticar_salud(target_dir)
+    report = reparar_salud(target_dir) if fix else diagnosticar_salud(target_dir)
 
     if as_json:
         data = {

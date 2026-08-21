@@ -52,11 +52,13 @@ class AuditVisitor(ast.NodeVisitor):
             )
 
         # Detectar cursor.execute con f-strings o concatenación
-        if isinstance(node.func, ast.Attribute) and node.func.attr in ("execute", "executemany"):
-            if node.args:
-                primer_arg = node.args[0]
-                if isinstance(primer_arg, (ast.JoinedStr, ast.BinOp)):
-                    self.alertas.append(
+        if (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr in ("execute", "executemany")
+            and node.args
+            and isinstance(node.args[0], (ast.JoinedStr, ast.BinOp))
+        ):
+            self.alertas.append(
                         AlertaAuditoria(
                             archivo=self.filepath,
                             linea=node.lineno,
@@ -95,13 +97,15 @@ class AuditVisitor(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign) -> None:
         # Detectar contraseñas hardcodadas
         for target in node.targets:
-            if isinstance(target, ast.Name):
-                nombre_var = target.id.lower()
-                if any(k in nombre_var for k in ["password", "secret_key", "api_key", "auth_token"]):
-                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-                        val = node.value.value
-                        if len(val) > 4 and val not in ("placeholder", "change_me", "dummy"):
-                            self.alertas.append(
+            if (
+                isinstance(target, ast.Name)
+                and any(k in target.id.lower() for k in ["password", "secret_key", "api_key", "auth_token"])
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+                and len(node.value.value) > 4
+                and node.value.value not in ("placeholder", "change_me", "dummy")
+            ):
+                self.alertas.append(
                                 AlertaAuditoria(
                                     archivo=self.filepath,
                                     linea=node.lineno,

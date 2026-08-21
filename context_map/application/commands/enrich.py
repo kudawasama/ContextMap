@@ -23,7 +23,6 @@ def cmd_enrich(args: argparse.Namespace) -> int:
         Código de salida 0 (éxito) o 1 (error).
     """
     ruta_target = Path(args.path).resolve() if hasattr(args, "path") and args.path else Path(".").resolve()
-    dry_run = getattr(args, "dry_run", False)
 
     print(f"[enrich] Analizando directorio: {ruta_target}")
 
@@ -57,7 +56,6 @@ def cmd_enrich(args: argparse.Namespace) -> int:
         except Exception:
             continue
 
-        modificado = False
         lineas = contenido.splitlines()
 
         for node in ast.walk(tree):
