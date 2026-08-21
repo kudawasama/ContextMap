@@ -4,7 +4,7 @@ import tempfile
 
 from context_map.application.commands.hook import cmd_hook_install
 from context_map.core.storage.config_loader import load_project_config
-from context_map.domain.analysis.complexity import calcular_complejidad_archivo
+from context_map.domain.analyzers.cyclomatic import calcular_complejidad_archivo
 
 
 def test_hook_install_creates_pre_commit_script() -> None:

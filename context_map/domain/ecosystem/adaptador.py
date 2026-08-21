@@ -40,9 +40,9 @@ logger = logging.getLogger(__name__)
 def _es_generado_ctxmap(ruta: str) -> bool:
     """True si el archivo de reglas fue generado por ContextMap.
 
-    Los AGENTS.md de versiones anteriores del generador no traen los marcadores
-    ``CONTEXTMAP:BEGIN/END`` pero sí mencionan ContextMap en su cabecera, lo que
-    permite distinguirlos de un AGENTS.md escrito a mano por el usuario.
+    Exige la presencia del marcador explícito ``CONTEXTMAP:BEGIN`` para evitar
+    modificar accidentalmente archivos de reglas propios del usuario que
+    simplemente mencionen el nombre del proyecto en su texto.
     """
     if not os.path.exists(ruta):
         return False
@@ -51,11 +51,7 @@ def _es_generado_ctxmap(ruta: str) -> bool:
             contenido = f.read()
     except Exception:
         return False
-    return (
-        "CONTEXTMAP:BEGIN" in contenido
-        or "ContextMap" in contenido
-        or "context-map" in contenido
-    )
+    return "CONTEXTMAP:BEGIN" in contenido
 
 
 def _tiene_memoria_viva(ruta: str) -> bool:

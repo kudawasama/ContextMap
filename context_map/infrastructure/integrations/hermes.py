@@ -116,10 +116,12 @@ def leer_sesiones(
             + (f", {cols_sel}" if cols_sel else "")
             + f" FROM sessions ORDER BY {col_fecha_s} DESC"
         )
+        params: list[int] = []
         if limite:
-            query += f" LIMIT {limite}"
+            query += " LIMIT ?"
+            params.append(int(limite))
 
-        cursor.execute(query)
+        cursor.execute(query, tuple(params))
         filas = cursor.fetchall()
 
         for fila in filas:

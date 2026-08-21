@@ -1,4 +1,4 @@
-"""Módulo de extracción de conceptos de negocio por frecuencia de términos (TF-IDF local).
+"""Módulo de extracción de conceptos de negocio por frecuencia de términos y análisis léxico AST local.
 
 Identifica los términos de dominio dominantes del proyecto a partir de nombres de clases,
 módulos y funciones sin requerir servicios en la nube.

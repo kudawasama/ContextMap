@@ -108,7 +108,7 @@ def extraer_todos(ruta: str) -> list[str]:
 
 def calcular_complejidad(ruta: str) -> str:
     """Calcula el nivel de complejidad ciclomática de un archivo Python."""
-    from context_map.domain.analysis.complexity import calcular_complejidad_archivo
+    from context_map.domain.analyzers.cyclomatic import calcular_complejidad_archivo
     res = calcular_complejidad_archivo(ruta)
     if res:
         if res.max_complejidad_funcion > 10 or res.complejidad_total > 40:

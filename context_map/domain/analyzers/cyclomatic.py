@@ -1,12 +1,18 @@
 """Módulo de cálculo de Complejidad Ciclomática de McCabe vía AST para ContextMap.
 
 Calcula la densidad lógica y el número de caminos independientes por función o método
-para identificar zonas de alto riesgo de mantenibilidad.
+para identificar zonas de alto riesgo de mantenibilidad y deuda técnica.
 """
 
+from __future__ import annotations
+
 import ast
-from dataclasses import dataclass
+import logging
+import os
+from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -17,6 +23,21 @@ class MetricaFuncion:
     linea_inicio: int
     complejidad: int
     es_alta_complejidad: bool
+    clasificacion: str = "baja"  # 'baja' (1-5), 'media' (6-10), 'alta' (11-20), 'critica' (>20)
+
+
+# Alias para retrocompatibilidad con domain.analysis.complexity
+MetricaComplejidadFuncion = MetricaFuncion
+
+
+@dataclass
+class MetricaComplejidadArchivo:
+    """Resumen consolidado de complejidad de un archivo completo."""
+
+    ruta_relativa: str
+    complejidad_total: int
+    max_complejidad_funcion: int
+    funciones_complejas: list[MetricaFuncion] = field(default_factory=list)
 
 
 class _CicloVisitor(ast.NodeVisitor):
@@ -67,6 +88,17 @@ class _CicloVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+def _clasificar_complejidad(cc: int) -> str:
+    """Clasifica el nivel de riesgo según el valor de complejidad de McCabe."""
+    if cc > 20:
+        return "critica"
+    if cc > 10:
+        return "alta"
+    if cc > 5:
+        return "media"
+    return "baja"
+
+
 def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) -> list[MetricaFuncion]:
     """Calcula la complejidad ciclomática de McCabe para cada función en el código fuente.
 
@@ -75,7 +107,7 @@ def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) 
         umbral_alto: Umbral a partir del cual se considera alta complejidad (default: 10).
 
     Returns:
-        Lista de MetricaFuncion con el nombre, línea, complejidad y si excede el umbral.
+        Lista de MetricaFuncion con el nombre, línea, complejidad, clasificación y estado de riesgo.
     """
     if not codigo_fuente or not codigo_fuente.strip():
         return []
@@ -92,16 +124,63 @@ def calcular_complejidad_ciclomatica(codigo_fuente: str, umbral_alto: int = 10) 
             visitor = _CicloVisitor()
             visitor.visit(node)
             comp = visitor.complejidad
+            clasif = _clasificar_complejidad(comp)
             resultados.append(
                 MetricaFuncion(
                     nombre=node.name,
                     linea_inicio=node.lineno,
                     complejidad=comp,
                     es_alta_complejidad=comp >= umbral_alto,
+                    clasificacion=clasif,
                 )
             )
 
     return resultados
+
+
+def calcular_complejidad_archivo(ruta_archivo: str, ruta_base: str = ".") -> MetricaComplejidadArchivo | None:
+    """Calcula la complejidad ciclomática de las funciones en un archivo Python en disco.
+
+    Args:
+        ruta_archivo: Ruta completa al archivo Python.
+        ruta_base: Ruta base del proyecto para calcular ruta relativa.
+
+    Returns:
+        MetricaComplejidadArchivo con el resumen si es analizable, o None en error.
+    """
+    if not os.path.exists(ruta_archivo) or not ruta_archivo.endswith(".py"):
+        return None
+
+    try:
+        with open(ruta_archivo, encoding="utf-8", errors="ignore") as f:
+            code = f.read()
+    except Exception as err:
+        logger.debug("No se pudo leer el archivo %s: %s", ruta_archivo, err)
+        return None
+
+    try:
+        ruta_rel = os.path.relpath(ruta_archivo, ruta_base) if os.path.isabs(ruta_archivo) else ruta_archivo
+    except ValueError:
+        ruta_rel = ruta_archivo
+
+    funciones = calcular_complejidad_ciclomatica(code, umbral_alto=6)
+
+    if not funciones:
+        return MetricaComplejidadArchivo(
+            ruta_relativa=ruta_rel,
+            complejidad_total=1,
+            max_complejidad_funcion=1,
+        )
+
+    max_cc = max(f.complejidad for f in funciones)
+    complejas = [f for f in funciones if f.complejidad >= 6]
+
+    return MetricaComplejidadArchivo(
+        ruta_relativa=ruta_rel,
+        complejidad_total=sum(f.complejidad for f in funciones),
+        max_complejidad_funcion=max_cc,
+        funciones_complejas=complejas,
+    )
 
 
 def analizar_archivo_ciclomatico(file_path: Path, umbral_alto: int = 10) -> list[MetricaFuncion]:

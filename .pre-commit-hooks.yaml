@@ -1,7 +1,7 @@
 - id: context-map
   name: ContextMap Auto Sync
   description: Escanea y actualiza automáticamente la bóveda de Obsidian y briefs de ContextMap antes de cada commit.
-  entry: ctxmap build --clean --brief --quiet
+  entry: python -m context_map.cli build --clean --brief --quiet
   language: python
   stages: [pre-commit]
   types: [python, markdown, yaml, json]

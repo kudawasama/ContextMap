@@ -5,6 +5,19 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] — 2026-08-21
+
+### 🔧 Correcciones y Hardening — Saneamiento Técnico y Parche
+
+- **fix(`enrich`)**: Persistencia real en disco de los docstrings generados en `ctxmap enrich` vía `filepath.write_text` con formateo adecuado de indentación y soporte completo para flag `--dry-run` de previsualización sin alterar archivos.
+- **refactor(`complexity`/`cyclomatic`)**: Eliminación de la duplicación de código entre `domain/analysis/complexity.py` y `domain/analyzers/cyclomatic.py`. Consolidación unificada de métricas ciclomáticas de McCabe en `domain/analyzers/cyclomatic.py` (con soporte AST completo para `AsyncFor`, `AsyncWith`, `Assert`, `IfExp`, `BoolOp`).
+- **security(`adaptador`)**: Endurecimiento de `_es_generado_ctxmap` para exigir estrictamente el marcador `CONTEXTMAP:BEGIN` evitando falsos positivos con archivos de usuario.
+- **security(`hermes`)**: Parametrización segura de cláusulas `LIMIT ?` en SQLite para defensa en profundidad.
+- **devops(`pre-commit`)**: Actualización de `.pre-commit-hooks.yaml` para invocar el módulo local `python -m context_map.cli` en lugar del binario global.
+- **docs(`domain_extractor`)**: Corrección de docstrings clarificando análisis de frecuencia léxica local en lugar de TF-IDF.
+
+---
+
 ## [2.2.1] — 2026-08-21
 
 ### 🔧 Correcciones — Saneamiento de release

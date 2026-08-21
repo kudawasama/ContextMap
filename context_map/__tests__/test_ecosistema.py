@@ -328,8 +328,10 @@ def test_adaptar_upgrade_memoria_viva_agents_generado() -> None:
         with open(agents_path, "w", encoding="utf-8") as f:
             f.write(
                 "# Instrucciones — Bot Demo\n\n"
-                "Este proyecto utiliza **ContextMap** para gobernanza de contexto.\n"
+                "<!-- CONTEXTMAP:BEGIN -->\n"
+                "Este proyecto utiliza ContextMap para gobernanza de contexto.\n"
                 "## 1. Protocolo de Inicio\n- Leer el brief\n"
+                "<!-- CONTEXTMAP:END -->\n"
             )
 
         eco = detectar_ecosistema(temp_dir)
