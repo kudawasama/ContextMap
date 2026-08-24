@@ -32,3 +32,20 @@ jobs:
         run: uv sync --dev --all-extras
       - name: Ruff check
         run: uv run ruff check context_map/
+
+  typecheck:
+    name: Type check (mypy · no bloqueante)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar dependencias
+        run: uv sync --dev --all-extras
+      - name: mypy
+        # No bloqueante mientras se sanea el backlog de errores existente
+        # (ver auditoría de estabilidad 2026-08-24). Objetivo: bajar a 0 y
+        # quitar continue-on-error para que empiece a bloquear el merge.
+        continue-on-error: true
+        run: uv run mypy context_map/
