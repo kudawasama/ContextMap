@@ -535,7 +535,7 @@ def _slug(nombre: str) -> str:
 
 
 def _seccion_notas_proyecto(
-    db: "PersonalDB",
+    db: PersonalDB,
     destino: str,
     secciones: list[str],
 ) -> list[str]:
@@ -579,7 +579,7 @@ def _seccion_notas_proyecto(
     return secciones
 
 
-def _seccion_lecciones(db: "PersonalDB", secciones: list[str]) -> list[str]:
+def _seccion_lecciones(db: PersonalDB, secciones: list[str]) -> list[str]:
     """Añade la sección de lecciones al índice del vault personal.
 
     Args:
@@ -605,7 +605,7 @@ def _seccion_lecciones(db: "PersonalDB", secciones: list[str]) -> list[str]:
     return secciones
 
 
-def _seccion_decisiones(db: "PersonalDB", secciones: list[str]) -> list[str]:
+def _seccion_decisiones(db: PersonalDB, secciones: list[str]) -> list[str]:
     """Añade la sección de decisiones al índice del vault personal.
 
     Args:
