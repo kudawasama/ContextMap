@@ -327,14 +327,19 @@ def _render_conexiones(
         if con_wikilinks:
             if usar_rutas_reales:
                 # Mapa mental conectado: wikilink SOLO si ambos extremos tienen
-                # archivo real; si no, texto plano (0 nodos fantasma).
+                # archivo REAL en disco; si no, texto plano (0 nodos fantasma).
                 from context_map.presentation.vault.consolidated.rutas import (
                     ruta_archivo_nodo,
                 )
 
                 r_src = ruta_archivo_nodo(src) if src else None
                 r_tgt = ruta_archivo_nodo(tgt) if tgt else None
-                if r_src and r_tgt:
+                if (
+                    r_src
+                    and r_tgt
+                    and os.path.isfile(os.path.join(output_dir, r_src))
+                    and os.path.isfile(os.path.join(output_dir, r_tgt))
+                ):
                     partes.append(
                         f"| [[{r_src}\\|{src_title}]] | [[{r_tgt}\\|{tgt_title}]] "
                         f"| {e.kind} | {e.note or '—'} |"
@@ -367,20 +372,26 @@ def _render_conexiones(
         ]
         contados = 0
         for n in nodes:
-            if ruta_archivo_nodo(n) is None:
+            ruta_n = ruta_archivo_nodo(n)
+            if ruta_n is None:
                 continue
+            archivo_n = os.path.join(output_dir, ruta_n)
+            if not os.path.isfile(archivo_n):
+                continue  # sin archivo real en disco → texto plano, 0 fantasmas
             rels = conexiones_de_nodo(n, nodes)
             if not rels:
                 continue
-            ruta_n = ruta_archivo_nodo(n)
             sem_parts.append(f"### 🔗 {titulo_legible(n)}")
             sem_parts.append("")
             for rel in rels:
                 ruta_rel = ruta_archivo_nodo(rel)
-                if ruta_rel:
-                    sem_parts.append(
-                        f"- [[{ruta_n}|{titulo_legible(n)}]] ↔ [[{ruta_rel}|{titulo_legible(rel)}]]"
-                    )
+                if not ruta_rel:
+                    continue
+                if not os.path.isfile(os.path.join(output_dir, ruta_rel)):
+                    continue  # destino sin archivo real → se omite (0 fantasmas)
+                sem_parts.append(
+                    f"- [[{ruta_n}|{titulo_legible(n)}]] ↔ [[{ruta_rel}|{titulo_legible(rel)}]]"
+                )
             sem_parts.append("")
             contados += 1
             if contados >= 40:  # acotar el archivo

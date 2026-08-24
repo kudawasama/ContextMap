@@ -83,8 +83,11 @@ def _render_nota_riesgo(
         if conexiones:
             for rel in conexiones:
                 destino = ruta_archivo_nodo(rel)
-                if destino:
-                    partes.append(f"- [[{destino}|{titulo_legible(rel)}]]")
+                if not destino:
+                    continue
+                if not os.path.isfile(os.path.join(directorio, destino)):
+                    continue  # sin archivo real en disco → 0 nodos fantasma
+                partes.append(f"- [[{destino}|{titulo_legible(rel)}]]")
         else:
             partes.append("_(Sin conexiones registradas aún)_")
         partes.append("")

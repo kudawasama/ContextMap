@@ -174,7 +174,7 @@ def _generar_claude_md(project_name: str, eco: EcosistemaInfo, fecha: str) -> st
 Este proyecto usa **ContextMap** para gobernanza de contexto. Antes de modificar código:
 
 1. Lee `.context-map/CONTEXT.md` (brief ejecutivo: métricas, riesgos, tareas).
-2. Explora el vault en `.context-map/vault-{{project_name}}/` para entender el grafo del proyecto.
+2. Explora el vault en `.context-map/vault-{project_name}/` para entender el grafo del proyecto.
 3. No supongas lógica: inspecciona el código fuente antes de proponer cambios.
 4. Para contexto histórico global (otros proyectos): `ctxmap personal query "términos" --limite 5` (BD personal FTS5, pocos tokens).
 

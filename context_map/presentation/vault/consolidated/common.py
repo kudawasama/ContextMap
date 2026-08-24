@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 
 from context_map.core.models import Edge, Node
 
@@ -33,6 +34,22 @@ _PATH_GRAFO: dict[str, str] = {
     "6.0-HISTORIAL": "#f59e0b",
     "7.0-MANUAL": "#14b8a6",
     "8.0-KNOWLEDGE": "#10b981",
+}
+
+# Encabezados ``## `` del README que NO son identidad del proyecto: cortan la
+# extracción de PROPOSITO-BIBLIA (fix 2026-08-11 tras el piloto en
+# Bot_AX_Contable, donde la primera sección era "## 🚀 Requisitos").
+SECCIONES_NO_IDENTIDAD: set[str] = {
+    "instalación", "instalacion", "licencia", "contribuir",
+    "comparativa", "lista completa de comandos", "comandos",
+    "referencias", "changelog", "roadmap",
+    "requisitos", "requerimientos", "requirements", "dependencias",
+    "prerequisitos", "pre-requisitos", "configuración inicial",
+    "configuracion inicial", "uso", "uso rápido", "uso rapido",
+    "instrucciones", "instalación y uso", "instalacion y uso",
+    "puesta en marcha", "quickstart", "inicio rápido", "inicio rapido",
+    "ejecución", "ejecucion", "cómo usar", "como usar",
+    "cómo se usa", "como se usa",
 }
 
 
@@ -110,6 +127,43 @@ def generar_color_groups(vault_dir: str) -> str | None:
 _DOMINIOS_CACHE: dict[str, dict[str, list[str]]] = {}
 
 
+def _es_linea_descartable_dominios(limpia: str) -> bool:
+    """True si la línea no aporta al parser de dominios (vacía, comentario, separador).
+
+    Args:
+        limpia (str): Línea sin espacios alrededor.
+
+    Returns:
+        bool: True si debe descartarse.
+    """
+    return not limpia or limpia.startswith("#") or limpia.startswith("---")
+
+
+def _es_definicion_dominio(limpia: str) -> bool:
+    """True si la línea define un dominio (``nombre:``, no un item ``- ...``).
+
+    Args:
+        limpia (str): Línea sin espacios alrededor.
+
+    Returns:
+        bool: True si es una definición de dominio.
+    """
+    return limpia.endswith(":") and not limpia.startswith("-")
+
+
+def _es_item_dominio(limpia: str, nombre_actual: str | None) -> bool:
+    """True si la línea es un item de palabra clave bajo un dominio activo.
+
+    Args:
+        limpia (str): Línea sin espacios alrededor.
+        nombre_actual (str | None): Dominio activo actual.
+
+    Returns:
+        bool: True si es un item ``- valor`` y hay dominio activo.
+    """
+    return bool(limpia.startswith("- ") and nombre_actual)
+
+
 def _parsear_dominios_simple(texto: str) -> dict[str, list[str]]:
     """Parser mínimo del formato de dominios.yaml (sin depender de pyyaml).
 
@@ -120,16 +174,45 @@ def _parsear_dominios_simple(texto: str) -> dict[str, list[str]]:
     nombre_actual: str | None = None
     for linea in texto.splitlines():
         limpia = linea.strip()
-        if not limpia or limpia.startswith("#") or limpia.startswith("---"):
+        if _es_linea_descartable_dominios(limpia):
             continue
-        if limpia.endswith(":") and not limpia.startswith("-"):
+        if _es_definicion_dominio(limpia):
             nombre_actual = limpia[:-1].strip()
             dominios[nombre_actual] = []
-        elif limpia.startswith("- ") and nombre_actual:
+        elif _es_item_dominio(limpia, nombre_actual):
             valor = limpia[2:].strip().strip('"').strip("'")
             if valor:
                 dominios[nombre_actual].append(valor)
     return {k: v for k, v in dominios.items() if v}
+
+
+def _cargar_dominios(texto: str) -> dict[str, list[str]]:
+    """Carga los dominios desde el texto YAML, con fallback al parser mínimo.
+
+    Intenta ``yaml.safe_load`` (el binario ``uv tool`` puede no incluir PyYAML);
+    si no está disponible usa ``_parsear_dominios_simple``. En ambos casos las
+    claves se normalizan a minúsculas.
+
+    Args:
+        texto (str): Contenido de ``dominios.yaml``.
+
+    Returns:
+        dict[str, list[str]]: Mapeo dominio -> palabras clave en minúsculas.
+    """
+    dominios: dict[str, list[str]] = {}
+    try:
+        import yaml  # noqa: PLC0415 — opcional; fallback si no está
+
+        datos = yaml.safe_load(texto) or {}
+        for nombre, claves in datos.items():
+            if isinstance(claves, list):
+                dominios[str(nombre)] = [str(c).lower() for c in claves]
+    except ImportError:
+        # El entorno del binario (uv tool) puede no tener pyyaml:
+        # usamos el parser mínimo del formato.
+        for nombre, claves in _parsear_dominios_simple(texto).items():
+            dominios[nombre] = [c.lower() for c in claves]
+    return dominios
 
 
 def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
@@ -154,18 +237,7 @@ def _leer_dominios(cwd: str | None = None) -> dict[str, list[str]]:
         if os.path.isfile(ruta):
             with open(ruta, encoding="utf-8") as f:
                 texto = f.read()
-            try:
-                import yaml  # noqa: PLC0415 — opcional; fallback si no está
-
-                datos = yaml.safe_load(texto) or {}
-                for nombre, claves in datos.items():
-                    if isinstance(claves, list):
-                        dominios[str(nombre)] = [str(c).lower() for c in claves]
-            except ImportError:
-                # El entorno del binario (uv tool) puede no tener pyyaml:
-                # usamos el parser mínimo del formato.
-                for nombre, claves in _parsear_dominios_simple(texto).items():
-                    dominios[nombre] = [c.lower() for c in claves]
+            dominios = _cargar_dominios(texto)
     except Exception as err:  # noqa: BLE001 — los dominios son opcionales
         logger.debug("dominios.yaml no legible: %s", err)
     _DOMINIOS_CACHE[ruta] = dominios
@@ -231,6 +303,97 @@ def _linea_tags_inline(n: Node, cwd: str | None = None) -> str:
     return "> " + " ".join(f"#{e}" for e in etiquetas)
 
 
+def _es_linea_ignorable(stripped: str) -> bool:
+    """True si la línea no aporta contenido al propósito (badge, TOC, HTML).
+
+    Args:
+        stripped (str): Línea sin espacios alrededor.
+
+    Returns:
+        bool: True si debe descartarse sin afectar el párrafo en curso.
+    """
+    return (
+        stripped.startswith("[![")
+        or stripped.startswith("- [")
+        or stripped.startswith("* [")
+        or stripped.startswith("<!--")
+    )
+
+
+def _es_linea_separadora(stripped: str) -> bool:
+    """True si la línea es un separador HR que cierra el párrafo en curso.
+
+    Args:
+        stripped (str): Línea sin espacios alrededor.
+
+    Returns:
+        bool: True si es un separador horizontal (---, ___, ***).
+    """
+    return (
+        stripped.startswith("---")
+        or stripped.startswith("___")
+        or stripped.startswith("***")
+    )
+
+
+def _cerrar_parrafo(paragraphs: list[str], current_para: list[str]) -> list[str]:
+    """Cierra el párrafo en curso si tiene contenido, devolviendo un párrafo limpio.
+
+    Args:
+        paragraphs (list[str]): Acumulador de párrafos completados.
+        current_para (list[str]): Líneas del párrafo en curso.
+
+    Returns:
+        list[str]: Párrafo actual vaciado tras archivarlo si correspondía.
+    """
+    if current_para:
+        paragraphs.append(" ".join(current_para))
+    return []
+
+
+def _agrupar_parrafos(lines: list[str], start_idx: int) -> list[str]:
+    """Agrupa las líneas posteriores a ``start_idx`` en párrafos de texto plano.
+
+    Separa párrafos por líneas vacías y separadores HR; corta en el primer
+    encabezado (``#``) y descarta badges, TOC y HTML. Conserva el comportamiento
+    histórico de ``_extract_project_purpose``: el separador cierra el párrafo
+    actual y las líneas ruidosas se descartan sin romperlo.
+
+    Args:
+        lines (list[str]): Líneas completas del README.
+        start_idx (int): Índice desde el que agrupar (tras el título).
+
+    Returns:
+        list[str]: Párrafos de texto plano en orden de aparición.
+    """
+    paragraphs: list[str] = []
+    current_para: list[str] = []
+
+    for line in lines[start_idx:]:
+        stripped = line.strip()
+
+        if not stripped:
+            current_para = _cerrar_parrafo(paragraphs, current_para)
+            continue
+
+        if _es_linea_separadora(stripped):
+            current_para = _cerrar_parrafo(paragraphs, current_para)
+            continue  # el separador cierra el párrafo; nunca forma parte de él
+
+        if _es_linea_ignorable(stripped):
+            continue  # badges, TOC y HTML: se descartan sin tocar el párrafo
+
+        if stripped.startswith("#"):
+            _cerrar_parrafo(paragraphs, current_para)
+            break
+
+        current_para.append(stripped)
+
+    _cerrar_parrafo(paragraphs, current_para)
+
+    return paragraphs
+
+
 def _extract_project_purpose(cwd: str) -> str:
     """Extrae el propósito del proyecto desde README.md si existe.
 
@@ -260,46 +423,164 @@ def _extract_project_purpose(cwd: str) -> str:
     if title_idx is None:
         return ""
 
-    start_idx = title_idx + 1
-    paragraphs: list[str] = []
-    current_para: list[str] = []
+    parrafos = _agrupar_parrafos(lines, title_idx + 1)
+    return parrafos[0] if parrafos else ""
 
-    for line in lines[start_idx:]:
-        stripped = line.strip()
 
-        if not stripped:
-            if current_para:
-                paragraphs.append(" ".join(current_para))
-                current_para = []
-            continue
+def _es_linea_ruido_markdown(stripped: str) -> bool:
+    """True si la línea es ruido estructural de Markdown (tabla, TOC, bloque de código).
 
-        if stripped.startswith("[!["):
-            continue
+    Args:
+        stripped (str): Línea sin espacios alrededor.
 
-        if stripped.startswith("- [") or stripped.startswith("* ["):
-            continue
+    Returns:
+        bool: True si debe descartarse sin afectar el párrafo en curso.
+    """
+    return (
+        stripped.startswith("|")
+        or stripped.startswith("- [")
+        or stripped.startswith("* [")
+        or stripped.startswith("```")
+    )
 
-        if stripped.startswith("<!--"):
-            continue
 
-        if stripped.startswith("---") or stripped.startswith("___") or stripped.startswith("***"):
-            if current_para:
-                paragraphs.append(" ".join(current_para))
-                current_para = []
-            continue
+def _limpiar_markdown_linea(linea: str) -> str:
+    """Limpia el formato Markdown de una línea: imágenes, enlaces y negritas.
 
-        if stripped.startswith("#"):
-            if current_para:
-                paragraphs.append(" ".join(current_para))
-                current_para = []
-            break
+    Args:
+        linea (str): Línea cruda del README.
 
-        current_para.append(stripped)
+    Returns:
+        str: Texto limpio sin imágenes, enlaces colapsados a su texto y sin ``**``.
+    """
+    texto = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", linea)
+    texto = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", texto)
+    return texto.replace("**", "").strip()
 
-    if current_para:
-        paragraphs.append(" ".join(current_para))
 
-    return paragraphs[0] if paragraphs else ""
+def _es_linea_separadora_biblia(stripped: str) -> bool:
+    """True si la línea es un separador HR reconocido por PROPOSITO-BIBLIA.
+
+    Históricamente la biblia descartaba solo ``---``, ``___`` y comentarios
+    ``<!--`` (a diferencia del extractor de propósito, que también cerraba
+    párrafos con ``***``). Se mantiene el mismo subconjunto para no alterar
+    la extracción.
+
+    Args:
+        stripped (str): Línea sin espacios alrededor.
+
+    Returns:
+        bool: True si debe descartarse como separador.
+    """
+    return stripped.startswith("---") or stripped.startswith("___")
+
+
+def _clasificar_linea_biblia(stripped: str) -> str:
+    """Clasifica una línea del README para la extracción de PROPOSITO-BIBLIA.
+
+    Devuelve un token de acción para que el bucle principal de
+    ``_extract_proposito_biblia`` no acumule puntos de decisión por línea:
+    'vacia', 'badge', 'comentario', 'separador', 'ruido', 'titulo'
+    (encabezado ``# `` principal), 'seccion' (``## ``) o 'contenido' (texto).
+
+    Args:
+        stripped (str): Línea sin espacios alrededor.
+
+    Returns:
+        str: Token de clasificación.
+    """
+    if not stripped:
+        return "vacia"
+    if stripped.startswith("[!["):
+        return "badge"
+    if stripped.startswith("<!--"):
+        return "comentario"
+    if stripped.startswith("## "):
+        return "seccion"
+    if stripped.startswith("# "):
+        return "titulo"
+    if _es_linea_separadora_biblia(stripped):
+        return "separador"
+    if _es_linea_ruido_markdown(stripped):
+        return "ruido"
+    return "contenido"
+
+
+def _capturar_seccion_biblia(
+    titulo: str,
+    en_seccion_contenido: bool,
+    secciones_capturadas: int,
+    max_secciones: int,
+) -> tuple[str, int]:
+    """Procesa un encabezado ``## `` y decide la acción de corte.
+
+    Comportamiento histórico (preservado del refactor):
+    - Sección NO identidad corta SIEMPRE (incluso si es la primera).
+    - La primera sección de contenido nunca corta por ``max_secciones``.
+    - Desde la segunda sección, al alcanzar ``max_secciones`` se corta.
+
+    Args:
+        titulo (str): Título de la sección normalizado (sin emojis).
+        en_seccion_contenido (bool): Si ya se capturó alguna sección de identidad.
+        secciones_capturadas (int): Secciones de contenido capturadas hasta ahora.
+        max_secciones (int): Máximo de secciones a capturar.
+
+    Returns:
+        tuple[str, int]: (acción 'break' | 'ok', secciones_capturadas actualizada).
+    """
+    seccion_norm = re.sub(r"[^\w\sáéíóñü-]", "", titulo).strip()
+    if seccion_norm in SECCIONES_NO_IDENTIDAD:
+        return "break", secciones_capturadas  # sección operativa: cortar (fix 2026-08-11)
+    nuevas = secciones_capturadas + 1
+    if en_seccion_contenido and nuevas >= max_secciones:
+        return "break", nuevas
+    return "ok", nuevas
+
+
+def _asignar_tagline(tagline: str, texto: str) -> str:
+    """Asigna el tagline si aún no existe y el texto cabe en el límite histórico.
+
+    Args:
+        tagline (str): Tagline actual (posiblemente vacío).
+        texto (str): Línea de texto candidata a tagline.
+
+    Returns:
+        str: El tagline nuevo si correspondía, o el previo.
+    """
+    if not tagline and len(texto) < 400:
+        return texto
+    return tagline
+
+
+def _procesar_linea_contenido(
+    line: str,
+    en_seccion_contenido: bool,
+    tagline: str,
+    parrafos: list[str],
+    max_caracteres: int,
+) -> tuple[bool, str, list[str]]:
+    """Procesa una línea de contenido: tagline o párrafo de identidad.
+
+    Args:
+        line (str): Línea cruda del README.
+        en_seccion_contenido (bool): Si ya se capturó alguna sección de identidad.
+        tagline (str): Tagline actual (posiblemente vacío).
+        parrafos (list[str]): Párrafos acumulados.
+        max_caracteres (int): Límite de caracteres del resultado.
+
+    Returns:
+        tuple[bool, str, list[str]]: (cortar, tagline actualizado, parrafos).
+    """
+    texto = _limpiar_markdown_linea(line)
+    if not texto:
+        return False, tagline, parrafos
+    if not en_seccion_contenido:
+        # antes de la primera sección: el tagline (frase de identidad;
+        # límite generoso para frases reales de ~150-300 caracteres)
+        return False, _asignar_tagline(tagline, texto), parrafos
+    if sum(len(p) + len(texto) for p in parrafos) > max_caracteres:
+        return True, tagline, parrafos  # límite: no sumar el párrafo que desborda
+    return False, tagline, parrafos + [texto]
 
 
 def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: int = 2600) -> str:
@@ -319,24 +600,6 @@ def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: 
         str: Párrafos de identidad separados por doble salto de línea,
         o string vacío si no se pudo extraer.
     """
-    import re
-
-    SECCIONES_NO_IDENTIDAD = {
-        "instalación", "instalacion", "licencia", "contribuir",
-        "comparativa", "lista completa de comandos", "comandos",
-        "referencias", "changelog", "roadmap",
-        # Secciones operativas — NO son identidad (ampliado 2026-08-11 tras el
-        # piloto en Bot_AX_Contable: la primera sección del README era
-        # "## 🚀 Requisitos" y se capturaba como "alma").
-        "requisitos", "requerimientos", "requirements", "dependencias",
-        "prerequisitos", "pre-requisitos", "configuración inicial",
-        "configuracion inicial", "uso", "uso rápido", "uso rapido",
-        "instrucciones", "instalación y uso", "instalacion y uso",
-        "puesta en marcha", "quickstart", "inicio rápido", "inicio rapido",
-        "ejecución", "ejecucion", "cómo usar", "como usar",
-        "cómo se usa", "como se usa",
-    }
-
     readme_path = os.path.join(cwd, "README.md")
     if not os.path.isfile(readme_path):
         return ""
@@ -353,55 +616,30 @@ def _extract_proposito_biblia(cwd: str, max_secciones: int = 3, max_caracteres: 
     en_seccion_contenido = False
 
     for line in lines:
-        s = line.strip()
-        if not s:
-            continue
-        if s.startswith("[!["):          # badge de imagen
-            continue
-        if s.startswith("---") or s.startswith("<!--") or s.startswith("___"):
-            continue
-        if s.startswith("# "):           # título principal
-            continue
-        if s.startswith("## "):
-            titulo_seccion = s.lstrip("#").strip().lower()
-            # normalizar: quitar emojis/símbolos para comparar (p. ej. "🚀 requisitos")
-            titulo_norm = re.sub(r"[^\w\sáéíóñü-]", "", titulo_seccion).strip()
-            if titulo_norm in SECCIONES_NO_IDENTIDAD:
-                # La PRIMERA sección operativa también corta: requisitos/instalación
-                # NO son identidad (fix 2026-08-11, caso Bot_AX_Contable).
+        tipo = _clasificar_linea_biblia(line.strip())
+
+        if tipo == "seccion":
+            accion, secciones_capturadas = _capturar_seccion_biblia(
+                line.strip().lstrip("#").strip().lower(),
+                en_seccion_contenido,
+                secciones_capturadas,
+                max_secciones,
+            )
+            if accion == "break":
                 break
-            if not en_seccion_contenido:
-                # primera sección con contenido (normalmente ¿Qué es?)
-                en_seccion_contenido = True
-                secciones_capturadas += 1
-                continue
-            secciones_capturadas += 1
-            if secciones_capturadas >= max_secciones:
+            en_seccion_contenido = True
+            continue
+
+        if tipo == "contenido":
+            cortar, tagline, parrafos = _procesar_linea_contenido(
+                line, en_seccion_contenido, tagline, parrafos, max_caracteres
+            )
+            if cortar:
                 break
             continue
-        if s.startswith("|") or s.startswith("- [") or s.startswith("* ["):
-            continue
-        if s.startswith("```"):
-            continue
 
-        # limpiar markdown: **bold**, enlaces [x](url), imágenes ![..](..)
-        texto = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", s)
-        texto = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", texto)
-        texto = texto.replace("**", "").strip()
-        if not texto:
-            continue
-
-        if not en_seccion_contenido:
-            # antes de la primera sección: el tagline (frase de identidad;
-            # límite generoso para frases reales de ~150-300 caracteres)
-            if not tagline and len(texto) < 400:
-                tagline = texto
-            continue
-
-        parrafos.append(texto)
-        if sum(len(p) for p in parrafos) > max_caracteres:
-            parrafos = parrafos[:-1]
-            break
+        # vacia, badge, comentario, separador, ruido, titulo: se ignoran
+        continue
 
     partes = [p for p in [tagline] + parrafos if p]
     resultado = "\n\n".join(partes)

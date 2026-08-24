@@ -296,6 +296,43 @@ def _render_estructura(
     _escribir_markdown(output_dir, "03-ESTRUCTURA.md", partes)
 
 
+def _render_lista_riesgos(clasificados: dict[str, list[Node]], partes: list[str]) -> None:
+    """Añade los bloques de nodos de RIESGO al listado de la sección de riesgos.
+
+    Args:
+        clasificados (dict[str, list[Node]]): Nodos agrupados por tipo.
+        partes (list[str]): Acumulador de líneas Markdown.
+    """
+    vistos: set[str] = set()
+    for n in clasificados["RIESGO"]:
+        if _mencion_nodo_en_lista(n, vistos):
+            continue
+        partes.append(f"### ⚠️ {n.title}")
+        partes.append(f"{n.summary or 'Punto de atención técnica'}")
+        if n.evidence:
+            partes.append("- **Evidencia**:")
+            for ev in n.evidence:
+                partes.append(f"  - {ev}")
+        partes.append("")
+
+
+def _render_lista_pruebas(clasificados: dict[str, list[Node]], partes: list[str]) -> None:
+    """Añade la lista de nodos PRUEBA detectados a la sección de riesgos.
+
+    Args:
+        clasificados (dict[str, list[Node]]): Nodos agrupados por tipo.
+        partes (list[str]): Acumulador de líneas Markdown.
+    """
+    partes.append("## 🧪 Cobertura de Pruebas Detectadas")
+    partes.append("")
+    vistos_prueba: set[str] = set()
+    for n in clasificados["PRUEBA"]:
+        if _mencion_nodo_en_lista(n, vistos_prueba):
+            continue
+        partes.append(f"- **{n.title}**: {n.summary or 'Test'}")
+    partes.append("")
+
+
 def _render_riesgos(
     project_name: str,
     clasificados: dict[str, list[Node]],
@@ -324,30 +361,13 @@ def _render_riesgos(
         "",
     ])
     if clasificados["RIESGO"]:
-        vistos: set[str] = set()
-        for n in clasificados["RIESGO"]:
-            if _mencion_nodo_en_lista(n, vistos):
-                continue
-            partes.append(f"### ⚠️ {n.title}")
-            partes.append(f"{n.summary or 'Punto de atención técnica'}")
-            if n.evidence:
-                partes.append("- **Evidencia**:")
-                for ev in n.evidence:
-                    partes.append(f"  - {ev}")
-            partes.append("")
+        _render_lista_riesgos(clasificados, partes)
     else:
         partes.append("✅ **Sin riesgos o alertas críticas detectadas.**")
         partes.append("")
 
     if clasificados["PRUEBA"]:
-        partes.append("## 🧪 Cobertura de Pruebas Detectadas")
-        partes.append("")
-        vistos_prueba: set[str] = set()
-        for n in clasificados["PRUEBA"]:
-            if _mencion_nodo_en_lista(n, vistos_prueba):
-                continue
-            partes.append(f"- **{n.title}**: {n.summary or 'Test'}")
-        partes.append("")
+        _render_lista_pruebas(clasificados, partes)
 
     partes.extend(_pie_nota())
     _escribir_markdown(output_dir, "04-RIESGOS_Y_COMPLEJIDAD.md", partes)
@@ -397,6 +417,24 @@ def _render_backlog(
     _escribir_markdown(output_dir, "05-BACKLOG_Y_TODOS.md", partes)
 
 
+def _render_lista_cambios(clasificados: dict[str, list[Node]], partes: list[str]) -> None:
+    """Añade el registro de cambios y correcciones a la sección de historial.
+
+    Args:
+        clasificados (dict[str, list[Node]]): Nodos agrupados por tipo.
+        partes (list[str]): Acumulador de líneas Markdown.
+    """
+    vistos: set[str] = set()
+    for n in clasificados["CAMBIO"][:50]:
+        if _mencion_nodo_en_lista(n, vistos):
+            continue
+        icono = "🔧" if n.type == "CORRECCION" else "🔄"
+        partes.append(f"- {icono} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
+        if n.summary and n.summary != n.title:
+            partes.append(f"  - {n.summary}")
+    partes.append("")
+
+
 def _render_historial(
     project_name: str,
     clasificados: dict[str, list[Node]],
@@ -435,15 +473,7 @@ def _render_historial(
     partes.append("## 🔄 Registro de Cambios y Correcciones")
     partes.append("")
     if clasificados["CAMBIO"]:
-        vistos: set[str] = set()
-        for n in clasificados["CAMBIO"][:50]:
-            if _mencion_nodo_en_lista(n, vistos):
-                continue
-            icono = "🔧" if n.type == "CORRECCION" else "🔄"
-            partes.append(f"- {icono} **{n.title}** ({n.created_at or 'Fecha no esp.'})")
-            if n.summary and n.summary != n.title:
-                partes.append(f"  - {n.summary}")
-        partes.append("")
+        _render_lista_cambios(clasificados, partes)
     else:
         partes.append("_(Sin registros de cambios)_")
         partes.append("")
