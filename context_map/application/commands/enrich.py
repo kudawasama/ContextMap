@@ -24,9 +24,7 @@ def _formatear_docstring(doc: str, indent: str) -> list[str]:
         Lista de líneas listas para ser insertadas.
     """
     texto = doc.strip()
-    if texto.startswith('"""') and texto.endswith('"""'):
-        texto = texto[3:-3].strip()
-    elif texto.startswith("'''") and texto.endswith("'''"):
+    if texto.startswith('"""') and texto.endswith('"""') or texto.startswith("'''") and texto.endswith("'''"):
         texto = texto[3:-3].strip()
 
     lineas_doc = texto.splitlines()
@@ -102,9 +100,8 @@ def cmd_enrich(args: argparse.Namespace) -> int:
         # Recolectar funciones sin docstring
         nodos_funciones: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                if not ast.get_docstring(node) and node.body:
-                    nodos_funciones.append(node)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not ast.get_docstring(node) and node.body:
+                nodos_funciones.append(node)
 
         if not nodos_funciones:
             archivos_procesados += 1
