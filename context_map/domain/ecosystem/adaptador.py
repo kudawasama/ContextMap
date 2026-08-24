@@ -79,6 +79,31 @@ def _volcar_archivo(ruta: str, contenido: str) -> None:
         f.write(contenido)
 
 
+def _respaldar_antes_de_sobrescribir(ruta: str) -> None:
+    """Guarda una copia de seguridad (``<ruta>.bak``) antes de un overwrite destructivo.
+
+    El modo 'overwrite' reemplaza el archivo entero sin pasar por
+    ``_mergear_bloque``, así que es la única vía de ``_escribir_regla`` que
+    puede perder contenido que el usuario escribió a mano. Se respalda solo
+    aquí (no en 'merge'/'respect', que ya preservan el contenido) para no
+    ensuciar el árbol de trabajo con un `.bak` en cada `ctxmap adapt`/`refresh`
+    normal.
+    """
+    if not os.path.exists(ruta):
+        return
+    try:
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            anterior = f.read()
+    except Exception:
+        logger.warning("No se pudo leer %s para respaldarlo antes del overwrite.", ruta)
+        return
+    try:
+        with open(f"{ruta}.bak", "w", encoding="utf-8") as f:
+            f.write(anterior)
+    except Exception:
+        logger.warning("No se pudo escribir el respaldo %s.bak.", ruta)
+
+
 def _mergear_bloque(actual: str, contenido: str) -> str:
     """Inserta o reemplaza el bloque ContextMap delimitado en el contenido actual.
 
@@ -129,8 +154,9 @@ def _escribir_regla(
         return
 
     if modo == "overwrite" or forzar:
+        _respaldar_antes_de_sobrescribir(ruta)
         _volcar_archivo(ruta, contenido)
-        generados.append(ruta_rel)
+        generados.append(f"{ruta_rel} (.bak generado)")
         return
 
     if modo == "merge":
