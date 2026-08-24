@@ -52,5 +52,8 @@ Thumbs.db
 # Context Map (generated)
 .context-map/
 
+# Respaldos automáticos de `ctxmap adapt --overwrite`
+*.bak
+
 # Logs
 *.log

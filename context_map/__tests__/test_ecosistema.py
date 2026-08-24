@@ -314,6 +314,47 @@ def test_adaptar_merge_vs_overwrite() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_adaptar_overwrite_respalda_antes_de_sobrescribir() -> None:
+    """overwrite no debe perder contenido: el archivo previo queda en <ruta>.bak.
+
+    Regresión de un incidente real: `ctxmap adapt . --overwrite` borró 182
+    líneas de un AGENTS.md real y vació varios archivos de `.hermes/` sin
+    ningún respaldo, contradiciendo la promesa de memoria indestructible.
+    """
+    temp_dir = _crear_proyecto_python()
+    try:
+        agents_path = os.path.join(temp_dir, "AGENTS.md")
+        contenido_original = "# Reglas manuales que NO deben perderse\n\nDetalle importante."
+        with open(agents_path, "w", encoding="utf-8") as f:
+            f.write(contenido_original)
+
+        eco = detectar_ecosistema(temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="overwrite")
+
+        backup_path = agents_path + ".bak"
+        assert os.path.exists(backup_path), "overwrite no generó respaldo .bak del archivo previo"
+        with open(backup_path, encoding="utf-8") as f:
+            assert f.read() == contenido_original, "El .bak no coincide con el contenido perdido"
+
+        with open(agents_path, encoding="utf-8") as f:
+            assert "DemoProj" in f.read(), "overwrite no regeneró el archivo"
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_ecosistema_genera_reglas_sin_bak_previo() -> None:
+    """Generar una regla por primera vez (sin archivo previo) no debe crear .bak."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        eco = detectar_ecosistema(temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="overwrite")
+        assert not os.path.exists(os.path.join(temp_dir, "AGENTS.md.bak")), (
+            "No debería crearse .bak cuando no había archivo previo"
+        )
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def test_adaptar_upgrade_memoria_viva_agents_generado() -> None:
     """Un AGENTS.md generado por una versión ANTERIOR de ContextMap (sin la regla
     de memoria viva) se actualiza en modo respect (hallazgo B, caso Bot_AX_Contable).

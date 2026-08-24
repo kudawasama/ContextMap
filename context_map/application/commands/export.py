@@ -43,8 +43,8 @@ def exportar_contexto(
     # Cargar nodos y edges del mapa
     nodos: list[Node] = []
     edges: list = []
-    graph_file = project_path / ".context-map" / "maps" / "graph.jsonl"
-    edges_file = project_path / ".context-map" / "maps" / "edges.jsonl"
+    graph_file = project_path / ".context-map" / "state" / "graph.jsonl"
+    edges_file = project_path / ".context-map" / "state" / "edges.jsonl"
 
     if graph_file.exists():
         records = load_jsonl(str(graph_file))
@@ -98,11 +98,12 @@ def exportar_contexto(
         if not brief_only and nodos:
             parts.extend(["", "## Project Memory & Nodes", ""])
             for nodo in nodos:
-                parts.append(f"### [{nodo.tipo.upper()}] {nodo.titulo}")
+                evidencia = "; ".join(nodo.evidence) if nodo.evidence else "N/A"
+                parts.append(f"### [{nodo.type.upper()}] {nodo.title}")
                 parts.append(f"- **ID:** `{nodo.id}`")
-                parts.append(f"- **File:** `{nodo.filepath}`")
-                parts.append(f"- **Tag:** `{classification_tag(nodo)}`")
-                parts.append(f"- **Details:** {nodo.contenido or 'N/A'}")
+                parts.append(f"- **Evidence:** `{evidencia}`")
+                parts.append(f"- **Tag:** `{classification_tag(nodo.classification)}`")
+                parts.append(f"- **Details:** {nodo.summary or 'N/A'}")
                 parts.append("")
 
         output_file.write_text("\n".join(parts), encoding="utf-8")
@@ -123,10 +124,10 @@ def exportar_contexto(
         if not brief_only and nodos:
             nodes_elem = ET.SubElement(root, "nodes")
             for nodo in nodos:
-                n_elem = ET.SubElement(nodes_elem, "node", attrib={"id": nodo.id, "type": nodo.tipo})
-                ET.SubElement(n_elem, "title").text = nodo.titulo
-                ET.SubElement(n_elem, "filepath").text = str(nodo.filepath)
-                ET.SubElement(n_elem, "content").text = nodo.contenido or ""
+                n_elem = ET.SubElement(nodes_elem, "node", attrib={"id": nodo.id, "type": nodo.type})
+                ET.SubElement(n_elem, "title").text = nodo.title
+                ET.SubElement(n_elem, "evidence").text = "; ".join(nodo.evidence) if nodo.evidence else ""
+                ET.SubElement(n_elem, "content").text = nodo.summary or ""
 
         # Formatear XML con sangría limpia
         xml_str = minidom.parseString(ET.tostring(root, encoding="utf-8")).toprettyxml(indent="  ")
