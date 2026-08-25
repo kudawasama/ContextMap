@@ -101,7 +101,11 @@ def aviso_frescura(frescura: str) -> str:
 
 def riesgos_criticos(nodes: list[Node]) -> str:
     """Sección de riesgos identificados."""
-    riesgos = [n for n in nodes if n.type == "RIESGO"]
+    from context_map.presentation.vault.consolidated.secciones_riesgos import (
+        _es_riesgo_real,
+    )
+
+    riesgos = [n for n in nodes if n.type == "RIESGO" and _es_riesgo_real(n)]
 
     if not riesgos:
         return "## Riesgos Críticos\n\nNo hay riesgos identificados. ✅"
