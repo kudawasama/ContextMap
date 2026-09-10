@@ -35,7 +35,7 @@ def calcular_stats(nodes: list[Node]) -> dict[str, Any]:
 def extraer_proposito(project_name: str, project_dir: str) -> str:
     """Extrae el propósito del proyecto desde README.md (biblia: tagline + ¿Qué es?)."""
     try:
-        from context_map.presentation.vault.consolidated.common import (
+        from context_map.presentation.vault.consolidated.readme_extract import (
             _extract_proposito_biblia,
         )
 

@@ -90,14 +90,23 @@ def extraer_funciones(ruta: str) -> list[str]:
     return funciones
 
 
+_MARCADORES_TODO = re.compile(r"(?:#|//|/\*|<!--)\s*(?:TODO|FIXME|HACK|BUG|OPTIMIZE)[Ss]?\b:?")
+
+
 def extraer_todos(ruta: str) -> list[str]:
-    """Extrae TODOs, FIXMEs, HACKs de un archivo."""
+    """Extrae marcadores TODO/FIXME/HACK/BUG/OPTIMIZE de un archivo.
+
+    Exige que el marcador (mayúsculas, la convención real) esté pegado a un
+    símbolo de comentario (#, //, /*, <!--) para no confundirlo con palabras
+    en español que lo contienen como subcadena (p. ej. "todo", "método",
+    "debug") ni con menciones sueltas de "TODO" dentro de docstrings o
+    strings que hablan del concepto sin ser una etiqueta real.
+    """
     todos = []
     try:
         with open(ruta, encoding="utf-8", errors="ignore") as f:
             for i, linea in enumerate(f, 1):
-                linea_lower = linea.lower()
-                if any(kw in linea_lower for kw in ["todo", "fixme", "hack", "bug", "optimize"]):
+                if _MARCADORES_TODO.search(linea):
                     todos.append(f"L{i}: {linea.strip()[:100]}")
                 if len(todos) >= 10:
                     break

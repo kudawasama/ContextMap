@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node
-from context_map.presentation.vault.consolidated.common import _escribir_markdown
+from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.consolidated.notas_ideas import (
     ACCION_POR_CLASIFICACION,
     ICONOS_STATUS,

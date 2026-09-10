@@ -21,6 +21,37 @@ def verificar_directorio(ruta: str, nombres: list[str]) -> bool:
     return any(os.path.isdir(os.path.join(ruta, nombre)) for nombre in nombres)
 
 
+DIRECTORIOS_TESTS = ["tests", "test", "__tests__", "spec", "specs", "context_map/__tests__", "context_map/tests"]
+
+
+def _tiene_config_pytest(ruta_raiz: str) -> bool:
+    """Detecta configuración de pytest en archivos raíz, en el directorio de
+    tests (p. ej. ``conftest.py`` anidado) o en ``[tool.pytest.ini_options]``
+    / ``[pytest]`` dentro de ``pyproject.toml``.
+    """
+    if verificar_archivo(
+        ruta_raiz,
+        ["pytest.ini", "conftest.py", ".pytest_cache", "tox.ini", ".coveragerc", "jest.config.js", "tsconfig.json"],
+    ):
+        return True
+
+    for directorio in DIRECTORIOS_TESTS:
+        if os.path.isfile(os.path.join(ruta_raiz, directorio, "conftest.py")):
+            return True
+
+    pyproject = os.path.join(ruta_raiz, "pyproject.toml")
+    if os.path.isfile(pyproject):
+        try:
+            with open(pyproject, encoding="utf-8") as f:
+                contenido = f.read()
+            if "[tool.pytest.ini_options]" in contenido or "[pytest]" in contenido:
+                return True
+        except OSError:
+            pass
+
+    return False
+
+
 def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
     """Ejecuta la auditoría de readiness del proyecto en la ruta especificada."""
     resultado = ResultadoReadiness(ruta_raiz=ruta_raiz)
@@ -84,27 +115,14 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
         SenalReadiness(
             nombre="Tests",
             peso=9,
-            presente=verificar_directorio(
-                ruta_raiz, ["tests", "test", "__tests__", "spec", "specs", "context_map/__tests__", "context_map/tests"]
-            )
+            presente=verificar_directorio(ruta_raiz, DIRECTORIOS_TESTS)
             or verificar_archivo(ruta_raiz, ["test.py", "tests.py"]),
             detalle="Directorio o archivo con pruebas automatizadas.",
         ),
         SenalReadiness(
             nombre="pytest.ini/conftest",
             peso=5,
-            presente=verificar_archivo(
-                ruta_raiz,
-                [
-                    "pytest.ini",
-                    "conftest.py",
-                    ".pytest_cache",
-                    "tox.ini",
-                    ".coveragerc",
-                    "jest.config.js",
-                    "tsconfig.json",
-                ],
-            ),
+            presente=_tiene_config_pytest(ruta_raiz),
             detalle="Configuración del framework de pruebas.",
         ),
         SenalReadiness(

@@ -247,7 +247,7 @@ def test_titulo_legible_quita_ruido() -> None:
 
 def test_proposito_biblia_extrae_identidad() -> None:
     """La biblia extrae tagline + sección ¿Qué es? del README (sin la segunda sección)."""
-    from context_map.presentation.vault.consolidated.common import _extract_proposito_biblia
+    from context_map.presentation.vault.consolidated.readme_extract import _extract_proposito_biblia
 
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_biblia_")
     try:
@@ -275,7 +275,7 @@ def test_proposito_biblia_no_captura_requisitos_como_identidad() -> None:
     sección ``## 🚀 Requisitos`` (que antes se capturaba como "alma" porque la
     primera sección no pasaba el filtro SECCIONES_NO_IDENTIDAD).
     """
-    from context_map.presentation.vault.consolidated.common import _extract_proposito_biblia
+    from context_map.presentation.vault.consolidated.readme_extract import _extract_proposito_biblia
 
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_biblia_req_")
     try:
@@ -432,7 +432,7 @@ def test_snippet_etiquetas_se_genera_y_activa() -> None:
     """El build genera el snippet CSS de etiquetas y lo activa en appearance.json."""
     import json
 
-    from context_map.presentation.vault.consolidated.common import generar_snippet_etiquetas
+    from context_map.presentation.vault.consolidated.graph_style import generar_snippet_etiquetas
 
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_tags_")
     try:
@@ -456,7 +456,7 @@ def test_grupos_grafo_por_tag_y_path() -> None:
     """El build genera los grupos de color del grafo (tag/path) en graph.json."""
     import json
 
-    from context_map.presentation.vault.consolidated.common import generar_color_groups
+    from context_map.presentation.vault.consolidated.graph_style import generar_color_groups
 
     temp_dir = tempfile.mkdtemp(prefix="ctxmap_graph_")
     try:
@@ -537,7 +537,7 @@ def test_zona_knowledge_protegida() -> None:
 def test_tags_dominio_desde_yaml() -> None:
     """Los tags de dominio (grupos reales) se asignan desde dominios.yaml."""
 
-    from context_map.presentation.vault.consolidated.common import (
+    from context_map.presentation.vault.consolidated.dominios import (
         _leer_dominios,
         _tags_dominio,
     )

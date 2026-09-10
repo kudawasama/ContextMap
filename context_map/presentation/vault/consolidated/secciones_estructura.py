@@ -5,10 +5,8 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node
-from context_map.presentation.vault.consolidated.common import (
-    _escribir_markdown,
-    _linea_tags_inline,
-)
+from context_map.presentation.vault.consolidated.dominios import _linea_tags_inline
+from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
 
 

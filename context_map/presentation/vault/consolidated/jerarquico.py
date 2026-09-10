@@ -13,11 +13,11 @@ import os
 from datetime import datetime
 
 from context_map.core.models import Edge, Node
-from context_map.presentation.vault.consolidated.common import (
-    _clasificar_nodos,
+from context_map.presentation.vault.consolidated.escritura import (
     _escribir_markdown,
     _render_grafo_conexiones,
 )
+from context_map.presentation.vault.consolidated.nodos import _clasificar_nodos
 from context_map.presentation.vault.consolidated.secciones_backlog import _render_seccion_backlog
 from context_map.presentation.vault.consolidated.secciones_estructura import (
     _render_seccion_estructura,

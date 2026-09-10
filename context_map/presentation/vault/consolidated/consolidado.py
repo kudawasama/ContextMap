@@ -11,13 +11,15 @@ import os
 from datetime import datetime
 
 from context_map.core.models import Edge, Node
-from context_map.presentation.vault.consolidated.common import (
-    _clasificar_nodos,
+from context_map.presentation.vault.consolidated.escritura import (
     _escribir_markdown,
-    _extract_project_purpose,
-    _mencion_nodo_en_lista,
     _render_grafo_conexiones,
 )
+from context_map.presentation.vault.consolidated.nodos import (
+    _clasificar_nodos,
+    _mencion_nodo_en_lista,
+)
+from context_map.presentation.vault.consolidated.readme_extract import _extract_project_purpose
 
 SECCIONES_MOC = [
     ("01-PROPOSITO", "01. Propósito del Proyecto"),
