@@ -117,7 +117,7 @@ def cmd_build(args) -> None:
     render_obsidian_vault(proj, nodes, edges, vault_path, mode=vault_mode)
 
     # Snippet CSS: etiquetas con color por contexto (se activa solo)
-    from context_map.presentation.vault.consolidated.common import (
+    from context_map.presentation.vault.consolidated.graph_style import (
         generar_color_groups,
         generar_snippet_etiquetas,
     )

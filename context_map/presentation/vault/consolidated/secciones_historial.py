@@ -8,7 +8,7 @@ import subprocess
 from collections import defaultdict
 
 from context_map.core.models import Node
-from context_map.presentation.vault.consolidated.common import _escribir_markdown
+from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 
 logger = logging.getLogger(__name__)
 

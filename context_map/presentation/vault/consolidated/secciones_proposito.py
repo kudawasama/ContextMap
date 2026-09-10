@@ -6,8 +6,8 @@ import logging
 import os
 
 from context_map.core.models import Edge, Node
-from context_map.presentation.vault.consolidated.common import (
-    _escribir_markdown,
+from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
+from context_map.presentation.vault.consolidated.readme_extract import (
     _extract_project_purpose,
     _extract_proposito_biblia,
 )
