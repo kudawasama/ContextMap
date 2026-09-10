@@ -55,7 +55,13 @@ def _clean_null_bytes(text: str) -> str:
 
 
 def _slugificar(texto: str) -> str:
-    """Convierte texto a slug seguro para nombres de archivo."""
+    """Convierte texto a slug seguro para nombres de archivo.
+
+    Los separadores de ruta (``/`` y ``\\``) se reemplazan por ``-`` en vez
+    de eliminarse: un título que embebe una ruta (p. ej. notas de riesgo
+    como "archivo complejo: carpeta/archivo.py") no debe perder la
+    separación entre palabras y volverse ilegible.
+    """
     texto = _clean_null_bytes(texto)
     slug = texto.lower().strip()
     slug = re.sub(r"[áàäâ]", "a", slug)
@@ -64,6 +70,7 @@ def _slugificar(texto: str) -> str:
     slug = re.sub(r"[óòöô]", "o", slug)
     slug = re.sub(r"[úùüû]", "u", slug)
     slug = re.sub(r"[ñ]", "n", slug)
+    slug = re.sub(r"[/\\]+", "-", slug)
     slug = re.sub(r"[^a-z0-9\s\-]", "", slug)
     slug = re.sub(r"[\s]+", "-", slug)
     slug = re.sub(r"-{2,}", "-", slug)
@@ -72,9 +79,16 @@ def _slugificar(texto: str) -> str:
 
 
 def _safe_filename(text: str) -> str:
-    """Limpia caracteres inválidos en el nombre de un archivo, incluyendo nulos."""
+    """Limpia caracteres inválidos en el nombre de un archivo, incluyendo nulos.
+
+    Los separadores de ruta (``/`` y ``\\``) se reemplazan por ``_`` en vez
+    de eliminarse, por la misma razón que en ``_slugificar``: de lo
+    contrario un título que embebe una ruta concatena sus palabras sin
+    separación (p. ej. "carpeta/archivo.py" -> "carpetaarchivo.py").
+    """
     text = _clean_null_bytes(text)
-    safe = re.sub(r'[\\/*?:"<>|\x00-\x1f]', "", text)
+    safe = re.sub(r"[\\/]+", "_", text)
+    safe = re.sub(r'[*?:"<>|\x00-\x1f]', "", safe)
     safe = safe.strip(". ")
     return safe[:100] or "nota"
 
