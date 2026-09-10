@@ -1,0 +1,1123 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA.">
+      
+      
+        <meta name="author" content="kudawasama">
+      
+      
+        <link rel="canonical" href="https://kudawasama.github.io/ContextMap/plans/2026-08-10-mapa-mental-conectado/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Mapa Mental Conectado — Implementation Plan - ContextMap — Narrative Mental Map for AI Agents</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mapa-mental-conectado-implementation-plan" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-header__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ContextMap — Narrative Mental Map for AI Agents
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mapa Mental Conectado — Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏠 Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../README_EN.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🇬🇧 English Docs
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CHANGELOG.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Historial (Changelog)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CONTRIBUTING.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🤝 Contribuir
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CODE_OF_CONDUCT.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Código de Conducta
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-nav__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ContextMap — Narrative Mental Map for AI Agents
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏠 Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../README_EN.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🇬🇧 English Docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Historial (Changelog)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🤝 Contribuir
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CODE_OF_CONDUCT.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Código de Conducta
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fase-1-fundamentos-resolver-archivos-reales-y-conexiones-semanticas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 1 — Fundamentos: resolver archivos reales y conexiones semánticas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 1 — Fundamentos: resolver archivos reales y conexiones semánticas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-1-helper-ruta_archivo_nodo-resolver-el-archivo-real-de-un-nodo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1: Helper ruta_archivo_nodo() — resolver el archivo real de un nodo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-2-generador-de-conexiones-semanticas-conexiones_de_nodo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2: Generador de conexiones semánticas conexiones_de_nodo()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-2-conexiones-visibles-notas-00-conexiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 2 — Conexiones visibles: notas + 00-CONEXIONES
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 2 — Conexiones visibles: notas + 00-CONEXIONES">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-3-seccion-conexiones-en-notas-de-ideas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 3: Sección "🔗 Conexiones" en notas de ideas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-4-seccion-conexiones-en-notas-de-riesgos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4: Sección "🔗 Conexiones" en notas de riesgos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-5-00-conexionesmd-con-wikilinks-reales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 5: 00-CONEXIONES.md con wikilinks reales
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-3-fecha-de-ingreso-y-herramientas-de-obsidian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Fecha de ingreso y herramientas de Obsidian
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 3 — Fecha de ingreso y herramientas de Obsidian">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-6-orden-cronologico-por-fecha-de-ingreso-en-listados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 6: Orden cronológico por fecha de ingreso en listados
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-7-bloques-dataview-bases-con-fallback-estatico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 7: Bloques Dataview (bases) con fallback estático
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-9-grupos-de-colores-del-graph-view-obsidiangraphjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 9: Grupos de colores del Graph View (.obsidian/graph.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-10-plantillas-y-nota-del-dia-para-el-trabajo-manual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 10: Plantillas y nota del día para el trabajo manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-11-carpeta-de-adjuntos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 11: Carpeta de adjuntos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-4-historia-conexiones-menciones-cruzadas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Historia → conexiones (menciones cruzadas)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 4 — Historia → conexiones (menciones cruzadas)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-12-importadores-crean-edges-relaciona-por-menciones-cruzadas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 12: Importadores crean edges relaciona por menciones cruzadas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-5-integracion-verificacion-y-documentacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 5 — Integración, verificación y documentación
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 5 — Integración, verificación y documentación">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-13-suite-completa-regenerar-el-propio-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 13: Suite completa + regenerar el propio vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-14-documentar-en-readme-y-skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 14: Documentar en README y skill
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#criterios-de-aceptacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Criterios de aceptación
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mapa-mental-conectado-implementation-plan">Mapa Mental Conectado — Implementation Plan</h1>
+<blockquote>
+<p><strong>For Hermes:</strong> Use subagent-driven-development skill to implement this plan task-by-task.</p>
+</blockquote>
+<p><strong>Goal:</strong> Convertir el vault de ContextMap de un árbol aislado en un mapa mental profesional: jerarquía visual ordenada intacta + conexiones semánticas entre notas reales + herramientas de Obsidian (bases/Dataview, lienzo Canvas, plantillas, nota del día, etiquetas, adjuntos, grupos) + orden por fecha de ingreso.</p>
+<p><strong>Architecture:</strong> Mantener el árbol jerárquico como columna vertebral visual (no se rompe la topología actual). Agregar una capa de conexiones reales entre archivos que SÍ existen (<code>🔗 Conexiones</code> en cada nota + <code>00-CONEXIONES.md</code> con wikilinks reales), un generador de Canvas (<code>00-MAPA-MENTAL.canvas</code>), grupos de colores en el Graph View (<code>.obsidian/graph.json</code>), bloques Dataview con fallback estático para ordenar por fecha, plantillas y nota del día para el trabajo manual, y edges <code>relaciona</code> creados por los importadores cuando una conversación menciona varios nodos.</p>
+<p><strong>Tech Stack:</strong> Python (ContextMap), Obsidian (wikilinks, .canvas JSON, graph.json, Dataview queries), pytest.</p>
+<p><strong>Principios:</strong> TDD (test → fail → implement → pass), commits frecuentes, DRY, YAGNI. Cada wikilink nuevo DEBE apuntar a un archivo que existe (0 nodos fantasma — el audit <code>scripts/audit_vault_topology.py</code> debe seguir pasando).</p>
+<hr />
+<h2 id="fase-1-fundamentos-resolver-archivos-reales-y-conexiones-semanticas">Fase 1 — Fundamentos: resolver archivos reales y conexiones semánticas</h2>
+<h3 id="task-1-helper-ruta_archivo_nodo-resolver-el-archivo-real-de-un-nodo">Task 1: Helper <code>ruta_archivo_nodo()</code> — resolver el archivo real de un nodo</h3>
+<p><strong>Objective:</strong> Dado un nodo, devolver la ruta relativa (al vault) del archivo .md que lo materializa, o <code>None</code> si no existe archivo individual (nodos agrupados: BASE, FUTURO, CAMBIO/CORRECCION en secciones; IDEAS completadas en batches).</p>
+<p><strong>Files:</strong>
+- Create: <code>context_map/presentation/vault/consolidated/rutas.py</code>
+- Test: <code>context_map/__tests__/test_conexiones.py</code> (nuevo)</p>
+<p><strong>Step 1: Write failing test</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_ruta_archivo_nodo</span><span class="p">():</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">context_map.presentation.vault.consolidated.rutas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ruta_archivo_nodo</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="c1"># IDEA pendiente → archivo individual</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">idea</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"FUTURO001"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"IDEA"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Nueva feature"</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">"pendiente"</span><span class="p">,</span> <span class="n">concept</span><span class="o">=</span><span class="s2">"DEVOPS"</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">ruta</span> <span class="o">=</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">idea</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="k">assert</span> <span class="n">ruta</span> <span class="o">==</span> <span class="s2">"2.0-IDEAS/2.1-Ideas-Pendientes/DEVOPS/idea_FUTURO001_NUEVA_FUNCIONALIDAD.md"</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="c1"># RIESGO → archivo individual sanitizado</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">riesgo</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"R1"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"RIESGO"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Deuda técnica en parser.py"</span><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="k">assert</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">riesgo</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"4.0-RIESGOS/"</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="c1"># BASE/FUTURO/CAMBIO agrupados → None (sin archivo individual)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="k">assert</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"B1"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"BASE"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"x"</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="k">assert</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"F1"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"FUTURO"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"y"</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+</code></pre></div>
+<p><strong>Step 2: Run test → FAIL</strong> (<code>ModuleNotFoundError</code>).</p>
+<p><strong>Step 3: Implement</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="sd">"""Resolución de la ruta real de archivo de un nodo en el vault jerárquico."""</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">context_map.core.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Mismo criterio que secciones_ideas.py: idea_{id_limpio}_{ACCION}.md</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">_ACCION</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"feature"</span><span class="p">:</span> <span class="s2">"NUEVA_FUNCIONALIDAD"</span><span class="p">,</span> <span class="s2">"fix"</span><span class="p">:</span> <span class="s2">"CORRECCION_BUG"</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>           <span class="s2">"update"</span><span class="p">:</span> <span class="s2">"MEJORA"</span><span class="p">,</span> <span class="s2">"chore"</span><span class="p">:</span> <span class="s2">"MANTENIMIENTO"</span><span class="p">,</span> <span class="s2">"docs"</span><span class="p">:</span> <span class="s2">"DOCUMENTACION"</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>           <span class="s2">"refactor"</span><span class="p">:</span> <span class="s2">"REFACTOR"</span><span class="p">,</span> <span class="s2">"test"</span><span class="p">:</span> <span class="s2">"PRUEBA"</span><span class="p">,</span> <span class="s2">"idea"</span><span class="p">:</span> <span class="s2">"IDEA"</span><span class="p">}</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">_accion</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="k">return</span> <span class="n">_ACCION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"classification"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"IDEA"</span><span class="p">)</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">ruta_archivo_nodo</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="sd">"""Ruta relativa (al vault) del archivo que materializa el nodo, o None."""</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"IDEA"</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"pendiente"</span><span class="p">,</span> <span class="s2">"activo"</span><span class="p">):</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="n">carpeta</span> <span class="o">=</span> <span class="s2">"2.1-Ideas-Pendientes"</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"pendiente"</span> <span class="k">else</span> <span class="s2">"2.2-Ideas-Futuras"</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="n">concept</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"concept"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"GENERAL"</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"2.0-IDEAS/</span><span class="si">{</span><span class="n">carpeta</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">concept</span><span class="si">}</span><span class="s2">/idea_</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">_accion</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">.md"</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"RIESGO"</span><span class="p">:</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="c1"># mismo safe_filename que el renderizador (60 chars, sin caracteres especiales)</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"4.0-RIESGOS/</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">.md"</span>  <span class="c1"># Ajustar al _safe_filename real</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    <span class="c1"># Agrupados (BASE→3.1, FUTURO→5.1, CAMBIO/CORRECCION→6.1/6.2, IDEA completada→batch)</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="k">return</span> <span class="kc">None</span>
+</code></pre></div>
+<blockquote>
+<p>NOTA implementación: reutilizar <code>_safe_filename</code> de <code>presentation/vault/templates.py</code> en vez del <code>[:60]</code> (verificar el nombre real del archivo RIESGO generado; el test debe usar el mismo sanitizado).</p>
+</blockquote>
+<p><strong>Step 4: Run test → PASS</strong></p>
+<p><strong>Step 5: Commit</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>add<span class="w"> </span>context_map/presentation/vault/consolidated/rutas.py<span class="w"> </span>context_map/__tests__/test_conexiones.py
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"feat(vault): resolver ruta real de archivo por nodo (base de conexiones sin nodos fantasma)"</span>
+</code></pre></div>
+<hr />
+<h3 id="task-2-generador-de-conexiones-semanticas-conexiones_de_nodo">Task 2: Generador de conexiones semánticas <code>conexiones_de_nodo()</code></h3>
+<p><strong>Objective:</strong> Para un nodo, calcular sus top-5 nodos relacionados (por mismo concepto, misma fecha de ingreso/sesión, o referencia cruzada en summaries), excluyendo nodos agrupados sin archivo individual.</p>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/presentation/vault/consolidated/rutas.py</code>
+- Test: <code>context_map/__tests__/test_conexiones.py</code></p>
+<p><strong>Step 1: Write failing test</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_conexiones_semanticas</span><span class="p">():</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">context_map.presentation.vault.consolidated.rutas</span><span class="w"> </span><span class="kn">import</span> <span class="n">conexiones_de_nodo</span><span class="p">,</span> <span class="n">ruta_archivo_nodo</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">a</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"I1"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"IDEA"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Bot contable"</span><span class="p">,</span> <span class="n">concept</span><span class="o">=</span><span class="s2">"AUTOMATIZACION"</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">"pendiente"</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="s2">"2026-08-01T10:00:00"</span><span class="p">)</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">b</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"I2"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"IDEA"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Reporte diario"</span><span class="p">,</span> <span class="n">concept</span><span class="o">=</span><span class="s2">"AUTOMATIZACION"</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">"pendiente"</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="s2">"2026-08-01T10:05:00"</span><span class="p">)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">c</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"I3"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"IDEA"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"UI nueva"</span><span class="p">,</span> <span class="n">concept</span><span class="o">=</span><span class="s2">"UI"</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">"pendiente"</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="s2">"2026-08-02T09:00:00"</span><span class="p">)</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">cons</span> <span class="o">=</span> <span class="n">conexiones_de_nodo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">rutas</span> <span class="o">=</span> <span class="p">[</span><span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cons</span><span class="p">]</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">assert</span> <span class="s2">"I2"</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cons</span><span class="p">]</span>       <span class="c1"># mismo concepto</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="k">assert</span> <span class="s2">"I3"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cons</span><span class="p">]</span>   <span class="c1"># concepto distinto y fecha distinta</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cons</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span>
+</code></pre></div>
+<p><strong>Step 2: Run → FAIL.</strong></p>
+<p><strong>Step 3: Implement</strong> — scoring en <code>conexiones_de_nodo(node, todos, limite=5)</code>:
+- +3 mismo <code>concept</code>; +2 misma fecha (<code>created[:10]</code> igual); +1 si el título del otro aparece en <code>node.summary</code> (o viceversa).
+- Excluir <code>node</code> mismo y nodos con <code>ruta_archivo_nodo() is None</code> (evitar fantasma).
+- Ordenar por score desc, devolver top-N.</p>
+<p><strong>Step 4: Run → PASS.</strong></p>
+<p><strong>Step 5: Commit</strong> — <code>feat(vault): conexiones semanticas entre nodos (concepto/fecha/menciones) con limite de 5</code>.</p>
+<hr />
+<h2 id="fase-2-conexiones-visibles-notas-00-conexiones">Fase 2 — Conexiones visibles: notas + 00-CONEXIONES</h2>
+<h3 id="task-3-seccion-conexiones-en-notas-de-ideas">Task 3: Sección "🔗 Conexiones" en notas de ideas</h3>
+<p><strong>Objective:</strong> Cada nota individual de idea (pendiente/activa) incluye su sección de conexiones con wikilinks a archivos reales, sin tocar el pie <code>⬅</code> (el árbol queda intacto).</p>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/presentation/vault/consolidated/secciones_ideas.py</code> (función que escribe cada nota, ~línea 153)
+- Test: <code>context_map/__tests__/test_conexiones.py</code></p>
+<p><strong>Step 1: Test</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_nota_idea_incluye_conexiones</span><span class="p">():</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="c1"># render 2 ideas del mismo concepto → la nota de la primera contiene</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="c1"># [[2.0-IDEAS/2.1-Ideas-Pendientes/AUTOMATIZACION/idea_I2_....md|...</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="c1"># y NO rompe: sigue teniendo el pie '⬅ Volver'</span>
+</code></pre></div>
+<p><strong>Step 2: FAIL.</strong> <strong>Step 3: Implement</strong> — en el render de la nota, tras las secciones narrativas y antes del pie:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">context_map.presentation.vault.consolidated.rutas</span><span class="w"> </span><span class="kn">import</span> <span class="n">conexiones_de_nodo</span><span class="p">,</span> <span class="n">ruta_archivo_nodo</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">if</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">partes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"## 🔗 Conexiones"</span><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">partes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">conexiones_de_nodo</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">todos</span><span class="p">):</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="n">destino</span> <span class="o">=</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="k">if</span> <span class="n">destino</span><span class="p">:</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>            <span class="n">partes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- [[</span><span class="si">{</span><span class="n">destino</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">rel</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">40</span><span class="p">]</span><span class="si">}</span><span class="s2">]]"</span><span class="p">)</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">partes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 4: PASS.</strong> <strong>Step 5: Commit</strong> — <code>feat(vault): notas de idea con seccion de conexiones (wikilinks a archivos reales)</code>.</p>
+<hr />
+<h3 id="task-4-seccion-conexiones-en-notas-de-riesgos">Task 4: Sección "🔗 Conexiones" en notas de riesgos</h3>
+<p><strong>Files:</strong> <code>context_map/presentation/vault/consolidated/secciones_riesgos.py</code> (o el que renderiza los archivos de riesgo). Mismo patrón que Task 3. Test: riesgo enlaza a la idea que lo menciona. Commit: <code>feat(vault): notas de riesgo con conexiones</code>.</p>
+<hr />
+<h3 id="task-5-00-conexionesmd-con-wikilinks-reales">Task 5: <code>00-CONEXIONES.md</code> con wikilinks reales</h3>
+<p><strong>Objective:</strong> <code>_render_grafo_conexiones</code> pasa de <code>con_wikilinks=False</code> (todo texto) a renderizar cada arista con wikilinks SI ambos extremos tienen archivo real; los demás (ids sin archivo) quedan como texto plano → 0 nodos fantasma.</p>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/presentation/vault/consolidated/jerarquico.py:223</code> y la función <code>_render_grafo_conexiones</code>
+- Test: <code>context_map/__tests__/test_conexiones.py</code></p>
+<p><strong>Step 1: Test</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_conexiones_md_con_wikilinks_solo_archivos_reales</span><span class="p">():</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="c1"># edge entre 2 ideas pendientes → aparece [[2.0-IDEAS/.../idea_X...]]</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="c1"># edge depends_on hacia un id sin archivo → texto plano, sin '[['</span>
+</code></pre></div>
+<p><strong>Step 2: FAIL.</strong> <strong>Step 3: Implement</strong> — en <code>_render_grafo_conexiones</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">context_map.presentation.vault.consolidated.rutas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ruta_archivo_nodo</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">nodos_por_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">}</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">src</span> <span class="o">=</span> <span class="n">nodos_por_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">source</span><span class="p">);</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">nodos_por_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">r_src</span> <span class="o">=</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="k">if</span> <span class="n">src</span> <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">r_dst</span> <span class="o">=</span> <span class="n">ruta_archivo_nodo</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span> <span class="k">if</span> <span class="n">dst</span> <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="k">if</span> <span class="n">r_src</span> <span class="ow">and</span> <span class="n">r_dst</span><span class="p">:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="n">lineas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">40</span><span class="p">]</span><span class="si">}</span><span class="s2"> ↔ [[</span><span class="si">{</span><span class="n">r_dst</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">dst</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">40</span><span class="p">]</span><span class="si">}</span><span class="s2">]] (</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="n">lineas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2">) [sin archivo individual]"</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 4: PASS</strong> + correr <code>python scripts/audit_vault_topology.py .context-map/vault-ContextMap</code> → 0 enlaces rotos. <strong>Step 5: Commit</strong> — <code>feat(vault): 00-CONEXIONES con wikilinks reales sin nodos fantasma</code>.</p>
+<hr />
+<h2 id="fase-3-fecha-de-ingreso-y-herramientas-de-obsidian">Fase 3 — Fecha de ingreso y herramientas de Obsidian</h2>
+<h3 id="task-6-orden-cronologico-por-fecha-de-ingreso-en-listados">Task 6: Orden cronológico por fecha de ingreso en listados</h3>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/presentation/vault/consolidated/secciones_ideas.py</code> (2.4-Ideas-Relevantes) y <code>secciones_backlog.py</code> (5.1-Tareas)</p>
+<p><strong>Step 1: Test</strong> — dado 2 nodos con created distinto, el listado sale ordenado ASC por <code>created</code>.</p>
+<p><strong>Step 2-4:</strong> ordenar <code>sorted(nodos, key=lambda n: n.created)</code> al renderizar; añadir la fecha visible <code>(2026-08-01)</code> en cada ítem. PASS.</p>
+<p><strong>Step 5: Commit</strong> — <code>feat(vault): listados ordenados por fecha de ingreso</code>.</p>
+<hr />
+<h3 id="task-7-bloques-dataview-bases-con-fallback-estatico">Task 7: Bloques Dataview (bases) con fallback estático</h3>
+<p><strong>Objective:</strong> En <code>2.4-Ideas-Relevantes.md</code> incluir un bloque Dataview (tabla: archivo, created, concepto, status, orden por fecha). Como Dataview es plugin, el fallback estático (lista ordenada de Task 6) SIEMPRE se mantiene debajo.</p>
+<p><strong>Files:</strong> Modify: <code>context_map/presentation/vault/consolidated/secciones_ideas.py</code></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="gu">## 📊 Base de Ideas (Dataview)</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>```dataview
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>TABLE created AS "Ingreso", concepto, status
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>FROM "2.0-IDEAS"
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>SORT created ASC
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>**Test:** el archivo generado contiene `\`\`\`dataview` y la lista estática ordenada. **Commit:** `feat(vault): base dataview de ideas con fallback estatico`.
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>---
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>### Task 8: Generador de Lienzo `00-MAPA-MENTAL.canvas`
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>**Objective:** ContextMap genera un Canvas Obsidian con el mapa mental completo: nodos `file` (solo archivos reales) + aristas `relaciona`/`depends_on`.
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>**Files:**
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>- Create: `context_map/presentation/vault/consolidated/canvas.py`
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>- Modify: `context_map/presentation/vault/consolidated/jerarquico.py` (llamar al final de `_render_hierarchical_vault`)
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>**Step 1: Test** — genera el archivo, es JSON válido, cada node tiene `type:"file"` con ruta que existe en el vault, cada edge referencia `fromNode`/`toNode` existentes.
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>**Step 2: FAIL.** **Step 3: Implement:**
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>```python
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>import json, uuid
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>def render_canvas(output_dir, nodes, edges):
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>    """00-MAPA-MENTAL.canvas — nodos file + aristas."""
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>    por_id = {n.id: n for n in nodes}
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>    canvas_nodes, canvas_edges = [], []
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>    ids = {}
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>    # Layout radial simple por orden de nodos (x = 200*idx % 1200, y = 200*(idx//6))
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>    for i, n in enumerate(nodes):
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>        ruta = ruta_archivo_nodo(n)
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>        if not ruta:
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>            continue
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>        uid = str(uuid.uuid4())
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a>        ids[n.id] = uid
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>        canvas_nodes.append({"id": uid, "type": "file", "file": ruta,
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>                             "x": 200 * (i % 6), "y": 200 * (i // 6),
+<a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a>                             "width": 260, "height": 60})
+<a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a>    for e in edges:
+<a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a>        if e.source in ids and e.target in ids:
+<a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a>            canvas_edges.append({"id": str(uuid.uuid4()),
+<a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a>                                 "fromNode": ids[e.source], "fromSide": "right",
+<a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a>                                 "toNode": ids[e.target], "toSide": "left"})
+<a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a>    payload = {"nodes": canvas_nodes, "edges": canvas_edges}
+<a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a>    ruta_canvas = os.path.join(output_dir, "00-MAPA-MENTAL.canvas")
+<a id="__codelineno-9-41" name="__codelineno-9-41" href="#__codelineno-9-41"></a>    with open(ruta_canvas, "w", encoding="utf-8") as f:
+<a id="__codelineno-9-42" name="__codelineno-9-42" href="#__codelineno-9-42"></a>        json.dump(payload, f, ensure_ascii=False, indent=2)
+<a id="__codelineno-9-43" name="__codelineno-9-43" href="#__codelineno-9-43"></a>    return ruta_canvas
+</code></pre></div></p>
+<p><strong>Step 4: PASS.</strong> <strong>Step 5: Commit</strong> — <code>feat(vault): lienzo 00-MAPA-MENTAL.canvas con mapa mental conectado</code>.</p>
+<hr />
+<h3 id="task-9-grupos-de-colores-del-graph-view-obsidiangraphjson">Task 9: Grupos de colores del Graph View (<code>.obsidian/graph.json</code>)</h3>
+<p><strong>Objective:</strong> Generar <code>.context-map/vault-&lt;proj&gt;/.obsidian/graph.json</code> con grupos por estado (Pendientes/Activas/Completadas/Riesgos) con colores — la vista "profesional".</p>
+<p><strong>Files:</strong> Modify: <code>context_map/presentation/vault/consolidated/canvas.py</code> (o nuevo <code>graph_config.py</code>)</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_graph_json</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="sd">""".obsidian/graph.json — grupos por estado con colores (rgb int)."""</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">grupos</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>        <span class="p">{</span><span class="s2">"query"</span><span class="p">:</span> <span class="s2">"path:2.1-Ideas-Pendientes"</span><span class="p">,</span> <span class="s2">"color"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"rgb"</span><span class="p">:</span> <span class="mh">0xEAB308</span><span class="p">}},</span>  <span class="c1"># amarillo</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>        <span class="p">{</span><span class="s2">"query"</span><span class="p">:</span> <span class="s2">"path:2.2-Ideas-Futuras"</span><span class="p">,</span>    <span class="s2">"color"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"rgb"</span><span class="p">:</span> <span class="mh">0x3B82F6</span><span class="p">}},</span>  <span class="c1"># azul</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>        <span class="p">{</span><span class="s2">"query"</span><span class="p">:</span> <span class="s2">"path:2.3-Ideas-Completas"</span><span class="p">,</span>  <span class="s2">"color"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"rgb"</span><span class="p">:</span> <span class="mh">0x22C55E</span><span class="p">}},</span>  <span class="c1"># verde</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>        <span class="p">{</span><span class="s2">"query"</span><span class="p">:</span> <span class="s2">"path:4.0-RIESGOS"</span><span class="p">,</span>          <span class="s2">"color"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"rgb"</span><span class="p">:</span> <span class="mh">0xEF4444</span><span class="p">}},</span>  <span class="c1"># rojo</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="p">]</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="n">conf</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"collapse-filter"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"search"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"showTags"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>            <span class="s2">"groups"</span><span class="p">:</span> <span class="n">grupos</span><span class="p">}</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="n">obs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">".obsidian"</span><span class="p">)</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">"graph.json"</span><span class="p">),</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Test:</strong> <code>.obsidian/graph.json</code> existe con 4 grupos y colores. <strong>Commit:</strong> <code>feat(vault): grupos de color del graph view por estado</code>.</p>
+<hr />
+<h3 id="task-10-plantillas-y-nota-del-dia-para-el-trabajo-manual">Task 10: Plantillas y nota del día para el trabajo manual</h3>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/presentation/briefs/skill.py</code> (referencia a plantillas)
+- Create generador: <code>context_map/presentation/vault/consolidado/plantillas.py</code></p>
+<p><strong>Step 1:</strong> Generar <code>.context-map/plantillas/nota-sesion.md</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>---
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>type: nota-manual
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>preserve: true
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>created: {{fecha}}
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>project: "{{proyecto}}"
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="gu">tags: [sesion, manual]</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="gu">---</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="gh"># Sesión — {{fecha}}</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="gu">## ¿Qué se hizo?</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="gu">## Decisiones</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="gu">## Pendiente</span>
+</code></pre></div>
+<p><strong>Step 2:</strong> Generar <code>.context-map/vault-&lt;proj&gt;/.manual/Diario/YYYY-MM-DD.md</code> (nota del día) si hay eventos con esa fecha: enlaza a los nodos tocados ese día (<code>[[idea_X]]</code>). Se regenera en cada <code>refresh</code>.</p>
+<p><strong>Test:</strong> plantilla existe; si hay nodos con created de hoy, existe la nota diaria con wikilinks. <strong>Commit:</strong> <code>feat(vault): plantillas para notas manuales y nota del dia automatica</code>.</p>
+<hr />
+<h3 id="task-11-carpeta-de-adjuntos">Task 11: Carpeta de adjuntos</h3>
+<p><strong>Files:</strong> <code>context_map/application/commands/build.py</code> (<code>ensure_dirs</code>) — crear <code>.context-map/vault-&lt;proj&gt;/adjuntos/</code> al build. Documentar en la skill. Test trivial (dir existe). <strong>Commit:</strong> <code>feat(vault): carpeta de adjuntos del vault</code>.</p>
+<hr />
+<h2 id="fase-4-historia-conexiones-menciones-cruzadas">Fase 4 — Historia → conexiones (menciones cruzadas)</h2>
+<h3 id="task-12-importadores-crean-edges-relaciona-por-menciones-cruzadas">Task 12: Importadores crean edges <code>relaciona</code> por menciones cruzadas</h3>
+<p><strong>Objective:</strong> Cuando una conversación importada (sessions/antigravity/chat) menciona 2+ nodos existentes, crear un edge <code>relaciona</code> entre ellos (persistido en <code>edges.jsonl</code>), de modo que el mapa mental conecta lo que la historia conversada conectó.</p>
+<p><strong>Files:</strong>
+- Modify: <code>context_map/application/commands/importers.py</code> (tras crear nodos de la conversación) o <code>context_map/domain/synchronization/sync.py</code>
+- Test: <code>context_map/__tests__/test_conexiones.py</code></p>
+<p><strong>Step 1: Test</strong> — importar un chat que menciona "Bot contable" y "Reporte diario" → <code>edges.jsonl</code> contiene un edge <code>relaciona</code> entre esos ids.</p>
+<p><strong>Step 2: FAIL.</strong> <strong>Step 3: Implement</strong> — tras normalizar los nodos nuevos: para cada par de nodos cuyo título aparezca en el texto del evento, <code>append_jsonl(edges, {"source": a.id, "target": b.id, "kind": "relaciona", "summary": "mencion cruzada en conversacion"})</code> (dedup por (source,target,kind)).</p>
+<p><strong>Step 4: PASS.</strong> <strong>Step 5: Commit</strong> — <code>feat(importers): edges 'relaciona' por menciones cruzadas en conversaciones</code>.</p>
+<hr />
+<h2 id="fase-5-integracion-verificacion-y-documentacion">Fase 5 — Integración, verificación y documentación</h2>
+<h3 id="task-13-suite-completa-regenerar-el-propio-vault">Task 13: Suite completa + regenerar el propio vault</h3>
+<p><strong>Steps:</strong>
+1. <code>python -m pytest</code> → todos pasan.
+2. <code>python scripts/audit_vault_topology.py .context-map/vault-ContextMap</code> → 0 colisiones, 0 huérfanos, 0 enlaces rotos.
+3. <code>ctxmap refresh . --project ContextMap</code> → regenera todo; verificar: notas con "🔗 Conexiones", <code>00-CONEXIONES.md</code> con wikilinks, <code>00-MAPA-MENTAL.canvas</code> válido, <code>.obsidian/graph.json</code> presente, listados ordenados por fecha.
+4. <code>ctxmap check .</code> → Salud del Vault OK.</p>
+<p><strong>Commit:</strong> <code>feat(vault): mapa mental conectado completo — verificado con audit y refresh</code>.</p>
+<h3 id="task-14-documentar-en-readme-y-skill">Task 14: Documentar en README y skill</h3>
+<p><strong>Files:</strong> <code>README.md</code> (sección nueva "🗺️ Mapa Mental Conectado" con las herramientas: lienzo, grupos, dataview, plantillas, nota del día, adjuntos), <code>references/brief-specification.md</code> y <code>SKILL.md</code> de la skill <code>context-mapping</code> (regla de conexiones: jerarquía intacta + wikilinks solo a archivos reales + límite 5 + sin nodos fantasma).</p>
+<p><strong>Commit:</strong> <code>docs: documentar mapa mental conectado y herramientas de Obsidian</code>.</p>
+<hr />
+<h2 id="criterios-de-aceptacion">Criterios de aceptación</h2>
+<ol>
+<li>El Graph View sigue mostrando el árbol ordenado (jerarquía intacta) — la regla inamovible de topología NO se rompe (audit 0/0/0).</li>
+<li>Al abrir una nota (tomarla), el Local Graph muestra sus conexiones <code>🔗</code> con otras notas.</li>
+<li><code>00-CONEXIONES.md</code> y <code>00-MAPA-MENTAL.canvas</code> materializan el grafo conectado sin nodos fantasma.</li>
+<li>Los listados ordenan por fecha de ingreso (created) y <code>2.4-Ideas-Relevantes</code> tiene base Dataview con fallback estático.</li>
+<li><code>.obsidian/graph.json</code> colorea el grafo por estado (grupos profesionales).</li>
+<li>Existen plantillas para notas manuales y la nota del día se genera automáticamente.</li>
+<li>Las conversaciones importadas crean conexiones <code>relaciona</code> (la historia conecta el mapa).</li>
+<li>50+ tests pasan; audit 0/0/0; <code>ctxmap refresh</code> regenera todo sin borrar <code>.manual/</code>.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
