@@ -428,6 +428,7 @@ def _cmd_personal_sync(args) -> None:
 
         total_nuevos = 0
         total_lecciones = 0
+        total_omitidos = 0
         for nombre, ruta in proyectos:
             events_path, chats_path, vault_base = _rutas_proyecto(ruta)
 
@@ -437,12 +438,22 @@ def _cmd_personal_sync(args) -> None:
             for ev in load_events_from_chat_folder(chats_path):
                 eventos.append(ev.to_dict())
 
+            lecciones = _leer_lecciones_vault(vault_base, nombre)
+
+            # Un proyecto sin eventos ni lecciones no aporta nada a la memoria
+            # global: registrarlo solo ensuciaba el panel con filas vacías
+            # (una carpeta contenedora como 'GitHub' o el residuo de los tests).
+            if not eventos and not lecciones:
+                total_omitidos += 1
+                print(f"sync {nombre}: sin contenido, omitido")
+                continue
+
             nuevos = db.cargar_eventos(nombre, eventos)
             total_nuevos += nuevos
 
             # Contador POR PROYECTO (el acumulado global se muestra al final)
             lecciones_proyecto = 0
-            for leccion in _leer_lecciones_vault(vault_base, nombre):
+            for leccion in lecciones:
                 if db.agregar_leccion(leccion):
                     total_lecciones += 1
                     lecciones_proyecto += 1
@@ -460,6 +471,8 @@ def _cmd_personal_sync(args) -> None:
             f"lecciones={stats['lecciones']} decisiones={stats['decisiones']}"
         )
         print(f"  nuevos en esta ejecución: {total_nuevos} eventos, {total_lecciones} lecciones")
+        if total_omitidos:
+            print(f"  omitidos por no tener contenido: {total_omitidos}")
     finally:
         db.cerrar()
 

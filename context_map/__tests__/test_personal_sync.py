@@ -66,3 +66,38 @@ def test_bases_solapadas_no_repite_proyectos(tmp_path, monkeypatch) -> None:
 
     assert len(rutas) == len(set(rutas)), rutas
     assert rutas.count(esperada) == 1, rutas
+
+
+def test_sync_omite_proyectos_sin_contenido(tmp_path, monkeypatch) -> None:
+    """Un `.context-map` vacío no llega a la tabla de proyectos (T1.7).
+
+    Caso real: `GitHub` (carpeta contenedora inicializada una vez) y `__tests__`
+    (residuo de los tests dentro del propio repo) aparecían como proyectos con
+    0 eventos y 0 lecciones.
+    """
+    from context_map.application.commands.personal import _cmd_personal_sync
+    from context_map.core.personal import PersonalDB
+
+    raiz = tmp_path / "Mi unidad"
+    (raiz / "GitHub" / ".context-map").mkdir(parents=True)
+    con_datos = raiz / "mi-app-utm"
+    _proyecto(raiz, "mi-app-utm")
+    (con_datos / ".context-map" / "raw" / "events.jsonl").write_text(
+        '{"type": "BASE", "text": "Proyecto escaneado", "source": "test", "timestamp": "2026-09-21T10:00:00"}\n',
+        encoding="utf-8",
+    )
+
+    import context_map.application.commands.personal as personal_mod
+
+    monkeypatch.setattr(personal_mod, "_bases_por_defecto", lambda: [str(raiz)])
+
+    _cmd_personal_sync(_args(todos=True))
+
+    db = PersonalDB()
+    try:
+        nombres = db.listar_proyectos()
+    finally:
+        db.cerrar()
+
+    assert "GitHub" not in nombres, nombres
+    assert "mi-app-utm" in nombres, nombres
