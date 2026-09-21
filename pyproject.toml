@@ -40,6 +40,12 @@ pdf = [
     "pymupdf>=1.24.0",
 ]
 mcp = [
+    # FastMCP crea el modelo de salida de cada tool con
+    # `create_model(nombre, result=<tipo>)`. pydantic 2.9.2 rechaza esa llamada
+    # (PydanticUserError: "A non-annotated attribute was detected") y rompe por
+    # completo el import de `context_map.infrastructure.mcp_server`, lo que a su
+    # vez impide recolectar el suite de tests. El piso verificado es 2.13.
+    "pydantic>=2.13,<3",
     "mcp>=1.2.0,<2.0.0",
 ]
 dev = [
