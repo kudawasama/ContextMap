@@ -351,6 +351,7 @@ class PersonalDB:
         self,
         proyecto: str,
         eventos: list[dict[str, Any]],
+        ruta: str = "",
     ) -> int:
         """Inserta eventos de un proyecto de forma idempotente.
 
@@ -358,11 +359,14 @@ class PersonalDB:
             proyecto: Nombre del proyecto al que pertenecen los eventos.
             eventos: Lista de diccionarios con ``type``, ``text``,
                 ``timestamp``, ``source`` y opcionalmente ``tags``.
+            ruta: Ruta del proyecto en disco. Sin ella la columna ``ruta``
+                quedaba vacía y no había forma de localizar ni deduplicar los
+                proyectos por su ubicación real.
 
         Returns:
             int: Cantidad de eventos nuevos insertados.
         """
-        pid = self.registrar_proyecto(proyecto)
+        pid = self.registrar_proyecto(proyecto, ruta)
         nuevos = 0
         for ev in eventos:
             tipo = str(ev.get("type") or "EVENTO")

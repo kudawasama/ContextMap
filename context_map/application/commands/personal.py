@@ -56,7 +56,7 @@ def sincronizar_proyecto_automatico(
             for ev in load_events_from_chat_folder(chats_path):
                 eventos.append(ev.to_dict())
 
-            nuevos = db.cargar_eventos(proj_name, eventos)
+            nuevos = db.cargar_eventos(proj_name, eventos, os.path.abspath(target_dir))
             lecciones = 0
             for leccion in _leer_lecciones_vault(vault_base, proj_name):
                 if db.agregar_leccion(leccion):
@@ -448,7 +448,7 @@ def _cmd_personal_sync(args) -> None:
                 print(f"sync {nombre}: sin contenido, omitido")
                 continue
 
-            nuevos = db.cargar_eventos(nombre, eventos)
+            nuevos = db.cargar_eventos(nombre, eventos, ruta)
             total_nuevos += nuevos
 
             # Contador POR PROYECTO (el acumulado global se muestra al final)
