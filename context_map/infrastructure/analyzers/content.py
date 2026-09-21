@@ -95,23 +95,35 @@ def extraer_funciones(ruta: str) -> list[str]:
     return funciones
 
 
-_MARCADORES_TODO = re.compile(r"(?:#|//|/\*|<!--)\s*(?:TODO|FIXME|HACK|BUG|OPTIMIZE)[Ss]?\b:?")
+_RE_MARCADOR_TODO = re.compile(
+    r"(?:#|//|/\*|\*|<!--|--)\s*(?:TODO|FIXME|HACK|BUG|OPTIMIZE|XXX)[Ss]?\b:?"
+)
+"""Marcador de tarea pendiente: requiere signo de comentario y palabra en MAYÚSCULAS.
+
+La heurística anterior buscaba la subcadena ``todo``/``bug`` en cualquier línea,
+así que marcaba como pendiente la prosa en español («todo el rango», «todos los
+módulos»), las llamadas ``logger.debug(...)`` y los docstrings. En la BD personal
+eso produjo 647 de 685 eventos ``TODO`` falsos (94%). La coincidencia en
+mayúsculas es deliberada: ``# todo`` en un comentario en español es prosa, no un
+marcador; ``# TODO`` sí lo es.
+"""
 
 
 def extraer_todos(ruta: str) -> list[str]:
-    """Extrae marcadores TODO/FIXME/HACK/BUG/OPTIMIZE de un archivo.
+    """Extrae los marcadores TODO/FIXME/HACK/BUG/OPTIMIZE/XXX escritos en comentarios.
 
-    Exige que el marcador (mayúsculas, la convención real) esté pegado a un
-    símbolo de comentario (#, //, /*, <!--) para no confundirlo con palabras
-    en español que lo contienen como subcadena (p. ej. "todo", "método",
-    "debug") ni con menciones sueltas de "TODO" dentro de docstrings o
-    strings que hablan del concepto sin ser una etiqueta real.
+    Args:
+        ruta (str): Ruta del archivo a analizar.
+
+    Returns:
+        list[str]: Líneas con marcador, con el formato ``L<n>: <texto>``
+        (máximo 10 por archivo).
     """
     todos = []
     try:
         with open(ruta, encoding="utf-8", errors="ignore") as f:
             for i, linea in enumerate(f, 1):
-                if _MARCADORES_TODO.search(linea):
+                if _RE_MARCADOR_TODO.search(linea):
                     todos.append(f"L{i}: {linea.strip()[:100]}")
                 if len(todos) >= 10:
                     break
