@@ -13,16 +13,24 @@ from context_map.core.models import Event
 
 JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO", "REGLA"}
 
-# Patrones determinísticos para clasificación heurística del tipo de evento
+# Patrones determinísticos para clasificación heurística del tipo de evento.
+# El orden importa: gana el primer patrón que coincide.
+#
+# `todo` (minúsculas) NO se usa como marcador de tarea: en un corpus en español
+# es prosa («todo el rango», «ya está todo») y marcaba como pendiente cualquier
+# frase. Los marcadores reales van en MAYÚSCULAS. `hit` se retiró de HITO porque
+# coincidía con usos verbales («hit the API») y `correc` no coincidía con nada
+# (el límite de palabra impedía que casara con «corrección»).
 _LINE_PATTERNS: list[tuple[str | re.Pattern[str], str]] = [
     (re.compile(r"\b(adding|added|feat|feature)\b", re.I), "IDEA"),
-    (re.compile(r"\b(fix|fixing|correc|patch)\b", re.I), "CORRECCION"),
+    (re.compile(r"\b(fix|fixing|correc\w*|arregl\w*|patch)\b", re.I), "CORRECCION"),
     (re.compile(r"\b(test|tested|pytest|spec|qa)\b", re.I), "PRUEBA"),
-    (re.compile(r"\b(next|future|todo|planned|roadmap)\b", re.I), "FUTURO"),
+    (re.compile(r"\b(next|future|planned|roadmap)\b", re.I), "FUTURO"),
+    (re.compile(r"\b(?:TODO|FIXME|HACK)\b"), "FUTURO"),
     (re.compile(r"\b(risk|bug|issue|danger|blocked)\b", re.I), "RIESGO"),
     (re.compile(r"\b(change|changed|update|updated)\b", re.I), "CAMBIO"),
     (re.compile(r"\b(base|init|seed|bootstrap|setup)\b", re.I), "BASE"),
-    (re.compile(r"\b(release|milestone|hit)\b", re.I), "HITO"),
+    (re.compile(r"\b(release|milestone)\b", re.I), "HITO"),
 ]
 
 
