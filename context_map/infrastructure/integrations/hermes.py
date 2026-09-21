@@ -283,6 +283,45 @@ def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
     return eventos
 
 
+def sesion_es_del_proyecto(sesion: Sesion, proyecto: str = "", ruta_raiz: str = "") -> bool:
+    """Indica si una sesión de Hermes pertenece a un proyecto concreto.
+
+    Predicado compartido por el importador (``importar_sesiones``) y por la
+    señal de frescura (``signals.sesiones_posteriores``). Antes cada uno usaba su
+    propio criterio: el importador filtraba por proyecto pero la señal contaba
+    TODAS las sesiones posteriores al build, así que `ctxmap check` avisaba de
+    «11 sesiones sin importar» que eran de otros proyectos y que `refresh` no
+    podía importar nunca.
+
+    Args:
+        sesion (Sesion): Sesión leída de Hermes.
+        proyecto (str): Nombre del proyecto (se busca en cwd, repo y título).
+        ruta_raiz (str): Ruta del proyecto; habilita la comparación por ruta.
+
+    Returns:
+        bool: True si la sesión pertenece al proyecto.
+    """
+    cwd = str(getattr(sesion, "cwd", "") or "")
+    repo = str(getattr(sesion, "git_repo_root", "") or "")
+    titulo = str(getattr(sesion, "titulo", "") or "")
+
+    if ruta_raiz:
+        raiz = os.path.normcase(os.path.abspath(ruta_raiz))
+        for valor in (cwd, repo):
+            if not valor:
+                continue
+            ruta = os.path.normcase(os.path.abspath(valor))
+            if ruta == raiz or ruta.startswith(raiz + os.sep):
+                return True
+
+    if proyecto:
+        nombre = proyecto.lower()
+        if any(nombre in valor.lower() for valor in (cwd, repo, titulo)):
+            return True
+
+    return not proyecto and not ruta_raiz
+
+
 def importar_sesiones(
     db_path: str | None = None,
     limite: int = 5,
@@ -304,11 +343,7 @@ def importar_sesiones(
     """
     sesiones = leer_sesiones(db_path, limite)
     if project:
-        p = project.lower()
-        sesiones = [
-            s for s in sesiones
-            if p in f"{s.cwd} {s.git_repo_root} {s.titulo}".lower()
-        ]
+        sesiones = [s for s in sesiones if sesion_es_del_proyecto(s, project)]
     eventos_totales = []
 
     for sesion in sesiones:

@@ -40,16 +40,17 @@ def _hacer_repo(tmp_path, con_build: bool = True, con_git: bool = True) -> str:
     return str(tmp_path)
 
 
-def _sesion(fecha_inicio: str) -> SimpleNamespace:
+def _sesion(fecha_inicio: str, cwd: str = "") -> SimpleNamespace:
     """Crea una sesión fake de Hermes con la fecha de inicio dada.
 
     Args:
         fecha_inicio (str): Timestamp (epoch o ISO) de inicio de la sesión.
+        cwd (str): Carpeta de trabajo de la sesión (identifica su proyecto).
 
     Returns:
         SimpleNamespace: Sesión mínima compatible con el modelo.
     """
-    return SimpleNamespace(fecha_inicio=fecha_inicio)
+    return SimpleNamespace(fecha_inicio=fecha_inicio, cwd=cwd, git_repo_root="", titulo="")
 
 
 def test_ultima_actividad_detecta_commit_posterior_al_build(tmp_path, monkeypatch):
@@ -76,7 +77,11 @@ def test_check_avisa_con_sesiones_sin_importar(tmp_path, monkeypatch):
         return ""
 
     def _fake_leer(db_path=None, limite=None):  # noqa: ANN001
-        return [_sesion("1800000000"), _sesion("1800000000"), _sesion("1800000000")]
+        return [
+            _sesion("1800000000", cwd=ruta),
+            _sesion("1800000000", cwd=ruta),
+            _sesion("1800000000", cwd=ruta),
+        ]
 
     monkeypatch.setattr("context_map.domain.analysis.checker._ejecutar_git", _fake_git)
     monkeypatch.setattr("context_map.domain.analysis.checker.leer_sesiones", _fake_leer)
@@ -101,18 +106,32 @@ def test_check_sin_actividad_no_avisa(tmp_path, monkeypatch):
 
 
 def test_sesiones_posteriores_cuenta_solo_las_recientes(tmp_path, monkeypatch):
-    """Cuenta sesiones cuya fecha de inicio supera el timestamp del build."""
+    """Cuenta sesiones del proyecto cuya fecha de inicio supera la del build."""
     ruta = _hacer_repo(tmp_path)
 
     def _fake_leer(db_path=None, limite=None):  # noqa: ANN001
         return [
-            _sesion("1800000000"),  # posterior a 2000-01-01
-            _sesion("1800000000"),
-            _sesion("100"),         # anterior al build
+            _sesion("1800000000", cwd=ruta),   # posterior a 2000-01-01
+            _sesion("1800000000", cwd=ruta),
+            _sesion("100", cwd=ruta),          # anterior al build
         ]
 
     monkeypatch.setattr("context_map.domain.analysis.checker.leer_sesiones", _fake_leer)
     assert _sesiones_posteriores(ruta) == 2
+
+
+def test_sesiones_de_otros_proyectos_no_cuentan(tmp_path, monkeypatch):
+    """Una sesión reciente de OTRO proyecto no es «contexto desactualizado»."""
+    ruta = _hacer_repo(tmp_path)
+
+    def _fake_leer(db_path=None, limite=None):  # noqa: ANN001
+        return [
+            _sesion("1800000000", cwd=str(tmp_path.parent / "00_GOBERNANZA_IA")),
+            _sesion("1800000000", cwd=str(tmp_path.parent / "mi-app-utm")),
+        ]
+
+    monkeypatch.setattr("context_map.domain.analysis.checker.leer_sesiones", _fake_leer)
+    assert _sesiones_posteriores(ruta) == 0
 
 
 def test_sin_build_previo_avisa_nunca_build(tmp_path):

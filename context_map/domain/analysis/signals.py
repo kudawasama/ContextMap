@@ -328,18 +328,31 @@ def ultima_actividad(ruta_raiz: str) -> dict[str, object]:
 
 
 def sesiones_posteriores(ruta_raiz: str) -> int:
-    """Cuenta sesiones de Hermes iniciadas después del último build."""
+    """Cuenta sesiones de Hermes DEL PROYECTO iniciadas tras el último build.
+
+    Solo cuentan las sesiones que el importador traería a este vault
+    (``hermes.sesion_es_del_proyecto``): contar las de otros proyectos producía
+    un aviso de «contexto desactualizado» que ``ctxmap refresh`` nunca podía
+    resolver.
+    """
     ts_b = timestamp_build(ruta_raiz)
     if ts_b is None:
         return 0
     try:
         import context_map.domain.analysis.checker as chk
+        from context_map.infrastructure.integrations.hermes import sesion_es_del_proyecto
+
         sesiones = chk.leer_sesiones(db_path=None, limite=50)
     except Exception:
         return 0
 
+    raiz = os.path.abspath(ruta_raiz)
+    nombre = os.path.basename(raiz)
+
     n = 0
     for s in sesiones:
+        if not sesion_es_del_proyecto(s, nombre, raiz):
+            continue
         inicio = getattr(s, "fecha_inicio", "") or ""
         try:
             ts = float(inicio)
