@@ -14,6 +14,10 @@ from datetime import datetime
 from context_map.core.models import Event
 from context_map.core.storage import append_jsonl, load_jsonl
 from context_map.infrastructure.analyzers.content import InfoContenido, analizar_directorio
+from context_map.infrastructure.analyzers.exclusions import (
+    CARPETAS_EXCLUIDAS,
+    es_ruta_excluida,
+)
 from context_map.infrastructure.analyzers.structure import EstructuraProyecto, escanear_proyecto
 
 
@@ -26,27 +30,8 @@ def _ahora() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-_CARPETAS_EXCLUIDAS: set[str] = {
-    ".context-map",
-    ".venv",
-    "venv",
-    ".git",
-    "__pycache__",
-    "node_modules",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".tox",
-    ".eggs",
-    "dist",
-    "build",
-    ".idea",
-    ".vscode",
-    ".vs",
-    "egg-info",
-    "desktop.ini",
-    ".ds_store",
-    "thumbs.db",
-}
+_CARPETAS_EXCLUIDAS: frozenset[str] = CARPETAS_EXCLUIDAS
+"""Alias de compatibilidad: la lista canónica vive en ``analyzers/exclusions.py``."""
 
 
 def _es_ruta_excluida(ruta: str) -> bool:
@@ -58,12 +43,7 @@ def _es_ruta_excluida(ruta: str) -> bool:
     Returns:
         bool: True si debe ser ignorada.
     """
-    nombre = os.path.basename(ruta).lower()
-    if nombre in ("desktop.ini", ".ds_store", "thumbs.db") or nombre.endswith((".gdoc", ".gsheet", ".gslides")):
-        return True
-
-    partes = ruta.replace("\\", "/").split("/")
-    return any(parte.lower() in _CARPETAS_EXCLUIDAS for parte in partes)
+    return es_ruta_excluida(ruta)
 
 
 def _events_desde_estructura(est: EstructuraProyecto) -> list[Event]:

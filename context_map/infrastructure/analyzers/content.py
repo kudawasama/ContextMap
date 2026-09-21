@@ -10,6 +10,11 @@ import os
 import re
 from dataclasses import dataclass, field
 
+from context_map.infrastructure.analyzers.exclusions import (
+    CARPETAS_EXCLUIDAS,
+    es_carpeta_excluida,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -155,19 +160,14 @@ def analizar_contenido(ruta: str) -> InfoContenido | None:
 
 def analizar_directorio(ruta: str) -> list[InfoContenido]:
     """Analiza todos los archivos Python de un directorio."""
-    ignorar = {
-        "__pycache__", ".git", ".venv", "venv", "env",
-        "node_modules", ".mypy_cache", ".pytest_cache",
-        ".tox", "dist", "build", "*.egg-info",
-        ".context-map",
-    }
+    ignorar = set(CARPETAS_EXCLUIDAS)
     resultados = []
     contador = 0
     for dirpath, dirnames, filenames in os.walk(ruta):
         # Filtrar directorios ignorados
         dirnames[:] = [
             d for d in dirnames
-            if d not in ignorar and not d.endswith(".egg-info")
+            if d not in ignorar and not es_carpeta_excluida(d)
         ]
         for filename in filenames:
             if not filename.endswith(".py"):

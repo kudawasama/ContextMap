@@ -10,6 +10,11 @@ import os
 import re
 from dataclasses import dataclass, field
 
+from context_map.infrastructure.analyzers.exclusions import (
+    carpetas_excluidas,
+    es_carpeta_excluida,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -125,11 +130,7 @@ def escanear_proyecto(ruta_raiz: str, ignorar: list[str] | None = None) -> Estru
         EstructuraProyecto con toda la información
     """
     if ignorar is None:
-        ignorar = [
-            "__pycache__", ".git", ".venv", "venv", "env",
-            "node_modules", ".mypy_cache", ".pytest_cache",
-            ".tox", "dist", "build", "*.egg-info",
-        ]
+        ignorar = carpetas_excluidas()
 
     nombre = os.path.basename(os.path.abspath(ruta_raiz))
     estructura = EstructuraProyecto(nombre=nombre, ruta_raiz=ruta_raiz)
@@ -139,7 +140,7 @@ def escanear_proyecto(ruta_raiz: str, ignorar: list[str] | None = None) -> Estru
         # Filtrar directorios ignorados
         dirnames[:] = [
             d for d in dirnames
-            if d not in ignorar and not d.endswith(".egg-info")
+            if d not in ignorar and not es_carpeta_excluida(d)
         ]
 
         for filename in filenames:
