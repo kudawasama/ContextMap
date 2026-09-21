@@ -357,11 +357,38 @@ def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
 # ---------------------------------------------------------------------------
 
 
+def _deduplicar_por_ruta(proyectos: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Elimina proyectos repetidos conservando el orden de descubrimiento.
+
+    Las bases de ``sync --todos`` se solapan (``H:\\Mi unidad`` contiene a
+    ``H:\\Mi unidad\\Desarrollo y Proyectos``), así que el mismo proyecto se
+    descubría y escaneaba 2-3 veces por corrida: 19 hallazgos para 11 proyectos
+    reales, con el doble de trabajo y de escrituras en la BD.
+
+    Args:
+        proyectos (list[tuple[str, str]]): Pares (nombre, ruta) descubiertos.
+
+    Returns:
+        list[tuple[str, str]]: Pares únicos por ruta real.
+    """
+    vistos: set[str] = set()
+    unicos: list[tuple[str, str]] = []
+    for nombre, ruta in proyectos:
+        clave = os.path.normcase(os.path.realpath(ruta))
+        if clave in vistos:
+            logger.debug("Proyecto repetido omitido: %s (%s)", nombre, ruta)
+            continue
+        vistos.add(clave)
+        unicos.append((nombre, ruta))
+    return unicos
+
+
 def _proyectos_para_sync(args) -> list[tuple[str, str]]:
     """Determina los proyectos a consolidar según los flags del comando sync.
 
     Con ``--todos`` recorre las bases por defecto (incluye Google Drive
     ``Mi unidad``) más ``--rutas``; sin él consolida el proyecto objetivo.
+    El resultado se deduplica por ruta real (T1.6).
 
     Args:
         args: Namespace con ``--todos``, ``--rutas`` y ``target``.
@@ -386,7 +413,7 @@ def _proyectos_para_sync(args) -> list[tuple[str, str]]:
         target = getattr(args, "target", ".") or "."
         target = os.path.abspath(target)
         proyectos.append((_nombre_proyecto_por_ruta(target), target))
-    return proyectos
+    return _deduplicar_por_ruta(proyectos)
 
 
 def _cmd_personal_sync(args) -> None:
