@@ -223,16 +223,27 @@ def test_sincronizar_proyecto_automatico_tolerante(tmp_path, monkeypatch) -> Non
         db.cerrar()
 
 
-def test_nombre_proyecto_usa_vault(tmp_path) -> None:
-    """Deriva el nombre del proyecto desde vault-<X> (no de la carpeta local)."""
+def test_nombre_proyecto_usa_una_sola_regla(tmp_path) -> None:
+    """El nombre no depende del vault: es el mismo que usa la consolidación.
+
+    Antes el descubrimiento tomaba el slug del vault (`vault-MiProyecto`) y la
+    auto-consolidación el nombre del repo/carpeta, así que el mismo proyecto
+    entraba dos veces en la BD personal.
+    """
+    from context_map.application.commands._helpers import project_name
     from context_map.application.commands.personal import _nombre_proyecto_por_ruta
 
-    # Con vault-<Nombre>: usa el nombre del vault (consistente entre PCs)
     con_vault = tmp_path / "carpeta-local"
     (con_vault / ".context-map" / "vault-MiProyecto").mkdir(parents=True)
-    assert _nombre_proyecto_por_ruta(str(con_vault)) == "MiProyecto"
 
-    # Sin vault: fallback a la carpeta
+    from argparse import Namespace
+
+    esperado = project_name(Namespace(project=None, target=str(con_vault)))
+
+    assert _nombre_proyecto_por_ruta(str(con_vault)) == esperado
+    assert _nombre_proyecto_por_ruta(str(con_vault)) == "carpeta-local"
+
+    # Sin vault ni repo: sigue mandando la carpeta
     sin_vault = tmp_path / "carpeta-sola"
     sin_vault.mkdir(exist_ok=True)
     assert _nombre_proyecto_por_ruta(str(sin_vault)) == "carpeta-sola"

@@ -89,55 +89,17 @@ def _rutas_proyecto(target_dir: str) -> tuple[str, str, str]:
     )
 
 
-def _nombre_desde_vault(base: str) -> str | None:
-    """Nombre del proyecto desde ``.context-map/vault-<Nombre>/``.
-
-    Args:
-        base (str): Directorio ``.context-map`` del proyecto.
-
-    Returns:
-        str | None: Nombre del vault, o None si no hay vault con ese prefijo.
-    """
-    try:
-        for entrada in sorted(os.listdir(base)):
-            if entrada.startswith("vault-") and os.path.isdir(
-                os.path.join(base, entrada)
-            ):
-                return entrada[len("vault-"):]
-    except OSError:
-        pass
-    return None
-
-
-def _nombre_desde_context(base: str) -> str | None:
-    """Nombre del proyecto desde el frontmatter ``project`` de CONTEXT.md.
-
-    Args:
-        base (str): Directorio ``.context-map`` del proyecto.
-
-    Returns:
-        str | None: Nombre del proyecto, o None si no es deducible.
-    """
-    context_path = os.path.join(base, "CONTEXT.md")
-    if not os.path.exists(context_path):
-        return None
-    try:
-        with open(context_path, encoding="utf-8") as f:
-            cabecera = f.read(3000)
-        m = re.search(r'^project:\s*["\']?([^"\'\n]+)', cabecera, re.MULTILINE)
-        if m:
-            return m.group(1).strip()
-    except OSError:
-        pass
-    return None
-
-
 def _nombre_proyecto_por_ruta(target_dir: str) -> str:
-    """Deriva el nombre del proyecto desde su contexto.
+    """Deriva el nombre del proyecto con la MISMA regla que la consolidación.
 
-    Orden: nombre del vault (``vault-<X>``) > frontmatter ``project`` de
-    CONTEXT.md > carpeta base. Así el nombre es consistente entre PCs
-    (la carpeta local puede llamarse distinto, ej. PruebaContext vs ContextMap).
+    Antes había dos criterios: el descubrimiento de ``sync --todos`` tomaba el
+    nombre del vault (``vault-<slug>``, con guiones) y la consolidación
+    automática de cada ``ctxmap sync`` usaba la regla de ``project_name``
+    (config → repo GitHub → carpeta). El mismo proyecto entraba dos veces en la
+    BD personal: «Mitos y Leyendas» y «Mitos-y-Leyendas», 85 eventos cada uno.
+
+    Un solo criterio: el de ``project_name``, que además es el que nombra el
+    vault, la carpeta y el brief.
 
     Args:
         target_dir: Directorio raíz del proyecto.
@@ -145,16 +107,11 @@ def _nombre_proyecto_por_ruta(target_dir: str) -> str:
     Returns:
         str: Nombre estable del proyecto.
     """
-    base = os.path.join(target_dir, ".context-map")
-    if os.path.isdir(base):
-        nombre_vault = _nombre_desde_vault(base)
-        if nombre_vault:
-            return nombre_vault
-        nombre_proyecto = _nombre_desde_context(base)
-        if nombre_proyecto:
-            return nombre_proyecto
-    nombre = os.path.basename(os.path.abspath(target_dir))
-    return nombre or "Repo"
+    from types import SimpleNamespace
+
+    from context_map.application.commands._helpers import project_name
+
+    return project_name(SimpleNamespace(project=None, target=target_dir))
 
 
 def _bases_gdrive_estandar() -> list[str]:
