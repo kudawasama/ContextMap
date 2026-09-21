@@ -34,12 +34,14 @@ _LINE_PATTERNS: list[tuple[str | re.Pattern[str], str]] = [
 ]
 
 
-def _heuristic_event(raw: str, source_hint: str) -> Event:
+def _heuristic_event(raw: str, source_hint: str, timestamp: str = "") -> Event:
     """Clasifica texto libre usando patrones heurísticos léxicos.
 
     Args:
         raw (str): Texto plano del mensaje o línea.
         source_hint (str): Origen del evento.
+        timestamp (str): Fecha ISO del origen (archivo de conversación). Vacío si
+            la fuente no tiene fecha; sin ella el historial por día se pierde.
 
     Returns:
         Event: Evento clasificado e instanciado.
@@ -50,4 +52,4 @@ def _heuristic_event(raw: str, source_hint: str) -> Event:
         if isinstance(pat, re.Pattern) and pat.search(text):
             kind = k
             break
-    return Event(type=kind, text=text, timestamp="", source=source_hint)
+    return Event(type=kind, text=text, timestamp=timestamp, source=source_hint)

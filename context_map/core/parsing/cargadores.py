@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+from datetime import datetime
 from typing import Any
 
 from context_map.core.models import Event
@@ -117,6 +119,37 @@ def _parece_binario(ruta: str) -> bool:
         return True
 
 
+_FECHA_EN_NOMBRE = re.compile(r"(\d{4})-?(\d{2})-?(\d{2})")
+
+
+def _fecha_de_conversacion(ruta: str) -> str:
+    """Deduce la fecha de una conversación a partir del nombre o de su mtime.
+
+    Los exports de chat suelen nombrarse ``2026-09-14_...`` o
+    ``20260813_104604_...``; si el nombre no trae fecha se usa la de
+    modificación del archivo. Sin fecha, los eventos que genera esta carpeta son
+    invisibles en el historial por día.
+
+    Args:
+        ruta (str): Ruta del archivo de conversación.
+
+    Returns:
+        str: Fecha ISO-8601, o cadena vacía si no se pudo deducir.
+    """
+    coincidencia = _FECHA_EN_NOMBRE.search(os.path.basename(ruta))
+    if coincidencia:
+        anio, mes, dia = coincidencia.groups()
+        try:
+            return datetime(int(anio), int(mes), int(dia)).isoformat(timespec="seconds")
+        except ValueError:
+            logger.debug("Fecha inválida en el nombre de %s: %s", ruta, coincidencia.group(0))
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(ruta)).isoformat(timespec="seconds")
+    except OSError as err:
+        logger.debug("No se pudo leer la fecha de %s: %s", ruta, err)
+        return ""
+
+
 def load_events_from_chat_folder(folder: str) -> list[Event]:
     """Lee archivos de conversaciones de chat y genera eventos clasificados.
 
@@ -141,13 +174,14 @@ def load_events_from_chat_folder(folder: str) -> list[Event]:
                 logger.debug("Se omite '%s': parece binario (bytes nulos)", name)
                 continue
             source = f"chat:{name}"
+            fecha = _fecha_de_conversacion(path)
             try:
                 with open(path, encoding="utf-8") as f:
                     for line in f:
                         line_str = line.strip()
                         if not line_str or len(line_str) < 8:
                             continue
-                        events.append(_heuristic_event(line_str, source))
+                        events.append(_heuristic_event(line_str, source, fecha))
             except Exception as err:
                 logger.debug("No se pudo leer archivo de chat %s: %s", path, err)
                 continue

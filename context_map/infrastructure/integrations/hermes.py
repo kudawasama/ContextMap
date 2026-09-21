@@ -10,6 +10,7 @@ import logging
 import os
 import sqlite3
 from dataclasses import dataclass, field
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,35 @@ class Sesion:
     mensajes: list[Mensaje] = field(default_factory=list)
     cwd: str = ""
     git_repo_root: str = ""
+
+
+def _a_iso(valor: object) -> str:
+    """Normaliza una fecha de Hermes a ISO-8601.
+
+    El ``state.db`` moderno guarda ``sessions.started_at`` y
+    ``messages.timestamp`` como epoch Unix (segundos, a veces con decimales).
+    El importador los propagaba en crudo, así que los eventos derivados de las
+    conversaciones quedaban sin fecha: 305 de los 313 eventos sin fecha de la
+    BD personal venían de aquí, y sin fecha el historial por día no los ve.
+
+    Args:
+        valor (object): Epoch (numérico o texto) o fecha ISO.
+
+    Returns:
+        str: Fecha ISO-8601 con segundos, o cadena vacía si no es interpretable.
+    """
+    if valor is None or valor == "":
+        return ""
+    texto = str(valor).strip()
+    try:
+        return datetime.fromtimestamp(float(texto)).isoformat(timespec="seconds")
+    except (OverflowError, OSError, ValueError):
+        pass
+    try:
+        return datetime.fromisoformat(texto.replace("Z", "+00:00")).isoformat(timespec="seconds")
+    except ValueError:
+        logger.debug("Fecha no interpretable de Hermes: %r", valor)
+        return ""
 
 
 def _encontrar_db_sessions() -> str | None:
@@ -128,7 +158,7 @@ def leer_sesiones(
             sesion = Sesion(
                 id=str(fila[0]),
                 titulo=fila[1] or "Sin título",
-                fecha_inicio=str(fila[2] or ""),
+                fecha_inicio=_a_iso(fila[2]),
             )
             if cols_con:
                 sesion.cwd = str(fila[3] or "")
@@ -147,7 +177,7 @@ def leer_sesiones(
                     id=msg[0],
                     rol=msg[1] or "unknown",
                     contenido=msg[2] or "",
-                    timestamp=str(msg[3] or ""),
+                    timestamp=_a_iso(msg[3]),
                 ))
 
             sesiones.append(sesion)
@@ -163,12 +193,16 @@ def leer_sesiones(
 def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
     """Extrae contexto relevante de una sesión.
 
+    Cada evento hereda la fecha del mensaje que lo originó (o la de inicio de la
+    sesión). Sin ella, el evento queda fuera de todo historial por día.
+
     Returns:
-        Lista de diccionarios con tipo, texto, tags
+        Lista de diccionarios con tipo, texto, timestamp, source y tags.
     """
     eventos = []
 
     for msg in sesion.mensajes:
+        inicio = len(eventos)
         if msg.rol == "user":
             # Mensajes del usuario suelen tener peticiones/decisiones
             texto = msg.contenido[:200]
@@ -240,6 +274,11 @@ def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
                     "source": "chat",
                     "tags": ["acción", msg.herramienta],
                 })
+
+        # Fecha del mensaje (o de la sesión) para todo lo que generó este mensaje
+        fecha = msg.timestamp or sesion.fecha_inicio
+        for evento in eventos[inicio:]:
+            evento["timestamp"] = fecha
 
     return eventos
 
