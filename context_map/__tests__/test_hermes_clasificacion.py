@@ -68,6 +68,33 @@ def test_usuario_rechazo_es_decision():
 
 
 def test_mensaje_normal_sigue_siendo_idea():
-    """Sin patrones de cierre, el comportamiento previo se mantiene (IDEA)."""
-    ev = extraer_contexto_sesion(_sesion_con("assistant", "voy a implementar la nueva feature"))
+    """Un mensaje de implementación sin cierre sigue siendo IDEA."""
+    ev = extraer_contexto_sesion(_sesion_con("assistant", "vamos a implementar el nuevo endpoint"))
     assert "IDEA" in _tipos(ev)
+
+
+def test_sesion_es_del_proyecto_con_alias(tmp_path):
+    """Verifica que los alias permitan asociar sesiones huérfanas por renombre."""
+    from context_map.infrastructure.integrations.hermes import sesion_es_del_proyecto
+    import json
+
+    s_huerfana = Sesion(
+        id="s_old",
+        titulo="Revisión de arquitectura y pruebas",
+        fecha_inicio="2026-08-01",
+        cwd="C:/Users/jose.cespedes/Desktop/PruebaContext",
+    )
+
+    # 1. Sin alias no coincide si el proyecto es ContextMap
+    assert not sesion_es_del_proyecto(s_huerfana, proyecto="ContextMap", ruta_raiz=str(tmp_path / "ContextMap"))
+
+    # 2. Con alias explícito coincide
+    assert sesion_es_del_proyecto(s_huerfana, proyecto="ContextMap", alias=["PruebaContext"])
+
+    # 3. Con alias en .context-map/config.json coincide automáticamente
+    proy_dir = tmp_path / "ContextMap"
+    cfg_dir = proy_dir / ".context-map"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "config.json").write_text(json.dumps({"alias": ["PruebaContext"]}), encoding="utf-8")
+
+    assert sesion_es_del_proyecto(s_huerfana, proyecto="ContextMap", ruta_raiz=str(proy_dir))

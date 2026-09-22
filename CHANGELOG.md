@@ -5,6 +5,21 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-09-22
+
+### 🌐 Optimización Multi-Proyecto, Base Personal & Resiliencia de Vaults
+
+- **feat(`personal`)**: Nuevo comando `ctxmap personal panorama` para visualización ejecutiva del estado de actividad real de todos los proyectos con semáforo inteligente (`max(max_ts_ses, max_ts_ev)`), conteo de pendientes y directrices activas.
+- **feat(`personal`)**: Nuevo comando `ctxmap personal timeline` para inspección cronológica unificada de sesiones de IA, commits y cambios relevantes con filtros por días, proyecto o tipo de evento.
+- **feat(`personal`)**: Nuevo comando `ctxmap personal repair` para saneamiento automatizado de eventos de ruido técnico, deduplicación/fusión de proyectos duplicados, optimización de índices FTS5 y `VACUUM` de SQLite con respaldo previo `.bak`.
+- **feat(`personal`)**: Exportación del Vault Personal v2 con notas ricas por proyecto, manejo determinista de colisiones de slugs y saneamiento de enlaces para 0 wikilinks rotos.
+- **feat(`personal`)**: Captura automática de directrices y decisiones de arquitectura desde notas manuales (`7.0-MANUAL/`) a la tabla `decisiones` de la base consolidada.
+- **feat(`hermes`)**: Soporte de alias de directorio (`.context-map/config.json` → `alias`) para recuperar sesiones históricas y huérfanas tras renombrar o mover repositorios.
+- **feat(`mcp`)**: Incorporación de las herramientas MCP `personal_panorama` y `personal_timeline` para consulta agéntica directa.
+- **feat(`wrap`)**: Integración automática de `panorama` en el cierre de sesión diario de `ctxmap wrap`.
+
+---
+
 ## [2.3.0] — 2026-08-21
 
 ### 🛡️ Novedades y Mejoras — Escáner de Secretos Avanzado, Entropía Shannon, Opt-Out Ollama & Automatización Release

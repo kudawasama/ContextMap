@@ -498,3 +498,128 @@ def test_sync_mensaje_lecciones_por_proyecto(tmp_path, monkeypatch, capsys) -> N
 
     linea_sin = next((linea for linea in out.splitlines() if "sync SinKnowledge" in linea), "")
     assert "lecciones +0" in linea_sin, f"mensaje engañoso: {linea_sin}"
+
+
+def test_export_colision_slugs_genera_notas_unicas(tmp_path) -> None:
+    """Verifica que proyectos con nombres que producen slugs similares no colisionen."""
+    from argparse import Namespace
+    from context_map.application.commands.personal import _cmd_personal_export
+    from context_map.core.personal import PersonalDB
+
+    ruta_db = str(tmp_path / "personal-slugs.db")
+    db = PersonalDB(ruta_db)
+    try:
+        db.cargar_eventos("Mitos y Leyendas", [{"type": "IDEA", "text": "E1", "timestamp": "2026-08-01", "source": "s"}])
+        db.cargar_eventos("Mitos-y-Leyendas", [{"type": "IDEA", "text": "E2", "timestamp": "2026-08-02", "source": "s"}])
+    finally:
+        db.cerrar()
+
+    destino = str(tmp_path / "vault-colision")
+    _cmd_personal_export(Namespace(destino=destino, db=ruta_db))
+
+    archivos = [f for f in os.listdir(destino) if f.endswith(".md") and f != "00-INDICE.md"]
+    # Deben existir 2 notas distintas de proyecto
+    assert len(archivos) == 2
+    with open(os.path.join(destino, "00-INDICE.md"), encoding="utf-8") as f:
+        indice = f.read()
+    for arch in archivos:
+        base = arch[:-3]
+        assert f"[[{base}|" in indice
+
+
+def test_export_saneamiento_markdown_y_cero_wikilinks_rotos(tmp_path) -> None:
+    """Verifica que las lecciones no rompan encabezados ni introduzcan wikilinks rotos."""
+    from argparse import Namespace
+    from context_map.application.commands.personal import _cmd_personal_export
+    from context_map.core.personal import Leccion, PersonalDB
+
+    ruta_db = str(tmp_path / "personal-sanear.db")
+    db = PersonalDB(ruta_db)
+    try:
+        db.registrar_proyecto("AppSanear", "/ruta/sanear")
+        db.agregar_leccion(
+            Leccion(
+                leccion="### Lección con encabezado y [[NotaExterna|alias]]",
+                como_se_resolvio="## Solución con [[8.0-KNOWLEDGE]]",
+                instruccion="Instrucción con [[EnlaceInexistente]]",
+                proyecto="AppSanear",
+            )
+        )
+    finally:
+        db.cerrar()
+
+    destino = str(tmp_path / "vault-sanear")
+    _cmd_personal_export(Namespace(destino=destino, db=ruta_db))
+
+    with open(os.path.join(destino, "00-INDICE.md"), encoding="utf-8") as f:
+        indice = f.read()
+
+    # No debe haber wikilinks rotos a notas que no existen
+    assert "[[8.0-KNOWLEDGE]]" not in indice
+    assert "[[EnlaceInexistente]]" not in indice
+    assert "[[NotaExterna" not in indice
+    # La nota de AppSanear sí debe estar enlazada
+    assert "[[AppSanear|AppSanear]]" in indice or "[[appsanear|AppSanear]]" in indice
+
+
+def test_leer_lecciones_ignora_indices_y_plantillas(tmp_path) -> None:
+    """Verifica que _leer_lecciones_vault ignore 8.0-KNOWLEDGE.md, 00-* y plantillas vacías."""
+    from context_map.application.commands.personal import _leer_lecciones_vault
+
+    k_dir = tmp_path / ".context-map" / "vault-Test" / "8.0-KNOWLEDGE"
+    k_dir.mkdir(parents=True)
+
+    # Índice que NO debe leerse como lección
+    (k_dir / "8.0-KNOWLEDGE.md").write_text("# 8.0 Knowledge\n\nÍndice general", encoding="utf-8")
+    (k_dir / "00-INDICE.md").write_text("# Índice\n", encoding="utf-8")
+    (k_dir / "TEMPLATE.md").write_text("# Plantilla\n\n---\n", encoding="utf-8")
+
+    # Lección válida
+    (k_dir / "LeccionValida.md").write_text(
+        "# 🎯 Lección: Buenas prácticas\n\n🛠️ Cómo se resolvió: aplicando Clean Architecture\n",
+        encoding="utf-8",
+    )
+
+    lecciones = _leer_lecciones_vault(str(tmp_path / ".context-map"), "Test")
+    assert len(lecciones) == 1
+    assert "Buenas prácticas" in lecciones[0].leccion
+
+
+def test_leer_decisiones_vault_extrae_directrices_y_secciones(tmp_path) -> None:
+    """Verifica que _leer_decisiones_vault extraiga notas type: decision y viñetas ## Decisiones."""
+    from context_map.application.commands.personal import _leer_decisiones_vault
+
+    manual_dir = tmp_path / ".context-map" / "vault-Test" / "7.0-MANUAL"
+    manual_dir.mkdir(parents=True)
+
+    # 1. Nota de tipo directriz/decisión
+    (manual_dir / "GOBIERNO.md").write_text(
+        """---
+type: directriz
+project: "Test"
+---
+
+# 🏛️ Regla Inamovible: No tocar mi-app-utm
+
+Contexto del acuerdo con el usuario.
+""",
+        encoding="utf-8",
+    )
+
+    # 2. Nota con sección ## Decisiones
+    (manual_dir / "Diario.md").write_text(
+        """# Diario
+
+## Decisiones
+- Se descarta cron a Telegram por falta de valor local
+- Se adopta SQLite como BD complementaria
+""",
+        encoding="utf-8",
+    )
+
+    decisiones = _leer_decisiones_vault(str(tmp_path / ".context-map"), "Test")
+    assert len(decisiones) >= 2
+    titulos = [d.decision for d in decisiones]
+    assert any("Regla Inamovible" in t or "GOBIERNO" in t for t in titulos)
+    assert any("descarta cron a Telegram" in t for t in titulos)
+

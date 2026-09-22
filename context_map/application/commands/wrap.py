@@ -82,8 +82,24 @@ def cmd_wrap(args) -> None:
     print(f"  · Eventos registrados en events.jsonl : {eventos}")
     print(f"  · Sesiones de Hermes sin importar     : {pendientes}")
     if pendientes:
-        print("  ⚠️  Quedan sesiones sin importar — vuelve a ejecutar `ctxmap refresh .`")
-        print("      cuando termines (o simplemente `ctxmap wrap`).")
+        print("  ⚠️  Quedan sesiones sin importar — ejecuta `ctxmap import-sessions` o `ctxmap refresh .`")
     else:
-        print("  ✅ Memoria viva al día. Hasta la próxima sesión.")
+        print("  ✅ Memoria viva al día. Contexto y vault sincronizados.")
     print("─────────────────────────────────────")
+
+    # 3) Panorama consolidado de la jornada multi-proyecto
+    try:
+        from context_map.core.personal import PersonalDB
+        from context_map.core.personal.panorama import (
+            construir_panorama,
+            formatear_panorama_texto,
+        )
+
+        db = PersonalDB()
+        try:
+            report = construir_panorama(db=db, dias=1)
+            print("\n" + formatear_panorama_texto(report))
+        finally:
+            db.cerrar()
+    except Exception:
+        pass  # Tolerante si no hay BD personal disponible en el entorno

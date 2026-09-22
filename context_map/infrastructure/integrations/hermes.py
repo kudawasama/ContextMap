@@ -283,20 +283,51 @@ def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
     return eventos
 
 
-def sesion_es_del_proyecto(sesion: Sesion, proyecto: str = "", ruta_raiz: str = "") -> bool:
+def _leer_alias_proyecto(ruta_raiz: str) -> list[str]:
+    """Lee alias de nombres o carpetas configurados para el proyecto.
+
+    Busca en ``.context-map/config.json`` el campo ``alias`` o ``alias_carpetas``.
+    Si no existe o no se puede leer, devuelve lista vacía.
+
+    Args:
+        ruta_raiz: Ruta del directorio raíz del proyecto.
+
+    Returns:
+        list[str]: Lista de alias en minúsculas.
+    """
+    if not ruta_raiz:
+        return []
+    cfg_path = os.path.join(ruta_raiz, ".context-map", "config.json")
+    if not os.path.isfile(cfg_path):
+        return []
+    try:
+        with open(cfg_path, encoding="utf-8") as f:
+            data = json.load(f)
+        aliases = data.get("alias") or data.get("alias_carpetas") or data.get("aliases") or []
+        if isinstance(aliases, str):
+            return [aliases.strip()]
+        return [str(a).strip() for a in aliases if str(a).strip()]
+    except Exception:
+        return []
+
+
+def sesion_es_del_proyecto(
+    sesion: Sesion,
+    proyecto: str = "",
+    ruta_raiz: str = "",
+    alias: list[str] | None = None,
+) -> bool:
     """Indica si una sesión de Hermes pertenece a un proyecto concreto.
 
     Predicado compartido por el importador (``importar_sesiones``) y por la
-    señal de frescura (``signals.sesiones_posteriores``). Antes cada uno usaba su
-    propio criterio: el importador filtraba por proyecto pero la señal contaba
-    TODAS las sesiones posteriores al build, así que `ctxmap check` avisaba de
-    «11 sesiones sin importar» que eran de otros proyectos y que `refresh` no
-    podía importar nunca.
+    señal de frescura (``signals.sesiones_posteriores``). Permite asociar sesiones
+    por coincidencia de ruta, nombre de proyecto o alias históricos (T2.6).
 
     Args:
         sesion (Sesion): Sesión leída de Hermes.
         proyecto (str): Nombre del proyecto (se busca en cwd, repo y título).
         ruta_raiz (str): Ruta del proyecto; habilita la comparación por ruta.
+        alias (list[str] | None): Lista opcional de alias de nombres/carpetas.
 
     Returns:
         bool: True si la sesión pertenece al proyecto.
@@ -314,12 +345,21 @@ def sesion_es_del_proyecto(sesion: Sesion, proyecto: str = "", ruta_raiz: str = 
             if ruta == raiz or ruta.startswith(raiz + os.sep):
                 return True
 
+    nombres_candidatos: list[str] = []
     if proyecto:
-        nombre = proyecto.lower()
-        if any(nombre in valor.lower() for valor in (cwd, repo, titulo)):
+        nombres_candidatos.append(proyecto.lower())
+
+    if alias:
+        nombres_candidatos.extend([a.lower() for a in alias if a])
+    elif ruta_raiz:
+        for a in _leer_alias_proyecto(ruta_raiz):
+            nombres_candidatos.append(a.lower())
+
+    for nom in nombres_candidatos:
+        if any(nom in valor.lower() for valor in (cwd, repo, titulo)):
             return True
 
-    return not proyecto and not ruta_raiz
+    return not proyecto and not ruta_raiz and not alias
 
 
 def importar_sesiones(
@@ -327,6 +367,8 @@ def importar_sesiones(
     limite: int = 5,
     output_path: str = ".context-map/raw/events.jsonl",
     project: str = "",
+    target_dir: str = ".",
+    alias: list[str] | None = None,
 ) -> int:
     """Importa sesiones de Hermes como eventos.
 
@@ -334,16 +376,20 @@ def importar_sesiones(
         db_path (str | None): Ruta a la DB de sesiones (None = autodetecta).
         limite (int): Máximo de sesiones a leer.
         output_path (str): Archivo de eventos de salida.
-        project (str): Nombre del proyecto — si se pasa, solo se importan
-            sesiones cuyo cwd/git_repo_root/título lo mencionen (evita
-            contaminar el vault con sesiones de otros proyectos).
+        project (str): Nombre del proyecto para filtrar sesiones.
+        target_dir (str): Directorio del proyecto para resolver rutas y alias.
+        alias (list[str] | None): Alias opcionales para matching de sesiones.
 
     Returns:
-        Número de eventos importados
+        int: Número de eventos importados.
     """
     sesiones = leer_sesiones(db_path, limite)
-    if project:
-        sesiones = [s for s in sesiones if sesion_es_del_proyecto(s, project)]
+    if project or target_dir:
+        sesiones = [
+            s
+            for s in sesiones
+            if sesion_es_del_proyecto(s, project, target_dir, alias=alias)
+        ]
     eventos_totales = []
 
     for sesion in sesiones:

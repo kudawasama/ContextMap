@@ -57,3 +57,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Scratch and test workspace
+.work/

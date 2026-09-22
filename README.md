@@ -118,7 +118,11 @@ Consolida en un único archivo **SQLite + FTS5** (`~/.context-map/personal/perso
 
 ```bash
 ctxmap personal sync --todos      # Sincroniza todos tus repositorios
+ctxmap personal panorama          # Semáforo de actividad real y pendientes por proyecto
+ctxmap personal timeline --dias 7 # Feed cronológico de sesiones de IA y eventos
 ctxmap personal query "términos"  # Búsqueda ultra-rápida full-text (pocos tokens)
+ctxmap personal export ~/.vault   # Exporta un vault consolidado limpio y navegable
+ctxmap personal repair            # Sanea eventos técnicos, deduplica y optimiza FTS5/VACUUM
 ```
 
 ---

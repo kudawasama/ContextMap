@@ -104,11 +104,13 @@ def cmd_import_sessions(args) -> None:
     print("Buscando base de datos de sesiones...")
 
     output = os.path.join(RAW_DIR, "events.jsonl")
+    target_dir = getattr(args, "target", ".") or "."
     importados = importar_sesiones(
         db_path=args.db,
         limite=args.limit or 5,
         output_path=output,
         project=project_name(args),
+        target_dir=target_dir,
     )
 
     print(f"Sesiones importadas: {importados} eventos nuevos")

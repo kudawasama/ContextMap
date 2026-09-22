@@ -412,6 +412,59 @@ def test_null_byte_character_in_filename() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_extras_no_se_escriben_fuera_del_proyecto() -> None:
+    """Hallazgo 20: plantillas y nota del día no deben fugarse fuera del vault.
+
+    Antes, ``project_root`` se derivaba con ``dirname(dirname(output_dir))`` y,
+    al renderizar a un temp dir sin un ``.context-map`` padre, ``render_plantillas``
+    y ``render_nota_dia`` escribían en la raíz del temp (o del sistema), dejando
+    vaults fantasma. Ahora esos extras opcionales se omiten si no hay un
+    ``.context-map`` padre; y se escriben dentro del proyecto cuando sí lo hay.
+    """
+    nodos = _crear_nodos_de_prueba()
+
+    # Caso 1: vault fuera de un .context-map → no debe crear .context-map fuera.
+    root_temp = tempfile.mkdtemp(prefix="ctxmap_test_extras_fuera_")
+    try:
+        output_dir = os.path.join(root_temp, "sub", "vault")
+        render_obsidian_vault(
+            project_name="TestExtras",
+            nodes=nodos,
+            edges=[],
+            output_dir=output_dir,
+            mode="hierarchical",
+        )
+        # El lienzo y los adjuntos viven DENTRO del vault (siguen generándose).
+        assert os.path.isdir(os.path.join(output_dir, "adjuntos"))
+        # Pero no se debe haber creado un .context-map en la raíz del temp.
+        assert not os.path.exists(os.path.join(root_temp, ".context-map")), (
+            "Se fugaron plantillas/nota del día fuera del proyecto "
+            "(se creó .context-map en la raíz del temp dir)"
+        )
+    finally:
+        shutil.rmtree(root_temp, ignore_errors=True)
+
+    # Caso 2: vault bajo .context-map → plantillas se escriben en la raíz real.
+    root_temp = tempfile.mkdtemp(prefix="ctxmap_test_extras_dentro_")
+    try:
+        ctx_dir = os.path.join(root_temp, ".context-map")
+        os.makedirs(ctx_dir, exist_ok=True)
+        output_dir = os.path.join(ctx_dir, "vault-TestExtras")
+        render_obsidian_vault(
+            project_name="TestExtras",
+            nodes=nodos,
+            edges=[],
+            output_dir=output_dir,
+            mode="hierarchical",
+        )
+        plantilla = os.path.join(ctx_dir, "plantillas", "nota-sesion.md")
+        assert os.path.exists(plantilla), (
+            "La plantilla de sesión no se escribió dentro de .context-map del proyecto"
+        )
+    finally:
+        shutil.rmtree(root_temp, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Vault Consolidado ===")
     test_consolidated_vault_limita_archivos()

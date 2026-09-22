@@ -96,6 +96,35 @@ def _pie(backlink: str) -> list[str]:
     ]
 
 
+def _resolver_project_root(output_dir: str) -> str | None:
+    """Resuelve la raíz del proyecto desde la ruta del vault.
+
+    El vault vive siempre bajo ``<raíz>/.context-map/vault-<proyecto>``. Esta
+    función asciende desde ``output_dir`` buscando el componente ``.context-map``
+    y devuelve su directorio padre (la raíz del proyecto). Si el directorio de
+    salida no está dentro de ningún ``.context-map`` (p. ej. un temp dir del
+    suite de tests), devuelve ``None`` para que los extras opcionales
+    (plantillas y nota del día) se omitan en lugar de escribirse en otro
+    proyecto.
+
+    Args:
+        output_dir (str): Directorio de salida de la bóveda.
+
+    Returns:
+        str | None: Ruta absoluta de la raíz del proyecto, o ``None`` si no se
+        encuentra el marcador ``.context-map``.
+    """
+    ruta = os.path.abspath(output_dir)
+    while True:
+        padre, nombre = os.path.split(ruta)
+        if not nombre:
+            # Se alcanzó la raíz del sistema sin encontrar .context-map.
+            return None
+        if nombre == ".context-map":
+            return padre
+        ruta = padre
+
+
 def _render_indice_hierarchico(
     project_name: str,
     nodes: list[Node],
@@ -237,16 +266,24 @@ def _render_hierarchical_vault(
         render_plantillas,
     )
 
-    project_root = os.path.dirname(os.path.dirname(output_dir))
+    # Hallazgo 20 (2026-09-21): antes se derivaba la raíz como
+    # dirname(dirname(output_dir)), asumiendo que el vault vivía EXACTAMENTE
+    # dos niveles bajo la raíz (.context-map/vault-X). Con rutas más cortas
+    # (temp dirs del suite) o más largas, plantillas/ y la nota del día se
+    # escribían en OTRO proyecto — o en la raíz del sistema (/.context-map) —
+    # dejando vaults fantasma y falseando la señal «Vaults activos» de check.
+    # Ahora la raíz se resuelve buscando el directorio `.context-map` padre y
+    # los extras opcionales se escriben SOLO cuando ese marcador existe.
+    project_root = _resolver_project_root(output_dir)
     # Fix CI (2026-08-12): los extras visuales (lienzo, plantillas, nota del
-    # día) son OPCIONALES — si el directorio base no es escribible (p. ej. la
-    # raíz del sistema al renderizar en un temp dir de 2 niveles), se omiten
-    # sin romper el vault. En Linux CI esto era PermissionError: '/.context-map'.
+    # día) son OPCIONALES — si el directorio base no es escribible se omiten
+    # sin romper el vault.
     try:
         render_canvas(output_dir, nodes, edges)
         render_graph_json(output_dir, nodes)
-        render_plantillas(project_root, project_name)
-        render_nota_dia(project_root, project_name, nodes)
+        if project_root:
+            render_plantillas(project_root, project_name)
+            render_nota_dia(project_root, project_name, nodes)
         os.makedirs(os.path.join(output_dir, "adjuntos"), exist_ok=True)
     except OSError as err:
         logging.getLogger(__name__).warning("Extras visuales omitidos: %s", err)

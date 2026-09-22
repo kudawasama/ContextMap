@@ -61,10 +61,16 @@ def sincronizar_proyecto_automatico(
             for leccion in _leer_lecciones_vault(vault_base, proj_name):
                 if db.agregar_leccion(leccion):
                     lecciones += 1
-            if nuevos or lecciones:
+
+            decisiones = 0
+            for decision in _leer_decisiones_vault(vault_base, proj_name):
+                if db.agregar_decision(decision):
+                    decisiones += 1
+
+            if nuevos or lecciones or decisiones:
                 logger.info(
-                    "personal: %s consolidado (+%d eventos, +%d lecciones) en %s",
-                    proj_name, nuevos, lecciones, db.ruta,
+                    "personal: %s consolidado (+%d eventos, +%d lecciones, +%d decisiones) en %s",
+                    proj_name, nuevos, lecciones, decisiones, db.ruta,
                 )
         finally:
             db.cerrar()
@@ -291,6 +297,15 @@ def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
     for nombre in sorted(os.listdir(knowledge_dir)):
         if not nombre.endswith(".md"):
             continue
+        # Ignorar índices y notas estructurales
+        nombre_upper = nombre.upper()
+        if (
+            nombre_upper.startswith("00-")
+            or "INDICE" in nombre_upper
+            or nombre in ("8.0-KNOWLEDGE.md", "README.md", "TEMPLATE.md", "PLANTILLA.md")
+        ):
+            continue
+
         ruta = os.path.join(knowledge_dir, nombre)
         try:
             with open(ruta, encoding="utf-8") as f:
@@ -298,15 +313,80 @@ def _leer_lecciones_vault(vault_base: str, proyecto: str) -> list[Leccion]:
         except OSError:
             continue
 
+        # Validar que contenga contenido estructurado o marca de lección
+        cuerpo = re.sub(r"^---.*?---\s*", "", contenido, flags=re.DOTALL).strip()
+        if not cuerpo or ("🎯 Lección" not in cuerpo and "## " not in cuerpo):
+            continue
+
         # Extraer título (primer encabezado) y cuerpo limpio de frontmatter
         titulo = nombre[:-3].replace("-", " ").replace("_", " ").strip()
         m_titulo = re.search(r"^#\s+(.+)$", contenido, re.MULTILINE)
         if m_titulo:
             titulo = m_titulo.group(1).strip()
-        cuerpo = re.sub(r"^---.*?---\s*", "", contenido, flags=re.DOTALL)
 
-        lecciones.append(_parsear_leccion(proyecto, cuerpo, titulo, nombre))
+        lec_obj = _parsear_leccion(proyecto, cuerpo, titulo, nombre)
+        if lec_obj and lec_obj.leccion:
+            lecciones.append(lec_obj)
     return lecciones
+
+
+def _leer_decisiones_vault(vault_base: str, proyecto: str) -> list[Decision]:
+    """Extrae decisiones de arquitectura y directrices desde el vault.
+
+    Inspecciona carpetas como ``7.0-MANUAL/`` y ``vault-*/`` buscando notas
+    con frontmatter ``type: decision``, ``type: directriz``, ``type: regla`` o
+    secciones marcadas con ``## Decisiones``.
+
+    Args:
+        vault_base: Directorio base de ``.context-map`` del proyecto.
+        proyecto: Nombre del proyecto.
+
+    Returns:
+        list[Decision]: Lista de decisiones estructuradas.
+    """
+    decisiones: list[Decision] = []
+    candidatos_dirs = [
+        os.path.join(vault_base, "vault", "7.0-MANUAL"),
+        os.path.join(vault_base, "vault-" + proyecto, "7.0-MANUAL"),
+        os.path.join(vault_base, "7.0-MANUAL"),
+    ]
+
+    for cdir in candidatos_dirs:
+        if not os.path.isdir(cdir):
+            continue
+        for raiz, _, archivos in os.walk(cdir):
+            for arch in archivos:
+                if not arch.endswith(".md"):
+                    continue
+                ruta_arch = os.path.join(raiz, arch)
+                try:
+                    with open(ruta_arch, encoding="utf-8") as f:
+                        contenido = f.read()
+                except OSError:
+                    continue
+
+                # 1. Si la nota completa es de tipo decision o directriz
+                m_type = re.search(r"^type:\s*(decision|directriz|regla|adr)\b", contenido, re.MULTILINE | re.I)
+                if m_type:
+                    tit = arch[:-3].replace("-", " ").replace("_", " ").strip()
+                    m_tit = re.search(r"^#\s+(.+)$", contenido, re.MULTILINE)
+                    if m_tit:
+                        tit = m_tit.group(1).strip()
+                    cuerpo = re.sub(r"^---.*?---\s*", "", contenido, flags=re.DOTALL).strip()
+                    decisiones.append(Decision(decision=tit, contexto=cuerpo[:400], proyecto=proyecto))
+                    continue
+
+                # 2. Si contiene viñetas en sección ## Decisiones
+                m_sec = re.search(r"##\s+(?:🎯\s*)?Decisiones.*?\n(.*?)(?=\n##|\Z)", contenido, re.DOTALL | re.I)
+                if m_sec:
+                    bloque = m_sec.group(1).strip()
+                    for linea in bloque.splitlines():
+                        linea_limpia = linea.strip()
+                        if linea_limpia.startswith(("-", "*")) and len(linea_limpia) > 5:
+                            texto_dec = linea_limpia.lstrip("-* ").strip()
+                            decisiones.append(Decision(decision=texto_dec[:200], contexto=f"En {arch}", proyecto=proyecto))
+
+    return decisiones
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +465,7 @@ def _cmd_personal_sync(args) -> None:
 
         total_nuevos = 0
         total_lecciones = 0
+        total_decisiones = 0
         total_omitidos = 0
         for nombre, ruta in proyectos:
             events_path, chats_path, vault_base = _rutas_proyecto(ruta)
@@ -396,11 +477,10 @@ def _cmd_personal_sync(args) -> None:
                 eventos.append(ev.to_dict())
 
             lecciones = _leer_lecciones_vault(vault_base, nombre)
+            decisiones = _leer_decisiones_vault(vault_base, nombre)
 
-            # Un proyecto sin eventos ni lecciones no aporta nada a la memoria
-            # global: registrarlo solo ensuciaba el panel con filas vacías
-            # (una carpeta contenedora como 'GitHub' o el residuo de los tests).
-            if not eventos and not lecciones:
+            # Un proyecto sin eventos, lecciones ni decisiones no aporta a la memoria global
+            if not eventos and not lecciones and not decisiones:
                 total_omitidos += 1
                 print(f"sync {nombre}: sin contenido, omitido")
                 continue
@@ -408,16 +488,22 @@ def _cmd_personal_sync(args) -> None:
             nuevos = db.cargar_eventos(nombre, eventos, ruta)
             total_nuevos += nuevos
 
-            # Contador POR PROYECTO (el acumulado global se muestra al final)
+            # Contadores POR PROYECTO
             lecciones_proyecto = 0
             for leccion in lecciones:
                 if db.agregar_leccion(leccion):
                     total_lecciones += 1
                     lecciones_proyecto += 1
 
+            decisiones_proyecto = 0
+            for decision in decisiones:
+                if db.agregar_decision(decision):
+                    total_decisiones += 1
+                    decisiones_proyecto += 1
+
             print(
-                f"sync {nombre}: {len(eventos)} eventos "
-                f"(+{nuevos} nuevos), lecciones +{lecciones_proyecto}"
+                f"sync {nombre}: {len(eventos)} eventos (+{nuevos} nuevos), "
+                f"lecciones +{lecciones_proyecto}, decisiones +{decisiones_proyecto}"
             )
 
         stats = db.estadisticas()
@@ -427,7 +513,7 @@ def _cmd_personal_sync(args) -> None:
             f"  proyectos={stats['proyectos']} eventos={stats['eventos']} "
             f"lecciones={stats['lecciones']} decisiones={stats['decisiones']}"
         )
-        print(f"  nuevos en esta ejecución: {total_nuevos} eventos, {total_lecciones} lecciones")
+        print(f"  nuevos en esta ejecución: {total_nuevos} eventos, {total_lecciones} lecciones, {total_decisiones} decisiones")
         if total_omitidos:
             print(f"  omitidos por no tener contenido: {total_omitidos}")
     finally:
@@ -525,10 +611,58 @@ def _cmd_personal_query(args) -> None:
         db.cerrar()
 
 
-def _slug(nombre: str) -> str:
-    """Convierte un nombre de proyecto en un slug seguro para nombre de archivo."""
-    slug = re.sub(r"[^\w\-]+", "-", nombre.strip()).strip("-")
-    return slug or "proyecto"
+def _generar_slugs_unicos(nombres_proyectos: list[str]) -> dict[str, str]:
+    """Genera slugs deterministas y únicos para una lista de proyectos.
+
+    Evita colisiones entre nombres como 'Mitos y Leyendas' y 'Mitos-y-Leyendas'
+    asignando un sufijo numérico cuando dos proyectos producen el mismo slug.
+
+    Args:
+        nombres_proyectos: Lista de nombres de proyectos.
+
+    Returns:
+        dict[str, str]: Mapeo de nombre_proyecto -> slug_unico.
+    """
+    slugs: dict[str, str] = {}
+    usados: dict[str, int] = {}
+
+    for nombre in nombres_proyectos:
+        base = re.sub(r"[^\w\-]+", "-", nombre.strip()).strip("-") or "proyecto"
+        clave_base = base.lower()
+        if clave_base not in usados:
+            usados[clave_base] = 1
+            slugs[nombre] = base
+        else:
+            usados[clave_base] += 1
+            slugs[nombre] = f"{base}-{usados[clave_base]}"
+
+    return slugs
+
+
+def _sanear_texto_markdown(texto: str) -> str:
+    """Sanea el texto de markdown para no romper la jerarquía del índice.
+
+    - Elimina encabezados Markdown (#, ##, ###) para evitar romper la jerarquía de secciones.
+    - Convierte wikilinks [[destino|alias]] o [[destino]] en texto plano alias o destino
+      para evitar crear wikilinks rotos (fantasmas) en el vault personal.
+
+    Args:
+        texto: Cadena original de texto.
+
+    Returns:
+        str: Texto limpio y plano.
+    """
+    if not texto:
+        return ""
+    # Quitar wikilinks
+    sin_wikilinks = re.sub(r"\[\[([^|\]]+\|)?([^\]]+)\]\]", r"\2", texto)
+    # Quitar encabezados iniciales o intermedios (#, ##, ###)
+    lineas = []
+    for linea in sin_wikilinks.splitlines():
+        l_limpia = re.sub(r"^\s*#{1,6}\s*", "", linea).strip()
+        if l_limpia:
+            lineas.append(l_limpia)
+    return " ".join(lineas)
 
 
 def _seccion_notas_proyecto(
@@ -536,68 +670,146 @@ def _seccion_notas_proyecto(
     destino: str,
     secciones: list[str],
 ) -> list[str]:
-    """Añade la sección de notas reales por proyecto (``<slug>.md``).
+    """Añade la sección de notas reales por proyecto (<slug>.md) v2.
 
-    Escribe una nota por proyecto con sus últimos eventos y devuelve las
-    líneas de la sección de proyectos del índice.
+    Escribe una nota por proyecto con sus metadatos, riesgos vigentes,
+    pendientes y eventos agrupados por día, asegurando 0 wikilinks rotos
+    y 1 nota física por cada proyecto.
 
     Args:
-        db (PersonalDB): Base de datos personal abierta.
-        destino (str): Directorio de salida del vault personal.
-        secciones (list[str]): Acumulador de líneas del índice.
+        db: Base de datos personal abierta.
+        destino: Directorio de salida del vault personal.
+        secciones: Acumulador de líneas del índice.
 
     Returns:
         list[str]: Acumulador actualizado con la sección de proyectos.
     """
     proyectos = db.listar_proyectos()
     secciones.append("## Proyectos")
-    os.makedirs(destino, exist_ok=True)  # autónomo: crea el vault si falta
+    os.makedirs(destino, exist_ok=True)
+
+    slug_map = _generar_slugs_unicos(proyectos)
+    notas_escritas = 0
+
     for nombre in proyectos:
-        slug = _slug(nombre)
+        slug = slug_map[nombre]
         ruta_nota = os.path.join(destino, f"{slug}.md")
-        filas = db._conn.execute(
-            "SELECT tipo, texto, timestamp FROM eventos "
-            "JOIN proyectos ON proyectos.id = eventos.proyecto_id "
-            "WHERE proyectos.nombre = ? ORDER BY timestamp DESC LIMIT 50",
+
+        # Obtener metadatos del proyecto
+        fila_proy = db._conn.execute(
+            "SELECT id, ruta, ultimo_sync FROM proyectos WHERE nombre = ?",
             (nombre,),
+        ).fetchone()
+        pid = fila_proy["id"] if fila_proy else None
+        ruta_p = fila_proy["ruta"] if fila_proy else ""
+        sync_p = fila_proy["ultimo_sync"] if fila_proy else ""
+
+        lineas_nota = [
+            f"# {nombre}",
+            "",
+            f"- **Proyecto**: {nombre}",
+            f"- **Ruta**: `{ruta_p}`" if ruta_p else "- **Ruta**: *(no registrada)*",
+            f"- **Último sync**: {sync_p}" if sync_p else "- **Último sync**: *(sin sync)*",
+            "",
+        ]
+
+        # Riesgos vigentes
+        riesgos = db._conn.execute(
+            "SELECT texto, timestamp FROM eventos WHERE proyecto_id = ? AND tipo = 'RIESGO' "
+            "ORDER BY id DESC LIMIT 5",
+            (pid,),
         ).fetchall()
-        lineas_nota = [f"# {nombre}", "", f"**Proyecto**: {nombre}", ""]
-        if filas:
-            lineas_nota.append(f"## Eventos ({len(filas)})")
-            for fila in filas:
-                tipo = fila["tipo"]
-                texto = str(fila["texto"])[:200]
-                ts = str(fila["timestamp"] or "")
-                lineas_nota.append(f"- **[{tipo}]** {texto} _{ts}_")
+        if riesgos:
+            lineas_nota.append("### ⚠️ Riesgos Vigentes")
+            for r in riesgos:
+                ts = f" _{r['timestamp'][:10]}_" if r["timestamp"] else ""
+                r_txt = _sanear_texto_markdown(str(r["texto"]))[:160]
+                lineas_nota.append(f"- {r_txt}{ts}")
+            lineas_nota.append("")
+
+        # Tareas pendientes
+        pendientes = db._conn.execute(
+            "SELECT texto, timestamp FROM eventos WHERE proyecto_id = ? AND tipo = 'FUTURO' "
+            "ORDER BY id DESC LIMIT 5",
+            (pid,),
+        ).fetchall()
+        if pendientes:
+            lineas_nota.append("### 📝 Tareas Pendientes")
+            for p in pendientes:
+                ts = f" _{p['timestamp'][:10]}_" if p["timestamp"] else ""
+                p_txt = _sanear_texto_markdown(str(p["texto"]))[:160]
+                lineas_nota.append(f"- {p_txt}{ts}")
+            lineas_nota.append("")
+
+        # Eventos agrupados por día
+        filas_ev = db._conn.execute(
+            "SELECT tipo, texto, timestamp FROM eventos WHERE proyecto_id = ? "
+            "ORDER BY timestamp DESC, id DESC LIMIT 100",
+            (pid,),
+        ).fetchall()
+
+        if filas_ev:
+            lineas_nota.append(f"### 📋 Historial de Eventos ({len(filas_ev)})")
+            dia_actual = ""
+            for ev in filas_ev:
+                ts = str(ev["timestamp"] or "")
+                dia = ts[:10] if ts else "Sin fecha"
+                if dia != dia_actual:
+                    dia_actual = dia
+                    lineas_nota.append(f"\n#### 📅 {dia_actual}")
+
+                tipo = ev["tipo"]
+                texto_limpio = _sanear_texto_markdown(str(ev["texto"]))[:140]
+                lineas_nota.append(f"- **[{tipo}]** {texto_limpio}")
+            lineas_nota.append("")
+
+        # Pie de navegación de regreso al índice
+        lineas_nota.append("---")
+        lineas_nota.append("[[00-INDICE|⬅ Volver al Índice General]]")
+
         with open(ruta_nota, "w", encoding="utf-8") as f:
             f.write("\n".join(lineas_nota))
+
+        notas_escritas += 1
         secciones.append(f"- [[{slug}|{nombre}]]")
+
     secciones.append("")
+    # Verificación de consistencia: 1 nota por proyecto
+    assert notas_escritas == len(proyectos), (
+        f"Inconsistencia en export: {notas_escritas} notas escritas para {len(proyectos)} proyectos"
+    )
     return secciones
 
 
 def _seccion_lecciones(db: PersonalDB, secciones: list[str]) -> list[str]:
-    """Añade la sección de lecciones al índice del vault personal.
+    """Añade la sección de lecciones compacta al índice del vault personal v2.
 
     Args:
-        db (PersonalDB): Base de datos personal abierta.
-        secciones (list[str]): Acumulador de líneas del índice.
+        db: Base de datos personal abierta.
+        secciones: Acumulador de líneas del índice.
 
     Returns:
         list[str]: Acumulador actualizado con la sección de lecciones.
     """
     filas_lec = db._conn.execute(
-        "SELECT leccion, como_se_resolvio, proyectos.nombre AS proy "
+        "SELECT leccion, instruccion, como_se_resolvio, proyectos.nombre AS proy "
         "FROM lecciones LEFT JOIN proyectos ON proyectos.id = lecciones.proyecto_id "
         "ORDER BY lecciones.id"
     ).fetchall()
     if filas_lec:
-        secciones.append("## Lecciones")
+        secciones.append("## Lecciones de Conocimiento (8.0-KNOWLEDGE)")
         for fila in filas_lec:
-            proy = f" ({fila['proy']})" if fila["proy"] else ""
-            secciones.append(f"### {fila['leccion']}{proy}")
-            if fila["como_se_resolvio"]:
-                secciones.append(str(fila["como_se_resolvio"]))
+            proy = f" *({fila['proy']})*" if fila["proy"] else ""
+            tit = _sanear_texto_markdown(str(fila["leccion"]))
+            secciones.append(f"### 🎯 {tit}{proy}")
+
+            # Mostrar instrucción o cómo se resolvió de forma compacta (<=250 caracteres)
+            instruccion = str(fila["instruccion"] or fila["como_se_resolvio"] or "")
+            inst_limpia = _sanear_texto_markdown(instruccion)
+            if inst_limpia:
+                if len(inst_limpia) > 250:
+                    inst_limpia = inst_limpia[:247] + "..."
+                secciones.append(f"> 📋 **Instrucción**: {inst_limpia}")
             secciones.append("")
     return secciones
 
@@ -606,8 +818,8 @@ def _seccion_decisiones(db: PersonalDB, secciones: list[str]) -> list[str]:
     """Añade la sección de decisiones al índice del vault personal.
 
     Args:
-        db (PersonalDB): Base de datos personal abierta.
-        secciones (list[str]): Acumulador de líneas del índice.
+        db: Base de datos personal abierta.
+        secciones: Acumulador de líneas del índice.
 
     Returns:
         list[str]: Acumulador actualizado con la sección de decisiones.
@@ -618,46 +830,52 @@ def _seccion_decisiones(db: PersonalDB, secciones: list[str]) -> list[str]:
         "ORDER BY decisiones.id"
     ).fetchall()
     if filas_dec:
-        secciones.append("## Decisiones")
+        secciones.append("## Decisiones Arquitectónicas")
         for fila in filas_dec:
-            proy = f" ({fila['proy']})" if fila["proy"] else ""
-            secciones.append(f"- **{fila['decision']}**{proy}")
+            proy = f" *({fila['proy']})*" if fila["proy"] else ""
+            dec_txt = _sanear_texto_markdown(str(fila["decision"]))
+            secciones.append(f"- **{dec_txt}**{proy}")
             if fila["contexto"]:
-                secciones.append(f"  _{fila['contexto']}_")
+                ctx_txt = _sanear_texto_markdown(str(fila["contexto"]))
+                secciones.append(f"  _{ctx_txt}_")
         secciones.append("")
     return secciones
 
 
 def _cmd_personal_export(args) -> None:
-    """Genera un vault personal Obsidian desde la BD.
+    """Genera un vault personal Obsidian desde la BD v2.
 
     Crea una nota REAL por proyecto (``<slug>.md`` con sus eventos) y un
     ``00-INDICE.md`` cuyos wikilinks apuntan a esas notas — sin nodos
-    fantasma (los [[...]] siempre tienen su archivo).
+    fantasma (los [[...]] siempre tienen su archivo existente).
 
     Args:
         args: Namespace con ``--destino`` y ``--db``.
     """
-    db = PersonalDB(args.db)
+    db = PersonalDB(getattr(args, "db", None))
     try:
         destino = getattr(args, "destino", None) or os.path.expanduser(
             "~/.context-map/vault-Personal"
         )
         os.makedirs(destino, exist_ok=True)
 
-        secciones: list[str] = ["# Vault Personal — ContextMap", ""]
+        secciones: list[str] = ["# 🌐 Vault Personal — ContextMap", ""]
 
-        # Nota real por proyecto (con sus eventos)
+        # Nota real por proyecto (con sus eventos y metadatos)
         secciones = _seccion_notas_proyecto(db, destino, secciones)
         secciones = _seccion_lecciones(db, secciones)
         secciones = _seccion_decisiones(db, secciones)
 
         ruta_indice = os.path.join(destino, "00-INDICE.md")
+        contenido_indice = "\n".join(secciones)
         with open(ruta_indice, "w", encoding="utf-8") as f:
-            f.write("\n".join(secciones))
+            f.write(contenido_indice)
 
+        total_archivos = len(os.listdir(destino))
+        tamano_kb = os.path.getsize(ruta_indice) / 1024
         print(f"personal: vault exportado en {destino}")
-        print(f"  archivos: {len(os.listdir(destino))} (índice + nota por proyecto)")
+        print(f"  archivos: {total_archivos} (índice + nota por proyecto)")
+        print(f"  índice: 00-INDICE.md ({tamano_kb:.1f} KB)")
     finally:
         db.cerrar()
 
@@ -684,6 +902,125 @@ def _cmd_personal_backup(args) -> None:
     print(f"  origen: {db.ruta}")
 
 
+def _cmd_personal_panorama(args) -> None:
+    """Genera y muestra el tablero general de actividad multi-proyecto.
+
+    Args:
+        args: Namespace con ``--dias``, ``--proyecto``, ``--solo-sesiones``, ``--json`` y ``--db``.
+    """
+    import json
+    from context_map.core.personal.panorama import (
+        construir_panorama,
+        formatear_panorama_texto,
+    )
+
+    db = PersonalDB(getattr(args, "db", None))
+    try:
+        dias = int(getattr(args, "dias", 14) or 14)
+        proyecto = getattr(args, "proyecto", None)
+        solo_sesiones = bool(getattr(args, "solo_sesiones", False))
+        json_output = bool(getattr(args, "json", False))
+
+        report = construir_panorama(
+            db=db,
+            dias=dias,
+            proyecto=proyecto,
+            solo_sesiones=solo_sesiones,
+        )
+
+        if json_output:
+            print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+        else:
+            print(formatear_panorama_texto(report))
+    finally:
+        db.cerrar()
+
+
+def _cmd_personal_timeline(args) -> None:
+    """Genera y muestra la línea temporal agregada de sesiones y eventos.
+
+    Args:
+        args: Namespace con ``--dias``, ``--proyecto``, ``--json`` y ``--db``.
+    """
+    import json
+    from dataclasses import asdict
+    from context_map.core.personal.panorama import (
+        construir_timeline,
+        formatear_timeline_texto,
+    )
+
+    db = PersonalDB(getattr(args, "db", None))
+    try:
+        dias = int(getattr(args, "dias", 30) or 30)
+        proyecto = getattr(args, "proyecto", None)
+        json_output = bool(getattr(args, "json", False))
+
+        items = construir_timeline(
+            db=db,
+            dias=dias,
+            proyecto=proyecto,
+        )
+
+        if json_output:
+            print(json.dumps([asdict(it) for it in items], indent=2, ensure_ascii=False))
+        else:
+            print(formatear_timeline_texto(items))
+    finally:
+        db.cerrar()
+
+
+def _cmd_personal_repair(args) -> None:
+    """Ejecuta el saneamiento y reparación integral de la BD personal.
+
+    Args:
+        args: Namespace con flags de repair y ``--db``.
+    """
+    import json
+    from context_map.core.personal.repair import (
+        formatear_repair_texto,
+        reparar_bd_personal,
+    )
+
+    db = PersonalDB(getattr(args, "db", None))
+    try:
+        dry_run = bool(getattr(args, "dry_run", False))
+        is_all = bool(getattr(args, "all", False))
+        merge_duplicados = is_all or bool(getattr(args, "merge_duplicados", False))
+        fill_ruta = is_all or bool(getattr(args, "fill_ruta", False))
+        drop_vacios = is_all or bool(getattr(args, "drop_vacios", False))
+        purge_ruido = is_all or bool(getattr(args, "purge_ruido", False))
+        vacuum = is_all or bool(getattr(args, "vacuum", False))
+        json_output = bool(getattr(args, "json", False))
+
+        # Si no se pasó ningún flag específico ni --all, ejecutar todas las reparaciones por defecto
+        if not (merge_duplicados or fill_ruta or drop_vacios or purge_ruido or vacuum):
+            merge_duplicados = fill_ruta = drop_vacios = purge_ruido = vacuum = True
+
+        rutas_extra = [
+            r.strip()
+            for r in (getattr(args, "rutas", "") or "").split(";")
+            if r.strip()
+        ]
+
+        report = reparar_bd_personal(
+            db=db,
+            dry_run=dry_run,
+            merge_duplicados=merge_duplicados,
+            fill_ruta=fill_ruta,
+            drop_vacios=drop_vacios,
+            purge_ruido=purge_ruido,
+            vacuum=vacuum,
+            rutas_busqueda=rutas_extra,
+        )
+
+        if json_output:
+            print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+        else:
+            print(formatear_repair_texto(report))
+    finally:
+        db.cerrar()
+
+
 # ---------------------------------------------------------------------------
 # Despacho principal
 # ---------------------------------------------------------------------------
@@ -702,9 +1039,13 @@ def cmd_personal(args) -> None:
         "query": _cmd_personal_query,
         "export": _cmd_personal_export,
         "backup": _cmd_personal_backup,
+        "panorama": _cmd_personal_panorama,
+        "timeline": _cmd_personal_timeline,
+        "repair": _cmd_personal_repair,
     }
     handler = despacho.get(sub)
     if callable(handler):
         handler(args)
     else:
-        print("personal: usa uno de sync | add | query | export | backup")
+        print("personal: usa uno de sync | add | query | export | backup | panorama | timeline | repair")
+
