@@ -149,12 +149,12 @@ ContextMap genera e inyecta reglas contextuales específicas para el stack de tu
 
 En el ecosistema de herramientas de contexto para IA (2026), existen 4 soluciones populares. A continuación se compara **ContextMap** frente a las alternativas web y CLI más utilizadas:
 
-| Característica / Capacidad | Concatenadores CLI (`Repomix`) | Ingestores Web (`Gitingest`) | Repo Maps (`Aider`) | Indexadores IDE (`Cursor` / `Windsurf`) | **ContextMap v1.9.0** |
+| Característica / Capacidad | Concatenadores CLI (`Repomix`) | Ingestores Web (`Gitingest`) | Repo Maps (`Aider`) | Indexadores IDE (`Cursor` / `Windsurf`) | **ContextMap v2.4.0** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Enfoque Principal** | Dump a archivo XML/MD | URL GitHub a prompt | Mapa AST + PageRank | RAG Vectorial local | **Gobernanza + Memoria Viva + Vault + Auto-Mantenimiento** |
 | **Consumo de Tokens** | 🔴 Masivo (repos entero) | 🔴 Masivo | 🟢 Eficiente | 🟡 Medio | 🟢 **Ultra-eficiente (`CONTEXT.md` / MCP)** |
 | **Bóveda Visual Interactiva (Obsidian Vault)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (Grafo en árbol estricto, Canvas, Dataview)** |
-| **Captura del "Por Qué" y "Para Qué" (Alma)** | ❌ No (solo código) | ❌ No | ❌ No (solo firmas) | ❌ No | **✅ Sí (Notas narrativas polimórficas)** |
+| **Captura del "Por Qué" y "Para Qué" (Alma)** | ❌ No (solo código) | ❌ No | ❌ No | ❌ No | **✅ Sí (Notas narrativas polimórficas)** |
 | **Gobernanza Multi-IDE (`AGENTS.md` + 10 IDEs)** | ❌ No | ❌ No | ❌ No | 🟡 Solo propio IDE | **✅ Sí (Portable entre 10+ IDEs)** |
 | **Memoria Viva Indestructible (`7.0-MANUAL/`)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (`preserve: true`, jamás se borra)** |
 | **Aprendizaje del Agente (`8.0-KNOWLEDGE/`)** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Sí (Formato de lecciones accionables)** |
@@ -178,7 +178,7 @@ En el ecosistema de herramientas de contexto para IA (2026), existen 4 solucione
 
 ## 📜 Historial de Versiones (Releases)
 
-Para consultar el historial completo de versiones, cambios, notas de release y novedades desde la v1.0.0 hasta la **v1.9.0**, por favor revisa el archivo [**CHANGELOG.md**](CHANGELOG.md).
+Para consultar el historial completo de versiones, cambios, notas de release y novedades desde la v1.0.0 hasta la **v2.4.0**, por favor revisa el archivo [**CHANGELOG.md**](CHANGELOG.md).
 
 ---
 

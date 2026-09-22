@@ -132,7 +132,7 @@ ContextMap generates and injects stack-specific rules adapted for over 10 AI dev
 
 In the AI developer tooling ecosystem (2026), there are 4 main approaches for providing context to LLMs. The table below compares **ContextMap** with the most popular web and CLI tools:
 
-| Feature / Capability | CLI Packagers (`Repomix`) | Web Ingestors (`Gitingest`) | Repo Maps (`Aider`) | IDE Indexers (`Cursor` / `Windsurf`) | **ContextMap v1.9.0** |
+| Feature / Capability | CLI Packagers (`Repomix`) | Web Ingestors (`Gitingest`) | Repo Maps (`Aider`) | IDE Indexers (`Cursor` / `Windsurf`) | **ContextMap v2.4.0** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Primary Focus** | Dump repo to XML/MD file | GitHub URL to prompt | AST map + PageRank | Local Vector RAG | **Governance + Living Memory + Vault + Self-Maintenance** |
 | **Token Consumption** | 🔴 Massive (entire file) | 🔴 Massive | 🟢 Efficient | 🟡 Medium | 🟢 **Ultra-efficient (`CONTEXT.md` / MCP)** |
@@ -155,7 +155,7 @@ In the AI developer tooling ecosystem (2026), there are 4 main approaches for pr
 
 ## 📜 Release History
 
-To view the complete version history, release notes, and changelog from v1.0.0 to **v1.9.0**, please visit the [**CHANGELOG.md**](CHANGELOG.md) file.
+To view the complete version history, release notes, and changelog from v1.0.0 to **v2.4.0**, please visit the [**CHANGELOG.md**](CHANGELOG.md) file.
 
 ---
 
