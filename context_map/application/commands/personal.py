@@ -909,6 +909,7 @@ def _cmd_personal_panorama(args) -> None:
         args: Namespace con ``--dias``, ``--proyecto``, ``--solo-sesiones``, ``--json`` y ``--db``.
     """
     import json
+
     from context_map.core.personal.panorama import (
         construir_panorama,
         formatear_panorama_texto,
@@ -944,6 +945,7 @@ def _cmd_personal_timeline(args) -> None:
     """
     import json
     from dataclasses import asdict
+
     from context_map.core.personal.panorama import (
         construir_timeline,
         formatear_timeline_texto,
@@ -976,6 +978,7 @@ def _cmd_personal_repair(args) -> None:
         args: Namespace con flags de repair y ``--db``.
     """
     import json
+
     from context_map.core.personal.repair import (
         formatear_repair_texto,
         reparar_bd_personal,

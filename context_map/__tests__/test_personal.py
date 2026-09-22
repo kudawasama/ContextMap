@@ -503,6 +503,7 @@ def test_sync_mensaje_lecciones_por_proyecto(tmp_path, monkeypatch, capsys) -> N
 def test_export_colision_slugs_genera_notas_unicas(tmp_path) -> None:
     """Verifica que proyectos con nombres que producen slugs similares no colisionen."""
     from argparse import Namespace
+
     from context_map.application.commands.personal import _cmd_personal_export
     from context_map.core.personal import PersonalDB
 
@@ -530,6 +531,7 @@ def test_export_colision_slugs_genera_notas_unicas(tmp_path) -> None:
 def test_export_saneamiento_markdown_y_cero_wikilinks_rotos(tmp_path) -> None:
     """Verifica que las lecciones no rompan encabezados ni introduzcan wikilinks rotos."""
     from argparse import Namespace
+
     from context_map.application.commands.personal import _cmd_personal_export
     from context_map.core.personal import Leccion, PersonalDB
 

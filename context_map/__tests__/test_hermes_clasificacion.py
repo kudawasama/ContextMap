@@ -75,8 +75,9 @@ def test_mensaje_normal_sigue_siendo_idea():
 
 def test_sesion_es_del_proyecto_con_alias(tmp_path):
     """Verifica que los alias permitan asociar sesiones huérfanas por renombre."""
-    from context_map.infrastructure.integrations.hermes import sesion_es_del_proyecto
     import json
+
+    from context_map.infrastructure.integrations.hermes import sesion_es_del_proyecto
 
     s_huerfana = Sesion(
         id="s_old",

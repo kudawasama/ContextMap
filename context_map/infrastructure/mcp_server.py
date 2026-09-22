@@ -275,6 +275,7 @@ def personal_panorama(
         json_output: Devolver reporte como JSON estructurado.
     """
     import json
+
     from context_map.core.personal import PersonalDB
     from context_map.core.personal.panorama import (
         construir_panorama,
@@ -314,6 +315,7 @@ def personal_timeline(
     """
     import json
     from dataclasses import asdict
+
     from context_map.core.personal import PersonalDB
     from context_map.core.personal.panorama import (
         construir_timeline,
@@ -351,6 +353,7 @@ def personal_repair(
         json_output: Devolver salida estructurada en JSON.
     """
     import json
+
     from context_map.core.personal import PersonalDB
     from context_map.core.personal.repair import (
         formatear_repair_texto,

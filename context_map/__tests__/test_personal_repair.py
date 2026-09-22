@@ -8,10 +8,9 @@ import shutil
 import tempfile
 from unittest.mock import patch
 
-from context_map.application.commands.personal import _cmd_personal_repair, cmd_personal
+from context_map.application.commands.personal import cmd_personal
 from context_map.core.personal import PersonalDB
 from context_map.core.personal.repair import (
-    RepairReport,
     _fusionar_proyectos_duplicados,
     _purgar_eventos_ruido,
     formatear_repair_texto,

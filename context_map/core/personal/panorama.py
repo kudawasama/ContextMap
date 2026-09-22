@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -183,10 +182,7 @@ def _coincide_sesion_con_proyecto(
         return True
     if git_root and clave_proy in _normalizar_clave(git_root):
         return True
-    if titulo and clave_proy in _normalizar_clave(titulo):
-        return True
-
-    return False
+    return bool(titulo and clave_proy in _normalizar_clave(titulo))
 
 
 def _calcular_dias_inactivo(fecha_iso: str, ahora: datetime) -> int | None:

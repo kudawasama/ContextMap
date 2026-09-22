@@ -149,7 +149,7 @@ def _fusionar_proyectos_duplicados(db: PersonalDB, dry_run: bool = False) -> lis
 
     fusiones: list[str] = []
 
-    for clave, lista in grupos.items():
+    for _clave, lista in grupos.items():
         if len(lista) <= 1:
             continue
 

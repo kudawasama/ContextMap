@@ -11,13 +11,10 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from context_map.application.commands.personal import (
-    _cmd_personal_panorama,
-    _cmd_personal_timeline,
     cmd_personal,
 )
 from context_map.core.personal import PersonalDB
 from context_map.core.personal.panorama import (
-    PanoramaReport,
     _calcular_dias_inactivo,
     _determinar_semaforo,
     construir_panorama,
@@ -289,15 +286,16 @@ def test_mcp_tools_panorama_y_timeline() -> None:
     db_init.cerrar()
 
     try:
-        with patch("context_map.core.personal.PersonalDB", side_effect=lambda: PersonalDB(db_file)):
-            with patch("context_map.core.personal.panorama.leer_sesiones", return_value=[]):
-                res_pano = mcp_server.personal_panorama(dias=14)
-                assert "PANORAMA MULTI-PROYECTO" in res_pano
+        with (
+            patch("context_map.core.personal.PersonalDB", side_effect=lambda: PersonalDB(db_file)),
+            patch("context_map.core.personal.panorama.leer_sesiones", return_value=[]),
+        ):
+            res_pano = mcp_server.personal_panorama(dias=14)
+            assert "PANORAMA MULTI-PROYECTO" in res_pano
+            res_json = mcp_server.personal_panorama(dias=14, json_output=True)
+            assert '"resumen_semaforo"' in res_json
 
-                res_json = mcp_server.personal_panorama(dias=14, json_output=True)
-                assert '"resumen_semaforo"' in res_json
-
-                res_time = mcp_server.personal_timeline(dias=30)
-                assert "LÍNEA TEMPORAL" in res_time
+            res_time = mcp_server.personal_timeline(dias=30)
+            assert "LÍNEA TEMPORAL" in res_time
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
