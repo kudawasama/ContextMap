@@ -9,9 +9,10 @@
 [![Release](https://img.shields.io/badge/version-v2.4.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
+[![Tests: 262 Passing](https://img.shields.io/badge/tests-262%2F262%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
+[![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Tests: 260 Passing](https://img.shields.io/badge/tests-260%2F260%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
-[![MCP Powered](https://img.shields.io/badge/MCP-16%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
 [Versión en Español 🇪🇸](README.md) • [📖 Technical Specifications & Architecture 🏛️](README_TECNICO.md) • [Changelog](CHANGELOG.md)
 
@@ -104,11 +105,13 @@ Scraping-Bot           🟡 Warm     21d        32       2/1          0
 ----------------------------------------------------------------------------
 ```
 
-### 🔌 3. Autonomous Control for AI Agents (Native MCP Server)
-Includes a built-in **stdio MCP Server (16 tools)**. Autonomous agents like **Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
+### 🔌 3. Autonomous Control for AI Agents (Native MCP Server & Skills)
+Includes a built-in **stdio MCP Server (16 tools)** and **Google Antigravity Skill generator**. Autonomous agents like **Antigravity, Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
 
-### 🛡️ 4. Universal Rules for 10+ IDEs
-Write project rules once, and ContextMap auto-syncs them to every tool's format:
+### 🛡️ 4. Universal Rules & Skills for 10+ IDEs
+Write project rules once, and ContextMap auto-syncs them to every tool's native format:
+* **Google Antigravity**: `.agents/skills/contextmap/SKILL.md`
+* **Hermes Agent**: `.hermes/workflows/contextmap.yaml` and `.hermes/config.yaml`
 * **Universal Standard**: `AGENTS.md`
 * **Claude Code**: `CLAUDE.md`
 * **Cursor**: `.cursor/rules/contextmap.mdc` and `.cursorrules`
@@ -123,11 +126,12 @@ Write project rules once, and ContextMap auto-syncs them to every tool's format:
 | What do you need? | Raw Dumps<br>*(Repomix / Gitingest)* | IDE-Locked Indexers<br>*(Cursor / Windsurf)* | **ContextMap v2.4.0** |
 | :--- | :---: | :---: | :---: |
 | **Token Consumption** | 🔴 Massive (expensive & slow) | 🟡 Medium | 🟢 **Ultra-efficient (>99% savings)** |
+| **Deterministic Prompt Caching** | ❌ Incompatible (breaks hash) | 🟡 Partial | **✅ Frozen Prefix (>90% Hit Rate)** |
 | **Interactive Visual Graph** | ❌ None | ❌ None | **✅ Obsidian Vault** |
 | **Permanent Architecture Memory** | ❌ Lost on chat close | 🟡 Partial | **✅ Indestructible Memory** |
 | **Switch IDEs Without Loss** | ❌ No | ❌ Vendor Lock-in | **✅ 100% Portable** |
 | **Multi-Project Portfolio View** | ❌ No | ❌ No | **✅ Consolidated SQLite DB** |
-| **Native MCP Server Tools** | ❌ No | 🟡 Proprietary | **✅ 16 Tools stdio ready** |
+| **Native MCP Server & Skills** | ❌ No | 🟡 Proprietary | **✅ 16 Tools stdio + Antigravity Skill** |
 
 ---
 

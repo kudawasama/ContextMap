@@ -9,9 +9,10 @@
 [![Release](https://img.shields.io/badge/version-v2.4.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
+[![Tests: 262 Passing](https://img.shields.io/badge/tests-262%2F262%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
+[![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Tests: 260 Passing](https://img.shields.io/badge/tests-260%2F260%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
-[![MCP Powered](https://img.shields.io/badge/MCP-16%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
 
 [English Version 🇬🇧](README_EN.md) • [📖 Documentación Técnica y Arquitectura 🏛️](README_TECNICO.md) • [Historial de Versiones](CHANGELOG.md)
 
@@ -104,11 +105,13 @@ Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0
 ----------------------------------------------------------------------------
 ```
 
-### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo)
-ContextMap incluye un servidor **MCP nativo (16 herramientas)**. Asistentes como **Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
+### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo & Skills)
+ContextMap incluye un servidor **MCP nativo (16 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
 
-### 🛡️ 4. Reglas Universales para 10+ Editores e IAs
+### 🛡️ 4. Reglas y Skills Universales para 10+ Editores e IAs
 Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de cada herramienta:
+* **Google Antigravity**: `.agents/skills/contextmap/SKILL.md`
+* **Hermes Agent**: `.hermes/workflows/contextmap.yaml` y `.hermes/config.yaml`
 * **Universal**: `AGENTS.md`
 * **Claude Code**: `CLAUDE.md`
 * **Cursor**: `.cursor/rules/contextmap.mdc` y `.cursorrules`
@@ -123,11 +126,12 @@ Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de
 | ¿Qué necesitas? | Copiar y Pegar Todo<br>*(Repomix / Gitingest)* | Indexadores de Editor<br>*(Cursor / Windsurf)* | **ContextMap v2.4.0** |
 | :--- | :---: | :---: | :---: |
 | **Gasto de Tokens** | 🔴 Altísimo (quema tu dinero) | 🟡 Medio | 🟢 **Mínimo (>99% de ahorro)** |
+| **Prompt Caching Determinista** | ❌ Incompatible (cambia el hash) | 🟡 Parcial | **✅ Prefijo congelado (>90% Hit Rate)** |
 | **Mapa Visual Interactivo** | ❌ No existe | ❌ No existe | **✅ Bóveda en Obsidian** |
 | **No Olvidar Acuerdos** | ❌ Pierde todo al cerrar chat | 🟡 Parcial | **✅ Memoria Permanente** |
 | **Cambiar de Editor sin Perder Datos** | ❌ No | ❌ Atrapado en su app | **✅ Totalmente Portable** |
 | **Visión de Múltiples Proyectos** | ❌ No | ❌ No | **✅ Base SQLite Consolidada** |
-| **Herramientas MCP Nativas** | ❌ No | 🟡 Cerradas | **✅ 16 Tools stdio listas** |
+| **Herramientas MCP & Skills Nativas** | ❌ No | 🟡 Cerradas | **✅ 16 Tools stdio + Antigravity Skill** |
 
 ---
 

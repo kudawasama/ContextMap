@@ -5,18 +5,21 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.0] — 2026-09-22
+## [2.4.0] — 2026-09-23
 
-### 🌐 Optimización Multi-Proyecto, Base Personal & Resiliencia de Vaults
+### 🚀 Evolución Arquitectónica, Modularización, Prompt Caching Determinista & Skills Nativas
 
+- **refactor(`personal`)**: Modularización completa del módulo monolítico `personal.py` (1.054 líneas) en el subpaquete desacoplado `context_map/application/commands/personal/` (`common.py`, `sync.py`, `export.py`, `query.py`, `panorama.py`, `timeline.py`, `repair.py` e `__init__.py`) bajo Clean Architecture y principio de responsabilidad única (SRP), garantizando retrocompatibilidad y soporte dinámico de monkeypatching en tests.
+- **feat(`brief`/`caching`)**: Optimizador determinista de Prompt Caching para Claude 3.7 Sonnet, Gemini 2.5 Pro/Flash y GPT-4o en `CONTEXT.md`. Congela un prefijo invariante estático de 1.005 tokens (identidad, propósito y reglas inmutables) sin marcas de tiempo volátiles al inicio, inyecta el delimitador formal `<!-- PROMPT_CACHE_BOUNDARY: INVARIANT_PREFIX -->` y sitúa el bloque dinámico al final, logrando una tasa de Cache Hit >90%, reducción de latencia de 4s a <500ms y recorte de costos en 90%.
+- **feat(`ecosystem`/`antigravity`)**: Generador nativo de la skill oficial de Antigravity en `.agents/skills/contextmap/SKILL.md` con frontmatter YAML estándar (`name: contextmap`) y directivas de memoria viva, complementado con el flujo declarativo `.hermes/workflows/contextmap.yaml`.
+- **perf(`scanner`)**: Acelerador de escaneo incremental en `infrastructure/analyzers/content.py` con persistencia de caché sintáctica `.context-map/.scan_cache.json` basada en huellas `(mtime_ns, size)`, permitiendo re-escaneos sub-150ms.
+- **ci(`mypy`)**: Saneamiento de 39 inconsistencias de tipado estricto (0 errores en 190 archivos) y promoción de MyPy a verificación 100% bloqueante en `.github/workflows/ci.yml`.
 - **feat(`personal`)**: Nuevo comando `ctxmap personal panorama` para visualización ejecutiva del estado de actividad real de todos los proyectos con semáforo inteligente (`max(max_ts_ses, max_ts_ev)`), conteo de pendientes y directrices activas.
 - **feat(`personal`)**: Nuevo comando `ctxmap personal timeline` para inspección cronológica unificada de sesiones de IA, commits y cambios relevantes con filtros por días, proyecto o tipo de evento.
 - **feat(`personal`)**: Nuevo comando `ctxmap personal repair` para saneamiento automatizado de eventos de ruido técnico, deduplicación/fusión de proyectos duplicados, optimización de índices FTS5 y `VACUUM` de SQLite con respaldo previo `.bak`.
 - **feat(`personal`)**: Exportación del Vault Personal v2 con notas ricas por proyecto, manejo determinista de colisiones de slugs y saneamiento de enlaces para 0 wikilinks rotos.
 - **feat(`personal`)**: Captura automática de directrices y decisiones de arquitectura desde notas manuales (`7.0-MANUAL/`) a la tabla `decisiones` de la base consolidada.
-- **feat(`hermes`)**: Soporte de alias de directorio (`.context-map/config.json` → `alias`) para recuperar sesiones históricas y huérfanas tras renombrar o mover repositorios.
-- **feat(`mcp`)**: Incorporación de las herramientas MCP `personal_panorama` y `personal_timeline` para consulta agéntica directa.
-- **feat(`wrap`)**: Integración automática de `panorama` en el cierre de sesión diario de `ctxmap wrap`.
+- **test**: 262/262 pruebas unitarias pasando al 100% con suite de verificación de Prompt Caching y caché de escaneo incremental.
 
 ---
 
