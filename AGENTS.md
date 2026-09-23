@@ -55,24 +55,25 @@ Cualquier agente que tome una tarea en este proyecto **DEBE** seguir estos pasos
    mi-app-utm) o por un vault que no es este, dilo ANTES de responder — nunca
    respondas con el contexto de otro proyecto.
 2. **Leer el Brief Ejecutivo**:
-   Consultar [.context-map/CONTEXT.md](file:///c:/Users/jose.cespedes/Desktop/PruebaContext/.context-map/CONTEXT.md) para conocer las métricas, riesgos críticos y tareas pendientes.
+   Consultar [.context-map/CONTEXT.md](file:///.context-map/CONTEXT.md) para conocer las métricas, riesgos críticos y tareas pendientes.
 3. **Comprobar la FRESCURA del contexto**: si el brief avisa que el diario manual
    es más nuevo que el build (sección "Estado del Contexto"), ejecuta
    `ctxmap refresh .` ANTES de responder sobre el estado del proyecto.
-4. **Leer los PENDIENTES REALES**: además del backlog generado (5.0-BACKLOG),
-   revisa SIEMPRE `.context-map/vault-ContextMap/7.0-MANUAL/BACKLOG.md` (si existe)
-   y el diario más reciente (`7.0-MANUAL/Diario/`). Los pendientes conversados con
-   el usuario viven ahí.
+4. **Leer los PENDIENTES REALES y DOCUMENTOS**: además del backlog generado (5.0-BACKLOG),
+   revisa SIEMPRE `.context-map/vault-ContextMap/7.0-MANUAL/BACKLOG.md`, los documentos de dominio en `.context-map/vault-ContextMap/3.2-DOCUMENTOS/`
+   y el diario más reciente (`7.0-MANUAL/Diario/`). Los pendientes conversados y el conocimiento documental viven ahí.
 5. **Revisar el Backlog y Vault**:
    Inspeccionar `.context-map/vault-ContextMap/2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
 6. **No Suponer Rutas o Lógica**:
    Inspeccionar el código fuente antes de formular hipótesis de cambio.
-7. **Captura Autónoma del Dominio**:
-   Al inicializar o ponerse en contexto en un proyecto, inspeccionar los submódulos de lógica nuclear (algoritmos, ecuaciones implícitas, reglas de negocio) y documentar lo descubierto en `7.0-MANUAL/DOMINIO.md` o en las notas del Vault, ejecutando `ctxmap refresh .` para que el brief y el Vault contengan el alma matemática y funcional del sistema.
+7. **Captura Autónoma del Dominio y Documentación**:
+   Al inicializar o ponerse en contexto en un proyecto, inspeccionar los submódulos de lógica nuclear (algoritmos, ecuaciones implícitas, reglas de negocio) y documentar lo descubierto en `7.0-MANUAL/DOMINIO.md` o en las notas del Vault. Para fuentes documentales externas (.pdf, .md, .txt), depositarlas en `.context-map/raw/docs/` y ejecutar `ctxmap refresh .`.
+8. **Memoria Viva Multicanal**:
+   Todo chat de Antigravity IDE, Hermes o exportación depositada en `.context-map/chats/` se procesa automáticamente en `ctxmap refresh .` para preservar decisiones y evitar pérdida de contexto histórico.
 
 > ⚠️ **NUNCA respondas "¿qué quedó pendiente?" basándote solo en un documento
 > suelto (auditoría, CHANGELOG, docs/)** — cruza SIEMPRE el brief + backlog manual
-> + diario más reciente. Esa es la fuente de verdad del proyecto.
+> + diario más reciente + documentos ingeridos. Esa es la fuente de verdad del proyecto.
 
 ---
 

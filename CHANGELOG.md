@@ -18,8 +18,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **feat(`personal`)**: Nuevo comando `ctxmap personal timeline` para inspección cronológica unificada de sesiones de IA, commits y cambios relevantes con filtros por días, proyecto o tipo de evento.
 - **feat(`personal`)**: Nuevo comando `ctxmap personal repair` para saneamiento automatizado de eventos de ruido técnico, deduplicación/fusión de proyectos duplicados, optimización de índices FTS5 y `VACUUM` de SQLite con respaldo previo `.bak`.
 - **feat(`personal`)**: Exportación del Vault Personal v2 con notas ricas por proyecto, manejo determinista de colisiones de slugs y saneamiento de enlaces para 0 wikilinks rotos.
-- **feat(`personal`)**: Captura automática de directrices y decisiones de arquitectura desde notas manuales (`7.0-MANUAL/`) a la tabla `decisiones` de la base consolidada.
-- **test**: 262/262 pruebas unitarias pasando al 100% con suite de verificación de Prompt Caching y caché de escaneo incremental.
+- **feat(`memory`/`multichannel`)**: Auto-importación multicanal de memoria viva en `ctxmap refresh .`: integración automática y tolerante de sesiones de Antigravity IDE (`~/.gemini/antigravity-ide/brain/`), exportaciones de chat externas en `.context-map/chats/` y auto-ingesta de documentos de dominio en `.context-map/raw/docs/` (`.md`, `.txt`, `.pdf`) como nodos `DOCUMENTO` en el grafo y Vault (`3.2-DOCUMENTOS/`), garantizando preservación histórica total.
+- **test**: 264/264 pruebas unitarias pasando al 100% con suite de verificación de auto-ingesta multicanal, Prompt Caching y caché de escaneo incremental.
 
 ---
 

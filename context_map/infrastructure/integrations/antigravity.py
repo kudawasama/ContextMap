@@ -513,37 +513,63 @@ def importar_antigravity(
     ide: bool = True,
     limite: int = 5,
     output_path: str | None = None,
+    project: str | None = None,
 ) -> int:
-    """Importa conversaciones de Antigravity como eventos.
+    """Importa conversaciones de Antigravity como eventos de forma idempotente.
 
     Args:
-        ide: True para Antigravity IDE, False para 2.0
-        limite: Máximo de conversaciones
-        output_path: Ruta donde guardar events.jsonl
+        ide (bool): True para Antigravity IDE, False para 2.0.
+        limite (int): Máximo de conversaciones a leer.
+        output_path (str | None): Ruta donde guardar events.jsonl.
+        project (str | None): Nombre del proyecto para filtrar conversaciones.
 
     Returns:
-        Número de eventos importados
+        int: Número de eventos nuevos importados.
     """
     conversaciones = leer_conversaciones_antigravity(ide, limite)
-    eventos = []
+    if project:
+        proj_norm = project.lower().replace("-", "").replace("_", "")
+        conversaciones = [
+            c for c in conversaciones
+            if not c.proyecto or proj_norm in c.proyecto.lower().replace("-", "").replace("_", "")
+        ]
 
+    eventos: list[Event] = []
     for conv in conversaciones:
         # Evento BASE de la conversación
         eventos.append(_evento_conversacion(conv, ide))
         # Clasificar y agregar eventos por mensaje significativo
         eventos.extend(_eventos_mensajes(conv, ide))
 
-    # Guardar eventos
-    if output_path and eventos:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if not output_path or not eventos:
+        return 0
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Leer existentes para evitar duplicados
+    existentes: set[str] = set()
+    if os.path.exists(output_path):
+        with open(output_path, encoding="utf-8") as f:
+            for linea in f:
+                linea = linea.strip()
+                if linea:
+                    try:
+                        obj = json.loads(linea)
+                        existentes.add(obj.get("text", "")[:80])
+                    except Exception as err:
+                        logger.debug("Línea no JSON en %s: %s", output_path, err)
+
+    nuevos = [e for e in eventos if e.text[:80] not in existentes]
+
+    if nuevos:
         with open(output_path, "a", encoding="utf-8") as f:
-            for evento in eventos:
+            for evento in nuevos:
                 f.write(json.dumps({
                     "type": evento.type,
                     "text": evento.text,
                     "timestamp": evento.timestamp,
                     "source": evento.source,
                     "tags": evento.tags,
-                }) + "\n")
+                }, ensure_ascii=False) + "\n")
 
-    return len(eventos)
+    return len(nuevos)

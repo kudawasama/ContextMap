@@ -98,11 +98,9 @@ para escribir las notas con alma) está en
 
 1. **Leer el Brief Ejecutivo**: `.context-map/CONTEXT.md` — responde qué es el
    proyecto, por qué existe, qué cumple, sus riesgos y tareas pendientes.
-2. **Explorar el Vault**: `.context-map/vault/` o `.context-map/vault-{{project_name}}/`:
-   propósito (1.0), ideas (2.0), riesgos (4.0) y backlog (5.0).
-3. **Importar la historia del proyecto**: las conversaciones con el usuario también
-   son contexto (comandos en la skill). Si el usuario comparte un chat, impórtalo
-   ANTES de responder.
+2. **Explorar el Vault y Documentos**: `.context-map/vault/` o `.context-map/vault-{project_name}/`:
+   propósito (1.0), ideas (2.0), documentos ingeridos (3.2), riesgos (4.0) y backlog (5.0/7.0-MANUAL).
+3. **Memoria Viva Multicanal**: Las conversaciones con el usuario, sesiones de Antigravity/Hermes y documentos de referencia (`.context-map/raw/docs/`, `.context-map/chats/`) se auto-integran al ejecutar `ctxmap refresh .`.
 4. **Responder las 3 preguntas del alma** antes de proponer cambios:
    ¿Por qué existe este proyecto? ¿Para qué sirve? ¿Qué cumple?
 5. **No Suponer Lógica**: inspecciona el código fuente antes de diagnosticar o cambiar.
@@ -129,10 +127,8 @@ para escribir las notas con alma) está en
 El contexto es la **memoria viva del proyecto**:
 
 1. Después de implementar, actualiza el mapa (`ctxmap refresh .`) para que refleje tu
-   trabajo (nodos CAMBIO / CORRECCION / IDEA).
-2. Al terminar una sesión de trabajo, importa la conversación (`import-sessions`,
-   `import-antigravity`, `import-chat`) para que las decisiones y porqués queden
-   registrados.
+   trabajo (nodos CAMBIO / CORRECCION / IDEA, ingesta de docs y sesiones recientes).
+2. Para añadir conocimiento externo, deposita archivos en `.context-map/raw/docs/` o chats en `.context-map/chats/`; `ctxmap refresh .` los asimilará automáticamente.
 3. Un contexto que no se actualiza muere: el siguiente agente queda ciego y el
    proyecto pierde su historia.
 
@@ -408,31 +404,35 @@ description: Protocolo, flujos y comandos esenciales para gobernar el contexto, 
 
 # Skill de ContextMap IA — {project_name}
 
-Esta skill proporciona las directivas operativas para interactuar con la memoria permanente y el grafo conceptual de **{project_name}**.
+Esta skill proporciona las directivas operativas para interactuar con la memoria permanente, los documentos de referencia y el grafo conceptual de **{project_name}**.
 
 ## Comandos Esenciales
 
 ```bash
-# 1. Poner todo el contexto al día en un solo paso (scan + build con preservación + check)
+# 1. Poner todo el contexto al día en un solo paso (scan + build con preservación + auto-ingesta + check)
 ctxmap refresh .
 
-# 2. Verificar la salud, integridad y enlaces rotos del vault
+# 2. Ingerir documentos brutos manualmente (MD, TXT, PDF)
+ctxmap ingest .context-map/raw/docs/
+
+# 3. Verificar la salud, integridad y enlaces rotos del vault
 ctxmap check .
 
-# 3. Sincronizar memoria personal / multi-proyecto
+# 4. Sincronizar memoria personal / multi-proyecto
 ctxmap personal sync
 
-# 4. Consultar decisiones o conocimiento histórico
+# 5. Consultar decisiones o conocimiento histórico
 ctxmap personal query "tema de consulta"
 ```
 
-## Protocolo de Inicio para Agentes
+## Protocolo de Inicio y Memoria Viva para Agentes
 
-1. **Inspeccionar Brief**: Leer `.context-map/CONTEXT.md` (identidad, propósito y estado).
-2. **Consultar Backlog Real**: Revisar `.context-map/vault-{safe}/7.0-MANUAL/BACKLOG.md` y notas de diario recientes.
-3. **Verificar Antes de Commit**:
+1. **Inspeccionar Brief**: Leer `.context-map/CONTEXT.md` (identidad, propósito, métricas y estado).
+2. **Consultar Documentos y Backlog**: Revisar `.context-map/vault-{safe}/3.2-DOCUMENTOS/`, `7.0-MANUAL/BACKLOG.md` y notas de diario recientes.
+3. **Memoria Viva Multicanal**: Para incorporar contexto externo (conversaciones, transcripciones o especificaciones), colócalos en `.context-map/chats/` o `.context-map/raw/docs/`. `ctxmap refresh .` los asimilará automáticamente.
+4. **Verificar Antes de Commit**:
    - Tests: `{test}`
-   - Refrescar grafo: `ctxmap refresh .`
+   - Refrescar grafo y vault: `ctxmap refresh .`
    - Sin archivos sueltos en raíz.
 """
 
