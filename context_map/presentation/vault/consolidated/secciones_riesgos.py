@@ -109,12 +109,12 @@ def _clave_dedup_riesgo(n) -> str:
     return (n.title or "")[:80]
 
 
-def _es_riesgo_real(n) -> bool:
+def _es_riesgo_real(n: Node) -> bool:
     """True si el nodo es realmente un RIESGO (no un IDEA mal clasificado)."""
     t = (n.title or "").strip().lower()
     if t.startswith("idea") or t.startswith("todo") or t.startswith("feature"):
         return False
-    return n.type != "IDEA"
+    return bool(n.type != "IDEA")
 
 
 def _render_seccion_riesgos(

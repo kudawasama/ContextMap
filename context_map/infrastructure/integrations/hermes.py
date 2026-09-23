@@ -199,7 +199,7 @@ def extraer_contexto_sesion(sesion: Sesion) -> list[dict]:
     Returns:
         Lista de diccionarios con tipo, texto, timestamp, source y tags.
     """
-    eventos = []
+    eventos: list[dict[str, object]] = []
 
     for msg in sesion.mensajes:
         inicio = len(eventos)

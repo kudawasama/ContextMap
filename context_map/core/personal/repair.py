@@ -100,7 +100,8 @@ def _purgar_eventos_ruido(db: PersonalDB, dry_run: bool = False) -> int:
 
     query_conteo = f"SELECT count(*) FROM eventos WHERE {' OR '.join(condiciones)}"
     cursor.execute(query_conteo)
-    total_ruido = cursor.fetchone()[0]
+    fila_conteo = cursor.fetchone()
+    total_ruido = int(fila_conteo[0]) if fila_conteo else 0
 
     # 2. TODOs falsos históricos (tipo FUTURO que no contengan TODO/FIXME/HACK en comentario)
     cursor.execute("SELECT id, texto FROM eventos WHERE tipo = 'FUTURO'")
@@ -116,7 +117,7 @@ def _purgar_eventos_ruido(db: PersonalDB, dry_run: bool = False) -> int:
             if not re_marcador_real.search(cuerpo):
                 ids_falsos_todo.append(fila[0])
 
-    total_purgados = total_ruido + len(ids_falsos_todo)
+    total_purgados = int(total_ruido + len(ids_falsos_todo))
 
     if not dry_run and total_purgados > 0:
         cursor.execute(f"DELETE FROM eventos WHERE {' OR '.join(condiciones)}")

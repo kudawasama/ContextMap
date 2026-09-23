@@ -82,7 +82,7 @@ class OllamaLocalClient:
             url = f"{self.host}/api/tags"
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=1.5) as resp:
-                return resp.status == 200
+                return bool(resp.status == 200)
         except Exception:
             return False
 
@@ -141,7 +141,7 @@ class OllamaLocalClient:
                 data = json.loads(resp.read().decode("utf-8"))
                 respuesta = data.get("response", "").strip()
                 if respuesta:
-                    return respuesta
+                    return str(respuesta)
         except Exception:
             pass
 

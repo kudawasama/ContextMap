@@ -332,7 +332,8 @@ class PersonalDB:
             (nombre, ruta),
         )
         self._conn.commit()
-        return int(cur.lastrowid)
+        return int(cur.lastrowid or 0)
+
 
     def listar_proyectos(self) -> list[str]:
         """Lista los nombres de proyectos registrados.

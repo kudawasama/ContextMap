@@ -76,7 +76,8 @@ def _leer_cache() -> str | None:
             with open(_CACHE_PATH, encoding="utf-8") as f:
                 datos = json.load(f)
             if time.time() - datos.get("ts", 0) < _CACHE_TTL:
-                return datos.get("version")
+                ver = datos.get("version")
+                return str(ver) if ver is not None else None
     except Exception:
         pass
     return None

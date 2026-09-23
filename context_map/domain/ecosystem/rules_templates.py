@@ -395,3 +395,72 @@ Después de cada commit:
 2. Si el commit tocó dependencias: actualiza el lockfile del gestor de paquetes.
 3. Si el commit tocó arquitectura: revisa que el vault 4.0-RIESGOS no marcó nueva deuda.
 """
+
+
+def _generar_antigravity_skill(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera la skill nativa de Antigravity (.agents/skills/contextmap/SKILL.md)."""
+    test = _test_command(eco)
+    safe = project_name.strip().replace(" ", "-").replace("/", "-")
+    return f"""---
+name: contextmap
+description: Protocolo, flujos y comandos esenciales para gobernar el contexto, consultar la memoria permanente y mantener vivo el grafo del proyecto con ContextMap IA.
+---
+
+# Skill de ContextMap IA — {project_name}
+
+Esta skill proporciona las directivas operativas para interactuar con la memoria permanente y el grafo conceptual de **{project_name}**.
+
+## Comandos Esenciales
+
+```bash
+# 1. Poner todo el contexto al día en un solo paso (scan + build con preservación + check)
+ctxmap refresh .
+
+# 2. Verificar la salud, integridad y enlaces rotos del vault
+ctxmap check .
+
+# 3. Sincronizar memoria personal / multi-proyecto
+ctxmap personal sync
+
+# 4. Consultar decisiones o conocimiento histórico
+ctxmap personal query "tema de consulta"
+```
+
+## Protocolo de Inicio para Agentes
+
+1. **Inspeccionar Brief**: Leer `.context-map/CONTEXT.md` (identidad, propósito y estado).
+2. **Consultar Backlog Real**: Revisar `.context-map/vault-{safe}/7.0-MANUAL/BACKLOG.md` y notas de diario recientes.
+3. **Verificar Antes de Commit**:
+   - Tests: `{test}`
+   - Refrescar grafo: `ctxmap refresh .`
+   - Sin archivos sueltos en raíz.
+"""
+
+
+
+def _generar_hermes_workflow_yaml(project_name: str, eco: EcosistemaInfo) -> str:
+    """Genera .hermes/workflows/contextmap.yaml estructurado para el orquestador Hermes."""
+    test = _test_command(eco)
+    return f"""# Hermes Workflow — ContextMap IA Governance
+version: "1.0"
+name: "contextmap-governance"
+description: "Flujo automatizado de contexto y calidad para {project_name}"
+
+steps:
+  - name: "Ponerse en contexto"
+    action: "read_file"
+    target: ".context-map/CONTEXT.md"
+
+  - name: "Ejecutar pruebas unitarias"
+    action: "run_command"
+    command: "{test}"
+
+  - name: "Sincronizar memoria viva"
+    action: "run_command"
+    command: "ctxmap refresh ."
+
+  - name: "Control de calidad"
+    action: "run_command"
+    command: "ctxmap check ."
+"""
+

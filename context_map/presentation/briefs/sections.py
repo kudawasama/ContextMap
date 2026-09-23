@@ -10,13 +10,18 @@ from context_map.presentation.briefs.extractors import vault_nombre
 
 
 def header(project_name: str) -> str:
-    """Encabezado del brief."""
+    """Encabezado determinista del brief optimizado para LLM Prompt Caching.
+
+    Mantiene un prefijo estático sin marcas temporales volátiles al inicio,
+    maximizando la tasa de acierto de caché de prefijos (Cache Hits) en
+    Claude 3.7, Gemini 2.5 y GPT-4o.
+    """
     return f"""# {project_name} — Brief para Agentes
 
 > **LEE esto ANTES de trabajar.** Este brief y el vault son la memoria viva del
 > proyecto: qué es, por qué existe, qué cumple, qué está pendiente y qué riesgos tiene.
-> Última actualización: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 """
+
 
 
 def que_es_y_por_que_existe(project_name: str, proposito: str) -> str:
@@ -80,14 +85,26 @@ def estado_proyecto(stats: dict[str, Any]) -> str:
 """
 
 
-def eficiencia_tokenizacion(brief_text_parcial: str) -> str:
-    """Sección de métricas de eficiencia de tokenización del contexto."""
+def eficiencia_tokenizacion(brief_text_parcial: str, invariant_tokens: int = 0) -> str:
+    """Sección de métricas de eficiencia de tokenización y Prompt Caching.
+
+    Args:
+        brief_text_parcial (str): Texto acumulado del brief para conteo de tokens.
+        invariant_tokens (int): Tokens del prefijo estático invariante (congelado para caché).
+
+    Returns:
+        str: Sección en formato Markdown con estadísticas de tokens y caché.
+    """
     from context_map.core.tokenization import TokenCounter
     c = TokenCounter()
     tokens = c.count_tokens(brief_text_parcial)
+    linea_caching = ""
+    if invariant_tokens > 0:
+        linea_caching = f"\n- **Prefijo Invariante (Prompt Cache)**: `{invariant_tokens}` tokens deterministas (alta tasa de Cache Hit en Claude 3.7 / Gemini 2.5)."
+
     return f"""## 🧮 Eficiencia de Contexto & Presupuesto de Tokens
 
-- **Brief Principal (`CONTEXT.md`)**: `{tokens}` tokens
+- **Brief Principal (`CONTEXT.md`)**: `{tokens}` tokens{linea_caching}
 - **Optimización de Ventana**: **>99% de ahorro de tokens** (carga inmediata del mapa narrativo vs. inspección masiva de código).
 """
 
@@ -190,10 +207,13 @@ ctxmap refresh .
 """
 
 
-def footer() -> str:
-    """Pie de página del archivo."""
-    return """---
+def footer(fecha: str = "") -> str:
+    """Pie de página del archivo con trazabilidad temporal y optimización de caché."""
+    ts = fecha or datetime.now().strftime("%Y-%m-%d %H:%M")
+    return f"""---
 
-> Este brief fue generado automáticamente por Context Map.
-> Actualízalo ejecutando `ctxmap build --brief`.
+> Este brief fue generado automáticamente por ContextMap IA.
+> Última compilación: {ts}
+> Optimizado para Prompt Caching (Claude 3.7 Sonnet, Gemini 2.5 Pro/Flash, GPT-4o).
 """
+

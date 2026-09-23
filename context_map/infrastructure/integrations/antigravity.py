@@ -126,11 +126,13 @@ def _decodificar_blob(datos: object) -> str:
     """
     if not datos:
         return ""
-    try:
-        return datos.decode("utf-8", errors="ignore")
-    except Exception as err:
-        logger.debug("No se pudo decodificar BLOB: %s", err)
-        return ""
+    if isinstance(datos, (bytes, bytearray)):
+        try:
+            return datos.decode("utf-8", errors="ignore")
+        except Exception as err:
+            logger.debug("No se pudo decodificar BLOB: %s", err)
+            return ""
+    return str(datos)
 
 
 def _es_mensaje_step(row) -> MensajeAntigravity | None:

@@ -61,25 +61,43 @@ def generar_brief(
     frescura = chequear_frescura(project_name, project_dir)
     reglas = reglas_negocio(project_dir)
 
-    sec_list = [
+    # 1. Bloque de Prefijo Invariante (optimizado para LLM Prompt Caching)
+    # Contiene la arquitectura, identidad, reglas y protocolos inmutables del proyecto.
+    prefijo_invariante_secs = [
         header(project_name),
         que_es_y_por_que_existe(project_name, proposito),
+    ]
+    if reglas:
+        prefijo_invariante_secs.append(reglas)
+    prefijo_invariante_secs.extend([
+        como_trabajar_aqui(project_name),
+        comandos_utiles(),
+    ])
+
+    texto_invariante = "\n\n".join([s for s in prefijo_invariante_secs if s])
+
+    from context_map.core.tokenization import TokenCounter
+    counter = TokenCounter()
+    tokens_invariantes = counter.count_tokens(texto_invariante)
+
+    # Marcador de frontera de caché para harnesses de IA
+    separador_cache = "<!-- PROMPT_CACHE_BOUNDARY: INVARIANT_PREFIX -->"
+
+    # 2. Bloque Dinámico (estado operativo, métricas y tareas cambiantes)
+    dinamico_secs = [
         resumen_ejecutivo(project_name, stats, readiness_score, version),
         estado_proyecto(stats),
         aviso_frescura(frescura),
         riesgos_criticos(nodes),
         tareas_pendientes(nodes, pendientes_manuales),
-        como_trabajar_aqui(project_name),
-        comandos_utiles(),
-        footer(),
     ]
 
-    if reglas:
-        sec_list.insert(4, reglas)
+    texto_parcial = texto_invariante + "\n\n" + "\n\n".join([s for s in dinamico_secs if s])
+    sec_eficiencia = eficiencia_tokenizacion(texto_parcial, invariant_tokens=tokens_invariantes)
+    dinamico_secs.append(sec_eficiencia)
+    dinamico_secs.append(footer())
 
-    texto_temp = "\n\n".join([s for s in sec_list if s])
-    sec_list.insert(4, eficiencia_tokenizacion(texto_temp))
-
+    sec_list = prefijo_invariante_secs + [separador_cache] + dinamico_secs
     brief_text = "\n\n".join([s for s in sec_list if s])
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)

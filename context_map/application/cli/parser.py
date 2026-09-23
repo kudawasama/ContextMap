@@ -1,7 +1,7 @@
 """Parser principal de argumentos de la CLI.
 
 Define y configura todos los subcomandos disponibles para la interfaz
-de línea de comandos de Context Map.
+de línea de comandos de ContextMap.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ def create_parser() -> argparse.ArgumentParser:
     """
     p = argparse.ArgumentParser(
         prog="ctxmap",
-        description="Mapa mental narrativo de proyectos para agentes de IA",
+        description="ContextMap IA — Mapa mental narrativo y memoria permanente para agentes de IA",
     )
     p.add_argument("-v", "--verbose", action="store_true", help="Logs detallados (nivel DEBUG)")
     p.add_argument(

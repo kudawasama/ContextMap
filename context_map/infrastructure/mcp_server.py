@@ -31,6 +31,7 @@ import os
 from contextlib import redirect_stdout
 from types import SimpleNamespace as NS
 
+_fastmcp: FastMCP | None = None
 try:
     from mcp.server.fastmcp import FastMCP
 

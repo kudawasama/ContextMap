@@ -364,8 +364,10 @@ def detectar_ide(target_dir: str = ".") -> IDEInfo:
         info.reglas_existentes.append(".hermes/")
     if os.path.isdir(os.path.join(target_dir, ".claude")):
         info.agentes.append("Claude")
-    if os.path.isdir(os.path.join(target_dir, ".antigravity")):
+    if os.path.isdir(os.path.join(target_dir, ".antigravity")) or os.path.isdir(os.path.join(target_dir, ".agents")):
         info.agentes.append("Antigravity")
+        if os.path.isdir(os.path.join(target_dir, ".agents")):
+            info.reglas_existentes.append(".agents/")
     if os.path.isdir(os.path.join(target_dir, ".opencode")) or _existe(target_dir, "opencode.json"):
         info.agentes.append("OpenCode")
     if os.path.isdir(os.path.join(target_dir, ".codex")):

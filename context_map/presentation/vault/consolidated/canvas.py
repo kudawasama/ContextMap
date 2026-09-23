@@ -93,14 +93,16 @@ def render_canvas(
         r_src = next((r for r, n in ruta_a_nodo.items() if n.id == e.source), None)
         r_dst = next((r for r, n in ruta_a_nodo.items() if n.id == e.target), None)
         if r_src and r_dst and r_src != r_dst:
-            pares.add(tuple(sorted((r_src, r_dst))))
+            s_par = sorted((r_src, r_dst))
+            pares.add((s_par[0], s_par[1]))
 
     nodos_unicos = list(ruta_a_nodo.values())
     for ruta, n in ruta_a_nodo.items():
         for rel in conexiones_de_nodo(n, nodos_unicos, limite=3):
             r_rel = ruta_archivo_nodo(rel)
             if r_rel and r_rel != ruta and r_rel in ids:
-                pares.add(tuple(sorted((ruta, r_rel))))
+                s_rel = sorted((ruta, r_rel))
+                pares.add((s_rel[0], s_rel[1]))
 
     canvas_edges: list[dict] = []
     for r_src, r_dst in sorted(pares):

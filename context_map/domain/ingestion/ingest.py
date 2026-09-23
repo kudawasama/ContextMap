@@ -99,7 +99,7 @@ def _extraer_pdf(ruta: str) -> str:
     try:
         # PyMuPDF moderno (>=1.24): import pymupdf; legado: import fitz
         try:
-            import pymupdf  # type: ignore[import-not-found]
+            import pymupdf
         except ImportError:
             import fitz as pymupdf  # type: ignore[no-redef]
     except ImportError as err:
@@ -110,7 +110,8 @@ def _extraer_pdf(ruta: str) -> str:
     try:
         doc = pymupdf.open(ruta)
         paginas: list[str] = []
-        for pagina in doc:
+        for i in range(len(doc)):
+            pagina = doc[i]
             texto = pagina.get_text()
             if texto.strip():
                 paginas.append(f"## [p.{pagina.number + 1}]\n{texto.strip()}")

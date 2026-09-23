@@ -67,7 +67,7 @@ def _parsear_dominios_simple(texto: str) -> dict[str, list[str]]:
         if _es_definicion_dominio(limpia):
             nombre_actual = limpia[:-1].strip()
             dominios[nombre_actual] = []
-        elif _es_item_dominio(limpia, nombre_actual):
+        elif _es_item_dominio(limpia, nombre_actual) and nombre_actual is not None:
             valor = limpia[2:].strip().strip('"').strip("'")
             if valor:
                 dominios[nombre_actual].append(valor)

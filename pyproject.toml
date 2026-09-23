@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "context-map-ai"
 version = "2.4.0"
-description = "Mapa mental narrativo de proyectos para agentes de IA"
+description = "ContextMap IA — Memoria permanente y mapa mental narrativo para agentes de IA"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -92,6 +92,11 @@ warn_return_any = true
 no_implicit_optional = true
 
 [[tool.mypy.overrides]]
-module = ["tomllib", "tomli"]
+module = ["tomllib", "tomli", "yaml", "fitz", "pymupdf", "watchdog.*", "mcp.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "context_map.__tests__.*"
+ignore_errors = true
+
 

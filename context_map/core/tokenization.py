@@ -36,7 +36,7 @@ try:
 
     _TIKTOKEN_AVAILABLE = True
 except ImportError:
-    tiktoken = None  # type: ignore
+    tiktoken = None
     _TIKTOKEN_AVAILABLE = False
 
 

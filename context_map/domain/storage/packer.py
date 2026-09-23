@@ -78,8 +78,8 @@ def crear_paquete_contexto(
     archivos_empaquetar: list[tuple[str, str]] = []  # (ruta_absoluta, arcname)
     hashes: dict[str, str] = {}
     for raiz, _, archivos in os.walk(context_dir):
-        for f in archivos:
-            full_p = os.path.join(raiz, f)
+        for nombre_archivo in archivos:
+            full_p = os.path.join(raiz, nombre_archivo)
             rel_p = os.path.relpath(full_p, abs_target)
             archivos_empaquetar.append((full_p, rel_p))
             hashes[rel_p] = _sha256_archivo(full_p)

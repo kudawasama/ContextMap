@@ -435,6 +435,35 @@ def test_cmd_adapt_overwrite_flag_funciona() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_adaptar_antigravity_skill_y_hermes_workflow() -> None:
+    """Verifica que se generen la skill nativa de Antigravity y el workflow YAML de Hermes."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        os.makedirs(os.path.join(temp_dir, ".agents"), exist_ok=True)
+        eco = detectar_ecosistema(temp_dir)
+        assert "Antigravity" in eco.ide.agentes
+
+        generados = adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, overwrite=True)
+        assert len(generados) > 0
+
+        skill_path = os.path.join(temp_dir, ".agents", "skills", "contextmap", "SKILL.md")
+        assert os.path.isfile(skill_path), "No se generó la skill de Antigravity"
+        with open(skill_path, encoding="utf-8") as f:
+            skill_content = f.read()
+        assert "name: contextmap" in skill_content
+        assert "ctxmap refresh ." in skill_content
+
+        hermes_yaml = os.path.join(temp_dir, ".hermes", "workflows", "contextmap.yaml")
+        assert os.path.isfile(hermes_yaml), "No se generó el workflow YAML de Hermes"
+        with open(hermes_yaml, encoding="utf-8") as f:
+            hermes_content = f.read()
+        assert "name: \"contextmap-governance\"" in hermes_content
+        assert "action: \"read_file\"" in hermes_content
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+
 if __name__ == "__main__":
     print("=== Test: Detección de stack ===")
     test_detectar_stack_python()

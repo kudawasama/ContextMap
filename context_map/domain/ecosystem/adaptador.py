@@ -20,11 +20,13 @@ from context_map.domain.ecosystem.rules_templates import (
     _build_command,
     _generar_agents_md,
     _generar_aider_conf,
+    _generar_antigravity_skill,
     _generar_claude_md,
     _generar_copilot_instructions,
     _generar_cursor_rules,
     _generar_gemini_rules,
     _generar_hermes_config,
+    _generar_hermes_workflow_yaml,
     _generar_opencode_json,
     _generar_roo_rules,
     _generar_shield_precommit,
@@ -229,6 +231,12 @@ _COMPROBADORES_AGENTES: dict[str, Callable[[EcosistemaInfo, str], bool]] = {
         "GitHub Copilot" in eco.ide.agentes
         or os.path.isdir(os.path.join(td, ".github"))
     ),
+    "antigravity": lambda eco, td: (
+        "Antigravity" in eco.ide.agentes
+        or os.path.isdir(os.path.join(td, ".agents"))
+        or os.path.isdir(os.path.join(td, ".antigravity"))
+        or os.path.isdir(os.path.join(td, ".gemini"))
+    ),
 }
 
 
@@ -265,6 +273,7 @@ def _reglas_por_agente(
         (_comprobar_agente("aider", eco, target_dir), ".aider.conf.yml", lambda: _generar_aider_conf(project_name, eco)),
         (_comprobar_agente("opencode", eco, target_dir), "opencode.json", lambda: _generar_opencode_json(project_name, eco)),
         (_comprobar_agente("copilot", eco, target_dir), ".github/copilot-instructions.md", lambda: _generar_copilot_instructions(project_name, eco)),
+        (_comprobar_agente("antigravity", eco, target_dir), ".agents/skills/contextmap/SKILL.md", lambda: _generar_antigravity_skill(project_name, eco)),
     ]
     return [
         (ruta, generar())
@@ -322,6 +331,7 @@ def adaptar_ecosistema(
     # 3. Ecosistema .hermes/
     _escribir_regla(generados, target_dir, modo, ".hermes/config.yaml", _generar_hermes_config(project_name, eco))
     _escribir_regla(generados, target_dir, modo, ".hermes/workflows/dev-loop.md", _generar_workflow_dev_loop(project_name, eco))
+    _escribir_regla(generados, target_dir, modo, ".hermes/workflows/contextmap.yaml", _generar_hermes_workflow_yaml(project_name, eco))
     _escribir_regla(generados, target_dir, modo, ".hermes/shields/pre-commit.md", _generar_shield_precommit(project_name, eco))
     _escribir_regla(generados, target_dir, modo, ".hermes/triggers/post-commit.md", _generar_trigger_postcommit(project_name, eco))
 
@@ -343,10 +353,13 @@ __all__ = [
     "_generar_copilot_instructions",
     "_generar_gemini_rules",
     "_generar_aider_conf",
+    "_generar_antigravity_skill",
     "_generar_roo_rules",
     "_generar_opencode_json",
     "_generar_hermes_config",
+    "_generar_hermes_workflow_yaml",
     "_generar_workflow_dev_loop",
     "_generar_shield_precommit",
     "_generar_trigger_postcommit",
 ]
+

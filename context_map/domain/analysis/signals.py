@@ -257,7 +257,7 @@ def salud_vault(ruta_raiz: str) -> dict[str, object]:
         "vaults": len(vault_dirs),
         "notas_manuales": n_manuales,
         "ultimo_build_clean": bool(info_build.get("clean", False)),
-        "manuales_preservadas": int(info_build.get("manuales_preservadas", 0)),
+        "manuales_preservadas": int(str(info_build.get("manuales_preservadas", 0) or 0)),
     }
 
 

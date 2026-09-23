@@ -1,0 +1,21 @@
+# Hermes Workflow — ContextMap IA Governance
+version: "1.0"
+name: "contextmap-governance"
+description: "Flujo automatizado de contexto y calidad para ContextMap"
+
+steps:
+  - name: "Ponerse en contexto"
+    action: "read_file"
+    target: ".context-map/CONTEXT.md"
+
+  - name: "Ejecutar pruebas unitarias"
+    action: "run_command"
+    command: "python -m pytest"
+
+  - name: "Sincronizar memoria viva"
+    action: "run_command"
+    command: "ctxmap refresh ."
+
+  - name: "Control de calidad"
+    action: "run_command"
+    command: "ctxmap check ."
