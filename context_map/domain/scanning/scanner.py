@@ -107,6 +107,31 @@ def _events_desde_estructura(est: EstructuraProyecto) -> list[Event]:
     return eventos
 
 
+def _es_ruta_test(ruta: str) -> bool:
+    """Verifica si una ruta corresponde a archivos o carpetas de pruebas unitarias.
+
+    Evita que cadenas de prueba o fixtures de tests se conviertan en falsos
+    positivos de tareas técnicas (TODOs de producción).
+
+    Args:
+        ruta (str): Ruta relativa o absoluta del archivo.
+
+    Returns:
+        bool: True si es un archivo o directorio de pruebas.
+    """
+    norm = ruta.replace("\\", "/").lower()
+    partes = norm.split("/")
+    nombre = partes[-1] if partes else ""
+    return (
+        "__tests__" in partes
+        or "tests" in partes
+        or "testing" in partes
+        or "fixtures" in partes
+        or nombre.startswith("test_")
+        or nombre.endswith("_test.py")
+    )
+
+
 def _events_desde_contenido(
     contenidos: list[InfoContenido],
     max_eventos: int = 30,
@@ -126,7 +151,10 @@ def _events_desde_contenido(
     if not contenidos:
         return eventos
 
-    complejos = [info for info in contenidos if info.complejidad == "alta"]
+    complejos = [
+        info for info in contenidos
+        if info.complejidad == "alta" and not _es_ruta_test(info.ruta)
+    ]
     if len(complejos) >= 2:
         top3 = sorted(complejos, key=lambda x: x.lineas_codigo, reverse=True)[:3]
         rutas_top3 = [
@@ -167,7 +195,7 @@ def _events_desde_contenido(
     for info in contenidos:
         if info.todos:
             rel_path = os.path.relpath(info.ruta, ruta_raiz).replace("\\", "/")
-            if rel_path.startswith(".."):
+            if rel_path.startswith("..") or _es_ruta_test(rel_path):
                 continue
             for todo in info.todos:
                 match = re.match(r"L(\d+):\s*(.*)", todo)

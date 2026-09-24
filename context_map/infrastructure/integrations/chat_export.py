@@ -139,6 +139,30 @@ def parsear_chat(ruta: str) -> list[MensajeChat]:
         return _parsear_texto_simple(ruta)
 
 
+def es_mensaje_ruido(msg: MensajeChat) -> bool:
+    """Determina si un mensaje de chat externo carece de valor técnico/contextual.
+
+    Args:
+        msg (MensajeChat): Mensaje a evaluar.
+
+    Returns:
+        bool: True si el mensaje debe descartarse como ruido.
+    """
+    if not msg.contenido or len(msg.contenido.strip()) < 10:
+        return True
+    texto_lower = msg.contenido.lower()
+    patrones_ruido = (
+        "¡perfecto!",
+        "sigo con todo",
+        "claro que sí",
+        "ok",
+        "gracias",
+        "(◕‿◕)",
+        "~ ♪",
+    )
+    return any(p in texto_lower for p in patrones_ruido)
+
+
 def clasificar_mensaje(msg: MensajeChat) -> dict:
     """Clasifica un mensaje por su contenido.
 
@@ -184,7 +208,7 @@ def importar_chat(
     Returns:
         Número de eventos importados
     """
-    mensajes = parsear_chat(ruta)
+    mensajes = [m for m in parsear_chat(ruta) if not es_mensaje_ruido(m)]
     eventos = [clasificar_mensaje(msg) for msg in mensajes]
 
     # Guardar

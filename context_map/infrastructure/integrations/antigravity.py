@@ -398,6 +398,11 @@ _PATRONES_RUIDO: list[str] = [
     "has completed",
     "without warnings",
     "conversa",  # Mensajes truncados
+    "¡perfecto!",
+    "sigo con todo",
+    "claro que sí",
+    "(◕‿◕)",
+    "~ ♪",
 ]
 
 
