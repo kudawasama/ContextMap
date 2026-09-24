@@ -41,7 +41,8 @@ def obtener_memoria_ram_windows() -> tuple[float, float]:
 
         stat = MEMORYSTATUSEX()
         stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
-        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+        windll = getattr(ctypes, "windll", None)
+        if windll and windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
             total_gb = round(stat.ullTotalPhys / (1024**3), 2)
             avail_gb = round(stat.ullAvailPhys / (1024**3), 2)
             return total_gb, avail_gb
