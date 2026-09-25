@@ -39,8 +39,22 @@ def _es_todo_codigo(n: Node) -> bool:
     Returns:
         bool: True si debe excluirse del backlog.
     """
+    import re
+
     t = (n.title or "").strip()
-    if "__tests__" in t or "/tests/" in t or "test_" in t:
+    contexto = "\n".join([t, n.summary or "", *(n.evidence or [])])
+
+    # Rutas de pruebas. El scanner filtra en origen (_es_ruta_test), pero los
+    # nodos históricos previos al fix guardan la ruta en summary/evidence, no
+    # en el título (p. ej. test_conexiones.py:L344).
+    if (
+        "test_" in t
+        or "__tests__" in contexto
+        or "/tests/" in contexto
+        or "\\tests\\" in contexto
+        or "fixtures" in contexto
+        or re.search(r"(?:test_[A-Za-z0-9_]*|[A-Za-z0-9_]+_test)\.py", contexto)
+    ):
         return True
     if "(◕‿◕)" in t or "~ ♪" in t or "sigo con todo" in t.lower() or "¡perfecto!" in t.lower():
         return True
