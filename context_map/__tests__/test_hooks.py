@@ -32,3 +32,24 @@ def test_desinstalar_git_hooks(tmp_path):
     assert res_des["status"] == "OK"
     assert res_des["pre-commit"] == "desinstalado"
     assert not (git_dir / "pre-commit").exists()
+
+
+def test_hooks_priorizan_codigo_local(tmp_path):
+    """Los hooks usan el código local antes que el binario global (AGENTS.md §4.3).
+
+    Regresión (2026-09-25): el post-commit llamaba directo a ``ctxmap`` (global,
+    posiblemente desactualizado); con un binario viejo, ``refresh`` reescribía el
+    vault con lógica previa y pisaba notas del diario.
+    """
+    git_dir = tmp_path / ".git" / "hooks"
+    git_dir.mkdir(parents=True)
+    instalar_git_hooks(str(tmp_path))
+
+    for nombre in ("pre-commit", "post-commit"):
+        lineas = [ln.strip() for ln in (git_dir / nombre).read_text(encoding="utf-8").splitlines()]
+        idx_local = next((i for i, ln in enumerate(lineas) if "python -m context_map.cli" in ln), -1)
+        idx_global = next((i for i, ln in enumerate(lineas) if ln.startswith("ctxmap ")), -1)
+        assert idx_local != -1, f"{nombre} no invoca el código local"
+        assert idx_global == -1 or idx_local < idx_global, (
+            f"{nombre} prioriza el binario global sobre el código local"
+        )

@@ -29,10 +29,13 @@ fi
 POST_COMMIT_SCRIPT = """#!/bin/sh
 # ContextMap Auto-Maintenance Post-commit Hook
 # Registra la actividad del commit en la memoria viva.
+# Prioriza el código local del repo (python -m context_map.cli) antes que
+# el binario global 'ctxmap', que puede estar desactualizado (AGENTS.md §4.3).
+if python -m context_map.cli refresh . 2>/dev/null; then
+    exit 0
+fi
 if command -v ctxmap >/dev/null 2>&1; then
     ctxmap refresh .
-else
-    python -m context_map.cli refresh .
 fi
 """
 
