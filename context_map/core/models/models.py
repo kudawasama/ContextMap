@@ -79,10 +79,17 @@ class Node:
     def to_dict(self) -> dict[str, Any]:
         """Serializa el nodo a un diccionario para persistencia en formato JSON/JSONL.
 
+        Omite ``namespace`` cuando vale el valor por defecto (``"code"``) para
+        mantener compatibilidad hacia atrás: binarios y herramientas antiguas que
+        hacen ``Node(**data)`` no conocen el campo y fallarían al rehidratar.
+
         Returns:
             Dict[str, Any]: Diccionario con todos los atributos del nodo.
         """
-        return asdict(self)
+        data = asdict(self)
+        if data.get("namespace") == "code":
+            data.pop("namespace", None)
+        return data
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> Node:
