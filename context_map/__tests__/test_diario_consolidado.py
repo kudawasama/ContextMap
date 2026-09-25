@@ -74,3 +74,30 @@ def test_tres_builds_tres_nodos_un_bloque(tmp_path):
     assert contenido.count("🤖 Ingresados por el scanner") == 1
     assert "Nodo 0" in contenido and "Nodo 1" in contenido and "Nodo 2" in contenido
 
+
+def test_preserva_contenido_del_agente_despues_del_scanner(tmp_path):
+    """El contenido vivo del agente (después del bloque scanner) NO se pierde.
+
+    Regresión (2026-09-25): ``render_nota_dia`` tomaba solo lo anterior al
+    marcador del scanner y descartaba todo lo que venía después (resumen,
+    conexiones, notas manuales) al reescribir la sección autogenerada.
+    """
+    out = str(tmp_path)
+    hoy = date.today().isoformat()
+    render_nota_dia(out, "MiProyecto", [_nodo("Nodo A", hoy)])
+    ruta = _ruta_diario(tmp_path, hoy)
+
+    # El agente agrega una sección propia DESPUÉS del bloque autogenerado.
+    contenido = ruta.read_text(encoding="utf-8")
+    contenido += "\n## 🛠️ Resumen del agente\n\nTexto vivo que no debe perderse.\n"
+    ruta.write_text(contenido, encoding="utf-8")
+
+    # Nuevo build con otro nodo (fuerza reescritura de la sección scanner).
+    render_nota_dia(out, "MiProyecto", [_nodo("Nodo A", hoy), _nodo("Nodo B", hoy)])
+    final = ruta.read_text(encoding="utf-8")
+
+    assert "## 🛠️ Resumen del agente" in final, "Se perdió el contenido del agente"
+    assert "Texto vivo que no debe perderse." in final
+    assert "Nodo B" in final
+    assert final.count("🤖 Ingresados por el scanner") == 1
+

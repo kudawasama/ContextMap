@@ -257,23 +257,32 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
                 existente = f.read()
             if "preserve: true" in existente:
                 marcador = "## 🤖 Ingresados por el scanner (autogenerado)"
-                # Parte escrita por el AGENTE: todo lo anterior al marcador.
-                parte_agente = existente.split(marcador)[0] if marcador in existente else existente
-                faltantes = [
-                    n for n in ingresados
-                    if (n.title or "") not in parte_agente
-                ]
-                if faltantes:
-                    anexo = [
-                        "",
-                        marcador,
-                        "",
-                    ]
-                    for n in faltantes:
-                        anexo.append(f"- **{n.title}**")
-                    anexo.append("")
+                if marcador in existente:
+                    antes, resto = existente.split(marcador, 1)
+                    # La sección del scanner llega hasta el próximo heading '## '
+                    # (o el final del archivo). Todo lo que venga DESPUÉS es
+                    # contenido vivo del agente (resumen, conexiones, notas) y
+                    # DEBE preservarse — antes se perdía al reescribir.
+                    lineas = resto.splitlines()
+                    corte = len(lineas)
+                    for i in range(1, len(lineas)):
+                        if lineas[i].startswith("## "):
+                            corte = i
+                            break
+                    despues = "\n".join(lineas[corte:]).strip("\n")
+                else:
+                    antes, despues = existente, ""
+
+                # Idempotencia: solo reescribir si hay nodos nuevos.
+                if any((n.title or "") not in existente for n in ingresados):
+                    seccion = [marcador, ""]
+                    seccion += [f"- **{n.title}**" for n in ingresados]
+                    seccion.append("")
+                    nuevo = antes.rstrip() + "\n\n" + "\n".join(seccion)
+                    if despues:
+                        nuevo += "\n" + despues + "\n"
                     with open(ruta, "w", encoding="utf-8") as f:
-                        f.write(parte_agente.rstrip() + "\n" + "\n".join(anexo))
+                        f.write(nuevo)
                 return ruta
         except Exception:
             pass  # si no se puede leer, regenerar normal
