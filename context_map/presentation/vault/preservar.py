@@ -23,7 +23,14 @@ logger = logging.getLogger(__name__)
 # Zonas protegidas del trabajo manual. 7.0-MANUAL es la zona VISIBLE (Obsidian
 # oculta las carpetas que empiezan con "."); .manual se preserva por
 # compatibilidad con vaults generados por versiones anteriores.
-ZONAS_MANUALES = ("7.0-MANUAL", "8.0-KNOWLEDGE", ".manual")
+# 90-CONOCIMIENTO es el mundo PKM (namespace knowledge): un árbol separado que
+# el build de código JAMÁS regenera ni borra.
+ZONAS_MANUALES = ("7.0-MANUAL", "8.0-KNOWLEDGE", "90-CONOCIMIENTO", ".manual")
+
+# Subconjunto de zonas manuales que pertenecen al mundo CÓDIGO. El índice del
+# proyecto (00-INDICE) enlaza estas notas, pero NO debe enlazar 90-CONOCIMIENTO:
+# el mundo PKM es una isla aparte (cero wikilinks cruzados entre namespaces).
+ZONAS_MANUALES_CODIGO = ("7.0-MANUAL", "8.0-KNOWLEDGE", ".manual")
 
 
 def _leer_frontmatter_preserve(fpath: str) -> bool:

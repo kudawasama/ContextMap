@@ -148,11 +148,13 @@ def _render_indice_hierarchico(
         all_tags.update(n.tags)
     tags_badges = " ".join(f"`#{t}`" for t in sorted(all_tags)[:20])
 
-    # Notas manuales (zonas protegidas 7.0-MANUAL y .manual) para el índice
-    from context_map.presentation.vault.preservar import ZONAS_MANUALES
+    # Notas manuales (zonas protegidas 7.0-MANUAL y .manual) para el índice.
+    # Se usa el subconjunto del mundo CÓDIGO: 90-CONOCIMIENTO queda fuera para
+    # no crear wikilinks cruzados entre namespaces (islas separadas).
+    from context_map.presentation.vault.preservar import ZONAS_MANUALES_CODIGO
 
     manual_notas: list[str] = []
-    for zona in ZONAS_MANUALES:
+    for zona in ZONAS_MANUALES_CODIGO:
         zona_dir = os.path.join(output_dir, zona)
         if os.path.isdir(zona_dir):
             for raiz, _dirs, archivos in os.walk(zona_dir):
@@ -229,6 +231,10 @@ def _render_hierarchical_vault(
     output_dir: str = ".context-map/vault",
 ) -> str:
     """Renderiza la bóveda Obsidian en modo jerárquico en árbol."""
+    # Aislar el mundo CÓDIGO: los nodos del namespace ``knowledge`` no entran
+    # al render del proyecto (viven como notas manuales en 90-CONOCIMIENTO/).
+    nodes = [n for n in nodes if (getattr(n, "namespace", "code") or "code") == "code"]
+
     backlog_dir = os.path.join(output_dir, "5.0-BACKLOG")
     preservados: dict[str, str] = {}
     if os.path.isdir(backlog_dir):
@@ -295,5 +301,14 @@ def _render_hierarchical_vault(
             tpath = os.path.join(target_backlog, fname)
             with open(tpath, "w", encoding="utf-8") as f:
                 f.write(content)
+
+    # Mundo CONOCIMIENTO (namespace knowledge): esqueleto PKM idempotente.
+    # El build de código solo lo siembra la primera vez; jamás lo sobrescribe
+    # (90-CONOCIMIENTO está en ZONAS_MANUALES y todo es preserve: true).
+    from context_map.presentation.vault.consolidated.conocimiento import (
+        sembrar_conocimiento,
+    )
+
+    sembrar_conocimiento(output_dir)
 
     return output_dir

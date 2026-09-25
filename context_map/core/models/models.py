@@ -51,6 +51,10 @@ class Node:
         related_to (List[str]): Identificadores de nodos relacionados.
         evidence (List[str]): Evidencias asociadas (rutas de archivo, líneas, clases).
         classification (str): ID de clasificación semántica ('feature', 'fix', 'refactor', etc.).
+        concept (str): Concepto temático del nodo.
+        namespace (str): Mundo al que pertenece el nodo ('code' o 'knowledge').
+            El mundo de código es el que escanea/regenera el motor; el mundo de
+            conocimiento (PKM) es manual y el build jamás lo toca.
     """
 
     id: str
@@ -70,6 +74,7 @@ class Node:
     evidence: list[str] = field(default_factory=list)
     classification: str = ""
     concept: str = ""
+    namespace: str = "code"
 
     def to_dict(self) -> dict[str, Any]:
         """Serializa el nodo a un diccionario para persistencia en formato JSON/JSONL.

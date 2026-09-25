@@ -24,12 +24,31 @@ from context_map.presentation.vault import render_obsidian_vault
 
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
-# Nodos raíz permitidos sin padre (no cuentan como violación)
-SIN_PADRE_PERMITIDOS = {"00-INDICE.md", "00-CONEXIONES.md"}
+# Nodos raíz permitidos sin padre (no cuentan como violación).
+# 90-CONOCIMIENTO.md es la raíz del mundo PKM: una segunda raíz independiente
+# del mundo de código (isla separada, sin enlaces cruzados).
+SIN_PADRE_PERMITIDOS = {"00-INDICE.md", "00-CONEXIONES.md", "90-CONOCIMIENTO.md"}
 
 # Wikilink del README incrustado en 1.1-Mapa-Mental-Narrativo (contenido
 # documental del proyecto, no parte de la topología)
 ENLACES_DOCUMENTALES_PERMITIDOS = {"entre-notas"}
+
+
+def _namespace(rel: str) -> str:
+    """Namespace de un archivo del vault según su ruta.
+
+    El mundo PKM vive en ``90-CONOCIMIENTO/`` (más su raíz ``90-CONOCIMIENTO.md``);
+    todo lo demás pertenece al mundo de código.
+
+    Args:
+        rel (str): Ruta relativa del archivo dentro del vault.
+
+    Returns:
+        str: ``"knowledge"`` o ``"code"``.
+    """
+    if rel == "90-CONOCIMIENTO.md" or rel.startswith("90-CONOCIMIENTO/"):
+        return "knowledge"
+    return "code"
 
 
 def _crear_nodos_con_estados() -> list[Node]:
@@ -129,6 +148,8 @@ def _analizar_vault(vault_dir: str) -> tuple[dict[str, str], list[str], list[str
                 for r2 in por_nombre[target]:
                     if r2 != rel:
                         in_degree[r2].add(rel)
+                        if _namespace(r2) != _namespace(rel):
+                            errores.append(f"ENLACE CRUZADO: {rel} -> [[{m}]]")
 
     # Nodos sin padre
     for rel in archivos:
@@ -216,6 +237,19 @@ def test_topologia_arbol_estricto() -> None:
         print(f"   Colisiones: {colisiones if colisiones else 'ninguna'}")
         assert not colisiones, f"Colisiones de nombre base: {colisiones}"
 
+        # 2.b Mundo CONOCIMIENTO (namespace knowledge): isla separada con su árbol
+        conf_dir = os.path.join(temp_dir, "90-CONOCIMIENTO")
+        assert os.path.exists(os.path.join(conf_dir, "90-CONOCIMIENTO.md")), (
+            "Falta la raíz del mundo conocimiento (90-CONOCIMIENTO.md)"
+        )
+        for sub in ("00-INBOX", "01-PROJECTS", "02-AREAS", "03-RESOURCES", "04-ARCHIVE", "05-WIKI"):
+            assert os.path.exists(os.path.join(conf_dir, sub, f"{sub}.md")), (
+                f"Falta el índice del mundo conocimiento: {sub}/{sub}.md"
+            )
+        # Cero wikilinks cruzados entre namespaces (código <-> conocimiento)
+        cruces = [e for e in errores if e.startswith("ENLACE CRUZADO")]
+        assert not cruces, f"Wikilinks cruzados entre namespaces: {cruces}"
+
         # 3. Sin errores de topología (sin padre / enlaces rotos / índices mal)
         print(f"   Errores topología: {errores if errores else 'ninguno'}")
         assert not errores, "Violaciones de topología:\n" + "\n".join(errores)
@@ -293,6 +327,59 @@ def test_no_mezcla_ideas_por_estado() -> None:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def test_mundo_conocimiento_aislado() -> None:
+    """El mundo CONOCIMIENTO (PKM) es una isla: existe, tiene árbol y no se cruza.
+
+    Verifica que tras renderizar:
+    1. Se siembra ``90-CONOCIMIENTO/`` con el esqueleto PARA + LLM Wiki.
+    2. El índice de código (``00-INDICE.md``) NO enlaza notas del mundo PKM.
+    3. No hay wikilinks cruzados entre namespaces.
+    """
+    from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
+    nodos = _crear_nodos_con_estados()
+    temp_dir = tempfile.mkdtemp(prefix="ctxmap_test_pkm_")
+
+    try:
+        render_obsidian_vault(
+            project_name="TestTopologia",
+            nodes=nodos,
+            edges=[],
+            output_dir=temp_dir,
+            mode="hierarchical",
+        )
+
+        # 1. El esqueleto PKM existe y está protegido
+        assert "90-CONOCIMIENTO" in ZONAS_MANUALES, (
+            "90-CONOCIMIENTO debe ser zona protegida (nunca la borra el build)"
+        )
+        conf_dir = os.path.join(temp_dir, "90-CONOCIMIENTO")
+        root = os.path.join(conf_dir, "90-CONOCIMIENTO.md")
+        assert os.path.exists(root), "No se sembró 90-CONOCIMIENTO.md"
+        with open(root, encoding="utf-8") as fh:
+            raiz_txt = fh.read()
+        assert "namespace: knowledge" in raiz_txt, "La raíz PKM no declara su namespace"
+        assert "preserve: true" in raiz_txt, "La raíz PKM debe ser preserve: true"
+
+        # 2. El índice de código NO enlaza el mundo PKM
+        with open(os.path.join(temp_dir, "00-INDICE.md"), encoding="utf-8") as fh:
+            indice = fh.read()
+        assert "90-CONOCIMIENTO" not in indice, (
+            "00-INDICE.md (código) no debe enlazar el mundo conocimiento"
+        )
+
+        # 3. Sin cruces entre namespaces
+        _por_nombre, errores, colisiones = _analizar_vault(temp_dir)
+        assert not colisiones, f"Colisiones de nombre base: {colisiones}"
+        cruces = [e for e in errores if e.startswith("ENLACE CRUZADO")]
+        assert not cruces, f"Wikilinks cruzados entre namespaces: {cruces}"
+        sin_padre = [e for e in errores if e.startswith("SIN PADRE")]
+        assert not sin_padre, f"Notas PKM sin padre: {sin_padre}"
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 if __name__ == "__main__":
     print("=== Test: Topología Estricta en Árbol ===")
     test_topologia_arbol_estricto()
@@ -302,6 +389,11 @@ if __name__ == "__main__":
     print("=== Test: No mezcla de ideas por estado ===")
     test_no_mezcla_ideas_por_estado()
     print("   OK: test_no_mezcla_ideas_por_estado PASO")
+
+    print()
+    print("=== Test: Mundo conocimiento aislado ===")
+    test_mundo_conocimiento_aislado()
+    print("   OK: test_mundo_conocimiento_aislado PASO")
 
     print()
     print("Todos los tests pasaron correctamente.")

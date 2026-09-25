@@ -16,6 +16,7 @@ Submódulos:
 from __future__ import annotations
 
 from context_map.presentation.vault.consolidated.consolidado import _render_consolidated_vault
+from context_map.presentation.vault.consolidated.conocimiento import sembrar_conocimiento
 from context_map.presentation.vault.consolidated.jerarquico import _render_hierarchical_vault
 from context_map.presentation.vault.consolidated.readme_extract import _extract_project_purpose
 
@@ -23,4 +24,5 @@ __all__ = [
     "_extract_project_purpose",
     "_render_consolidated_vault",
     "_render_hierarchical_vault",
+    "sembrar_conocimiento",
 ]
