@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import types
+from collections.abc import Mapping
 
 from context_map.application.commands.build import cmd_build
 from context_map.application.commands.scan import cmd_scan
@@ -58,6 +59,16 @@ def cmd_refresh(args) -> None:
     Args:
         args: Namespace de argparse con atributo ``target`` y ``project``.
     """
+    if isinstance(args, Mapping):
+        # Tolerar llamadores externos (p. ej. watcher) que pasen un mapping:
+        # se normaliza a un objeto con atributos para el resto del flujo.
+        args = types.SimpleNamespace(
+            target=args.get("target", args.get("target_dir", ".")),
+            project=args.get("project"),
+            quiet=args.get("quiet", False),
+            clean=args.get("clean", False),
+        )
+
     target = getattr(args, "target", ".") or "."
     quiet = getattr(args, "quiet", False)
     abs_target = os.path.abspath(target)
