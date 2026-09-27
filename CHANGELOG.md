@@ -5,6 +5,16 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] — 2026-09-26
+
+### 🔧 Correcciones — Refresco automático del watcher restaurado
+
+- **fix(`watcher`)**: `_ejecutar_refresco_default` entrega ahora un `argparse.Namespace` (`target`, `project`, `quiet=True`) a `cmd_refresh` en lugar del `dict` anterior. Tanto `cmd_refresh` como los comandos que delega (`cmd_scan`, `project_name`) acceden a `args.target` / `args.project` como atributos, así que el daemon fallaba ante cada cambio de archivo con `'dict' object has no attribute 'target'` y **el refresco automático nunca llegaba a ejecutarse**: el contexto solo se actualizaba con un `ctxmap refresh` manual. Con `quiet=True` el daemon además deja de imprimir el banner de refresh en cada evento.
+- **fix(`refresh`)**: `cmd_refresh` normaliza mappings entrantes a `SimpleNamespace` (aceptando `target` o `target_dir`, más `project`/`quiet`/`clean`), como red de seguridad para llamadores externos que aún pasen un diccionario.
+- **test**: dos pruebas de regresión en `context_map/__tests__/test_watcher.py` (contrato de atributos del callback por defecto y normalización de mappings). La primera falla con el código previo y pasa con el arreglo. PR #6.
+
+---
+
 ## [2.4.0] — 2026-09-23
 
 ### 🚀 Evolución Arquitectónica, Modularización, Prompt Caching Determinista & Skills Nativas
