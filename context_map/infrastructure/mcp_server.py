@@ -640,6 +640,35 @@ def knowledge_wiki_lint(target: str = ".") -> str:
         return f"ERROR en knowledge_wiki_lint: {err}"
 
 
+@_tool
+def knowledge_ingest(url: str, video: bool = False, destino: str = "inbox", titulo: str = "", target: str = ".") -> str:
+    """Captura una fuente externa al mundo CONOCIMIENTO (Web Clipper + YouTube).
+
+    USAR cuando el usuario comparte un link y hay que guardarlo: con video=False
+    descarga la web y la convierte a Markdown; con video=True baja la transcripcion
+    de YouTube (yt-dlp). Entra al inbox por defecto o a la wiki con destino='wiki'.
+
+    Args:
+        url: Direccion web o de video de YouTube.
+        video: True si es un video de YouTube (transcripcion).
+        destino: 'inbox' (defecto) o 'wiki'.
+        titulo: Titulo opcional.
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import captura as cap
+
+    try:
+        vdir = _vault_de(target)
+        if video:
+            titulo_final, texto = cap.descargar_transcripcion_youtube(url, titulo or None)
+            res = cap.capturar(vdir, texto, titulo_final, url, destino)
+        else:
+            res = cap.capturar_desde_url(vdir, url, titulo, destino)
+        return f"knowledge_ingest: [OK] captura en {res['destino']}: {res['ruta']}"
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_ingest: {err}"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:

@@ -113,8 +113,16 @@ def create_parser() -> argparse.ArgumentParser:
     s_git.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_git.add_argument("--limit", type=int, default=50, help="Máximo de commits")
 
-    s_ingest = sub.add_parser("ingest", help="Ingiere documentos externos (MD/TXT/PDF) al mapa de contexto")
-    s_ingest.add_argument("target", help="Archivo o directorio de documentos a ingerir")
+    s_ingest = sub.add_parser(
+        "ingest",
+        help="Ingiere documentos (MD/TXT/PDF) al mapa, o captura fuentes al mundo conocimiento (--url/--youtube)",
+    )
+    s_ingest.add_argument("target", nargs="?", default=".", help="Archivo o directorio de documentos a ingerir")
+    s_ingest.add_argument("--url", default="", help="Captura un artículo web al mundo conocimiento (Web Clipper)")
+    s_ingest.add_argument("--youtube", default="", help="Captura la transcripción de un video de YouTube (yt-dlp)")
+    s_ingest.add_argument("--titulo", default="", help="Título de la captura (opcional)")
+    s_ingest.add_argument("--destino", choices=["inbox", "wiki"], default="inbox", help="Dónde capturar: inbox (defecto) o wiki")
+    s_ingest.add_argument("--entidades", default="", help="Conceptos wiki separados por coma (solo con --destino wiki)")
     s_ingest.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_ingest.add_argument(
         "--mode",

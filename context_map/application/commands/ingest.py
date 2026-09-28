@@ -61,13 +61,62 @@ def _existe_titulo(titulo: str, nodos_existentes: list[Node]) -> bool:
     )
 
 
+def _cmd_captura_fuente(args, fuente: str, es_youtube: bool) -> None:
+    """Captura una URL o transcripción de YouTube al mundo conocimiento (PKM).
+
+    Args:
+        args: Namespace de argparse (``--titulo``, ``--destino``, ``--entidades``).
+        fuente (str): URL o video de YouTube a capturar.
+        es_youtube (bool): True si es transcripción de YouTube.
+    """
+    import types
+
+    from context_map.domain.knowledge import captura as cap
+
+    proj_args = types.SimpleNamespace(
+        cmd="ingest", target=".", project=getattr(args, "project", "Repo"),
+    )
+    proj = project_name(proj_args)
+    vdir = vault_dir(proj)
+    destino = getattr(args, "destino", "inbox") or "inbox"
+    entidades = getattr(args, "entidades", "") or ""
+    titulo = getattr(args, "titulo", "") or ""
+
+    try:
+        if es_youtube:
+            titulo_final, texto = cap.descargar_transcripcion_youtube(fuente, titulo or None)
+            total = len(texto.split())
+            res = cap.capturar(vdir, texto, titulo_final, fuente, destino, entidades)
+        else:
+            res = cap.capturar_desde_url(vdir, fuente, titulo, destino, entidades)
+            total = -1
+        print(f"[ingest] 📥 Captura a {res['destino']}: {res['ruta']}")
+        if total >= 0:
+            print(f"[ingest]   transcripción: {total} palabras")
+        if res.get("entidades"):
+            print(f"[ingest]   entidades wiki: {res['entidades']}")
+    except Exception as err:  # noqa: BLE001 — informar sin romper el CLI
+        print(f"[ingest] ✗ Captura fallida: {err}")
+
+
 def cmd_ingest(args) -> None:
     """Ejecuta la ingesta de documentos externos.
 
+    Si se pasa ``--url`` o ``--youtube`` deriva a la captura PKM (mundo
+    conocimiento: inbox o wiki) sin tocar el mapa de código.
+
     Args:
-        args: Namespace de argparse con ``target``, ``--project``, ``--mode``.
+        args: Namespace de argparse con ``target``, ``--project``, ``--mode``,
+        ``--url``, ``--youtube``, ``--destino``, ``--entidades``.
     """
     import types
+
+    # Captura de fuentes al mundo conocimiento (F4, Web Clipper + YouTube).
+    url = getattr(args, "url", "") or ""
+    youtube = getattr(args, "youtube", "") or ""
+    if url or youtube:
+        _cmd_captura_fuente(args, url or youtube, es_youtube=bool(youtube))
+        return
 
     # El proyecto se resuelve desde la raíz del repo, no desde el target de documentos
     proj_args = types.SimpleNamespace(
