@@ -466,6 +466,102 @@ def install_hooks(target: str = ".", force: bool = False, confirm: bool = False)
         return f"ERROR en install_hooks: {err}"
 
 
+def _vault_de(target: str, project: str = "") -> str:
+    """Resuelve la ruta ABSOLUTA del vault del proyecto objetivo."""
+    from context_map.application.commands._helpers import project_name, vault_dir
+
+    t = _target_abs(target)
+    ns = NS(target=t, project=project or "Repo")
+    return os.path.join(t, vault_dir(project_name(ns)))
+
+
+@_tool
+def knowledge_inbox_add(texto: str, titulo: str = "", tags: str = "", fuente: str = "", target: str = ".") -> str:
+    """Captura una nota en el inbox del mundo CONOCIMIENTO (PKM / Second Brain).
+
+    USAR cuando el usuario pide guardar una idea, dato, link o apunte sin decir
+    dónde va: entra crudo al inbox y luego se clasifica a PARA.
+
+    Args:
+        texto: Contenido de la nota.
+        titulo: Título opcional (si falta, se deriva del texto).
+        tags: Etiquetas separadas por coma.
+        fuente: Origen (URL, archivo, conversación).
+        target: Ruta del proyecto (default '.').
+    """
+    from context_map.domain.knowledge import inbox as kb
+
+    try:
+        ruta = kb.crear_nota(
+            _vault_de(target), texto, titulo=titulo or None, tags=tags, fuente=fuente,
+        )
+        return f"knowledge_inbox_add: [OK] nota creada en {ruta}"
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_inbox_add: {err}"
+
+
+@_tool
+def knowledge_inbox_list(target: str = ".") -> str:
+    """Lista las notas pendientes en el inbox del mundo CONOCIMIENTO (PKM).
+
+    Args:
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import inbox as kb
+
+    try:
+        notas = kb.listar_notas(_vault_de(target), "inbox")
+        if not notas:
+            return "knowledge_inbox_list: inbox vacío."
+        lineas = [f"knowledge_inbox_list: {len(notas)} nota(s):"]
+        for n in notas:
+            lineas.append(f" - {n['titulo']} ({os.path.basename(n['ruta'])})")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_inbox_list: {err}"
+
+
+@_tool
+def knowledge_inbox_move(nota: str, destino: str, target: str = ".") -> str:
+    """Mueve una nota del inbox a una categoría PARA tras clasificarla.
+
+    Args:
+        nota: Nombre o ruta de la nota a mover.
+        destino: Categoría destino (projects, areas, resources o archive).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import inbox as kb
+
+    try:
+        ruta = kb.mover_nota(_vault_de(target), nota, destino)
+        return f"knowledge_inbox_move: [OK] {nota} → {destino}: {ruta}"
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_inbox_move: {err}"
+
+
+@_tool
+def knowledge_purge(target: str = ".", dry_run: bool = False) -> str:
+    """Clasifica y vacía el inbox del mundo CONOCIMIENTO (PKM) usando el método PARA.
+
+    Args:
+        target: Ruta del proyecto.
+        dry_run: Si es True, solo simula las decisiones (no mueve archivos).
+    """
+    from context_map.domain.knowledge import inbox as kb
+
+    try:
+        decisiones = kb.purgar(_vault_de(target), dry_run=dry_run)
+        if not decisiones:
+            return "knowledge_purge: inbox vacío."
+        etiqueta = " (dry-run, sin cambios)" if dry_run else ""
+        lineas = [f"knowledge_purge: {len(decisiones)} nota(s){etiqueta}:"]
+        for d in decisiones:
+            lineas.append(f" - {d['nota']} → {d['destino']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_purge: {err}"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:

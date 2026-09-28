@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 
+from context_map.domain.knowledge.inbox import DESTINOS
 from context_map.infrastructure.version_check import version_local
 
 
@@ -247,5 +248,32 @@ def create_parser() -> argparse.ArgumentParser:
     p_unpack = sub.add_parser("unpack", help="Desempaqueta un archivo .ctxpack y restaura el contexto")
     p_unpack.add_argument("archive", help="Ruta del archivo .ctxpack")
     p_unpack.add_argument("target", nargs="?", default=".", help="Directorio destino para la restauración (default: .)")
+
+    s_inbox = sub.add_parser(
+        "inbox",
+        help="Captura PKM (Second Brain) y clasificación en 90-CONOCIMIENTO/00-INBOX",
+    )
+    si = s_inbox.add_subparsers(dest="inbox_cmd", help="Acciones del inbox")
+
+    si_add = si.add_parser("add", help="Crea una nota cruda en el inbox")
+    si_add.add_argument("texto", help="Texto de la nota")
+    si_add.add_argument("--title", default=None, help="Título de la nota")
+    si_add.add_argument("--tags", default="", help="Etiquetas separadas por coma")
+    si_add.add_argument("--source", default="", help="Origen (URL, archivo, conversación)")
+    si_add.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    si_list = si.add_parser("list", help="Lista las notas pendientes del inbox")
+    si_list.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    si_list.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    si_move = si.add_parser("move", help="Mueve una nota del inbox a PARA")
+    si_move.add_argument("nota", help="Nombre o ruta de la nota")
+    si_move.add_argument("destino", choices=list(DESTINOS), help="Categoría destino")
+    si_move.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    si_purge = si.add_parser("purge", help="Clasifica y vacía el inbox (heurística PARA)")
+    si_purge.add_argument("--dry-run", action="store_true", help="Simular sin mover archivos")
+    si_purge.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    si_purge.add_argument("--target", default=".", help="Ruta del proyecto")
 
     return p
