@@ -19,17 +19,31 @@ from context_map.domain.knowledge.inbox import (
     ruta_categoria,
     ruta_conocimiento,
 )
+from context_map.domain.knowledge.wiki import (
+    consultar,
+    ingresar,
+    lint,
+    ruta_entidades,
+    ruta_resumenes,
+    ruta_wiki,
+)
 
 __all__ = [
     "CATEGORIAS",
     "DESTINOS",
     "NS_CONOCIMIENTO",
     "clasificar",
+    "consultar",
     "crear_nota",
+    "ingresar",
     "leer_titulo",
+    "lint",
     "listar_notas",
     "mover_nota",
     "purgar",
     "ruta_categoria",
     "ruta_conocimiento",
+    "ruta_entidades",
+    "ruta_resumenes",
+    "ruta_wiki",
 ]

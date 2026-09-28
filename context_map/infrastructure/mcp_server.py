@@ -562,6 +562,84 @@ def knowledge_purge(target: str = ".", dry_run: bool = False) -> str:
         return f"ERROR en knowledge_purge: {err}"
 
 
+@_tool
+def knowledge_wiki_ingest(contenido: str, titulo: str = "", fuente: str = "", entidades: str = "", target: str = ".") -> str:
+    """Ingesta una fuente a la LLM Wiki (resúmenes + entidades + entry log).
+
+    Crea la página de resumen, actualiza el índice de resúmenes, el entry log y
+    las páginas de entidades/conceptos indicadas. USAR cuando hay que guardar un
+    aprendizaje, artículo o lección en la base de conocimiento.
+
+    Args:
+        contenido: Texto del resumen (redactado por el agente).
+        titulo: Título de la página (default: primera línea).
+        fuente: Origen (URL, video, PDF, conversación).
+        entidades: Conceptos separados por coma.
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import wiki as kb_w
+
+    try:
+        res = kb_w.ingresar(_vault_de(target), titulo, contenido, fuente=fuente, entidades=entidades)
+        lineas = [f"knowledge_wiki_ingest: [OK] resumen creado en {res['ruta']}"]
+        if res["entidades"]:
+            lineas.append(f"entidades: {res['entidades']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_ingest: {err}"
+
+
+@_tool
+def knowledge_wiki_query(pregunta: str, limite: int = 5, target: str = ".") -> str:
+    """Busca páginas relevantes de la LLM Wiki CON CITAS para responder preguntas.
+
+    Devuelve las páginas más relacionadas con su wikilink (cita) y un fragmento;
+    el agente sintetiza la respuesta citando cada página.
+
+    Args:
+        pregunta: Texto de la consulta.
+        limite: Máximo de resultados (default 5).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import wiki as kb_w
+
+    try:
+        resultados = kb_w.consultar(_vault_de(target), pregunta, limite=limite)
+        if not resultados:
+            return f"knowledge_wiki_query: sin páginas relevantes para: {pregunta}"
+        lineas = [f"knowledge_wiki_query: {len(resultados)} resultado(s):"]
+        for r in resultados:
+            lineas.append(f" - {r['titulo']} — cita {r['cita']}")
+            lineas.append(f"     {r['excerpt']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_query: {err}"
+
+
+@_tool
+def knowledge_wiki_lint(target: str = ".") -> str:
+    """Audita la salud de la LLM Wiki: enlaces rotos, huérfanas, conceptos sin página.
+
+    Args:
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import wiki as kb_w
+
+    try:
+        reporte = kb_w.lint(_vault_de(target))
+        estado = "OK" if reporte.ok else "PROBLEMAS"
+        lineas = [f"knowledge_wiki_lint: [{estado}]"]
+        for e in reporte.errores:
+            lineas.append(f" ⚠️ {e}")
+        for a in reporte.avisos:
+            lineas.append(f" 💬 {a}")
+        if not reporte.errores and not reporte.avisos:
+            lineas.append(" sin errores ni avisos.")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_lint: {err}"
+
+
 def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:

@@ -16,8 +16,26 @@ from __future__ import annotations
 
 import os
 import re
-import unicodedata
 from datetime import datetime
+
+from context_map.domain.knowledge.indices import (
+    agregar_a_indice as _agregar_a_indice,
+)
+from context_map.domain.knowledge.indices import (
+    leer_titulo,
+)
+from context_map.domain.knowledge.indices import (
+    quitar_de_indice as _quitar_de_indice,
+)
+from context_map.domain.knowledge.indices import (
+    ruta_libre as _ruta_libre,
+)
+from context_map.domain.knowledge.indices import (
+    sanear as _sanear,
+)
+from context_map.domain.knowledge.indices import (
+    slug as _slug,
+)
 
 NS_CONOCIMIENTO = "90-CONOCIMIENTO"
 
@@ -81,43 +99,6 @@ def ruta_categoria(vault_dir: str, categoria: str) -> str:
     return os.path.join(ruta_conocimiento(vault_dir), sub)
 
 
-def _slug(texto: str, max_len: int = 60) -> str:
-    """Convierte un texto libre en un slug seguro para nombre de archivo.
-
-    Args:
-        texto (str): Texto de origen.
-        max_len (int): Longitud máxima del slug.
-
-    Returns:
-        str: Slug en minúsculas con guiones.
-    """
-    norm = unicodedata.normalize("NFKD", texto)
-    norm = "".join(c for c in norm if not unicodedata.combining(c))
-    norm = re.sub(r"[^a-zA-Z0-9]+", "-", norm).strip("-").lower()
-    return (norm[:max_len].rstrip("-")) or "nota"
-
-
-def _sanear(titulo: str) -> str:
-    """Sanea un título para incrustarlo en frontmatter YAML entre comillas."""
-    return (titulo or "").replace('"', "'").replace("\n", " ").strip()
-
-
-def _ruta_libre(carpeta: str, base: str) -> str:
-    """Devuelve una ruta de archivo libre (agrega sufijo -2, -3… si existe)."""
-    ruta = os.path.join(carpeta, f"{base}.md")
-    contador = 2
-    while os.path.exists(ruta):
-        ruta = os.path.join(carpeta, f"{base}-{contador}.md")
-        contador += 1
-    return ruta
-
-
-def _backlink_relativo(vault_dir: str, ruta_nota: str) -> str:
-    """Ruta del wikilink de una nota relativa al vault, sin extensión."""
-    rel = os.path.relpath(ruta_nota, vault_dir).replace(os.sep, "/")
-    return rel[:-3] if rel.endswith(".md") else rel
-
-
 def _contenido_nota(titulo: str, texto: str, fuente: str, status: str, padre: str) -> str:
     """Construye el Markdown de una nota PKM con frontmatter y pie de padre."""
     fecha = datetime.now().isoformat(timespec="seconds")
@@ -137,41 +118,6 @@ def _contenido_nota(titulo: str, texto: str, fuente: str, status: str, padre: st
         "---\n"
         f"[[{padre}|⬅ Volver a {padre.split('/')[-1]}]]\n"
     )
-
-
-def _agregar_a_indice(index_path: str, ruta_nota_abs: str, vault_dir: str,
-                      titulo: str, ancla: str) -> None:
-    """Añade el wikilink de una nota al índice de su categoría (sin duplicar)."""
-    if not os.path.exists(index_path):
-        return
-    link = _backlink_relativo(vault_dir, ruta_nota_abs)
-    with open(index_path, encoding="utf-8") as f:
-        lineas = f.read().splitlines()
-    if any(f"[[{link}" in ln for ln in lineas):
-        return
-    lineas = [ln for ln in lineas if not ln.strip().startswith("- _(vacío")]
-    idx = next((i for i, ln in enumerate(lineas) if ln.strip() == ancla), None)
-    entrada = f"- [[{link}|{titulo}]]"
-    if idx is None:
-        lineas.append(entrada)
-    else:
-        lineas.insert(idx + 1, "")
-        lineas.insert(idx + 1, entrada)
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lineas) + "\n")
-
-
-def _quitar_de_indice(index_path: str, ruta_nota_abs: str, vault_dir: str) -> None:
-    """Quita el wikilink de una nota de un índice (evita enlaces rotos al mover)."""
-    if not os.path.exists(index_path):
-        return
-    link = _backlink_relativo(vault_dir, ruta_nota_abs)
-    with open(index_path, encoding="utf-8") as f:
-        lineas = f.read().splitlines()
-    filtradas = [ln for ln in lineas if f"[[{link}" not in ln]
-    if len(filtradas) != len(lineas):
-        with open(index_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(filtradas) + "\n")
 
 
 def crear_nota(vault_dir: str, texto: str, titulo: str | None = None,
@@ -241,18 +187,7 @@ def listar_notas(vault_dir: str, categoria: str = "inbox") -> list[dict[str, str
     return notas
 
 
-def leer_titulo(ruta: str) -> str:
-    """Lee el título de una nota desde su frontmatter o su primer heading."""
-    try:
-        with open(ruta, encoding="utf-8") as f:
-            contenido = f.read()
-    except OSError:
-        return os.path.basename(ruta)
-    m = re.search(r'^title:\s*"?(.+?)"?\s*$', contenido, re.MULTILINE)
-    if m:
-        return m.group(1).strip()
-    m = re.search(r"^#\s+(.+)$", contenido, re.MULTILINE)
-    return m.group(1).strip() if m else os.path.basename(ruta)
+# leer_titulo se importa desde indices.py (compartido con la wiki).
 
 
 def clasificar(texto: str) -> str:

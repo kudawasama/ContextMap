@@ -276,4 +276,27 @@ def create_parser() -> argparse.ArgumentParser:
     si_purge.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     si_purge.add_argument("--target", default=".", help="Ruta del proyecto")
 
+    s_wiki = sub.add_parser(
+        "wiki",
+        help="LLM Wiki (patrón Karpathy) del mundo conocimiento: resúmenes, entidades y lint",
+    )
+    sw = s_wiki.add_subparsers(dest="wiki_cmd", help="Acciones de la wiki")
+
+    sw_ingest = sw.add_parser("ingest", help="Ingesta una fuente: página de resumen + índices + entry log + entidades")
+    sw_ingest.add_argument("archivo", help="Archivo .md/.txt con el contenido del resumen")
+    sw_ingest.add_argument("--titulo", default="", help="Título de la página (default: primera línea del archivo)")
+    sw_ingest.add_argument("--fuente", default="", help="Origen (URL, video, PDF, conversación)")
+    sw_ingest.add_argument("--entidades", default="", help="Conceptos separados por coma a crear/actualizar")
+    sw_ingest.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    sw_query = sw.add_parser("query", help="Busca páginas relevantes CON CITAS")
+    sw_query.add_argument("pregunta", help="Texto de la consulta")
+    sw_query.add_argument("--limite", type=int, default=5, help="Máximo de resultados (default: 5)")
+    sw_query.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_query.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    sw_lint = sw.add_parser("lint", help="Audita la salud de la wiki (enlaces, huérfanas, conceptos sin página)")
+    sw_lint.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_lint.add_argument("--target", default=".", help="Ruta del proyecto")
+
     return p

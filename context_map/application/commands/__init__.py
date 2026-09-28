@@ -34,6 +34,7 @@ from context_map.application.commands.tools import (
 )
 from context_map.application.commands.update import cmd_update
 from context_map.application.commands.watch import cmd_watch
+from context_map.application.commands.wiki import cmd_wiki
 from context_map.application.commands.wrap import cmd_wrap
 
 __all__ = [
@@ -64,4 +65,5 @@ __all__ = [
     "cmd_watch",
     "cmd_hook",
     "cmd_inbox",
+    "cmd_wiki",
 ]

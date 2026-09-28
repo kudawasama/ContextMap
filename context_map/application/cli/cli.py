@@ -32,6 +32,7 @@ from context_map.application.commands import (
     cmd_update,
     cmd_watch,
     cmd_weekly,
+    cmd_wiki,
     cmd_wrap,
 )
 from context_map.application.commands.adapt import cmd_adapt
@@ -120,6 +121,7 @@ def main() -> None:
         "hook": lambda a: _dispatch_cmd(cmd_hook, a),
         "inbox": cmd_inbox,
         "watch": lambda a: _dispatch_cmd(cmd_watch, a),
+        "wiki": cmd_wiki,
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
         "personal": cmd_personal,
