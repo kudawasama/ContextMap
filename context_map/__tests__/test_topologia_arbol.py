@@ -121,9 +121,13 @@ def _analizar_vault(vault_dir: str) -> tuple[dict[str, str], list[str], list[str
     archivos: dict[str, str] = {}
     for root, _dirs, files in os.walk(vault_dir):
         for f in files:
-            if f.endswith(".md"):
-                rel = os.path.relpath(os.path.join(root, f), vault_dir).replace("\\", "/")
-                archivos[rel] = f[:-3]  # nombre base sin .md
+            if not f.endswith(".md"):
+                continue
+            rel = os.path.relpath(os.path.join(root, f), vault_dir).replace("\\", "/")
+            # Plantillas Obsidian (templates/): no son notas del grafo.
+            if rel.startswith("templates/") or "/templates/" in rel:
+                continue
+            archivos[rel] = f[:-3]  # nombre base sin .md
 
     por_nombre: dict[str, list[str]] = {}
     for rel, base in archivos.items():
@@ -238,6 +242,22 @@ def test_topologia_arbol_estricto() -> None:
         assert not colisiones, f"Colisiones de nombre base: {colisiones}"
 
         # 2.b Mundo CONOCIMIENTO (namespace knowledge): isla separada con su árbol
+        # 2.c Config Obsidian del mundo conocimiento (F5)
+        assert os.path.exists(os.path.join(temp_dir, ".obsidian", "community-plugins.json")), (
+            "Falta community-plugins.json (config PKM)"
+        )
+        assert os.path.exists(os.path.join(temp_dir, ".obsidian", "daily-notes.json")), (
+            "Falta daily-notes.json (nota del día → inbox)"
+        )
+        assert os.path.exists(os.path.join(temp_dir, "templates", "nota-pkm.md")), (
+            "Falta la plantilla de nota PKM"
+        )
+        from context_map.presentation.vault.preservar import ZONAS_MANUALES
+
+        assert ".obsidian" in ZONAS_MANUALES, (
+            ".obsidian debe preservarse en cada build (config del usuario)"
+        )
+
         conf_dir = os.path.join(temp_dir, "90-CONOCIMIENTO")
         assert os.path.exists(os.path.join(conf_dir, "90-CONOCIMIENTO.md")), (
             "Falta la raíz del mundo conocimiento (90-CONOCIMIENTO.md)"

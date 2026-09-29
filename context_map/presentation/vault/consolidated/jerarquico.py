@@ -308,7 +308,11 @@ def _render_hierarchical_vault(
     from context_map.presentation.vault.consolidated.conocimiento import (
         sembrar_conocimiento,
     )
+    from context_map.presentation.vault.consolidated.obsidian_config import (
+        sembrar_config_obsidian,
+    )
 
     sembrar_conocimiento(output_dir)
+    sembrar_config_obsidian(output_dir)
 
     return output_dir

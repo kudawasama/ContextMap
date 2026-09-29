@@ -25,7 +25,10 @@ logger = logging.getLogger(__name__)
 # compatibilidad con vaults generados por versiones anteriores.
 # 90-CONOCIMIENTO es el mundo PKM (namespace knowledge): un árbol separado que
 # el build de código JAMÁS regenera ni borra.
-ZONAS_MANUALES = ("7.0-MANUAL", "8.0-KNOWLEDGE", "90-CONOCIMIENTO", ".manual")
+# .obsidian se preserva para que la configuración real del usuario (plugins
+# instalados, tema, daily notes) no se pierda en cada build; el generador solo
+# completa lo que falta (F5, idempotente).
+ZONAS_MANUALES = ("7.0-MANUAL", "8.0-KNOWLEDGE", "90-CONOCIMIENTO", ".obsidian", ".manual")
 
 # Subconjunto de zonas manuales que pertenecen al mundo CÓDIGO. El índice del
 # proyecto (00-INDICE) enlaza estas notas, pero NO debe enlazar 90-CONOCIMIENTO:
