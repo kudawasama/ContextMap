@@ -6,6 +6,7 @@ y ejecuta refrescos incrementales desbouncheados en tiempo real.
 
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import time
@@ -28,10 +29,22 @@ def _es_archivo_relevante(path: str) -> bool:
 
 
 def _ejecutar_refresco_default(project_dir: str) -> None:
-    """Ejecuta el comando refresh por defecto de ContextMap."""
+    """Ejecuta el comando refresh por defecto de ContextMap.
+
+    Construye un ``argparse.Namespace`` real porque ``cmd_refresh`` y sus
+    delegados (``cmd_scan``, ``project_name``) acceden a atributos como
+    ``.target`` / ``.project``; pasar un ``dict`` provocaba
+    ``'dict' object has no attribute 'target'`` y el refresco automático
+    nunca se ejecutaba. Se usa ``quiet=True`` para no imprimir el banner de
+    refresh en cada cambio de archivo detectado por el daemon.
+
+    Args:
+        project_dir (str): Directorio raíz del proyecto a refrescar.
+    """
     try:
         from context_map.application.commands.refresh import cmd_refresh
-        cmd_refresh({"target_dir": project_dir, "clean": False})
+        args = argparse.Namespace(target=project_dir, project=None, quiet=True)
+        cmd_refresh(args)
     except Exception as e:
         logger.warning("Error durante refresco automático en watcher: %s", e)
 
