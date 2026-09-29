@@ -5,6 +5,51 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-09-28
+
+### 🧠 Modo Conocimiento (PKM): Second Brain + LLM Wiki en islas separadas
+
+Fusión del enfoque del curso de Obsidian (vault + Second Brain de Tiago Forte +
+patrón LLM Wiki de Karpathy) con la memoria de proyecto de ContextMap, **sin
+colisionar**: dos `namespace` ortogonales (`code` y `knowledge`), un solo vault,
+cero wikilinks cruzados y doble topología validada por test.
+
+- **feat(`vault`) F1**: Esqueleto del mundo PKM `90-CONOCIMIENTO/` (PARA +
+  WIKI) sembrado de forma idempotente; campo `namespace` en `Node`;
+  `90-CONOCIMIENTO` en `ZONAS_MANUALES` (el build jamás lo borra); el render
+  filtra por namespace y el test valida la doble topología con 0 cruces.
+- **feat(`inbox`) F2**: Comandos `ctxmap inbox add|list|move|purge` — captura
+  cruda y clasificación heurística PARA con actualización de wikilinks (sin
+  enlaces rotos al mover). Módulo `domain/knowledge/inbox.py` y 4 tools MCP
+  (`knowledge_inbox_add/list/move`, `knowledge_purge`).
+- **feat(`wiki`) F3**: LLM Wiki — `ctxmap wiki ingest|query|lint` con páginas de
+  resumen, entidades (upsert canónico), entry log y ranking **con citas** para
+  respuestas trazables. Módulo `domain/knowledge/wiki.py` y 3 tools MCP.
+- **feat(`captura`) F4**: Captura de fuentes tipo Web Clipper —
+  `ctxmap ingest --url <web>` (HTML→Markdown con stdlib) y `--youtube <video>`
+  (transcripción vía yt-dlp con fallback de cliente). Tool MCP `knowledge_ingest`.
+- **feat(`obsidian`) F5**: Config real de Obsidian — `.obsidian/community-plugins.json`,
+  `core-plugins.json`, `daily-notes.json` (nota del día → inbox) y
+  `templates/nota-pkm.md`, sembrados idempotentes. **`.obsidian` pasó a zona
+  preservada**: la configuración del usuario (plugins, tema) ya no se pierde en
+  cada build (verificado con `--clean`). Doc de sync móvil en `8.0-KNOWLEDGE`.
+- **Helpers compartidos**: `domain/knowledge/indices.py` (slugs, enlaces, índices)
+  reutilizado por inbox y wiki.
+- **fix(`models`)**: `Node.to_dict` omite el `namespace` por defecto para no
+  romper binarios/herramientas previas al rehidratar (`Node(**data)`).
+- **fix(`diario`)**: `render_nota_dia` conserva el contenido del agente que está
+  DESPUÉS de la sección del scanner (antes se descartaba al reescribir).
+- **fix(`hooks`)**: Los hooks pre/post-commit priorizan el código local
+  (`python -m context_map.cli`) sobre el binario global desactualizado.
+- **fix(`scanner`)**: `_es_ruta_test` ignora carpetas/archivos de prueba al
+  recolectar TODOs y medir complejidad; filtro de ruido semántico en chats
+  (`es_mensaje_ruido`) y blindaje de `_es_todo_codigo` (summary/evidence).
+- **test**: Suite **288/288** (nuevos: `test_inbox`, `test_wiki`,
+  `test_captura`, `test_obsidian_config`, `test_hooks` de local-first,
+  `test_diario_consolidado` de preservación). 0 errores ruff y mypy.
+
+---
+
 ## [2.4.0] — 2026-09-23
 
 ### 🚀 Evolución Arquitectónica, Modularización, Prompt Caching Determinista & Skills Nativas
