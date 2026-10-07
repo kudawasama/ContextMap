@@ -265,8 +265,15 @@ def create_parser() -> argparse.ArgumentParser:
     si = s_inbox.add_subparsers(dest="inbox_cmd", help="Acciones del inbox")
 
     si_add = si.add_parser("add", help="Crea una nota cruda en el inbox")
-    si_add.add_argument("texto", help="Texto de la nota (usa '-' para leer de stdin)")
+    si_add.add_argument(
+        "texto", nargs="?", default="",
+        help="Texto de la nota (usa '-' para leer de stdin, o --clipboard)",
+    )
     si_add.add_argument("--stdin", action="store_true", help="Leer el texto de la entrada estándar (bookmarklet/pipe)")
+    si_add.add_argument(
+        "--clipboard", action="store_true",
+        help="Leer el texto del portapapeles del sistema (Web Clipper)",
+    )
     si_add.add_argument("--title", default=None, help="Título de la nota")
     si_add.add_argument("--tags", default="", help="Etiquetas separadas por coma")
     si_add.add_argument("--source", default="", help="Origen (URL, archivo, conversación)")
@@ -285,6 +292,16 @@ def create_parser() -> argparse.ArgumentParser:
     si_purge.add_argument("--dry-run", action="store_true", help="Simular sin mover archivos")
     si_purge.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     si_purge.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    si_clip = si.add_parser(
+        "bookmarklet", help="Web Clipper: imprime el bookmarklet (y su HTML arrastrable)"
+    )
+    si_clip.add_argument(
+        "--html", action="store_true",
+        help="Generar el HTML con el enlace arrastrable (default: .context-map/clip-bookmarklet.html)",
+    )
+    si_clip.add_argument("--ruta", default="", help="Ruta del HTML a generar")
+    si_clip.add_argument("--json", action="store_true", help="Salida JSON estructurada")
 
     s_wiki = sub.add_parser(
         "wiki",

@@ -7,6 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 📥 Web Clipper real (G5 · plan v2.7)
+
+- Nuevo módulo `domain/knowledge/clip.py`: **portapapeles nativo**
+  (`pbpaste` · PowerShell `Get-Clipboard` · `wl-paste`/`xclip`/`xsel`) y
+  **bookmarklet** de una línea que copia `- [título](url)` + selección.
+- `ctxmap inbox add --clipboard` captura el portapapeles en el inbox, con
+  **título legible** y **URL como fuente** desglosados del enlace Markdown.
+- `ctxmap inbox bookmarklet [--html] [--json]` imprime el bookmarklet y genera
+  `.context-map/clip-bookmarklet.html` (enlace arrastrable a favoritos).
+- El texto posicional de `inbox add` pasa a ser opcional (`--clipboard` y
+  `--stdin` ya no exigen argumento).
+- Guía de uso: `docs/WEB_CLIPPER.md`. Tests: `test_web_clipper.py` (10).
+
+### 🔧 Hooks de Git con el intérprete del proyecto
+
+- Los hooks `pre-commit`/`post-commit` usan el `python` del venv del proyecto
+  (o `uv run python`) antes que el `python` global del PATH: elimina avisos
+  falsos en cada commit cuando faltan extras (`pymupdf`, etc.).
+- Regresión cubierta en `test_hooks.py` (`test_hooks_usan_el_interprete_del_venv`).
+
 ### 🧠 Búsqueda semántica opcional en la wiki (G3 · plan v2.7)
 
 - Nuevo módulo `domain/knowledge/embeddings.py`: índice vectorial **opcional**
