@@ -10,6 +10,7 @@ from context_map.application.cli.parser import create_parser
 from context_map.application.commands.inbox import _texto_de_entrada
 from context_map.application.commands.ingest import EXTENSIONES_SOPORTADAS
 from context_map.domain.ingestion import extraer_texto
+from context_map.domain.ingestion.ingest import _ocr_pdf
 
 
 def test_extraer_texto_de_html_local(tmp_path) -> None:
@@ -53,6 +54,26 @@ def test_extraer_texto_de_docx(tmp_path) -> None:
     assert "Primer párrafo del informe." in texto
     assert "Segundo párrafo con detalle." in texto
     assert ".docx" in EXTENSIONES_SOPORTADAS
+
+
+def test_ocr_pdf_sin_fuente_devuelve_vacio() -> None:
+    """El OCR es best-effort: nunca revienta, devuelve '' si no puede."""
+    assert _ocr_pdf("/no/existe/archivo-que-no-esta.pdf") == ""
+
+
+def test_pdf_sin_texto_sugiere_ocr(tmp_path) -> None:
+    """Un PDF sin capa de texto (escaneado) da un error accionable con OCR."""
+    import pytest
+
+    pymupdf = pytest.importorskip("pymupdf")
+    archivo = tmp_path / "escaneado.pdf"
+    doc = pymupdf.open()
+    doc.new_page()  # página en blanco: sin texto extraíble
+    doc.save(str(archivo))
+    doc.close()
+
+    with pytest.raises(ValueError, match="OCR"):
+        extraer_texto(str(archivo))
 
 
 def test_docx_invalido_da_error_claro(tmp_path) -> None:

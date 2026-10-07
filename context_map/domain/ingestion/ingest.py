@@ -175,9 +175,68 @@ def _extraer_pdf(ruta: str) -> str:
         raise ValueError(f"No se pudo leer el PDF {ruta}: {err}") from err
 
     texto_total = _limpiar_texto("\n\n".join(paginas))
-    if not texto_total:
-        raise ValueError(f"El PDF {ruta} no contiene texto extraíble (¿es escaneado?).")
-    return texto_total
+    if texto_total:
+        return texto_total
+
+    # Sin capa de texto (PDF escaneado): intentar OCR opcional (best-effort).
+    ocr = _ocr_pdf(ruta)
+    if ocr:
+        return _limpiar_texto(ocr)
+
+    raise ValueError(
+        f"El PDF {ruta} no tiene texto extraíble (¿escaneado?). "
+        "Para OCR opcional instala: `uv pip install pytesseract pillow` "
+        "+ el binario Tesseract (https://tesseract-ocr.github.io)."
+    )
+
+
+def _ocr_pdf(ruta: str) -> str:
+    """OCR best-effort de un PDF escaneado (opcional, sin dependencias base).
+
+    Requiere ``pytesseract`` + ``Pillow`` + el binario ``tesseract``. Si algo
+    falta o falla, devuelve cadena vacía para que el llamador emita un mensaje
+    accionable (nunca revienta la ingesta).
+
+    Args:
+        ruta (str): Ruta del PDF.
+
+    Returns:
+        str: Texto reconocido, o "" si el OCR no está disponible o falla.
+    """
+    import importlib.util
+
+    if importlib.util.find_spec("pytesseract") is None:
+        return ""
+    if importlib.util.find_spec("PIL") is None:
+        return ""
+
+    try:
+        import pytesseract
+        from PIL import Image
+
+        try:
+            import pymupdf
+        except ImportError:
+            import fitz as pymupdf  # type: ignore[no-redef]
+
+        doc = pymupdf.open(ruta)
+    except Exception:
+        return ""
+
+    partes: list[str] = []
+    try:
+        for i in range(len(doc)):
+            pagina = doc[i]
+            pix = pagina.get_pixmap(dpi=200)
+            imagen = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            texto = pytesseract.image_to_string(imagen, lang="spa+eng")
+            if texto.strip():
+                partes.append(f"## [p.{pagina.number + 1}]\n{texto.strip()}")
+    except Exception:
+        return ""
+    finally:
+        doc.close()
+    return "\n\n".join(partes)
 
 
 def _oraciones(texto: str) -> list[str]:

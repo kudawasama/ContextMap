@@ -92,7 +92,7 @@ warn_return_any = true
 no_implicit_optional = true
 
 [[tool.mypy.overrides]]
-module = ["tomllib", "tomli", "yaml", "fitz", "pymupdf", "watchdog.*", "mcp.*"]
+module = ["tomllib", "tomli", "yaml", "fitz", "pymupdf", "watchdog.*", "mcp.*", "pytesseract", "PIL.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
