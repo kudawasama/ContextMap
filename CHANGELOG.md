@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.7.0] — 2026-10-07
+
 ### 🗺️ G8 y G9 evaluados: BM25 ya estaba · MOC en una sola pasada
 
 - **G8 (`personal query`)**: el ítem pedía evaluar BM25 y **ya estaba
