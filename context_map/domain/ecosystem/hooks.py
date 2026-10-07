@@ -9,14 +9,32 @@ from __future__ import annotations
 import os
 import stat
 
+# Selector de intérprete compartido por los hooks.
+# El hook debe usar el MISMO entorno que el proyecto: el venv tiene las
+# dependencias reales (pymupdf, mcp…). Si se usa el `python` global aparecen
+# avisos falsos en cada commit (p. ej. "no se pudo ingerir X.pdf").
+# `$CTXMAP_PY` va SIN comillas a propósito: permite expandir "uv run python".
+_SELECTOR_PYTHON = """CTXMAP_PY=""
+if [ -x ".venv/Scripts/python.exe" ]; then
+    CTXMAP_PY=".venv/Scripts/python.exe"
+elif [ -x ".venv/bin/python" ]; then
+    CTXMAP_PY=".venv/bin/python"
+elif command -v uv >/dev/null 2>&1; then
+    CTXMAP_PY="uv run python"
+else
+    CTXMAP_PY="python"
+fi
+"""
+
 PRE_COMMIT_SCRIPT = """#!/bin/sh
 # ContextMap Auto-Sync Pre-Commit Hook
-# Prioriza el código local del repo (python -m context_map.cli) antes que
-# el binario global 'ctxmap', que puede estar desactualizado.
+# Usa el código LOCAL del repo (python -m context_map.cli) antes que el binario
+# global 'ctxmap', que puede estar desactualizado, y prioriza el intérprete del
+# venv del proyecto (con sus dependencias reales).
 # Se usa build --brief (SIN --clean) para NO destruir las notas manuales
 # del vault (zona protegida .manual/ y notas con preserve: true).
 # --import-sessions: cada commit registra la memoria viva (sesiones de Hermes).
-if python -m context_map.cli build --brief --quiet --import-sessions 2>/dev/null; then
+""" + _SELECTOR_PYTHON + """if $CTXMAP_PY -m context_map.cli build --brief --quiet --import-sessions 2>/dev/null; then
     git add .context-map CONTEXT.md AGENTS.md ACTIVE.md 2>/dev/null || true
     exit 0
 fi
@@ -29,9 +47,8 @@ fi
 POST_COMMIT_SCRIPT = """#!/bin/sh
 # ContextMap Auto-Maintenance Post-commit Hook
 # Registra la actividad del commit en la memoria viva.
-# Prioriza el código local del repo (python -m context_map.cli) antes que
-# el binario global 'ctxmap', que puede estar desactualizado (AGENTS.md §4.3).
-if python -m context_map.cli refresh . 2>/dev/null; then
+# Usa el código LOCAL del repo y el intérprete del venv (AGENTS.md §4.3).
+""" + _SELECTOR_PYTHON + """if $CTXMAP_PY -m context_map.cli refresh . 2>/dev/null; then
     exit 0
 fi
 if command -v ctxmap >/dev/null 2>&1; then

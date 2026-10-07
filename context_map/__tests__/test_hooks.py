@@ -46,10 +46,30 @@ def test_hooks_priorizan_codigo_local(tmp_path):
     instalar_git_hooks(str(tmp_path))
 
     for nombre in ("pre-commit", "post-commit"):
-        lineas = [ln.strip() for ln in (git_dir / nombre).read_text(encoding="utf-8").splitlines()]
-        idx_local = next((i for i, ln in enumerate(lineas) if "python -m context_map.cli" in ln), -1)
+        texto = (git_dir / nombre).read_text(encoding="utf-8")
+        lineas = [ln.strip() for ln in texto.splitlines()]
+        idx_local = next((i for i, ln in enumerate(lineas) if "-m context_map.cli" in ln), -1)
         idx_global = next((i for i, ln in enumerate(lineas) if ln.startswith("ctxmap ")), -1)
         assert idx_local != -1, f"{nombre} no invoca el código local"
         assert idx_global == -1 or idx_local < idx_global, (
             f"{nombre} prioriza el binario global sobre el código local"
         )
+
+
+def test_hooks_usan_el_interprete_del_venv(tmp_path):
+    """Los hooks prefieren el venv del proyecto antes que el `python` del PATH.
+
+    Regresión (2026-10-07): el hook usaba el `python` global (sin `pymupdf`) y
+    ensuciaba cada commit con avisos falsos de ingesta de documentos.
+    """
+    git_dir = tmp_path / ".git" / "hooks"
+    git_dir.mkdir(parents=True)
+    instalar_git_hooks(str(tmp_path))
+
+    for nombre in ("pre-commit", "post-commit"):
+        texto = (git_dir / nombre).read_text(encoding="utf-8")
+        assert "$CTXMAP_PY -m context_map.cli" in texto, f"{nombre} no usa el selector"
+        # El venv (Windows y POSIX) se evalúa ANTES del `python` de último recurso.
+        assert texto.index(".venv/Scripts/python.exe") < texto.index('CTXMAP_PY="python"')
+        assert texto.index(".venv/bin/python") < texto.index('CTXMAP_PY="python"')
+        assert 'command -v uv' in texto, "Debe considerar `uv run` como alternativa"

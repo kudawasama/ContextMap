@@ -40,6 +40,7 @@ def test_hook_install_escribe_script_con_import_sessions() -> None:
             content = f.read()
 
         assert "--import-sessions" in content
-        assert "python -m context_map.cli build" in content
+        assert "-m context_map.cli build" in content
+        assert "$CTXMAP_PY" in content, "El hook debe usar el selector de intérprete"
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
