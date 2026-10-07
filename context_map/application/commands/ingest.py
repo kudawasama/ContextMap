@@ -20,7 +20,9 @@ from context_map.core.models import Node
 from context_map.core.storage import load_jsonl
 from context_map.domain.ingestion import crear_nodo_documento, extraer_texto
 
-EXTENSIONES_SOPORTADAS: tuple[str, ...] = (".md", ".markdown", ".txt", ".text", ".pdf")
+EXTENSIONES_SOPORTADAS: tuple[str, ...] = (
+    ".md", ".markdown", ".txt", ".text", ".pdf", ".html", ".htm",
+)
 
 
 def _recolectar_archivos(target: str) -> list[str]:
@@ -111,11 +113,13 @@ def cmd_ingest(args) -> None:
     """
     import types
 
-    # Captura de fuentes al mundo conocimiento (F4, Web Clipper + YouTube).
+    # Captura de fuentes al mundo conocimiento (F4, Web Clipper + video).
     url = getattr(args, "url", "") or ""
     youtube = getattr(args, "youtube", "") or ""
-    if url or youtube:
-        _cmd_captura_fuente(args, url or youtube, es_youtube=bool(youtube))
+    video = getattr(args, "video", "") or ""
+    if url or youtube or video:
+        fuente = url or youtube or video
+        _cmd_captura_fuente(args, fuente, es_youtube=bool(youtube or video))
         return
 
     # El proyecto se resuelve desde la raíz del repo, no desde el target de documentos

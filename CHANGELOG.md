@@ -71,8 +71,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - El brief muestra **"Repaso pendiente (SM-2)"** cuando hay páginas vencidas.
 - Nuevas tools MCP: `knowledge_review_due`, `knowledge_review_grade`.
 
+### 🌐 Ingesta rica (F12)
+
+- **HTML local**: `ctxmap ingest <archivo.html>` convierte la página guardada
+  por el navegador a Markdown (mismo extractor stdlib que `--url`).
+- **Video genérico**: `ctxmap ingest --video <url>` (yt-dlp para cualquier
+  sitio soportado; `--youtube` se mantiene por compatibilidad).
+- **Captura por stdin**: `ctxmap inbox add -` (o `--stdin`) permite pegar desde
+  el portapapeles o un bookmarklet sin plugins.
+
 ### 🧪 Tests
 
+- Nuevo `test_ingesta_rica.py` (4 tests): HTML local, extensión soportada,
+  alias `--video` y captura por stdin.
 - Nuevo `test_review.py` (5 tests): SM-2 (primer acierto, fallo, secuencia),
   páginas vencidas y persistencia del estado.
 - Nuevo `test_wiki_avanzado.py` (7 tests): síntesis con citas, sin-match,
@@ -83,12 +94,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   de que 1.1/1.3/2.4 no muestran ruido y sí el contenido legítimo.
 - Nuevo `test_conocimiento_brief.py` (3 tests): el panorama lista páginas e
   inbox, y el conocimiento entra en el bloque dinámico del brief.
-- Suite: **310/310** verdes (antes 290); `ruff` y `mypy` limpios.
+- Suite: **314/314** verdes (antes 290); `ruff` y `mypy` limpios.
 
 ### 📝 Documentación
 
 - Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
-  **310** tests y **28** herramientas MCP (antes 288 y 16).
+  **314** tests y **28** herramientas MCP (antes 288 y 16).
 
 ---
 

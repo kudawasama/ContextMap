@@ -82,11 +82,20 @@ def extraer_texto(ruta: str) -> tuple[str, str]:
         with open(ruta, encoding="utf-8", errors="replace") as f:
             return _limpiar_texto(f.read()), "texto"
 
+    if ext in (".html", ".htm"):
+        # Páginas guardadas por el navegador (Web Clipper offline) → Markdown.
+        from context_map.domain.knowledge.captura import html_a_markdown
+
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            _titulo, markdown = html_a_markdown(f.read())
+        return _limpiar_texto(markdown), "html"
+
     if ext == ".pdf":
         return _extraer_pdf(ruta), "pdf"
 
     raise ValueError(
-        f"Extensión no soportada '{ext}'. Usa .md, .txt o .pdf (instala 'pymupdf' para PDF)."
+        f"Extensión no soportada '{ext}'. Usa .md, .txt, .html o .pdf "
+        "(instala 'pymupdf' para PDF)."
     )
 
 

@@ -120,6 +120,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_ingest.add_argument("target", nargs="?", default=".", help="Archivo o directorio de documentos a ingerir")
     s_ingest.add_argument("--url", default="", help="Captura un artículo web al mundo conocimiento (Web Clipper)")
     s_ingest.add_argument("--youtube", default="", help="Captura la transcripción de un video de YouTube (yt-dlp)")
+    s_ingest.add_argument("--video", default="", help="Captura la transcripción de un video (yt-dlp; cualquier sitio soportado)")
     s_ingest.add_argument("--titulo", default="", help="Título de la captura (opcional)")
     s_ingest.add_argument("--destino", choices=["inbox", "wiki"], default="inbox", help="Dónde capturar: inbox (defecto) o wiki")
     s_ingest.add_argument("--entidades", default="", help="Conceptos wiki separados por coma (solo con --destino wiki)")
@@ -264,7 +265,8 @@ def create_parser() -> argparse.ArgumentParser:
     si = s_inbox.add_subparsers(dest="inbox_cmd", help="Acciones del inbox")
 
     si_add = si.add_parser("add", help="Crea una nota cruda en el inbox")
-    si_add.add_argument("texto", help="Texto de la nota")
+    si_add.add_argument("texto", help="Texto de la nota (usa '-' para leer de stdin)")
+    si_add.add_argument("--stdin", action="store_true", help="Leer el texto de la entrada estándar (bookmarklet/pipe)")
     si_add.add_argument("--title", default=None, help="Título de la nota")
     si_add.add_argument("--tags", default="", help="Etiquetas separadas por coma")
     si_add.add_argument("--source", default="", help="Origen (URL, archivo, conversación)")

@@ -22,6 +22,26 @@ def _resolver_vault(args) -> str:
     return vault_dir(project_name(args))
 
 
+def _texto_de_entrada(args) -> str:
+    """Devuelve el texto de la nota, leyendo de stdin si se pidió.
+
+    Permite capturar desde un bookmarklet o un pipe:
+    ``pbpaste | ctxmap inbox add -`` o ``ctxmap inbox add "" --stdin``.
+
+    Args:
+        args: Namespace con ``texto`` y ``stdin``.
+
+    Returns:
+        str: Texto de la nota.
+    """
+    import sys
+
+    texto = getattr(args, "texto", "") or ""
+    if getattr(args, "stdin", False) or texto.strip() == "-":
+        return sys.stdin.read()
+    return texto
+
+
 def cmd_inbox(args) -> None:
     """Despacha las acciones del subcomando ``inbox``.
 
@@ -36,9 +56,10 @@ def cmd_inbox(args) -> None:
     vdir = _resolver_vault(args)
 
     if accion == "add":
+        texto = _texto_de_entrada(args)
         ruta = kb.crear_nota(
             vdir,
-            getattr(args, "texto", ""),
+            texto,
             titulo=getattr(args, "title", None),
             tags=getattr(args, "tags", ""),
             fuente=getattr(args, "source", ""),
