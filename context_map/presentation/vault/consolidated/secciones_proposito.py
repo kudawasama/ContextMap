@@ -6,6 +6,10 @@ import logging
 import os
 
 from context_map.core.models import Edge, Node
+from context_map.core.normalization.humanizacion import (
+    es_resumen_plantilla,
+    es_ruido_narrativo,
+)
 from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.consolidated.readme_extract import (
     _extract_project_purpose,
@@ -28,11 +32,17 @@ def _es_ruido_identidad(n: Node) -> bool:
         bool: True si debe excluirse de la biblia (1.3-Proposito).
     """
     titulo = (n.title or "").strip().lower()
-    if titulo.startswith("proyecto '") and "archivos" in titulo:
-        return True  # métrica repetitiva del scan
-    if titulo.startswith("todo") or n.type == "FUTURO":
+    if titulo.startswith("entrypoint") or n.type == "FUTURO":
         return True
-    return titulo.startswith("entrypoint")
+    # Ruido compartido (métricas del scan, TODOs crudos, mensajes de chat).
+    if es_ruido_narrativo(n):
+        return True
+    # Las REGLAS del proyecto son principios legítimos: su resumen plantilla no
+    # las descalifica (el texto se limpia al renderizar).
+    if (n.source or "").strip().lower() == "reglas":
+        return False
+    # Para el resto, un resumen plantilla indica un evento de proceso, no identidad.
+    return es_resumen_plantilla(n)
 
 
 def _render_seccion_proposito(
@@ -104,7 +114,14 @@ def _render_seccion_proposito(
         narrativa_parts.extend(["> " + proposito_texto, ""])
 
     from context_map.presentation.vault.mermaid import generar_diagrama_mermaid_global
-    diagrama_mermaid = generar_diagrama_mermaid_global(nodes, edges)
+    # El diagrama global solo muestra arquitectura: se excluye el ruido del
+    # scanner, los TODOs crudos y los mensajes de chat.
+    nodos_narrativos = [n for n in nodes if not es_ruido_narrativo(n)]
+    ids_narrativos = {n.id for n in nodos_narrativos}
+    edges_narrativos = [
+        e for e in edges if e.source in ids_narrativos and e.target in ids_narrativos
+    ]
+    diagrama_mermaid = generar_diagrama_mermaid_global(nodos_narrativos, edges_narrativos)
     if diagrama_mermaid:
         narrativa_parts.extend([
             "## 📊 Diagrama de Arquitectura (Mermaid)",
@@ -203,14 +220,22 @@ def _render_seccion_proposito(
     identidad_nodes = [
         n for n in clasificados["BASE"]
         if not _es_ruido_identidad(n)
-        and any(
-            kw in (n.title + " " + (n.summary or "")).lower()
-            for kw in ["proyecto", "propósito", "arquitectura", "core", "dominio"]
+        and (
+            # Las REGLAS del proyecto son principios de primera clase.
+            (n.source or "").strip().lower() == "reglas"
+            or any(
+                kw in (n.title + " " + (n.summary or "")).lower()
+                for kw in ["propósito", "arquitectura", "dominio", "núcleo"]
+            )
         )
     ]
     if identidad_nodes:
         for n in identidad_nodes:
-            identidad_parts.append(f"- **{n.title}**: {n.summary or '(sin descripción)'}")
+            # No arrastrar el resumen plantilla de la ingesta ("Este evento...").
+            resumen = "" if es_resumen_plantilla(n) else (n.summary or "").strip()
+            identidad_parts.append(
+                f"- **{n.title}**" + (f": {resumen}" if resumen else "")
+            )
         identidad_parts.append("")
     else:
         identidad_parts.append("_(No se encontraron nodos de identidad del proyecto)_")

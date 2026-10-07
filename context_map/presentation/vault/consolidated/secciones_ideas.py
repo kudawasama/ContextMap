@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 
 from context_map.core.models import Node
+from context_map.core.normalization.humanizacion import es_ruido_narrativo
 from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.consolidated.notas_ideas import (
     ACCION_POR_CLASIFICACION,
@@ -266,6 +267,10 @@ def _seleccionar_top_ideas(idea_nodes: list[Node], max_top: int = 20) -> list[No
     seen_ideas_top: set[str] = set()
     top_ideas: list[Node] = []
     for n in idea_nodes:
+        # Las "ideas relevantes" son ideas del proyecto, no TODOs crudos del
+        # código ni métricas del scanner (eso vive en 5.0-BACKLOG).
+        if es_ruido_narrativo(n):
+            continue
         key = n.title[:80]
         if key not in seen_ideas_top and len(top_ideas) < max_top:
             seen_ideas_top.add(key)

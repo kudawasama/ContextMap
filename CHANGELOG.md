@@ -18,16 +18,30 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   **H1 del brief** (`# <Proyecto> — Brief para Agentes`) además del
   frontmatter, de modo que un brief ajeno se reporta en el readiness.
 
+### ✨ Humanización de las notas narrativas (F7)
+
+- Nuevo módulo `core/normalization/humanizacion.py` con predicados de ruido:
+  métricas del scanner (`Proyecto 'X' — N archivos`), TODOs crudos, mensajes
+  de chat/IDE (por `source`, no solo por texto) y entrypoints de directorios
+  de trabajo/scratch.
+- `1.1-Mapa-Mental-Narrativo`: el diagrama global ya no muestra métricas del
+  scan, TODOs ni mensajes de conversación.
+- `1.3-Proposito`: las REGLAS del proyecto se muestran como principios (sin
+  el resumen plantilla de la ingesta); el ruido ya no entra.
+- `2.4-Ideas-Relevantes`: sin TODOs crudos del código mezclados con ideas.
+
 ### 🧪 Tests
 
 - Nuevo `test_brief_identidad.py` (3 tests): el export no contamina el CWD;
   un brief extranjero se detecta; un brief coherente no da falsos positivos.
-- Suite: **293/293** verdes (antes 290); `ruff` y `mypy` limpios.
+- Nuevo `test_humanizacion.py` (2 tests): predicados de ruido + verificación
+  de que 1.1/1.3/2.4 no muestran ruido y sí el contenido legítimo.
+- Suite: **295/295** verdes (antes 290); `ruff` y `mypy` limpios.
 
 ### 📝 Documentación
 
 - Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
-  **293** tests y **24** herramientas MCP (antes 288 y 16).
+  **295** tests y **24** herramientas MCP (antes 288 y 16).
 
 ---
 
