@@ -643,6 +643,40 @@ def knowledge_wiki_ask(pregunta: str, limite: int = 5, target: str = ".") -> str
 
 
 @_tool
+def knowledge_wiki_embeddings(target: str = ".", rebuild: bool = False) -> str:
+    """Estado del indice semantico opcional de la wiki (sentence-transformers).
+
+    La wiki no depende de esta capa: sin la libreria el ranking usa BM25. Con
+    rebuild=True carga el modelo (puede usar red la primera vez) y reconstruye
+    el indice cacheado en .context-map/state/embeddings.json. USAR para saber
+    si la busqueda semantica esta activa o para precalcular el indice.
+
+    Args:
+        target: Ruta del proyecto.
+        rebuild: Reconstruir el indice ignorando la cache.
+    """
+    from context_map.domain.knowledge import embeddings as emb
+
+    try:
+        vdir = _vault_de(target)
+        indice = emb.construir_indice(vdir, forzar=True) if rebuild else {}
+        diag = emb.estado(vdir)
+        if indice.get("motivo"):
+            diag["motivo"] = indice["motivo"]
+        lineas = ["knowledge_wiki_embeddings:"]
+        lineas.append(f" - disponible: {'si' if diag['disponible'] else 'no'}")
+        lineas.append(f" - modelo: {diag['modelo'] or '(ninguno)'}")
+        lineas.append(f" - paginas_wiki: {diag['paginas_wiki']}")
+        lineas.append(f" - paginas_indexadas: {diag['paginas_indexadas']}")
+        lineas.append(f" - cache_al_dia: {'si' if diag['cache_al_dia'] else 'no'}")
+        if diag.get("motivo"):
+            lineas.append(f" - motivo: {diag['motivo']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_embeddings: {err}"
+
+
+@_tool
 def knowledge_wiki_moc(target: str = ".") -> str:
     """Regenera el MOC (mapa de contenido) de la wiki: cada concepto con sus fuentes.
 

@@ -7,6 +7,7 @@ Expone la wiki PKM (``90-CONOCIMIENTO/05-WIKI``) desde la CLI:
 - ``ctxmap wiki ask "<pregunta>"``  → respuesta extractiva local (sin LLM) con citas.
 - ``ctxmap wiki moc``               → regenera el MOC (mapa de contenido).
 - ``ctxmap wiki lint``              → salud: enlaces rotos, huérfanas, conceptos, contradicciones.
+- ``ctxmap wiki embeddings``        → estado/construcción del índice semántico opcional.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import os
 from dataclasses import asdict
 
 from context_map.application.commands._helpers import project_name, vault_dir
+from context_map.domain.knowledge import embeddings
 from context_map.domain.knowledge import wiki as kb
 
 
@@ -32,7 +34,7 @@ def cmd_wiki(args) -> None:
     """
     accion = getattr(args, "wiki_cmd", None)
     if not accion:
-        print("Uso: ctxmap wiki {ingest|query|ask|moc|lint} [opciones]")
+        print("Uso: ctxmap wiki {ingest|query|ask|moc|lint|embeddings} [opciones]")
         return
 
     vdir = _resolver_vault(args)
@@ -106,6 +108,32 @@ def cmd_wiki(args) -> None:
             print(f"  💬 {a}")
         if not reporte.errores and not reporte.avisos:
             print("  (sin errores ni avisos)")
+
+    elif accion == "embeddings":
+        rebuild = bool(getattr(args, "rebuild", False))
+        indice = embeddings.construir_indice(vdir, forzar=True) if rebuild else {}
+        diag = embeddings.estado(vdir)
+        diag["reconstruido"] = rebuild and bool(indice.get("paginas"))
+        if indice.get("motivo"):
+            diag["motivo"] = indice["motivo"]
+        if getattr(args, "json", False):
+            print(json.dumps(diag, ensure_ascii=False, indent=2))
+            return
+        print("[wiki] 🧠 Búsqueda semántica (opcional)")
+        if not diag["disponible"]:
+            print("  Estado: NO disponible — el ranking sigue usando BM25.")
+            print(f"  Motivo: {diag['motivo']}")
+            print(f"  Instalar: {diag['instalar']}")
+            return
+        print(f"  Modelo: {diag['modelo']}")
+        print(f"  Páginas de la wiki: {diag['paginas_wiki']}")
+        print(f"  Páginas indexadas: {diag['paginas_indexadas']}")
+        print(f"  Caché al día: {'sí' if diag['cache_al_dia'] else 'no (usa --rebuild)'}")
+        if rebuild:
+            print(f"  Índice reconstruido: {'sí' if diag['reconstruido'] else 'no'}")
+        if diag.get("motivo"):
+            print(f"  Motivo: {diag['motivo']}")
+        print(f"  Caché: {diag['ruta_cache']}")
 
     else:
         print(f"[wiki] Acción desconocida: {accion}")

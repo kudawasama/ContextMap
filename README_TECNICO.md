@@ -82,7 +82,7 @@ Para garantizar un Graph View de Obsidian legible, limpio y sin colisiones:
 
 ## 4. Servidor MCP Nativo (Model Context Protocol)
 
-El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 28 herramientas nativas:
+El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 29 herramientas nativas:
 
 | Tool MCP | Descripción |
 | :--- | :--- |
@@ -102,6 +102,7 @@ El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre tr
 | `import_git` | Extracción de historial enriquecido de commits. |
 | `import_chat` | Ingesta de conversaciones exportadas de IA. |
 | `install_hooks` | Inyección de hooks de Git (`pre-commit` y `post-commit`). |
+| `knowledge_wiki_embeddings` | Diagnóstico/precálculo del índice semántico opcional de la wiki (sentence-transformers). |
 
 ---
 

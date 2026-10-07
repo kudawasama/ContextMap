@@ -319,6 +319,17 @@ def create_parser() -> argparse.ArgumentParser:
     sw_lint.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     sw_lint.add_argument("--target", default=".", help="Ruta del proyecto")
 
+    sw_emb = sw.add_parser(
+        "embeddings",
+        help="Estado/construcción del índice semántico opcional (sentence-transformers)",
+    )
+    sw_emb.add_argument(
+        "--rebuild", action="store_true",
+        help="Ignora la caché, carga el modelo y reconstruye el índice (usa red la 1ª vez)",
+    )
+    sw_emb.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_emb.add_argument("--target", default=".", help="Ruta del proyecto")
+
     s_review = sub.add_parser(
         "review", help="Repaso espaciado (SM-2) de la wiki del mundo conocimiento"
     )

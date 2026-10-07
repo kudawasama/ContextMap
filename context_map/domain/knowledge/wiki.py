@@ -6,8 +6,9 @@ usuario) usa para construir y mantener la wiki del curso de Obsidian:
 
 - ``ingresar``   → crea la página de resumen de una fuente, actualiza el índice
   de resúmenes, el entry log y las páginas de entidades/conceptos.
-- ``consultar``  → ranking por solape de tokens; devuelve páginas CON CITAS
-  (ruta del wikilink) para que el agente sintetice con trazabilidad.
+- ``consultar``  → ranking por solape de tokens (BM25) + embeddings opcionales;
+  devuelve páginas CON CITAS (ruta del wikilink) para que el agente sintetice
+  con trazabilidad.
 - ``lint``       → salud de la wiki: enlaces rotos, páginas huérfanas,
   conceptos sin página e ítems del entry log apuntando a nada.
 """
@@ -24,6 +25,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from context_map.domain.knowledge import embeddings
 from context_map.domain.knowledge.indices import (
     agregar_a_indice,
     backlink_relativo,
@@ -404,7 +406,12 @@ def listar_paginas(vault_dir: str) -> list[dict[str, str]]:
 
 
 def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, str]]:
-    """Busca páginas relevantes de la wiki por solape de tokens, con citas.
+    """Busca páginas relevantes de la wiki y las devuelve con citas.
+
+    Fusión de dos señales: **BM25** (solape de tokens, siempre disponible) y
+    **embeddings** (similitud semántica, opcional; ver
+    ``context_map.domain.knowledge.embeddings``). Sin ``sentence-transformers``
+    el comportamiento es idéntico al BM25 puro.
 
     Args:
         vault_dir (str): Directorio raíz del vault.
@@ -416,7 +423,14 @@ def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, 
         (wikilink) y ``excerpt`` (fragmento del contenido).
     """
     q_tokens = _tokens(pregunta)
-    if not q_tokens:
+
+    # Señal semántica opcional. Es best-effort: si falta la librería o falla el
+    # modelo, devuelve {} y el ranking se queda en BM25.
+    semanticas: dict[str, float] = {}
+    with contextlib.suppress(Exception):
+        semanticas = embeddings.similitudes(vault_dir, pregunta)
+
+    if not q_tokens and not semanticas:
         return []
 
     # Corpus con TF por documento (título + contenido).
@@ -436,8 +450,8 @@ def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, 
 
     # BM25 (k1=1.5, b=0.75): pondera frecuencia, rareza del término y longitud.
     k1, b = 1.5, 0.75
-    resultados: list[tuple[float, dict[str, str]]] = []
-    for ruta, titulo, contenido, toks in documentos:
+    puntajes_bm25: dict[str, float] = {}
+    for ruta, _titulo, _contenido, toks in documentos:
         tf = Counter(toks)
         largo = len(toks) or 1
         score = 0.0
@@ -449,6 +463,17 @@ def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, 
             score += idf * (tf[termino] * (k1 + 1)) / (
                 tf[termino] + k1 * (1 - b + b * largo / largo_medio)
             )
+        if score > 0:
+            puntajes_bm25[ruta] = score
+
+    # Fusión de señales: BM25 normalizado + peso × similitud semántica. Así una
+    # paráfrasis sin solape léxico también puede recuperar su página.
+    max_bm25 = max(puntajes_bm25.values(), default=0.0) or 1.0
+    resultados: list[tuple[float, dict[str, str]]] = []
+    for ruta, titulo, contenido, _toks in documentos:
+        score = puntajes_bm25.get(ruta, 0.0) / max_bm25 + (
+            embeddings.PESO_SEMANTICO * semanticas.get(ruta, 0.0)
+        )
         if score <= 0:
             continue
         cuerpo = re.sub(r"^---\n.*?\n---\n", "", contenido, flags=re.DOTALL)

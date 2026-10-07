@@ -106,7 +106,7 @@ Scraping-Bot           🟡 Warm     21d        32       2/1          0
 ```
 
 ### 🔌 3. Autonomous Control for AI Agents (Native MCP Server & Skills)
-Includes a built-in **stdio MCP Server (28 tools)** and **Google Antigravity Skill generator**. Autonomous agents like **Antigravity, Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
+Includes a built-in **stdio MCP Server (29 tools)** and **Google Antigravity Skill generator**. Autonomous agents like **Antigravity, Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
 
 ### 🛡️ 4. Universal Rules & Skills for 10+ IDEs
 Write project rules once, and ContextMap auto-syncs them to every tool's native format:
@@ -131,7 +131,7 @@ Write project rules once, and ContextMap auto-syncs them to every tool's native 
 | **Permanent Architecture Memory** | ❌ Lost on chat close | 🟡 Partial | **✅ Indestructible Memory** |
 | **Switch IDEs Without Loss** | ❌ No | ❌ Vendor Lock-in | **✅ 100% Portable** |
 | **Multi-Project Portfolio View** | ❌ No | ❌ No | **✅ Consolidated SQLite DB** |
-| **Native MCP Server & Skills** | ❌ No | 🟡 Proprietary | **✅ 28 Tools stdio + Antigravity Skill** |
+| **Native MCP Server & Skills** | ❌ No | 🟡 Proprietary | **✅ 29 Tools stdio + Antigravity Skill** |
 
 ---
 

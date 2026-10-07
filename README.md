@@ -106,7 +106,7 @@ Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0
 ```
 
 ### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo & Skills)
-ContextMap incluye un servidor **MCP nativo (28 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
+ContextMap incluye un servidor **MCP nativo (29 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
 
 ### 🛡️ 4. Reglas y Skills Universales para 10+ Editores e IAs
 Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de cada herramienta:
@@ -131,7 +131,7 @@ Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de
 | **No Olvidar Acuerdos** | ❌ Pierde todo al cerrar chat | 🟡 Parcial | **✅ Memoria Permanente** |
 | **Cambiar de Editor sin Perder Datos** | ❌ No | ❌ Atrapado en su app | **✅ Totalmente Portable** |
 | **Visión de Múltiples Proyectos** | ❌ No | ❌ No | **✅ Base SQLite Consolidada** |
-| **Herramientas MCP & Skills Nativas** | ❌ No | 🟡 Cerradas | **✅ 28 Tools stdio + Antigravity Skill** |
+| **Herramientas MCP & Skills Nativas** | ❌ No | 🟡 Cerradas | **✅ 29 Tools stdio + Antigravity Skill** |
 
 ---
 

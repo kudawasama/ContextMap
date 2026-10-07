@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🧠 Búsqueda semántica opcional en la wiki (G3 · plan v2.7)
+
+- Nuevo módulo `domain/knowledge/embeddings.py`: índice vectorial **opcional**
+  con `sentence-transformers` detectado en tiempo de ejecución. Sin la librería
+  nada cambia: `wiki query` / `wiki ask` siguen con BM25.
+- `wiki.consultar` **fusiona** BM25 normalizado + similitud semántica, así una
+  paráfrasis sin solape léxico recupera su página manteniendo las citas.
+- Índice cacheado en `.context-map/state/embeddings.json` con invalidación por
+  *hash* del contenido (si la wiki no cambia, no se recalcula).
+- Nuevo `ctxmap wiki embeddings [--rebuild] [--json]` y tool MCP
+  `knowledge_wiki_embeddings` para diagnosticar/precalcular.
+- **Cero dependencias base y cero red en `build`**: no se crea extra (el CI usa
+  `uv sync --all-extras`); la instalación es opt-in del usuario.
+- Tests: `test_embeddings_opcionales.py` (8); suite **327/327**.
+
+### 🔍 OCR opcional de PDF escaneado (G2 · plan v2.7)
+
+- Si un PDF no tiene capa de texto, `ingest` intenta OCR **best-effort** con
+  `pytesseract` + `Pillow` + binario `tesseract` (detección en tiempo de
+  ejecución, sin dependencias base). Si falta cualquier pieza, mensaje
+  accionable; nunca revienta la ingesta.
+- Tests: `test_ingesta_rica.py` (2 nuevos); suite **319/319**.
+
 ### 📄 Ingesta de `.docx` sin dependencias (G1 · plan v2.7)
 
 - `ctxmap ingest <archivo.docx>` extrae el texto con `zipfile` +
