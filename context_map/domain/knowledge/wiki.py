@@ -599,6 +599,15 @@ def _asegurar_enlace_moc(vault_dir: str) -> None:
 def generar_moc(vault_dir: str) -> str:
     """Genera el MOC (mapa de contenido): cada concepto con sus fuentes.
 
+    La generación es de **una sola pasada**: cada resumen se lee una vez y se
+    construye el mapa ``concepto → fuentes``, de modo que el coste escala con la
+    wiki (antes se releían todos los resúmenes por cada concepto).
+
+    Nota de diseño (G9): se mantiene un único ``MOC.md`` en lugar de páginas por
+    concepto — cada nota del vault debe colgar de un único padre (topología en
+    árbol) y fragmentar el índice llenaría el grafo de nodos ruido. Se revisará
+    si la wiki supera ~25 conceptos o ~40 resúmenes.
+
     Args:
         vault_dir (str): Directorio raíz del vault.
 
@@ -606,22 +615,36 @@ def generar_moc(vault_dir: str) -> str:
         str: Ruta del archivo ``MOC.md`` generado.
     """
     ruta_moc = os.path.join(ruta_wiki(vault_dir), MOC)
-    resumenes = _rutas_md(ruta_resumenes(vault_dir), f"{RESUMENES}.md")
     entidades = _rutas_md(ruta_entidades(vault_dir), f"{ENTIDADES}.md")
+    resumenes = _rutas_md(ruta_resumenes(vault_dir), f"{RESUMENES}.md")
+
+    # Una sola lectura por resumen: a qué conceptos enlaza y en qué orden.
+    fuentes_por_concepto: dict[str, list[str]] = {}
+    sin_concepto: list[str] = []
+    for ruta_res in resumenes:
+        with open(ruta_res, encoding="utf-8") as f:
+            contenido = f.read()
+        slugs = {
+            os.path.splitext(slug_concepto)[0]
+            for slug_concepto in re.findall(
+                rf"\[\[[^\]]*?/{ENTIDADES}/([^\]|\n]+)", contenido
+            )
+        }
+        if not slugs:
+            sin_concepto.append(
+                f"- [[{backlink_relativo(vault_dir, ruta_res)}|{leer_titulo(ruta_res)}]]"
+            )
+            continue
+        enlace = f"[[{backlink_relativo(vault_dir, ruta_res)}|{leer_titulo(ruta_res)}]]"
+        for slug_concepto in slugs:
+            fuentes_por_concepto.setdefault(slug_concepto, []).append(enlace)
 
     bloques: list[str] = ["## 🔖 Conceptos", ""]
     if entidades:
         for ruta_ent in entidades:
             slug_ent = os.path.splitext(os.path.basename(ruta_ent))[0]
             bloques.append(f"### 🔖 {leer_titulo(ruta_ent)}")
-            relacionados = []
-            for ruta_res in resumenes:
-                with open(ruta_res, encoding="utf-8") as f:
-                    if f"/{ENTIDADES}/{slug_ent}" in f.read():
-                        relacionados.append(
-                            f"[[{backlink_relativo(vault_dir, ruta_res)}|"
-                            f"{leer_titulo(ruta_res)}]]"
-                        )
+            relacionados = fuentes_por_concepto.get(slug_ent, [])
             if relacionados:
                 bloques += [f"- {r}" for r in relacionados]
             else:
@@ -629,15 +652,6 @@ def generar_moc(vault_dir: str) -> str:
             bloques.append("")
     else:
         bloques += ["_(sin conceptos todavía)_", ""]
-
-    sin_concepto: list[str] = []
-    for ruta_res in resumenes:
-        with open(ruta_res, encoding="utf-8") as f:
-            enlaces = re.findall(rf"\[\[[^\]]*?/{ENTIDADES}/[^\]|]+", f.read())
-        if not enlaces:
-            sin_concepto.append(
-                f"- [[{backlink_relativo(vault_dir, ruta_res)}|{leer_titulo(ruta_res)}]]"
-            )
 
     partes = [
         "---",

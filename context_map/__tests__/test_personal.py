@@ -625,3 +625,40 @@ Contexto del acuerdo con el usuario.
     assert any("Regla Inamovible" in t or "GOBIERNO" in t for t in titulos)
     assert any("descarta cron a Telegram" in t for t in titulos)
 
+
+def test_buscar_ordena_por_relevancia_bm25() -> None:
+    """G8: la búsqueda personal ya usa el BM25 de FTS5 (más relevante primero).
+
+    Se documenta como regresión: el plan v2.7 pedía "evaluar BM25 en personal
+    query" y ya estaba implementado (``bm25(fts) AS puntaje ORDER BY puntaje``).
+    """
+    db, temp_dir = _db_temporal()
+    try:
+        db.cargar_eventos(
+            "ContextMap",
+            [
+                {
+                    "type": "BASE",
+                    "text": "El vector denso guarda un vector por documento y otro vector de consulta",
+                    "timestamp": "",
+                    "source": "t",
+                },
+                {
+                    "type": "BASE",
+                    "text": "Un vector aparece aquí una sola vez entre muchas palabras",
+                    "timestamp": "",
+                    "source": "t",
+                },
+            ],
+        )
+        resultados = db.buscar("vector")
+
+        assert len(resultados) >= 2, "Ambos eventos deben recuperarse"
+        assert "denso" in resultados[0].texto, "El más relevante va primero"
+        assert resultados[0].puntaje <= resultados[1].puntaje, (
+            "bm25() devuelve valores negativos: más negativo = más relevante"
+        )
+    finally:
+        db.cerrar()
+        shutil.rmtree(temp_dir, ignore_errors=True)
+

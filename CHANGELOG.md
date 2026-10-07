@@ -7,6 +7,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🗺️ G8 y G9 evaluados: BM25 ya estaba · MOC en una sola pasada
+
+- **G8 (`personal query`)**: el ítem pedía evaluar BM25 y **ya estaba
+  implementado** (`bm25(fts) AS puntaje ORDER BY puntaje` en
+  `core/personal/bd.py`). Se cierra con un test de regresión de relevancia
+  (`test_buscar_ordena_por_relevancia_bm25`).
+- **G9 (MOC por concepto)**: se **descarta** fragmentar el índice en páginas por
+  concepto (cada nota debe colgar de un único padre → ruido en el grafo). En su
+  lugar, `generar_moc` ahora lee cada resumen **una sola vez** (antes releía
+  todos los resúmenes por cada concepto: O(conceptos × resúmenes)). Criterio de
+  revisión documentado: ~25 conceptos o ~40 resúmenes.
+- Tests: `test_moc_agrupa_conceptos_con_sus_fuentes` y la regresión de BM25.
+
 ### 🤖 Síntesis generativa con LLM opcional (G6 · plan v2.7)
 
 - Nuevo módulo `domain/knowledge/llm.py`: hook de generación con cliente HTTP

@@ -79,6 +79,35 @@ def test_bm25_prefiere_mayor_frecuencia(tmp_path) -> None:
     assert resultados[0]["titulo"] == "Mucho vector"
 
 
+def test_moc_agrupa_conceptos_con_sus_fuentes(tmp_path) -> None:
+    """G9: el MOC se genera en una pasada y agrupa cada concepto con sus fuentes."""
+    vdir = _vault(tmp_path)
+    kb.ingresar(
+        vdir, "Sistemas RAG",
+        "RAG combina la recuperación de documentos con la generación de texto.",
+        entidades="RAG, Embeddings",
+    )
+    kb.ingresar(
+        vdir, "Vectores densos",
+        "Los embeddings representan el significado en un espacio vectorial.",
+        entidades="Embeddings",
+    )
+    kb.ingresar(vdir, "Cocina", "Recetas de pastas italianas tradicionales.")
+
+    with open(kb.generar_moc(vdir), encoding="utf-8") as f:
+        moc = f.read()
+
+    assert "### 🔖 Embeddings" in moc and "### 🔖 RAG" in moc
+    # El concepto compartido aparece con las DOS fuentes que lo citan.
+    seccion = moc.split("### 🔖 Embeddings", 1)[1].split("###", 1)[0]
+    assert seccion.count("- [[") == 2, seccion
+    # Los conceptos con fuentes no muestran el aviso de vacío.
+    assert "_(sin fuentes asociadas todavía)_" not in moc
+    # El resumen sin conceptos se lista en su sección aparte.
+    assert "## 📄 Resúmenes sin concepto" in moc
+    assert "Cocina" in moc.split("## 📄 Resúmenes sin concepto", 1)[1]
+
+
 def test_lint_detecta_contradiccion(tmp_path) -> None:
     """Dos páginas que afirman y niegan lo mismo producen un aviso (no un error)."""
     vdir = _vault(tmp_path)
