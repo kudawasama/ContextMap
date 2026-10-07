@@ -22,6 +22,7 @@ from context_map.application.commands._helpers import (
     vault_dir,
 )
 from context_map.core.models import Edge, Node
+from context_map.core.normalization import estandarizar_nodo, estandarizar_nodos
 from context_map.core.parsing import events_to_model
 from context_map.core.storage import load_jsonl, snapshot_map, write_map
 from context_map.domain.analysis import analizar_readiness
@@ -89,7 +90,6 @@ def cmd_build(args) -> None:
     if extra_events:
         nodes, edges = events_to_model(extra_events)
         # Estandarizar nodos nuevos antes de persistir
-        from context_map.core.normalization import estandarizar_nodo, estandarizar_nodos
         nodes = estandarizar_nodos(nodes)
         append_nodes_edges(nodes, edges)
 
