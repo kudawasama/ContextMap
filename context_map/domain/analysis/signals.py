@@ -180,7 +180,10 @@ def analizar_readiness(ruta_raiz: str) -> ResultadoReadiness:
     if not verificar_archivo(ruta_raiz, ["README.md", "README.rst", "README.txt", "README"]):
         resultado.sugerencias.append("Crear un README.md con la descripción y uso del proyecto.")
     if not (
-        verificar_directorio(ruta_raiz, ["tests", "test", "__tests__", "spec", "specs"])
+        # Mismo criterio que la señal "Tests" (incluye context_map/__tests__,
+        # spec/, etc.): evita el falso positivo en proyectos con los tests
+        # dentro del paquete.
+        verificar_directorio(ruta_raiz, DIRECTORIOS_TESTS)
         or verificar_archivo(ruta_raiz, ["test.py", "tests.py"])
     ):
         resultado.sugerencias.append("Agregar una carpeta de pruebas (tests/) para validar el código.")

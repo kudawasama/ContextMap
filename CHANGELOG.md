@@ -16,6 +16,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Añadido a las extensiones soportadas en lote (`.docx`).
 - Tests: `test_ingesta_rica.py` (6); suite **317/317**.
 
+### 🔧 `check`: sin falso positivo de carpeta de tests (G7 · plan v2.7)
+
+- La sugerencia "Agregar una carpeta de pruebas (tests/)" usaba una lista de
+  directorios sin `context_map/__tests__`, así que se mostraba en proyectos con
+  los tests dentro del paquete. Ahora usa `DIRECTORIOS_TESTS` (el mismo criterio
+  que la señal "Tests").
+
 ### 🗺️ Plan v2.7 documentado
 
 OCR de PDF, embeddings opcionales (fallback BM25), captura móvil, Web Clipper y
