@@ -5,7 +5,7 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — 2026-10-07
+## [2.6.0] — 2026-10-07
 
 ### 🐛 Corregido (P0) — el brief ya no puede ser "extranjero"
 
