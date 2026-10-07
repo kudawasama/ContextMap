@@ -61,10 +61,15 @@ def exportar_contexto(
     if brief_file.exists():
         brief_content = brief_file.read_text(encoding="utf-8")
     else:
+        # IMPORTANTE: pasar SIEMPRE output_path absoluto bajo project_path.
+        # El default de generar_brief es ``.context-map/CONTEXT.md`` relativo al
+        # CWD, lo que sobrescribía el brief del proyecto real al exportar (o al
+        # correr los tests) desde otro directorio.
         brief_content = generar_brief(
             project_name=project_path.name,
             nodes=nodos,
             edges=edges,
+            output_path=str(project_path / ".context-map" / "CONTEXT.md"),
             project_dir=str(project_path),
         )
 

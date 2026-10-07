@@ -5,6 +5,32 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — 2026-10-07
+
+### 🐛 Corregido (P0) — el brief ya no puede ser "extranjero"
+
+- **`export`**: `exportar_contexto` invocaba `generar_brief` sin `output_path`,
+  por lo que el default `.context-map/CONTEXT.md` (relativo al CWD)
+  **sobrescribía el brief del proyecto real** con el de un proyecto temporal
+  — tanto al ejecutar `ctxmap export` como al correr la suite de tests. Ahora
+  el brief se genera siempre dentro del proyecto exportado.
+- **`check`**: la detección de nombre fragmentado compara ahora también el
+  **H1 del brief** (`# <Proyecto> — Brief para Agentes`) además del
+  frontmatter, de modo que un brief ajeno se reporta en el readiness.
+
+### 🧪 Tests
+
+- Nuevo `test_brief_identidad.py` (3 tests): el export no contamina el CWD;
+  un brief extranjero se detecta; un brief coherente no da falsos positivos.
+- Suite: **293/293** verdes (antes 290); `ruff` y `mypy` limpios.
+
+### 📝 Documentación
+
+- Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
+  **293** tests y **24** herramientas MCP (antes 288 y 16).
+
+---
+
 ## [2.5.0] — 2026-09-28
 
 ### 🧠 Modo Conocimiento (PKM): Second Brain + LLM Wiki en islas separadas

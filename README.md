@@ -9,7 +9,7 @@
 [![Release](https://img.shields.io/badge/version-v2.5.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
-[![Tests: 288 Passing](https://img.shields.io/badge/tests-288%2F288%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Tests: 293 Passing](https://img.shields.io/badge/tests-293%2F293%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
 [![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
@@ -106,7 +106,7 @@ Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0
 ```
 
 ### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo & Skills)
-ContextMap incluye un servidor **MCP nativo (16 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
+ContextMap incluye un servidor **MCP nativo (24 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
 
 ### 🛡️ 4. Reglas y Skills Universales para 10+ Editores e IAs
 Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de cada herramienta:

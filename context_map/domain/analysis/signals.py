@@ -407,17 +407,28 @@ def inconsistencia_nombre(ruta_raiz: str, proyecto_actual: str) -> str:
     ]
     nombre_vault = vaults[0] if len(vaults) == 1 else ""
 
+    # El brief del proyecto puede declarar su identidad de dos formas:
+    #  1. Frontmatter ``project: "Nombre"`` (versiones antiguas).
+    #  2. Encabezado H1 ``# Nombre — Brief para Agentes`` (formato actual).
+    # Comprobar AMBAS detecta briefs “extranjeros” escritos por otro proyecto
+    # (el bug P0: ``export`` sobrescribía el brief real con el de un tmp dir).
     nombre_project = ""
+    nombre_brief = ""
     context_md = os.path.join(context_dir, "CONTEXT.md")
     if os.path.isfile(context_md):
         try:
             with open(context_md, encoding="utf-8") as f:
                 for linea in f:
                     linea = linea.strip()
-                    if linea.startswith("project:"):
+                    if not nombre_project and linea.startswith("project:"):
                         nombre_project = (
                             linea.split(":", 1)[1].strip().strip('"').strip("'")
                         )
+                    if not nombre_brief and linea.startswith("# "):
+                        encabezado = linea[2:].strip()
+                        if "— Brief para Agentes" in encabezado:
+                            nombre_brief = encabezado.split("—")[0].strip()
+                    if nombre_project and nombre_brief:
                         break
         except Exception:
             pass
@@ -427,15 +438,26 @@ def inconsistencia_nombre(ruta_raiz: str, proyecto_actual: str) -> str:
     def _norm(v: str) -> str:
         return v.strip().replace(" ", "-").lower()
 
-    etiquetas = {"vault": nombre_vault, "project": nombre_project, "repo": nombre_repo}
+    etiquetas = {
+        "vault": nombre_vault,
+        "project": nombre_project,
+        "brief": nombre_brief,
+        "repo": nombre_repo,
+    }
     unicas = {_norm(v) for v in etiquetas.values() if v}
 
     if len(unicas) <= 1:
         return ""
 
     detalle = " · ".join(f"{k}='{v}'" for k, v in etiquetas.items() if v)
-    return (
+    aviso = (
         f"⚠️ Nombre del proyecto fragmentado ({detalle}): el vault, el CONTEXT.md "
         "y la carpeta del repo no coinciden — la BD personal puede duplicar "
         "eventos. Unifica a un solo nombre (idealmente el del repo)."
     )
+    if nombre_brief and nombre_project and _norm(nombre_brief) != _norm(nombre_project):
+        aviso += (
+            " ⚠️ El encabezado del brief no coincide con su frontmatter: "
+            "puede haber sido sobrescrito por otro proyecto (ej. un ``export``)."
+        )
+    return aviso

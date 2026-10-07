@@ -249,7 +249,7 @@ wheels = [
 
 [[package]]
 name = "context-map-ai"
-version = "2.3.0"
+version = "2.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
@@ -264,6 +264,7 @@ dev = [
 ]
 mcp = [
     { name = "mcp" },
+    { name = "pydantic" },
 ]
 pdf = [
     { name = "pymupdf" },
@@ -274,6 +275,7 @@ requires-dist = [
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<2.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10.0" },
+    { name = "pydantic", marker = "extra == 'mcp'", specifier = ">=2.13,<3" },
     { name = "pymupdf", marker = "extra == 'pdf'", specifier = ">=1.24.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
