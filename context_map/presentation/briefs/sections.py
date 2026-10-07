@@ -224,6 +224,7 @@ def conocimiento_relevante(panorama: dict[str, Any] | None = None) -> str:
     paginas = panorama.get("paginas") or []
     total = int(panorama.get("total") or 0)
     inbox = int(panorama.get("inbox") or 0)
+    repasos = int(panorama.get("repasos") or 0)
 
     lineas = [
         "## 🧠 Conocimiento Relevante (Second Brain)",
@@ -248,6 +249,11 @@ def conocimiento_relevante(panorama: dict[str, Any] | None = None) -> str:
         lineas.extend([
             "",
             f"📥 **Inbox pendiente de clasificar**: {inbox} nota(s) → `ctxmap inbox purge`.",
+        ])
+    if repasos:
+        lineas.extend([
+            "",
+            f"🔁 **Repaso pendiente (SM-2)**: {repasos} página(s) → `ctxmap review due`.",
         ])
     lineas.extend([
         "",

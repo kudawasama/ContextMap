@@ -683,6 +683,50 @@ def knowledge_wiki_lint(target: str = ".") -> str:
 
 
 @_tool
+def knowledge_review_due(limite: int = 20, target: str = ".") -> str:
+    """Páginas de la wiki pendientes de repaso hoy (repaso espaciado SM-2).
+
+    Args:
+        limite: Máximo de páginas (default 20).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import review as rv
+
+    try:
+        pendientes = rv.paginas_due(_vault_de(target), limite=limite)
+        if not pendientes:
+            return "knowledge_review_due: nada pendiente. 🎉"
+        lineas = [f"knowledge_review_due: {len(pendientes)} página(s):"]
+        for p in pendientes:
+            lineas.append(f" - {p['titulo']} ({p['due'] or 'nueva'}) · {p['cita']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_review_due: {err}"
+
+
+@_tool
+def knowledge_review_grade(pagina: str, calidad: int, target: str = ".") -> str:
+    """Califica (0-5) una página de la wiki y reprograma su repaso con SM-2.
+
+    Args:
+        pagina: Título de la página o wikilink.
+        calidad: Calificación 0-5 (>=3 es acierto).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import review as rv
+
+    try:
+        res = rv.calificar(_vault_de(target), pagina, calidad)
+        return (
+            f"knowledge_review_grade: {res['titulo']} → "
+            f"repeticiones={res['repetitions']}, intervalo={res['interval']}d, "
+            f"ease={res['ease']}, próximo={res['due']}"
+        )
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_review_grade: {err}"
+
+
+@_tool
 def knowledge_ingest(url: str, video: bool = False, destino: str = "inbox", titulo: str = "", target: str = ".") -> str:
     """Captura una fuente externa al mundo CONOCIMIENTO (Web Clipper + YouTube).
 

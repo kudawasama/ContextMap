@@ -55,9 +55,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   cuelga del índice `05-WIKI.md`.
 - Nuevas tools MCP: `knowledge_wiki_ask`, `knowledge_wiki_moc` → **26 tools**.
 
+### 🔎 Recuperación BM25 (F10)
+
+- El ranking de `wiki query` / `wiki ask` pasa de solape de tokens a **BM25**
+  (k1=1.5, b=0.75): pondera frecuencia del término, su rareza (IDF) y la
+  longitud del documento.
+- Tokenización **insensible a acentos**: `recuperacion` encuentra `recuperación`.
+- Sin dependencias nuevas: matemática local y determinista.
+
+### 🔁 Repaso espaciado SM-2 (F11)
+
+- Nuevo módulo `domain/knowledge/review.py`: algoritmo **SM-2** local.
+- `ctxmap review due` (qué toca hoy) y `ctxmap review grade "<página>" <0-5>`
+  (califica y reprograma). Estado en `.context-map/state/review.json`.
+- El brief muestra **"Repaso pendiente (SM-2)"** cuando hay páginas vencidas.
+- Nuevas tools MCP: `knowledge_review_due`, `knowledge_review_grade`.
+
 ### 🧪 Tests
 
-- Nuevo `test_wiki_avanzado.py` (5 tests): síntesis con citas, sin-match,
+- Nuevo `test_review.py` (5 tests): SM-2 (primer acierto, fallo, secuencia),
+  páginas vencidas y persistencia del estado.
+- Nuevo `test_wiki_avanzado.py` (7 tests): síntesis con citas, sin-match,
   determinismo, contradicciones y MOC.
 - Nuevo `test_brief_identidad.py` (3 tests): el export no contamina el CWD;
   un brief extranjero se detecta; un brief coherente no da falsos positivos.
@@ -65,12 +83,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   de que 1.1/1.3/2.4 no muestran ruido y sí el contenido legítimo.
 - Nuevo `test_conocimiento_brief.py` (3 tests): el panorama lista páginas e
   inbox, y el conocimiento entra en el bloque dinámico del brief.
-- Suite: **303/303** verdes (antes 290); `ruff` y `mypy` limpios.
+- Suite: **310/310** verdes (antes 290); `ruff` y `mypy` limpios.
 
 ### 📝 Documentación
 
 - Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
-  **303** tests y **26** herramientas MCP (antes 288 y 16).
+  **310** tests y **28** herramientas MCP (antes 288 y 16).
 
 ---
 

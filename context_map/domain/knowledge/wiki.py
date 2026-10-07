@@ -15,8 +15,11 @@ usuario) usa para construir y mantener la wiki del curso de Obsidian:
 from __future__ import annotations
 
 import contextlib
+import math
 import os
 import re
+import unicodedata
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -56,11 +59,28 @@ class ReporteLint:
     avisos: list[str]
 
 
-# Palabras vacías para el ranking de consulta (es, de, la…).
+def _sin_acentos(texto: str) -> str:
+    """Quita los acentos de un texto ("generación" → "generacion").
+
+    Mejora el matching: una consulta escrita sin tildes encuentra la página.
+
+    Args:
+        texto (str): Texto de entrada.
+
+    Returns:
+        str: Texto sin marcas diacríticas.
+    """
+    descompuesto = unicodedata.normalize("NFD", texto)
+    return "".join(c for c in descompuesto if unicodedata.category(c) != "Mn")
+
+
+_PATRON_TOKEN = re.compile(r"[a-z0-9]{3,}")
+
+# Palabras vacías para el ranking de consulta (normalizadas sin acentos).
 _STOPWORDS = {
     "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en",
     "y", "o", "a", "para", "por", "con", "que", "se", "su", "al", "lo", "como",
-    "es", "son", "mas", "más", "pero", "sobre", "entre", "esto", "esta", "the",
+    "es", "son", "mas", "pero", "sobre", "entre", "esto", "esta", "the",
     "of", "and", "to", "in", "on", "for",
 }
 
@@ -87,10 +107,15 @@ def ruta_entidades(vault_dir: str) -> str:
     return os.path.join(ruta_wiki(vault_dir), ENTIDADES)
 
 
+def _tokens_lista(texto: str) -> list[str]:
+    """Tokens relevantes con repetición (para TF): minúsculos, sin acentos ni stopwords."""
+    norm = _PATRON_TOKEN.findall(_sin_acentos((texto or "").lower()))
+    return [t for t in norm if t not in _STOPWORDS]
+
+
 def _tokens(texto: str) -> set[str]:
-    """Extrae tokens relevantes (minúsculos, sin stopwords) de un texto."""
-    norm = re.findall(r"[a-záéíóúüñ0-9]{3,}", (texto or "").lower())
-    return {t for t in norm if t not in _STOPWORDS}
+    """Conjunto de tokens relevantes (sin stopwords) de un texto."""
+    return set(_tokens_lista(texto))
 
 
 def _padre_wiki(seccion: str) -> str:
@@ -352,8 +377,8 @@ def listar_paginas(vault_dir: str) -> list[dict[str, str]]:
 
     Returns:
         list[dict[str, str]]: Items con ``titulo``, ``tipo`` (``resumen`` |
-        ``entidad``) y ``cita`` (wikilink relativo al vault). Los resúmenes
-        van primero para priorizarse al truncar.
+        ``entidad``), ``ruta`` absoluta y ``cita`` (wikilink relativo al
+        vault). Los resúmenes van primero para priorizarse al truncar.
     """
     resultado: list[dict[str, str]] = []
     for carpeta, tipo in (
@@ -372,6 +397,7 @@ def listar_paginas(vault_dir: str) -> list[dict[str, str]]:
             resultado.append({
                 "titulo": titulo,
                 "tipo": tipo,
+                "ruta": ruta,
                 "cita": f"[[{cita}|{titulo}]]",
             })
     return resultado
@@ -392,13 +418,38 @@ def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, 
     q_tokens = _tokens(pregunta)
     if not q_tokens:
         return []
-    resultados: list[tuple[int, dict[str, str]]] = []
+
+    # Corpus con TF por documento (título + contenido).
+    documentos: list[tuple[str, str, str, list[str]]] = []
     for ruta, titulo in _paginas(vault_dir):
         with open(ruta, encoding="utf-8") as f:
             contenido = f.read()
-        doc_tokens = _tokens(titulo + " " + contenido)
-        score = len(q_tokens & doc_tokens)
-        if score == 0:
+        documentos.append((ruta, titulo, contenido, _tokens_lista(titulo + " " + contenido)))
+    if not documentos:
+        return []
+
+    n_docs = len(documentos)
+    largo_medio = sum(len(d[3]) for d in documentos) / n_docs or 1.0
+    frecuencia_doc: Counter[str] = Counter()
+    for *_resto, toks in documentos:
+        frecuencia_doc.update(set(toks))
+
+    # BM25 (k1=1.5, b=0.75): pondera frecuencia, rareza del término y longitud.
+    k1, b = 1.5, 0.75
+    resultados: list[tuple[float, dict[str, str]]] = []
+    for ruta, titulo, contenido, toks in documentos:
+        tf = Counter(toks)
+        largo = len(toks) or 1
+        score = 0.0
+        for termino in q_tokens:
+            if termino not in tf:
+                continue
+            df = frecuencia_doc[termino]
+            idf = math.log(1 + (n_docs - df + 0.5) / (df + 0.5))
+            score += idf * (tf[termino] * (k1 + 1)) / (
+                tf[termino] + k1 * (1 - b + b * largo / largo_medio)
+            )
+        if score <= 0:
             continue
         cuerpo = re.sub(r"^---\n.*?\n---\n", "", contenido, flags=re.DOTALL)
         excerpt = re.sub(r"\s+", " ", cuerpo).strip()[:220]

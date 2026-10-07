@@ -115,10 +115,13 @@ def panorama_conocimiento(
 
     Returns:
         dict[str, Any]: ``paginas`` (lista de {titulo, tipo, cita}), ``total``
-        (páginas de la wiki) e ``inbox`` (notas sin clasificar).
+        (páginas de la wiki), ``inbox`` (notas sin clasificar) y ``repasos``
+        (páginas vencidas de repaso espaciado).
     """
     vault = os.path.join(project_dir, ".context-map", vault_nombre(project_name))
-    panorama: dict[str, Any] = {"paginas": [], "total": 0, "inbox": 0}
+    panorama: dict[str, Any] = {
+        "paginas": [], "total": 0, "inbox": 0, "repasos": 0,
+    }
     try:
         from context_map.domain.knowledge.wiki import listar_paginas
 
@@ -135,6 +138,13 @@ def panorama_conocimiento(
             for nombre in os.listdir(inbox)
             if nombre.endswith(".md") and nombre != "00-INBOX.md"
         )
+
+    try:
+        from context_map.domain.knowledge.review import contar_due
+
+        panorama["repasos"] = contar_due(vault)
+    except Exception:
+        panorama["repasos"] = 0
     return panorama
 
 

@@ -54,6 +54,31 @@ def test_sintetizar_es_determinista(tmp_path) -> None:
     assert a["respuesta"] == b["respuesta"]
 
 
+def test_bm25_ignora_acentos(tmp_path) -> None:
+    """Una consulta sin tildes encuentra una página con tildes (normalización)."""
+    vdir = _vault(tmp_path)
+    kb.ingresar(
+        vdir,
+        "Recuperación de documentos",
+        "La recuperación y la generación trabajan juntas en el sistema.",
+    )
+    resultados = kb.consultar(vdir, "recuperacion de documentos")
+    assert resultados, "Debe encontrar pese a la diferencia de tildes"
+    assert resultados[0]["titulo"] == "Recuperación de documentos"
+
+
+def test_bm25_prefiere_mayor_frecuencia(tmp_path) -> None:
+    """Con el mismo término, la página que lo repite más puntúa más alto."""
+    vdir = _vault(tmp_path)
+    kb.ingresar(vdir, "Poco vector", "Un vector suelto sobre datos y consultas.")
+    kb.ingresar(
+        vdir, "Mucho vector",
+        "El vector densidad y el vector semántico usan un vector por documento.",
+    )
+    resultados = kb.consultar(vdir, "vector")
+    assert resultados[0]["titulo"] == "Mucho vector"
+
+
 def test_lint_detecta_contradiccion(tmp_path) -> None:
     """Dos páginas que afirman y niegan lo mismo producen un aviso (no un error)."""
     vdir = _vault(tmp_path)

@@ -317,4 +317,20 @@ def create_parser() -> argparse.ArgumentParser:
     sw_lint.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     sw_lint.add_argument("--target", default=".", help="Ruta del proyecto")
 
+    s_review = sub.add_parser(
+        "review", help="Repaso espaciado (SM-2) de la wiki del mundo conocimiento"
+    )
+    srv = s_review.add_subparsers(dest="review_cmd", help="Acciones del repaso")
+
+    srv_due = srv.add_parser("due", help="Páginas de la wiki para repasar hoy")
+    srv_due.add_argument("--limite", type=int, default=20, help="Máximo de páginas (default: 20)")
+    srv_due.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    srv_due.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    srv_grade = srv.add_parser("grade", help="Califica una página (0-5) y reprograma su repaso")
+    srv_grade.add_argument("pagina", help="Título de la página o wikilink")
+    srv_grade.add_argument("calidad", type=int, help="Calificación 0-5 (>=3 es acierto)")
+    srv_grade.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    srv_grade.add_argument("--target", default=".", help="Ruta del proyecto")
+
     return p

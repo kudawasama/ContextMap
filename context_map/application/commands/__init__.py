@@ -24,6 +24,7 @@ from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.pack import cmd_pack, cmd_unpack
 from context_map.application.commands.personal import cmd_personal
 from context_map.application.commands.refresh import cmd_refresh
+from context_map.application.commands.review import cmd_review
 from context_map.application.commands.scan import cmd_scan
 from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do_sync
 from context_map.application.commands.tools import (
@@ -66,4 +67,5 @@ __all__ = [
     "cmd_hook",
     "cmd_inbox",
     "cmd_wiki",
+    "cmd_review",
 ]
