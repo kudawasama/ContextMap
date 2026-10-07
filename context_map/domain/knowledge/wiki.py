@@ -11,6 +11,8 @@ usuario) usa para construir y mantener la wiki del curso de Obsidian:
   con trazabilidad.
 - ``lint``       → salud de la wiki: enlaces rotos, páginas huérfanas,
   conceptos sin página e ítems del entry log apuntando a nada.
+- ``sintetizar`` → respuesta extractiva local con citas; opcionalmente generada
+  con LLM (hook G6) si el usuario configura ``CTXMAP_LLM_API_KEY``.
 """
 
 from __future__ import annotations
@@ -25,7 +27,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from context_map.domain.knowledge import embeddings
+from context_map.domain.knowledge import embeddings, llm
 from context_map.domain.knowledge.indices import (
     agregar_a_indice,
     backlink_relativo,
@@ -334,38 +336,76 @@ def _mejores_frases(ruta: str, q_tokens: set[str], max_frases: int = 2) -> list[
     return [fr for _s, fr in con_score[:max_frases]]
 
 
-def sintetizar(vault_dir: str, pregunta: str, limite: int = 5) -> dict[str, Any]:
-    """Sintetiza una respuesta **extractiva local** con citas a la wiki.
+def sintetizar(
+    vault_dir: str,
+    pregunta: str,
+    limite: int = 5,
+    *,
+    generador: llm.Generador | None = None,
+    usar_llm: bool | None = None,
+) -> dict[str, Any]:
+    """Sintetiza una respuesta con citas a la wiki (extractiva local por defecto).
 
-    No usa red ni LLM: elige las frases más afines de las páginas rankeadas y las
-    encadena citando cada fuente como ``[n]``. Determinista y trazable.
+    La respuesta base es **extractiva y local** (frases afines citadas, sin red).
+    Opcionalmente puede mejorarla un **LLM** (G6) cuando el usuario lo configura:
+
+    - ``generador`` inyectado → se usa ese hook (tests, agentes).
+    - ``usar_llm=None`` → se activa solo si ``CTXMAP_LLM_API_KEY`` está definida.
+    - ``usar_llm=False`` → fuerza la vía extractiva (``--no-llm``).
+
+    Si el LLM falla o no está configurado, se devuelve la versión extractiva.
 
     Args:
         vault_dir (str): Directorio raíz del vault.
         pregunta (str): Consulta del usuario/agente.
         limite (int): Máximo de páginas fuente (default 5).
+        generador (llm.Generador | None): Hook de generación inyectable.
+        usar_llm (bool | None): Fuerza o desactiva el LLM.
 
     Returns:
-        dict: ``pregunta``, ``respuesta`` (texto con marcadores ``[n]``) y
-        ``fuentes`` (lista de {titulo, cita, excerpt}).
+        dict: ``pregunta``, ``respuesta`` (texto con marcadores ``[n]``),
+        ``fuentes`` (lista de {titulo, cita, excerpt}) y ``motor``
+        (``extractivo`` | ``llm``). Si el LLM sintetizó, incluye además
+        ``respuesta_extractiva`` con la versión local trazable.
     """
     q_tokens = _tokens(pregunta)
     resultados = consultar(vault_dir, pregunta, limite=limite)
     if not resultados:
-        return {"pregunta": pregunta, "respuesta": "", "fuentes": []}
+        return {
+            "pregunta": pregunta,
+            "respuesta": "",
+            "fuentes": [],
+            "motor": "extractivo",
+        }
 
     bloques: list[str] = []
     fuentes: list[dict[str, str]] = []
+    fragmentos: list[tuple[str, str]] = []
     for i, r in enumerate(resultados, 1):
         frases = _mejores_frases(r["ruta"], q_tokens)
         if frases:
             bloques.append(" ".join(frases) + f" [{i}]")
+        fragmentos.append((r["titulo"], " ".join(frases) or r.get("excerpt", "")))
         fuentes.append({"titulo": r["titulo"], "cita": r["cita"], "excerpt": r["excerpt"]})
-    return {
+
+    respuesta_extractiva = "\n\n".join(bloques)
+    respuesta = respuesta_extractiva
+    motor = "extractivo"
+    if usar_llm is not False and (generador is not None or llm.disponible()[0]):
+        generada = llm.generar(pregunta, fragmentos, generador=generador)
+        if generada:
+            respuesta = generada
+            motor = "llm"
+
+    resultado: dict[str, Any] = {
         "pregunta": pregunta,
-        "respuesta": "\n\n".join(bloques),
+        "respuesta": respuesta,
         "fuentes": fuentes,
+        "motor": motor,
     }
+    if motor == "llm":
+        resultado["respuesta_extractiva"] = respuesta_extractiva
+    return resultado
 
 
 def listar_paginas(vault_dir: str) -> list[dict[str, str]]:

@@ -617,24 +617,32 @@ def knowledge_wiki_query(pregunta: str, limite: int = 5, target: str = ".") -> s
 
 
 @_tool
-def knowledge_wiki_ask(pregunta: str, limite: int = 5, target: str = ".") -> str:
+def knowledge_wiki_ask(pregunta: str, limite: int = 5, target: str = ".", llm: bool = False) -> str:
     """Responde una pregunta del mundo CONOCIMIENTO de forma extractiva y LOCAL, con citas.
 
-    No usa red ni LLM: encadena las frases mas afines de la wiki y cita cada
-    fuente como [n]. USAR cuando el usuario pregunta sobre su Second Brain.
+    Por defecto NO usa red ni LLM: encadena las frases mas afines de la wiki y
+    cita cada fuente como [n]. USAR cuando el usuario pregunta sobre su Second
+    Brain. Con llm=True intenta sintetizar con el LLM configurado por el usuario
+    (CTXMAP_LLM_API_KEY); si falla, devuelve la version extractiva local.
 
     Args:
         pregunta: Pregunta a responder.
         limite: Maximo de fuentes (default 5).
         target: Ruta del proyecto.
+        llm: Permitir el LLM opcional (envio de fragmentos al endpoint configurado).
     """
     from context_map.domain.knowledge import wiki as kb_w
 
     try:
-        res = kb_w.sintetizar(_vault_de(target), pregunta, limite=limite)
+        res = kb_w.sintetizar(_vault_de(target), pregunta, limite=limite, usar_llm=bool(llm))
         if not res["respuesta"]:
             return f"knowledge_wiki_ask: sin paginas relevantes para: {pregunta}"
-        lineas = ["knowledge_wiki_ask:", str(res["respuesta"]), "", "Fuentes:"]
+        lineas = [
+            f"knowledge_wiki_ask ({res.get('motor', 'extractivo')}):",
+            str(res["respuesta"]),
+            "",
+            "Fuentes:",
+        ]
         for i, f in enumerate(res["fuentes"], 1):
             lineas.append(f" [{i}] {f['titulo']} — {f['cita']}")
         return "\n".join(lineas)

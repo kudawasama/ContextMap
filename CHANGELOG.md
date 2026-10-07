@@ -7,6 +7,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🤖 Síntesis generativa con LLM opcional (G6 · plan v2.7)
+
+- Nuevo módulo `domain/knowledge/llm.py`: hook de generación con cliente HTTP
+  **sin dependencias** (stdlib `urllib`) contra cualquier endpoint compatible
+  con la API de OpenAI.
+- `wiki.sintetizar` acepta `generador` (hook inyectable) y `usar_llm`; la
+  respuesta se marca con `motor` (`extractivo` | `llm`) y, cuando el LLM actúa,
+  se conserva `respuesta_extractiva` para trazabilidad. Ante cualquier fallo
+  vuelve a la extracción local.
+- CLI: `ctxmap wiki ask --llm|--no-llm` y `ctxmap wiki llm [--probar] [--json]`.
+- MCP: `knowledge_wiki_ask` acepta `llm` (por defecto `false`: nunca red).
+- Configuración por entorno: `CTXMAP_LLM_API_KEY`, `CTXMAP_LLM_MODEL`,
+  `CTXMAP_LLM_BASE_URL`. Guía: `docs/LLM.md`. Tests: `test_llm_opcional.py` (12).
+
 ### 📥 Web Clipper real (G5 · plan v2.7)
 
 - Nuevo módulo `domain/knowledge/clip.py`: **portapapeles nativo**

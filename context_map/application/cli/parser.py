@@ -325,8 +325,18 @@ def create_parser() -> argparse.ArgumentParser:
     sw_ask = sw.add_parser("ask", help="Responde de forma extractiva con citas (sin LLM, local)")
     sw_ask.add_argument("pregunta", help="Pregunta a responder")
     sw_ask.add_argument("--limite", type=int, default=5, help="Máximo de fuentes (default: 5)")
+    sw_ask.add_argument(
+        "--llm", action="store_true",
+        help="Mejorar la respuesta con LLM (requiere CTXMAP_LLM_API_KEY)",
+    )
+    sw_ask.add_argument("--no-llm", action="store_true", help="Forzar la síntesis extractiva local")
     sw_ask.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     sw_ask.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    sw_llm = sw.add_parser("llm", help="Estado del LLM opcional de síntesis (env vars)")
+    sw_llm.add_argument("--probar", action="store_true", help="Hacer una llamada mínima de prueba (usa red)")
+    sw_llm.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_llm.add_argument("--target", default=".", help="Ruta del proyecto")
 
     sw_moc = sw.add_parser("moc", help="Regenera el MOC (mapa de contenido) de la wiki")
     sw_moc.add_argument("--json", action="store_true", help="Salida JSON estructurada")
