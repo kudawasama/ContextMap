@@ -14,10 +14,12 @@ usuario) usa para construir y mantener la wiki del curso de Obsidian:
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from context_map.domain.knowledge.indices import (
     agregar_a_indice,
@@ -33,6 +35,7 @@ WIKI = "05-WIKI"
 RESUMENES = "resumenes"
 ENTIDADES = "entidades"
 ENTRY_LOG = "entry-log.md"
+MOC = "MOC.md"
 
 # Anclas de los índices generados en F1 (esqueleto).
 _ANCLA_RESUMENES = "## 📄 Resúmenes"
@@ -235,6 +238,11 @@ def ingresar(vault_dir: str, titulo: str, contenido: str, fuente: str = "",
                 with open(ruta_ent, "w", encoding="utf-8") as f:
                     f.write(ent_txt)
 
+    # El MOC se regenera para que el grafo de conceptos quede al día.
+    # Nunca debe romper la ingesta.
+    with contextlib.suppress(Exception):
+        generar_moc(vault_dir)
+
     return {
         "ruta": ruta_res,
         "titulo": titulo_final,
@@ -256,6 +264,81 @@ def _paginas(vault_dir: str) -> list[tuple[str, str]]:
             ruta = os.path.join(carpeta, nombre)
             paginas.append((ruta, leer_titulo(ruta)))
     return paginas
+
+
+# Negaciones para el lint de contradicciones.
+_NEGACIONES = re.compile(
+    r"\b(no|nunca|jamás|jamas|sin|tampoco|nada|ningún|ningun|ninguna)\b",
+    re.IGNORECASE,
+)
+
+
+def _frases(texto: str) -> list[str]:
+    """Divide un texto en frases útiles (sin frontmatter ni wikilinks).
+
+    Args:
+        texto (str): Contenido Markdown de una página.
+
+    Returns:
+        list[str]: Frases de al menos 30 caracteres.
+    """
+    plano = re.sub(r"^---\n.*?\n---\n", "", texto, flags=re.DOTALL)
+    plano = re.sub(r"\[\[([^|\]]+\|)?([^\]]+)\]\]", r"\2", plano)
+    partes = re.split(r"(?<=[.!?])\s+|\n+", plano)
+    return [p.strip() for p in partes if len(p.strip()) >= 30]
+
+
+def _mejores_frases(ruta: str, q_tokens: set[str], max_frases: int = 2) -> list[str]:
+    """Frases de una página con mayor solape de tokens con la consulta.
+
+    Args:
+        ruta (str): Ruta de la página.
+        q_tokens (set[str]): Tokens de la consulta.
+        max_frases (int): Máximo de frases a devolver.
+
+    Returns:
+        list[str]: Frases ordenadas por afinidad (solo con solape > 0).
+    """
+    with open(ruta, encoding="utf-8") as f:
+        texto = f.read()
+    con_score = [(len(q_tokens & _tokens(fr)), fr) for fr in _frases(texto)]
+    con_score = [(s, fr) for s, fr in con_score if s > 0]
+    con_score.sort(key=lambda x: x[0], reverse=True)
+    return [fr for _s, fr in con_score[:max_frases]]
+
+
+def sintetizar(vault_dir: str, pregunta: str, limite: int = 5) -> dict[str, Any]:
+    """Sintetiza una respuesta **extractiva local** con citas a la wiki.
+
+    No usa red ni LLM: elige las frases más afines de las páginas rankeadas y las
+    encadena citando cada fuente como ``[n]``. Determinista y trazable.
+
+    Args:
+        vault_dir (str): Directorio raíz del vault.
+        pregunta (str): Consulta del usuario/agente.
+        limite (int): Máximo de páginas fuente (default 5).
+
+    Returns:
+        dict: ``pregunta``, ``respuesta`` (texto con marcadores ``[n]``) y
+        ``fuentes`` (lista de {titulo, cita, excerpt}).
+    """
+    q_tokens = _tokens(pregunta)
+    resultados = consultar(vault_dir, pregunta, limite=limite)
+    if not resultados:
+        return {"pregunta": pregunta, "respuesta": "", "fuentes": []}
+
+    bloques: list[str] = []
+    fuentes: list[dict[str, str]] = []
+    for i, r in enumerate(resultados, 1):
+        frases = _mejores_frases(r["ruta"], q_tokens)
+        if frases:
+            bloques.append(" ".join(frases) + f" [{i}]")
+        fuentes.append({"titulo": r["titulo"], "cita": r["cita"], "excerpt": r["excerpt"]})
+    return {
+        "pregunta": pregunta,
+        "respuesta": "\n\n".join(bloques),
+        "fuentes": fuentes,
+    }
 
 
 def listar_paginas(vault_dir: str) -> list[dict[str, str]]:
@@ -330,6 +413,146 @@ def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, 
     return [r for _score, r in resultados[:limite]]
 
 
+def _detectar_contradicciones(vault_dir: str) -> list[str]:
+    """Detecta posibles contradicciones: misma frase afirmada y negada.
+
+    Heurística conservadora: dos frases de páginas distintas cuya forma sin
+    negaciones coincide, pero una lleva negación y la otra no.
+
+    Args:
+        vault_dir (str): Directorio raíz del vault.
+
+    Returns:
+        list[str]: Avisos de posibles contradicciones.
+    """
+    declaraciones: dict[str, list[tuple[str, bool]]] = {}
+    for ruta, _t in _paginas(vault_dir):
+        with open(ruta, encoding="utf-8") as f:
+            texto = f.read()
+        for frase in _frases(texto):
+            base = re.sub(r"\s+", " ", _NEGACIONES.sub(" ", frase.lower())).strip(" .,;:")
+            if len(_tokens(base)) < 4:
+                continue
+            negada = bool(_NEGACIONES.search(frase))
+            declaraciones.setdefault(base, []).append(
+                (os.path.basename(ruta), negada)
+            )
+
+    avisos: list[str] = []
+    for base, items in declaraciones.items():
+        archivos = {a for a, _n in items}
+        if len(archivos) < 2 or len({n for _a, n in items}) < 2:
+            continue
+        avisos.append(
+            "POSIBLE CONTRADICCIÓN entre "
+            + " y ".join(sorted(archivos))
+            + f": «{base[:80]}» aparece afirmada y negada."
+        )
+    return avisos
+
+
+def _rutas_md(carpeta: str, indice: str) -> list[str]:
+    """Rutas de las páginas .md de una carpeta, excluyendo su índice."""
+    if not os.path.isdir(carpeta):
+        return []
+    return sorted(
+        os.path.join(carpeta, n)
+        for n in os.listdir(carpeta)
+        if n.endswith(".md") and n != indice
+    )
+
+
+def _asegurar_enlace_moc(vault_dir: str) -> None:
+    """Asegura (idempotente) el enlace al MOC desde el índice ``05-WIKI.md``."""
+    index_path = os.path.join(ruta_wiki(vault_dir), f"{WIKI}.md")
+    if not os.path.exists(index_path):
+        return
+    link = f"[[{NS_CONOCIMIENTO}/{WIKI}/MOC|🗺️ MOC — Mapa de contenido]]"
+    with open(index_path, encoding="utf-8") as f:
+        texto = f.read()
+    if f"/{WIKI}/{MOC}" in texto:
+        return
+    texto = texto.replace(
+        "## 📚 Subsecciones\n",
+        f"## 📚 Subsecciones\n\n- {link}\n",
+    )
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(texto)
+
+
+def generar_moc(vault_dir: str) -> str:
+    """Genera el MOC (mapa de contenido): cada concepto con sus fuentes.
+
+    Args:
+        vault_dir (str): Directorio raíz del vault.
+
+    Returns:
+        str: Ruta del archivo ``MOC.md`` generado.
+    """
+    ruta_moc = os.path.join(ruta_wiki(vault_dir), MOC)
+    resumenes = _rutas_md(ruta_resumenes(vault_dir), f"{RESUMENES}.md")
+    entidades = _rutas_md(ruta_entidades(vault_dir), f"{ENTIDADES}.md")
+
+    bloques: list[str] = ["## 🔖 Conceptos", ""]
+    if entidades:
+        for ruta_ent in entidades:
+            slug_ent = os.path.splitext(os.path.basename(ruta_ent))[0]
+            bloques.append(f"### 🔖 {leer_titulo(ruta_ent)}")
+            relacionados = []
+            for ruta_res in resumenes:
+                with open(ruta_res, encoding="utf-8") as f:
+                    if f"/{ENTIDADES}/{slug_ent}" in f.read():
+                        relacionados.append(
+                            f"[[{backlink_relativo(vault_dir, ruta_res)}|"
+                            f"{leer_titulo(ruta_res)}]]"
+                        )
+            if relacionados:
+                bloques += [f"- {r}" for r in relacionados]
+            else:
+                bloques.append("- _(sin fuentes asociadas todavía)_")
+            bloques.append("")
+    else:
+        bloques += ["_(sin conceptos todavía)_", ""]
+
+    sin_concepto: list[str] = []
+    for ruta_res in resumenes:
+        with open(ruta_res, encoding="utf-8") as f:
+            enlaces = re.findall(rf"\[\[[^\]]*?/{ENTIDADES}/[^\]|]+", f.read())
+        if not enlaces:
+            sin_concepto.append(
+                f"- [[{backlink_relativo(vault_dir, ruta_res)}|{leer_titulo(ruta_res)}]]"
+            )
+
+    partes = [
+        "---",
+        "type: moc",
+        "namespace: knowledge",
+        "preserve: true",
+        f"created: {datetime.now().isoformat(timespec='seconds')}",
+        'title: "MOC — Mapa de contenido"',
+        "tags: [knowledge, wiki, moc]",
+        "---",
+        "",
+        "# 🗺️ MOC — Mapa de contenido",
+        "",
+        "> Índice generado de la wiki: cada concepto con las fuentes que lo tratan.",
+        "",
+        *bloques,
+        "## 📄 Resúmenes sin concepto",
+        "",
+        *(sin_concepto or ["_(ninguno)_"]),
+        "",
+        "---",
+        f"[[{NS_CONOCIMIENTO}/{WIKI}/{WIKI}|⬅ Volver a 05-WIKI]]",
+        "",
+    ]
+    with open(ruta_moc, "w", encoding="utf-8") as f:
+        f.write("\n".join(partes))
+
+    _asegurar_enlace_moc(vault_dir)
+    return ruta_moc
+
+
 def lint(vault_dir: str) -> ReporteLint:
     """Audita la salud de la wiki: enlaces rotos, huérfanas, conceptos sin página.
 
@@ -349,7 +572,7 @@ def lint(vault_dir: str) -> ReporteLint:
                 return True
         # Índices y raíz del mundo conocimiento como targets válidos.
         extras = [
-            f"{RESUMENES}.md", f"{ENTIDADES}.md", ENTRY_LOG, "05-WIKI.md",
+            f"{RESUMENES}.md", f"{ENTIDADES}.md", ENTRY_LOG, "05-WIKI.md", MOC,
             os.path.join(RESUMENES, RESUMENES),
             os.path.join(ENTIDADES, ENTIDADES),
             "00-INBOX.md", "01-PROJECTS.md", "02-AREAS.md", "03-RESOURCES.md",
@@ -401,7 +624,10 @@ def lint(vault_dir: str) -> ReporteLint:
                 if ent not in existentes:
                     errores.append(f"CONCEPTO SIN PÁGINA: {ent} mencionado en {os.path.basename(ruta)}")
 
-    # 4. Entry log apuntando a páginas que no existen.
+    # 4. Posibles contradicciones entre páginas (misma frase afirmada y negada).
+    avisos.extend(_detectar_contradicciones(vault_dir))
+
+    # 5. Entry log apuntando a páginas que no existen.
     entry_log = os.path.join(ruta_wiki(vault_dir), ENTRY_LOG)
     if os.path.exists(entry_log):
         with open(entry_log, encoding="utf-8") as f:

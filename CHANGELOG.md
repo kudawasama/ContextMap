@@ -43,20 +43,34 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   ven el conocimiento capturado por el usuario.
 - Con wiki vacía, la sección guía la captura sin romper el build.
 
+### 🧭 Wiki 2.0 — síntesis extractiva, contradicciones y MOC (F9)
+
+- **`wiki ask`** (CLI) / **`knowledge_wiki_ask`** (MCP): respuesta **extractiva
+  y local** (sin LLM ni red) que encadena las frases más afines de la wiki y
+  cita cada fuente como `[n]`. Determinista y trazable.
+- **Lint de contradicciones**: detecta la misma afirmación apareciendo afirmada
+  y negada en páginas distintas (aviso, no error).
+- **MOC** (`wiki moc` / `knowledge_wiki_moc`): mapa de contenido autogenerado
+  (cada concepto con las fuentes que lo tratan); se regenera en cada ingesta y
+  cuelga del índice `05-WIKI.md`.
+- Nuevas tools MCP: `knowledge_wiki_ask`, `knowledge_wiki_moc` → **26 tools**.
+
 ### 🧪 Tests
 
+- Nuevo `test_wiki_avanzado.py` (5 tests): síntesis con citas, sin-match,
+  determinismo, contradicciones y MOC.
 - Nuevo `test_brief_identidad.py` (3 tests): el export no contamina el CWD;
   un brief extranjero se detecta; un brief coherente no da falsos positivos.
 - Nuevo `test_humanizacion.py` (2 tests): predicados de ruido + verificación
   de que 1.1/1.3/2.4 no muestran ruido y sí el contenido legítimo.
 - Nuevo `test_conocimiento_brief.py` (3 tests): el panorama lista páginas e
   inbox, y el conocimiento entra en el bloque dinámico del brief.
-- Suite: **298/298** verdes (antes 290); `ruff` y `mypy` limpios.
+- Suite: **303/303** verdes (antes 290); `ruff` y `mypy` limpios.
 
 ### 📝 Documentación
 
 - Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
-  **298** tests y **24** herramientas MCP (antes 288 y 16).
+  **303** tests y **26** herramientas MCP (antes 288 y 16).
 
 ---
 

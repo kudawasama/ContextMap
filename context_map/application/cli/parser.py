@@ -303,6 +303,16 @@ def create_parser() -> argparse.ArgumentParser:
     sw_query.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     sw_query.add_argument("--target", default=".", help="Ruta del proyecto")
 
+    sw_ask = sw.add_parser("ask", help="Responde de forma extractiva con citas (sin LLM, local)")
+    sw_ask.add_argument("pregunta", help="Pregunta a responder")
+    sw_ask.add_argument("--limite", type=int, default=5, help="Máximo de fuentes (default: 5)")
+    sw_ask.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_ask.add_argument("--target", default=".", help="Ruta del proyecto")
+
+    sw_moc = sw.add_parser("moc", help="Regenera el MOC (mapa de contenido) de la wiki")
+    sw_moc.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    sw_moc.add_argument("--target", default=".", help="Ruta del proyecto")
+
     sw_lint = sw.add_parser("lint", help="Audita la salud de la wiki (enlaces, huérfanas, conceptos sin página)")
     sw_lint.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     sw_lint.add_argument("--target", default=".", help="Ruta del proyecto")

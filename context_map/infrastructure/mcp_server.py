@@ -617,6 +617,48 @@ def knowledge_wiki_query(pregunta: str, limite: int = 5, target: str = ".") -> s
 
 
 @_tool
+def knowledge_wiki_ask(pregunta: str, limite: int = 5, target: str = ".") -> str:
+    """Responde una pregunta del mundo CONOCIMIENTO de forma extractiva y LOCAL, con citas.
+
+    No usa red ni LLM: encadena las frases mas afines de la wiki y cita cada
+    fuente como [n]. USAR cuando el usuario pregunta sobre su Second Brain.
+
+    Args:
+        pregunta: Pregunta a responder.
+        limite: Maximo de fuentes (default 5).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import wiki as kb_w
+
+    try:
+        res = kb_w.sintetizar(_vault_de(target), pregunta, limite=limite)
+        if not res["respuesta"]:
+            return f"knowledge_wiki_ask: sin paginas relevantes para: {pregunta}"
+        lineas = ["knowledge_wiki_ask:", str(res["respuesta"]), "", "Fuentes:"]
+        for i, f in enumerate(res["fuentes"], 1):
+            lineas.append(f" [{i}] {f['titulo']} — {f['cita']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_ask: {err}"
+
+
+@_tool
+def knowledge_wiki_moc(target: str = ".") -> str:
+    """Regenera el MOC (mapa de contenido) de la wiki: cada concepto con sus fuentes.
+
+    Args:
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.knowledge import wiki as kb_w
+
+    try:
+        ruta = kb_w.generar_moc(_vault_de(target))
+        return f"knowledge_wiki_moc: [OK] MOC regenerado en {ruta}"
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en knowledge_wiki_moc: {err}"
+
+
+@_tool
 def knowledge_wiki_lint(target: str = ".") -> str:
     """Audita la salud de la LLM Wiki: enlaces rotos, huérfanas, conceptos sin página.
 

@@ -4,7 +4,9 @@ Expone la wiki PKM (``90-CONOCIMIENTO/05-WIKI``) desde la CLI:
 
 - ``ctxmap wiki ingest <archivo>``  → página de resumen + índices + entry log + entidades.
 - ``ctxmap wiki query "<pregunta>"`` → páginas relevantes CON CITAS.
-- ``ctxmap wiki lint``              → salud: enlaces rotos, huérfanas, conceptos sin página.
+- ``ctxmap wiki ask "<pregunta>"``  → respuesta extractiva local (sin LLM) con citas.
+- ``ctxmap wiki moc``               → regenera el MOC (mapa de contenido).
+- ``ctxmap wiki lint``              → salud: enlaces rotos, huérfanas, conceptos, contradicciones.
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ def cmd_wiki(args) -> None:
     """
     accion = getattr(args, "wiki_cmd", None)
     if not accion:
-        print("Uso: ctxmap wiki {ingest|query|lint} [opciones]")
+        print("Uso: ctxmap wiki {ingest|query|ask|moc|lint} [opciones]")
         return
 
     vdir = _resolver_vault(args)
@@ -68,6 +70,29 @@ def cmd_wiki(args) -> None:
             print(f"\n  📌 {r['titulo']}")
             print(f"     Cita: {r['cita']}")
             print(f"     {r['excerpt']}")
+
+    elif accion == "ask":
+        pregunta = getattr(args, "pregunta", "")
+        limite = int(getattr(args, "limite", 5))
+        sintesis = kb.sintetizar(vdir, pregunta, limite=limite)
+        if getattr(args, "json", False):
+            print(json.dumps(sintesis, ensure_ascii=False, indent=2))
+            return
+        if not sintesis["respuesta"]:
+            print("[wiki] Sin páginas relevantes para responder esa pregunta.")
+            return
+        print(f"[wiki] 🧠 Respuesta (extractiva, local) para: {pregunta}\n")
+        print(sintesis["respuesta"])
+        print("\n[wiki] Fuentes:")
+        for i, fuente in enumerate(sintesis["fuentes"], 1):
+            print(f"  [{i}] {fuente['titulo']} — {fuente['cita']}")
+
+    elif accion == "moc":
+        ruta_moc = kb.generar_moc(vdir)
+        if getattr(args, "json", False):
+            print(json.dumps({"moc": ruta_moc}, ensure_ascii=False, indent=2))
+            return
+        print(f"[wiki] 🗺️ MOC regenerado: {ruta_moc}")
 
     elif accion == "lint":
         reporte = kb.lint(vdir)
