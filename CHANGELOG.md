@@ -5,6 +5,25 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 📄 Ingesta de `.docx` sin dependencias (G1 · plan v2.7)
+
+- `ctxmap ingest <archivo.docx>` extrae el texto con `zipfile` +
+  `ElementTree` (un `.docx` es un ZIP con `word/document.xml`), **sin
+  dependencias externas**.
+- Un `.docx` corrupto produce un `ValueError` con mensaje claro.
+- Añadido a las extensiones soportadas en lote (`.docx`).
+- Tests: `test_ingesta_rica.py` (6); suite **317/317**.
+
+### 🗺️ Plan v2.7 documentado
+
+OCR de PDF, embeddings opcionales (fallback BM25), captura móvil, Web Clipper y
+síntesis LLM opcional, todos como **extras opcionales** (local-first). Ver
+`7.0-MANUAL/MEJORAS/PLAN-MEJORA-v2.7-2026-10-07.md`.
+
+---
+
 ## [2.6.0] — 2026-10-07
 
 ### 🐛 Corregido (P0) — el brief ya no puede ser "extranjero"

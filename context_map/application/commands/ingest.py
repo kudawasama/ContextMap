@@ -21,7 +21,7 @@ from context_map.core.storage import load_jsonl
 from context_map.domain.ingestion import crear_nodo_documento, extraer_texto
 
 EXTENSIONES_SOPORTADAS: tuple[str, ...] = (
-    ".md", ".markdown", ".txt", ".text", ".pdf", ".html", ".htm",
+    ".md", ".markdown", ".txt", ".text", ".pdf", ".html", ".htm", ".docx",
 )
 
 

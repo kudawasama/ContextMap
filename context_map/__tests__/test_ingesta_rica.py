@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import zipfile
 from types import SimpleNamespace
 
 from context_map.application.cli.parser import create_parser
@@ -31,6 +32,37 @@ def test_html_esta_en_extensiones_soportadas() -> None:
     """El comando ingest reconoce .html/.htm en lote."""
     assert ".html" in EXTENSIONES_SOPORTADAS
     assert ".htm" in EXTENSIONES_SOPORTADAS
+
+
+def test_extraer_texto_de_docx(tmp_path) -> None:
+    """Un .docx se lee con la librería estándar (ZIP + word/document.xml)."""
+    archivo = tmp_path / "informe.docx"
+    ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    xml = (
+        f'<w:document xmlns:w="{ns}"><w:body>'
+        "<w:p><w:r><w:t>Primer párrafo del informe.</w:t></w:r></w:p>"
+        "<w:p><w:r><w:t>Segundo párrafo con detalle.</w:t></w:r></w:p>"
+        "</w:body></w:document>"
+    )
+    with zipfile.ZipFile(archivo, "w") as zf:
+        zf.writestr("word/document.xml", xml)
+
+    texto, tipo = extraer_texto(str(archivo))
+
+    assert tipo == "docx"
+    assert "Primer párrafo del informe." in texto
+    assert "Segundo párrafo con detalle." in texto
+    assert ".docx" in EXTENSIONES_SOPORTADAS
+
+
+def test_docx_invalido_da_error_claro(tmp_path) -> None:
+    """Un .docx corrupto falla con un ValueError descriptivo (no un traceback crudo)."""
+    archivo = tmp_path / "roto.docx"
+    archivo.write_bytes(b"esto no es un zip")
+    import pytest
+
+    with pytest.raises(ValueError, match="No se pudo leer el .docx"):
+        extraer_texto(str(archivo))
 
 
 def test_parser_acepta_video_generico() -> None:

@@ -82,6 +82,9 @@ def extraer_texto(ruta: str) -> tuple[str, str]:
         with open(ruta, encoding="utf-8", errors="replace") as f:
             return _limpiar_texto(f.read()), "texto"
 
+    if ext == ".docx":
+        return _extraer_docx(ruta), "docx"
+
     if ext in (".html", ".htm"):
         # Páginas guardadas por el navegador (Web Clipper offline) → Markdown.
         from context_map.domain.knowledge.captura import html_a_markdown
@@ -94,9 +97,52 @@ def extraer_texto(ruta: str) -> tuple[str, str]:
         return _extraer_pdf(ruta), "pdf"
 
     raise ValueError(
-        f"Extensión no soportada '{ext}'. Usa .md, .txt, .html o .pdf "
+        f"Extensión no soportada '{ext}'. Usa .md, .txt, .html, .docx o .pdf "
         "(instala 'pymupdf' para PDF)."
     )
+
+
+def _extraer_docx(ruta: str) -> str:
+    """Extrae el texto de un ``.docx`` usando solo la librería estándar.
+
+    Un ``.docx`` es un ZIP con ``word/document.xml``; se leen los párrafos
+    (``w:p``) y sus runs de texto (``w:t``) sin dependencias externas.
+
+    Args:
+        ruta (str): Ruta al archivo ``.docx``.
+
+    Returns:
+        str: Texto plano de los párrafos del documento.
+
+    Raises:
+        ValueError: Si el archivo no es un ZIP válido, no tiene
+            ``word/document.xml`` o no contiene texto.
+    """
+    import xml.etree.ElementTree as ET
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(ruta) as zf:
+            xml = zf.read("word/document.xml")
+    except (zipfile.BadZipFile, KeyError, OSError) as err:
+        raise ValueError(f"No se pudo leer el .docx: {err}") from err
+
+    ns = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError as err:
+        raise ValueError(f"El .docx tiene un XML inválido: {err}") from err
+
+    parrafos: list[str] = []
+    for parrafo in root.iter(f"{ns}p"):
+        texto = "".join(t.text or "" for t in parrafo.iter(f"{ns}t")).strip()
+        if texto:
+            parrafos.append(texto)
+
+    contenido = "\n\n".join(parrafos)
+    if not contenido:
+        raise ValueError("El .docx no tiene texto extraíble.")
+    return _limpiar_texto(contenido)
 
 
 def _extraer_pdf(ruta: str) -> str:
