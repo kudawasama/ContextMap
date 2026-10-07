@@ -258,6 +258,42 @@ def _paginas(vault_dir: str) -> list[tuple[str, str]]:
     return paginas
 
 
+def listar_paginas(vault_dir: str) -> list[dict[str, str]]:
+    """Lista las páginas de la wiki (resúmenes y entidades) con su wikilink.
+
+    Pensada para el brief de agentes: expone el Second Brain sin cargar el
+    contenido completo de cada página.
+
+    Args:
+        vault_dir (str): Directorio raíz del vault.
+
+    Returns:
+        list[dict[str, str]]: Items con ``titulo``, ``tipo`` (``resumen`` |
+        ``entidad``) y ``cita`` (wikilink relativo al vault). Los resúmenes
+        van primero para priorizarse al truncar.
+    """
+    resultado: list[dict[str, str]] = []
+    for carpeta, tipo in (
+        (ruta_resumenes(vault_dir), "resumen"),
+        (ruta_entidades(vault_dir), "entidad"),
+    ):
+        if not os.path.isdir(carpeta):
+            continue
+        nombre_idx = os.path.basename(carpeta) + ".md"
+        for nombre in sorted(os.listdir(carpeta)):
+            if not nombre.endswith(".md") or nombre == nombre_idx:
+                continue
+            ruta = os.path.join(carpeta, nombre)
+            titulo = leer_titulo(ruta)
+            cita = backlink_relativo(vault_dir, ruta)
+            resultado.append({
+                "titulo": titulo,
+                "tipo": tipo,
+                "cita": f"[[{cita}|{titulo}]]",
+            })
+    return resultado
+
+
 def consultar(vault_dir: str, pregunta: str, limite: int = 5) -> list[dict[str, str]]:
     """Busca páginas relevantes de la wiki por solape de tokens, con citas.
 

@@ -207,6 +207,55 @@ ctxmap refresh .
 """
 
 
+def conocimiento_relevante(panorama: dict[str, Any] | None = None) -> str:
+    """Sección del Second Brain: páginas de la wiki relevantes para el agente.
+
+    Va en el bloque dinámico del brief (después del boundary de prompt-cache),
+    de modo que el conocimiento capturado por el usuario llegue a los agentes
+    sin romper el prefijo invariante.
+
+    Args:
+        panorama (dict | None): Salida de ``panorama_conocimiento``.
+
+    Returns:
+        str: Bloque Markdown con las páginas, el inbox y los comandos de consulta.
+    """
+    panorama = panorama or {}
+    paginas = panorama.get("paginas") or []
+    total = int(panorama.get("total") or 0)
+    inbox = int(panorama.get("inbox") or 0)
+
+    lineas = [
+        "## 🧠 Conocimiento Relevante (Second Brain)",
+        "",
+        "> Mundo PKM independiente en `90-CONOCIMIENTO/` (notas `namespace: knowledge`).",
+        "> El código y el conocimiento son islas separadas: esto es lo capturado por el usuario.",
+        "",
+    ]
+    if paginas:
+        for p in paginas:
+            icono = "🔖" if p.get("tipo") == "entidad" else "📄"
+            lineas.append(f"- {icono} {p.get('cita') or p.get('titulo', '')}")
+        restantes = total - len(paginas)
+        if restantes > 0:
+            lineas.append(f"- _(+{restantes} página(s) más en la wiki)_")
+    else:
+        lineas.append(
+            '_Sin páginas todavía. Captura con `ctxmap inbox add "<texto>"` '
+            "o `ctxmap ingest --url <web>`._"
+        )
+    if inbox:
+        lineas.extend([
+            "",
+            f"📥 **Inbox pendiente de clasificar**: {inbox} nota(s) → `ctxmap inbox purge`.",
+        ])
+    lineas.extend([
+        "",
+        '> Consulta con citas: `ctxmap wiki query "<tema>"`.',
+    ])
+    return "\n".join(lineas)
+
+
 def footer(fecha: str = "") -> str:
     """Pie de página del archivo con trazabilidad temporal y optimización de caché."""
     ts = fecha or datetime.now().strftime("%Y-%m-%d %H:%M")

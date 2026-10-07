@@ -99,6 +99,45 @@ def extraer_pendientes_manuales(project_name: str, project_dir: str) -> list[str
     return pendientes
 
 
+def panorama_conocimiento(
+    project_name: str, project_dir: str, limite: int = 5
+) -> dict[str, Any]:
+    """Resume el mundo PKM (Second Brain) para el brief de agentes.
+
+    El conocimiento vive en ``90-CONOCIMIENTO/`` como isla independiente del
+    mundo de código. Esta función la expone sin acoplarla al prefijo invariante
+    del prompt-cache (el brief la coloca en su bloque dinámico).
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        project_dir (str): Directorio raíz del proyecto.
+        limite (int): Máximo de páginas a listar (default 5).
+
+    Returns:
+        dict[str, Any]: ``paginas`` (lista de {titulo, tipo, cita}), ``total``
+        (páginas de la wiki) e ``inbox`` (notas sin clasificar).
+    """
+    vault = os.path.join(project_dir, ".context-map", vault_nombre(project_name))
+    panorama: dict[str, Any] = {"paginas": [], "total": 0, "inbox": 0}
+    try:
+        from context_map.domain.knowledge.wiki import listar_paginas
+
+        todas = listar_paginas(vault)
+        panorama["total"] = len(todas)
+        panorama["paginas"] = todas[:limite]
+    except Exception:
+        return panorama
+
+    inbox = os.path.join(vault, "90-CONOCIMIENTO", "00-INBOX")
+    if os.path.isdir(inbox):
+        panorama["inbox"] = sum(
+            1
+            for nombre in os.listdir(inbox)
+            if nombre.endswith(".md") and nombre != "00-INBOX.md"
+        )
+    return panorama
+
+
 def chequear_frescura(project_name: str, project_dir: str) -> str:
     """Compara la fecha del último build vs el diario manual más reciente."""
     try:

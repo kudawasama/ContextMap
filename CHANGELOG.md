@@ -30,18 +30,33 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   el resumen plantilla de la ingesta); el ruido ya no entra.
 - `2.4-Ideas-Relevantes`: sin TODOs crudos del código mezclados con ideas.
 
+### 🧠 Puente knowledge → agentes (F8)
+
+- **`wiki.listar_paginas()`**: API pública que lista resúmenes y entidades con
+  su wikilink, para exponer el Second Brain sin cargar su contenido.
+- **`brief.extractors.panorama_conocimiento()`**: resume la wiki (páginas +
+  total + inbox pendiente) para el brief.
+- El brief (`CONTEXT.md`) incorpora la sección **"Conocimiento Relevante
+  (Second Brain)"** en su **bloque dinámico** (después del boundary de
+  prompt-cache), sin romper el prefijo invariante.
+- La tool MCP `context` devuelve esa sección automáticamente: los agentes ya
+  ven el conocimiento capturado por el usuario.
+- Con wiki vacía, la sección guía la captura sin romper el build.
+
 ### 🧪 Tests
 
 - Nuevo `test_brief_identidad.py` (3 tests): el export no contamina el CWD;
   un brief extranjero se detecta; un brief coherente no da falsos positivos.
 - Nuevo `test_humanizacion.py` (2 tests): predicados de ruido + verificación
   de que 1.1/1.3/2.4 no muestran ruido y sí el contenido legítimo.
-- Suite: **295/295** verdes (antes 290); `ruff` y `mypy` limpios.
+- Nuevo `test_conocimiento_brief.py` (3 tests): el panorama lista páginas e
+  inbox, y el conocimiento entra en el bloque dinámico del brief.
+- Suite: **298/298** verdes (antes 290); `ruff` y `mypy` limpios.
 
 ### 📝 Documentación
 
 - Conteo real unificado en `README.md`, `README_EN.md` y `README_TECNICO.md`:
-  **295** tests y **24** herramientas MCP (antes 288 y 16).
+  **298** tests y **24** herramientas MCP (antes 288 y 16).
 
 ---
 

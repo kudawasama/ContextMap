@@ -16,12 +16,14 @@ from context_map.presentation.briefs.extractors import (
     detectar_version,
     extraer_pendientes_manuales,
     extraer_proposito,
+    panorama_conocimiento,
     reglas_negocio,
 )
 from context_map.presentation.briefs.sections import (
     aviso_frescura,
     comandos_utiles,
     como_trabajar_aqui,
+    conocimiento_relevante,
     eficiencia_tokenizacion,
     estado_proyecto,
     footer,
@@ -60,6 +62,8 @@ def generar_brief(
     pendientes_manuales = extraer_pendientes_manuales(project_name, project_dir)
     frescura = chequear_frescura(project_name, project_dir)
     reglas = reglas_negocio(project_dir)
+    # Puente knowledge → agentes: el Second Brain entra en el bloque dinámico.
+    panorama_knowledge = panorama_conocimiento(project_name, project_dir)
 
     # 1. Bloque de Prefijo Invariante (optimizado para LLM Prompt Caching)
     # Contiene la arquitectura, identidad, reglas y protocolos inmutables del proyecto.
@@ -90,6 +94,7 @@ def generar_brief(
         aviso_frescura(frescura),
         riesgos_criticos(nodes),
         tareas_pendientes(nodes, pendientes_manuales),
+        conocimiento_relevante(panorama_knowledge),
     ]
 
     texto_parcial = texto_invariante + "\n\n" + "\n\n".join([s for s in dinamico_secs if s])
