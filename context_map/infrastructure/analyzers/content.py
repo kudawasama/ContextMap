@@ -97,7 +97,8 @@ def extraer_funciones(ruta: str) -> list[str]:
 
 
 _RE_MARCADOR_TODO = re.compile(
-    r"(?:#|//|/\*|\*|<!--|--)\s*(?:TODO|FIXME|HACK|BUG|OPTIMIZE|XXX)[Ss]?\b:?"
+    r"(?:#|//|/\*+|^\s*\*(?!\*)|<!--|--)\s*(?:TODO|FIXME|HACK|BUG|OPTIMIZE|XXX)[Ss]?\b:?",
+    re.MULTILINE,
 )
 """Marcador de tarea pendiente: requiere signo de comentario y palabra en MAYÚSCULAS.
 
@@ -107,11 +108,50 @@ módulos»), las llamadas ``logger.debug(...)`` y los docstrings. En la BD perso
 eso produjo 647 de 685 eventos ``TODO`` falsos (94%). La coincidencia en
 mayúsculas es deliberada: ``# todo`` en un comentario en español es prosa, no un
 marcador; ``# TODO`` sí lo es.
+
+Ajuste 2026-10-08: el ``*`` suelto solo cuenta como comentario de bloque al
+inicio de línea y si no es el primero de una negrita (``**TODO**`` en Markdown
+no es un pendiente). ``/*`` y ``/**`` siguen valiendo dentro de la línea.
 """
 
 
+def _todos_de_python(ruta: str) -> list[str] | None:
+    """Marcadores hallados en COMENTARIOS reales de un ``.py`` (con ``tokenize``).
+
+    Evita la clase de falsos positivos más terca: un docstring o un string que
+    *menciona* un marcador (p. ej. documentar ``# TODO`` o escribir ``**TODO**``
+    en negrita) no es un pendiente del código. Devuelve None si el archivo no es
+    un Python válido, para que el llamador use la heurística por líneas.
+
+    Args:
+        ruta (str): Ruta del archivo Python.
+
+    Returns:
+        list[str] | None: Líneas ``L<n>: <comentario>`` (máx. 10), o None si no
+        se pudo tokenizar.
+    """
+    import tokenize
+
+    encontrados: list[str] = []
+    try:
+        with open(ruta, "rb") as f:
+            for token in tokenize.tokenize(f.readline):
+                if token.type == tokenize.COMMENT and _RE_MARCADOR_TODO.search(token.string):
+                    encontrados.append(f"L{token.start[0]}: {token.string.strip()[:100]}")
+                if len(encontrados) >= 10:
+                    break
+    except Exception as err:  # noqa: BLE001 — sintaxis inválida: fallback por líneas
+        logger.debug("No se pudo tokenizar %s: %s", ruta, err)
+        return None
+    return encontrados
+
+
 def extraer_todos(ruta: str) -> list[str]:
-    """Extrae los marcadores TODO/FIXME/HACK/BUG/OPTIMIZE/XXX escritos en comentarios.
+    """Extrae los marcadores TODO/FIXME/HACK/BUG/OPTIMIZE/XXX de comentarios.
+
+    En archivos ``.py`` analiza **solo comentarios** (``tokenize``), de modo que
+    docstrings y strings que mencionan un marcador no cuentan. En el resto de
+    lenguajes (JS/TS/C/HTML/SQL…) usa la heurística por líneas.
 
     Args:
         ruta (str): Ruta del archivo a analizar.
@@ -120,6 +160,11 @@ def extraer_todos(ruta: str) -> list[str]:
         list[str]: Líneas con marcador, con el formato ``L<n>: <texto>``
         (máximo 10 por archivo).
     """
+    if ruta.endswith(".py"):
+        comentarios = _todos_de_python(ruta)
+        if comentarios is not None:
+            return comentarios
+
     todos = []
     try:
         with open(ruta, encoding="utf-8", errors="ignore") as f:

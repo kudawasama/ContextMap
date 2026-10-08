@@ -101,3 +101,54 @@ def test_preserva_contenido_del_agente_despues_del_scanner(tmp_path):
     assert "Nodo B" in final
     assert final.count("🤖 Ingresados por el scanner") == 1
 
+
+def test_excluye_todos_de_codigo_y_conserva_los_conversados(tmp_path):
+    """Los TODO crudos del código NO se vuelcan al diario; los conversados sí.
+
+    Dogfooding 2026-10-08: el diario acumulaba volcados de código (p. ej.
+    ``TODO (context_map/x.py:L10): return valor``), que son deuda técnica y
+    viven en ``5.0-BACKLOG/5.1-Tareas``. El filtro ``_es_todo_codigo`` que ya
+    usaban backlog/historial/ideas faltaba en el generador del diario.
+    """
+    out = str(tmp_path)
+    hoy = date.today().isoformat()
+    codigo = Node(
+        id="t1",
+        type="FUTURO",
+        title="TODO (context_map/app.py:L10): return valor  # pendiente de tipar",
+        created_at=f"{hoy}T10:00:00",
+    )
+    prueba = Node(
+        id="t2",
+        type="FUTURO",
+        title="TODO (context_map/__tests__/test_x.py:L5): assert algo",
+        created_at=f"{hoy}T10:30:00",
+    )
+    conversado = Node(
+        id="t3",
+        type="FUTURO",
+        title="Revisar el flujo de captura móvil con el usuario",
+        created_at=f"{hoy}T11:00:00",
+    )
+
+    render_nota_dia(out, "MiProyecto", [codigo, prueba, conversado])
+    contenido = _ruta_diario(tmp_path, hoy).read_text(encoding="utf-8")
+
+    assert "Revisar el flujo de captura móvil" in contenido
+    assert "return valor" not in contenido
+    assert "assert algo" not in contenido
+
+
+def test_sin_nodos_utiles_no_crea_diario(tmp_path):
+    """Un día con solo TODO de código no genera diario (sin ruido)."""
+    out = str(tmp_path)
+    hoy = date.today().isoformat()
+    solo_codigo = Node(
+        id="t1",
+        type="FUTURO",
+        title="TODO (context_map/app.py:L10): def foo(): pass",
+        created_at=f"{hoy}T10:00:00",
+    )
+    assert render_nota_dia(out, "MiProyecto", [solo_codigo]) is None
+    assert not _ruta_diario(tmp_path, hoy).exists()
+

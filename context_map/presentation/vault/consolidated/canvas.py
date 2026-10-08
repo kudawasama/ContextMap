@@ -200,6 +200,10 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
     Escribe en la zona protegida ``.manual/Diario/YYYY-MM-DD.md`` con wikilinks
     a los nodos cuyo ``created_at`` coincide con la fecha de hoy.
 
+    Los **TODO crudos del código** (y el ruido de tests/chat) se excluyen: son
+    deuda técnica y viven en ``5.0-BACKLOG/5.1-Tareas``. Sin este filtro el
+    diario se llenaba de volcados de código (regla del skill: títulos legibles).
+
     Args:
         output_dir (str): Directorio raíz del proyecto.
         project_name (str): Nombre del proyecto.
@@ -211,6 +215,9 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
     safe = project_name.strip().replace(" ", "-").replace("/", "-")
     hoy = date.today().isoformat()
     ingresados = [n for n in nodes if (n.created_at or "")[:10] == hoy]
+    from context_map.presentation.vault.consolidated.secciones_backlog import _es_todo_codigo
+
+    ingresados = [n for n in ingresados if not _es_todo_codigo(n)]
 
     if not ingresados:
         return None
