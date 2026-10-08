@@ -302,19 +302,63 @@ _NEGACIONES = re.compile(
 )
 
 
+def _limpiar_frase(frase: str) -> str:
+    """Quita marcadores Markdown de una frase (énfasis, enlaces, listas).
+
+    Args:
+        frase (str): Fragmento crudo de Markdown.
+
+    Returns:
+        str: Texto en prosa, con espacios normalizados.
+    """
+    sin_enfasis = re.sub(r"\*\*([^*]+)\*\*", r"\1", frase)
+    sin_enlaces = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", sin_enfasis)
+    sin_marcadores = re.sub(r"^\s*(?:[-*>]\s+)+\s*", "", sin_enlaces)
+    return re.sub(r"\s+", " ", sin_marcadores).strip()
+
+
+def _es_frase_util(frase: str) -> bool:
+    """Heurística: ¿la frase es prosa informativa y no ruido estructural?
+
+    Descarta títulos, ítems de índice, referencias a URLs y bloques de fórmulas
+    (muy simbólicos para el poco texto que aportan), que ensuciaban las
+    respuestas extractivas.
+
+    Args:
+        frase (str): Frase ya limpiada.
+
+    Returns:
+        bool: True si sirve como fuente de una respuesta.
+    """
+    if len(frase) < 40:
+        return False
+    if "\\displaystyle" in frase or "w/index.php" in frase:
+        return False
+    letras_y_espacios = sum(c.isalpha() or c.isspace() for c in frase)
+    return letras_y_espacios / len(frase) >= 0.7
+
+
 def _frases(texto: str) -> list[str]:
-    """Divide un texto en frases útiles (sin frontmatter ni wikilinks).
+    """Divide un texto en frases de prosa útiles (sin frontmatter ni wikilinks).
 
     Args:
         texto (str): Contenido Markdown de una página.
 
     Returns:
-        list[str]: Frases de al menos 30 caracteres.
+        list[str]: Frases informativas, limpias de marcadores Markdown.
     """
     plano = re.sub(r"^---\n.*?\n---\n", "", texto, flags=re.DOTALL)
     plano = re.sub(r"\[\[([^|\]]+\|)?([^\]]+)\]\]", r"\2", plano)
     partes = re.split(r"(?<=[.!?])\s+|\n+", plano)
-    return [p.strip() for p in partes if len(p.strip()) >= 30]
+    frases: list[str] = []
+    for parte in partes:
+        bruta = parte.strip()
+        if not bruta or bruta.startswith("#"):
+            continue  # Los títulos ya los aporta el título de la página.
+        limpia = _limpiar_frase(bruta)
+        if _es_frase_util(limpia):
+            frases.append(limpia)
+    return frases
 
 
 def _mejores_frases(ruta: str, q_tokens: set[str], max_frases: int = 2) -> list[str]:

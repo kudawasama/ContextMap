@@ -79,6 +79,50 @@ def test_bm25_prefiere_mayor_frecuencia(tmp_path) -> None:
     assert resultados[0]["titulo"] == "Mucho vector"
 
 
+def test_frases_descarta_titulos_y_ruido_matematico() -> None:
+    """Dogfooding 2026-10-08: la síntesis citaba títulos y fórmulas en vez de prosa.
+
+    Con la página real de Wikipedia de BM25, la respuesta extractiva devolvía
+    "# BM25 — ranking de relevancia" y "(Redirigido desde …)" en lugar de la
+    definición. ``_frases`` debe quedarse solo con prosa informativa.
+    """
+    texto = (
+        "# BM25 — ranking de relevancia\n"
+        "[Ir al contenido](#bodyContent)\n"
+        "(Redirigido desde «[BM25](/w/index.php?title=BM25&redirect=no)»)\n"
+        "**Okapi BM25** es una función de ranking utilizada en recuperación de "
+        "información para asignar relevancia a los documentos de un buscador.\n"
+        "s c o r e ( D , Q ) = \u2211 i = 1 n I D F ( q i ) \u22c5 f ( q i , D ) "
+        "{\\displaystyle score(D,Q)}\n"
+        "- [Modelo de espacio vectorial](https://es.wikipedia.org/wiki/Modelo)\n"
+    )
+    frases = kb._frases(texto)
+
+    assert any("es una función de ranking" in f for f in frases), frases
+    assert all(not f.startswith("#") for f in frases)
+    assert not any("w/index.php" in f for f in frases)
+    assert not any("displaystyle" in f for f in frases)
+
+
+def test_sintetizar_devuelve_la_definicion_no_el_titulo(tmp_path) -> None:
+    """La respuesta extractiva cita la definición y no la cabecera de la página."""
+    vdir = _vault(tmp_path)
+    kb.ingresar(
+        vdir,
+        "BM25 — ranking de relevancia",
+        "# BM25 — ranking de relevancia\n\n"
+        "(Redirigido desde «BM25»)\n\n"
+        "Okapi BM25 es una función de ranking utilizada en recuperación de "
+        "información para asignar relevancia a los documentos de un buscador.",
+        entidades="BM25",
+    )
+
+    resultado = kb.sintetizar(vdir, "¿para qué sirve BM25?")
+
+    assert "función de ranking" in resultado["respuesta"]
+    assert "Redirigido" not in resultado["respuesta"]
+
+
 def test_moc_agrupa_conceptos_con_sus_fuentes(tmp_path) -> None:
     """G9: el MOC se genera en una pasada y agrupa cada concepto con sus fuentes."""
     vdir = _vault(tmp_path)
