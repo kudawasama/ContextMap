@@ -7,6 +7,31 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.8.1] — 2026-10-08
+
+### ⚡ Rendimiento del build (P2.1 del plan de revisión)
+
+El benchmark de escala demostró que el cuello **no era el almacenamiento** (el
+`graph.jsonl` son 0,3–4,5 MB) sino **algoritmos**:
+
+- **Deduplicación de riesgos**: `distancia_levenshtein` era O(n²) en Python puro
+  (44,5 M llamadas a `min()`). Ahora usa **corte por cota matemática** (si
+  `0.6·jaccard + 0.4 < umbral`, ningún Levenshtein lo salvaría), recorte de
+  prefijo/sufijo común y límite con salida temprana. El resultado es **idéntico**
+  (verificado: misma deduplicación y 0 discrepancias en 59 pares).
+- **`_safe_filename`, `_archivo_en_titulo` y `_minusculas` memoizadas**: se
+  invocaban entre **1,1 y 2,3 millones** de veces por build.
+- `conexiones_de_nodo`: invariante sacado del bucle interno.
+
+| Nodos | Antes | Ahora |
+|---|---|---|
+| 300 | 17,9 s | **5,5 s** |
+| 1.000 | >180 s (no terminaba) | **14,3 s** |
+| 10.000 | no terminaba en 30 min | **17,6 min** (genera 7.817 notas) |
+
+**Conclusión**: SQLite **no** era la respuesta; el límite restante a 10k nodos es
+el render del vault (miles de ficheros). Hasta ~2.000–5.000 nodos es ágil.
+
 ## [2.8.0] — 2026-10-08
 
 ### 🔎 Búsqueda de contexto con citas (P1.1)

@@ -8,6 +8,7 @@ de secciones Markdown.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
 from context_map.core.models import Edge, Node
 
@@ -78,8 +79,13 @@ def _slugificar(texto: str) -> str:
     return slug[:60] or "sin-nombre"
 
 
+@lru_cache(maxsize=65536)
 def _safe_filename(text: str) -> str:
     """Limpia caracteres inválidos en el nombre de un archivo, incluyendo nulos.
+
+    Memoizada (plan de revisión P2.1): es una función **pura** del texto y se
+    invocaba ~1,1 millones de veces por build en el benchmark de 1.000 nodos
+    (22 s medidos).
 
     Los separadores de ruta (``/`` y ``\\``) se reemplazan por ``_`` en vez
     de eliminarse, por la misma razón que en ``_slugificar``: de lo

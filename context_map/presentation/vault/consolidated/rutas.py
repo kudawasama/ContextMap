@@ -13,6 +13,7 @@ PRUEBA, DOCUMENTO) devuelven ``None`` — conectarlos crearía nodos fantasma.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
 from context_map.core.models import Node
 
@@ -29,8 +30,23 @@ def _id_limpio(node: Node) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]", "", node.id or "")[:40] or "sin-id"
 
 
+@lru_cache(maxsize=65536)
+def _minusculas(texto: str) -> str:
+    """Minúsculas memoizadas.
+
+    Los títulos y resúmenes se comparan millones de veces en
+    :func:`conexiones_de_nodo` (O(n²)); recalcular ``.lower()`` sobre textos largos
+    era parte del cuello de botella (plan de revisión P2.1).
+    """
+    return (texto or "").lower()
+
+
+@lru_cache(maxsize=65536)
 def _archivo_en_titulo(title: str) -> str | None:
     """Extrae el path de archivo de un título tipo 'TODO (ruta.py:L12): ...'.
+
+    Memoizada: es una función **pura** del título y se invocaba >2 millones de
+    veces por build (34 s medidos en el benchmark de 1.000 nodos).
 
     Args:
         title (str): Título del nodo.
@@ -114,8 +130,9 @@ def conexiones_de_nodo(
     candidatos: list[tuple[int, str, Node]] = []
     base_concept = _concepto_nodo(node)
     base_fecha = (node.created_at or "")[:10]
-    base_title = (node.title or "").lower()
-    base_summary = (node.summary or "").lower()
+    base_title = _minusculas(node.title)
+    base_summary = _minusculas(node.summary)
+    arch_a = _archivo_en_titulo(node.title)  # invariante del bucle
 
     for otro in todos:
         if otro.id == node.id:
@@ -124,7 +141,6 @@ def conexiones_de_nodo(
             continue
 
         # TODOs del MISMO archivo no son relación (ruido del scanner)
-        arch_a = _archivo_en_titulo(node.title)
         arch_b = _archivo_en_titulo(otro.title)
         if arch_a and arch_b and arch_a == arch_b:
             continue
@@ -135,9 +151,9 @@ def conexiones_de_nodo(
             score += 3
         if base_fecha and (otro.created_at or "")[:10] == base_fecha:
             score += 2
-        otro_title = (otro.title or "").lower()
+        otro_title = _minusculas(otro.title)
         if (otro_title and otro_title in base_summary) or (
-            base_title and base_title in (otro.summary or "").lower()
+            base_title and base_title in _minusculas(otro.summary)
         ):
             score += 1
 
