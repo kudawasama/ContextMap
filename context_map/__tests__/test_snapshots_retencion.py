@@ -26,7 +26,7 @@ def _crear_historial(tmp_path, n: int, dias_atras: int = 0) -> str:
         str: Ruta absoluta de la carpeta del historial.
     """
     history = tmp_path / ".context-map" / "maps" / "HISTORY"
-    history.mkdir(parents=True)
+    history.mkdir(parents=True, exist_ok=True)
     base = time.time() - dias_atras * 86400
     for i in range(n):
         fichero = history / f"snap-{i:03d}.md"
@@ -109,6 +109,30 @@ def test_conserva_uno_por_dia(tmp_path, monkeypatch) -> None:
     assert "dia-0.md" in quedan and "dia-2.md" in quedan
     assert "dia-4.md" not in quedan
     assert res["archivados"] == 2
+
+
+def test_segunda_poda_se_acumula_en_un_solo_tar(tmp_path, monkeypatch) -> None:
+    """Dos podas seguidas NO crean dos tars: se completan en el mismo mensual."""
+    monkeypatch.setenv("CTXMAP_SNAPSHOT_KEEP", "2")
+    monkeypatch.setenv("CTXMAP_SNAPSHOT_KEEP_DAYS", "0")
+    history = _crear_historial(tmp_path, n=4)   # snap-000 .. snap-003
+
+    purgar_snapshots(history)                   # archiva snap-000 y snap-001
+
+    # Un snapshot nuevo y claramente más reciente (nombre distinto, sin colisión).
+    nuevo = os.path.join(history, "nuevo.md")
+    with open(nuevo, "w", encoding="utf-8") as f:
+        f.write("# nuevo\n")
+    futuro = time.time() + 3600
+    os.utime(nuevo, (futuro, futuro))
+    res = purgar_snapshots(history)             # archiva snap-002 (uno más)
+
+    carpeta = os.path.join(str(tmp_path), ".context-map", "maps", "archive")
+    tramos = os.listdir(carpeta)
+    assert tramos == [os.path.basename(str(res["archivo"]))], tramos
+    with tarfile.open(str(res["archivo"]), "r:gz") as t:
+        nombres = set(t.getnames())
+    assert nombres == {"snap-000.md", "snap-001.md", "snap-002.md"}, nombres
 
 
 def test_modo_borrado_explicito(tmp_path, monkeypatch) -> None:

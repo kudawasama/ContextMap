@@ -7,6 +7,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🧰 Archivo de snapshots: un tar por mes (refinamiento de v2.7.3)
+
+- El archivado de la retención creaba **un tar pequeño por cada poda** (≈22 KB,
+  una por build) → habría vuelto a acumular cientos de ficheros. Ahora se
+  completa **un único `maps/archive/<YYYY-MM>.tar.gz`** al mes (fusión atómica con
+  `os.replace`, sin duplicar nombres). Consolidados aquí: 461 snapshots en un tar
+  de 5,7 MB.
+
 ### 🧩 Paquete de pi: `@kudawa/pi-contextmap`
 
 - Publicado en npm el paquete que trae ContextMap a [pi](https://pi.dev):
@@ -581,7 +589,10 @@ Suite: 101/101 verdes · ruff 100 % limpio · CI verde.
 
 ---
 
-## [Unreleased]
+## [Histórico · 2026-08] Brief con alma y zona protegida (sin versión asignada)
+
+> Entradas de esa etapa que quedaron sin versión asignada. Se conservan tal cual
+> (memoria del proyecto); el encabezado deja de confundirse con «Unreleased».
 
 ### ✨ Nuevo
 
@@ -632,7 +643,9 @@ Suite: 101/101 verdes · ruff 100 % limpio · CI verde.
 
 ---
 
-## [Unreleased]
+## [Histórico · 2026-08] Plan de Refactorización 5.2 (F0–F4, sin versión asignada)
+
+> Entradas de esa etapa sin versión asignada. Se conservan tal cual.
 
 ### ♻️ Refactorizado
 

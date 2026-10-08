@@ -7,6 +7,7 @@ para prevenir pérdida de eventos, generación de vistas legibles y creación de
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -120,15 +121,32 @@ def purgar_snapshots(
 
         carpeta = os.path.join(os.path.dirname(history_dir), "archive")
         os.makedirs(carpeta, exist_ok=True)
-        marca = datetime.now().strftime("%Y%m%d-%H%M%S")
-        archivo_tar = os.path.join(carpeta, f"{marca}-{len(sobrantes)}snapshots.tar.gz")
+        # Un tar POR MES que se completa: así no se acumulan cientos de tars
+        # minúsculos (una poda por build crearía uno cada vez).
+        archivo_tar = os.path.join(carpeta, f"{datetime.now().strftime('%Y-%m')}.tar.gz")
+        temporal = archivo_tar + ".tmp"
         try:
-            # Un tar por poda: nunca se reescribe un archivo existente (sin riesgo).
-            with tarfile.open(archivo_tar, "w:gz") as tar:
+            ya_dentro: set[str] = set()
+            with tarfile.open(temporal, "w:gz") as destino:
+                if os.path.exists(archivo_tar):
+                    with tarfile.open(archivo_tar, "r:gz") as previo:
+                        for miembro in previo.getmembers():
+                            contenido = previo.extractfile(miembro)
+                            if contenido is None:
+                                continue
+                            destino.addfile(miembro, contenido)
+                            ya_dentro.add(miembro.name)
                 for ruta in sobrantes:
-                    tar.add(ruta, arcname=os.path.basename(ruta))
+                    nombre = os.path.basename(ruta)
+                    if nombre in ya_dentro:
+                        continue
+                    destino.add(ruta, arcname=nombre)
+                    ya_dentro.add(nombre)
+            os.replace(temporal, archivo_tar)  # atómico
         except Exception as err:  # noqa: BLE001 — si falla el archivado, NO se borra nada
             logger.warning("No se pudo archivar snapshots: %s", err)
+            with contextlib.suppress(OSError):
+                os.remove(temporal)
             return resultado
 
     eliminados = 0
