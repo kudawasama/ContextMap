@@ -7,6 +7,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.7.1] — 2026-10-08
+
+### 🐛 Arreglado
+
+- **Acentos en el portapapeles (Windows)**: `ctxmap inbox add --clipboard` leía la
+  salida de PowerShell con la codificación de la consola (cp850) y corrompía el
+  texto (`Recuperación` → `Recuperaci¢n`). PowerShell ahora fuerza salida UTF-8 y
+  la lectura se decodifica **siempre** como UTF-8. Detectado al estrenar el
+  Second Brain con una captura real (`·`, tildes y eñes).
+- **Respuestas extractivas con ruido**: `wiki ask` citaba títulos Markdown,
+  avisos de redirección y bloques de fórmulas (`\displaystyle`) en lugar de la
+  definición. `wiki._frases` descarta estructura y ruido matemático y devuelve
+  prosa limpia (sin `**`, sin `[texto](url)`, sin viñetas).
+
 ## [2.7.0] — 2026-10-07
 
 ### 🗺️ G8 y G9 evaluados: BM25 ya estaba · MOC en una sola pasada
