@@ -19,6 +19,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Guía: `docs/PI_PACKAGE.md`. (El nombre `pi-contextmap` fue rechazado por npm
   por parecido a `pi-context-map`; se publicó con ámbito `@kudawa`.)
 
+## [2.7.2] — 2026-10-08
+
+### 🐛 Arreglado
+
+- **Ruido de TODO en el Diario**: `render_nota_dia` volcaba los TODO del código
+  (`TODO (ruta.py:Ln): …`) en la nota del día. Ahora aplica el mismo filtro
+  `_es_todo_codigo` que ya usaban backlog, historial e ideas: la deuda técnica
+  vive en `5.0-BACKLOG/5.1-Tareas`, no en el diario.
+- **Falsos positivos del extractor de TODO**: en archivos `.py` se analizan
+  **solo comentarios reales** con `tokenize` (un docstring o un string que
+  *menciona* el marcador ya no cuenta) y `**TODO**` en negrita Markdown dejó de
+  parecer un comentario. Descubierto al documentar el propio filtro, que generó
+  nodos fantasma.
+- Tests: `test_analyzers_content.py` (8) y `test_diario_consolidado.py` (6);
+  suite **362/362**.
+
 ## [2.7.1] — 2026-10-08
 
 ### 🐛 Arreglado
