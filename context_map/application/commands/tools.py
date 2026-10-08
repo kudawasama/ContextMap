@@ -95,6 +95,15 @@ def cmd_brief(args) -> None:
     readiness = analizar_readiness(".")
     brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
 
+    # Capa mínima (P1.2): el agente elige según su presupuesto de tokens.
+    if getattr(args, "min", False):
+        from context_map.presentation.briefs.brief_minimo import generar_brief_minimo
+
+        ruta_min = os.path.join(CONTEXT_DIR, "CONTEXT.min.md")
+        generar_brief_minimo(proj, nodes, readiness.score, ruta_min)
+        print(f"brief-min:ok -> {ruta_min}")
+        return
+
     generar_brief(proj, nodes, edges, readiness.score, brief_path)
     agents_path = generar_instrucciones_agentes(proj, target_dir=".", overwrite_if_exists=False)
     print(f"brief:ok -> {brief_path}")

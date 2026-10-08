@@ -92,6 +92,23 @@ def _leer_brief(target: str, project: str) -> str:
     return "No se encontró CONTEXT.md — ejecuta `ctxmap build --brief` primero."
 
 
+def _leer_brief_min(target: str, project: str) -> str:
+    """Lee la capa mínima del brief (``CONTEXT.min.md``), con respaldo al completo."""
+    import glob
+
+    candidatos = [
+        os.path.join(target, ".context-map", "CONTEXT.min.md"),
+        os.path.join(target, ".context-map", f"CONTEXT-{project}.min.md") if project else "",
+    ]
+    candidatos += glob.glob(os.path.join(target, ".context-map", "CONTEXT*.min.md"))
+    for c in candidatos:
+        if c and os.path.isfile(c):
+            with open(c, encoding="utf-8") as f:
+                return f.read()
+    # Sin capa mínima todavía: devolver el completo (mejor eso que nada).
+    return _leer_brief(target, project)
+
+
 def _target_abs(target: str) -> str:
     """Resuelve y valida el directorio de proyecto apuntado por la tool.
 
@@ -219,12 +236,48 @@ def adapt(target: str = ".", project: str = "") -> str:
 
 
 @_tool
-def context(target: str = ".", project: str = "") -> str:
-    """Lee el CONTEXT.md (brief) del proyecto: qué es, por qué existe, estado y cómo trabajar. LEER ANTES de trabajar en el proyecto."""
+def context(target: str = ".", project: str = "", minimo: bool = False) -> str:
+    """Lee el CONTEXT.md (brief) del proyecto: qué es, por qué existe, estado y cómo trabajar. LEER ANTES de trabajar en el proyecto.
+
+    Args:
+        target: Ruta del proyecto.
+        project: Nombre del proyecto (opcional).
+        minimo: Devolver la capa mínima del brief (~600 tk) en vez del completo
+            (~1.600 tk). El mínimo conserva identidad, estado, títulos de riesgos
+            y pendientes, y explica cómo ampliar con `context_search`.
+    """
     try:
+        if minimo:
+            return _leer_brief_min(_target_abs(target), project)
         return _leer_brief(_target_abs(target), project)
     except Exception as err:  # noqa: BLE001 — devolver el error al agente
         return f"ERROR en context: {err}"
+
+
+@_tool
+def context_search(consulta: str, limite: int = 5, target: str = ".") -> str:
+    """Busca pasajes relevantes de la memoria del proyecto (nodos del grafo y notas del vault) CON CITAS.
+
+    USAR cuando necesites contexto del proyecto sin cargar ficheros completos: devuelve
+    solo los fragmentos más afines (BM25 local, sin red) con su cita para profundizar.
+    Complementa a `context` (brief completo o mínimo).
+
+    Args:
+        consulta: Términos a buscar (ej. "topologia del vault", "riesgos de ingesta").
+        limite: Máximo de pasajes (default 5).
+        target: Ruta del proyecto.
+    """
+    from context_map.domain.retrieval import buscar_contexto, formatear_resultados
+
+    try:
+        resultados = buscar_contexto(_target_abs(target), consulta, limite=limite)
+        if not resultados:
+            return f"context_search: sin resultados para: {consulta}"
+        return "\n".join(
+            [f"context_search: {len(resultados)} pasaje(s)"] + formatear_resultados(resultados)
+        )
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en context_search: {err}"
 
 
 @_tool

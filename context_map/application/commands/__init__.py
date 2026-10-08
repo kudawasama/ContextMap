@@ -26,6 +26,7 @@ from context_map.application.commands.personal import cmd_personal
 from context_map.application.commands.refresh import cmd_refresh
 from context_map.application.commands.review import cmd_review
 from context_map.application.commands.scan import cmd_scan
+from context_map.application.commands.search import cmd_search
 from context_map.application.commands.sync import cmd_sync, cmd_sync_migrate, do_sync
 from context_map.application.commands.tools import (
     cmd_brief,
@@ -48,6 +49,7 @@ __all__ = [
     "cmd_sync_migrate",
     "do_sync",
     "cmd_scan",
+    "cmd_search",
     "cmd_import_git",
     "cmd_import_sessions",
     "cmd_import_chat",

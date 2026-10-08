@@ -149,6 +149,18 @@ def create_parser() -> argparse.ArgumentParser:
 
     s_brief = sub.add_parser("brief", help="Genera brief para agentes de IA")
     s_brief.add_argument("--project", default="Repo", help="Nombre del proyecto")
+    s_brief.add_argument(
+        "--min", action="store_true",
+        help="Generar solo la capa mínima (CONTEXT.min.md, ~600 tk) en vez del completo",
+    )
+
+    s_search = sub.add_parser(
+        "search", help="Busca pasajes en la memoria del proyecto (nodos + notas) con citas"
+    )
+    s_search.add_argument("consulta", help="Términos a buscar (ej. \"topologia del vault\")")
+    s_search.add_argument("--limite", type=int, default=5, help="Máximo de pasajes (default: 5)")
+    s_search.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    s_search.add_argument("--target", default=".", help="Ruta del proyecto")
 
     s_antigravity = sub.add_parser("import-antigravity", help="Importa chats de Antigravity IDE")
     s_antigravity.add_argument("--project", default="Repo", help="Nombre del proyecto")

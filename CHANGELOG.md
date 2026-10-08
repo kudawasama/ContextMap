@@ -7,6 +7,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-10-08
+
+### 🔎 Búsqueda de contexto con citas (P1.1)
+
+- Nueva **`ctxmap search "<tema>"`** y tool MCP **`context_search`**: BM25 local
+  sobre **nodos del grafo + notas del vault**, devolviendo los pasajes más afines
+  con su **cita** (`nodo:<id>` o la ruta real del fichero). El agente recupera lo
+  que necesita en vez de leer ficheros completos. Sin red y sin dependencias.
+- Nuevo paquete `domain/retrieval/` (`buscar_contexto`, `formatear_resultados`).
+
+### 📉 Brief por capas (P1.2)
+
+- `ctxmap build --brief` genera **dos capas**: `CONTEXT.md` (completo) y
+  `CONTEXT.min.md` (identidad + estado + títulos de riesgos y pendientes + cómo
+  ampliar). **Medido en este proyecto: 1.860 tk → 797 tk (−57,2%)**.
+- La tool MCP `context` acepta **`minimo=True`** y el CLI tiene **`ctxmap brief --min`**.
+
+### ✅ Tests
+
+- `test_busqueda_contexto.py` (6) y `test_brief_minimo.py` (4); **386** en total.
+
 ## [2.7.4] — 2026-10-08
 
 ### 🧰 Visibilidad del peso (P0.2/P0.3 del plan de revisión)

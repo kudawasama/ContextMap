@@ -147,9 +147,20 @@ def cmd_build(args) -> None:
         brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
         readiness = analizar_readiness(".")
         generar_brief(proj, nodes, edges, readiness.score, brief_path)
+        # Capa mínima (P1.2): el agente elige según su presupuesto de tokens.
+        from context_map.presentation.briefs.brief_minimo import generar_brief_minimo, medir_brief
+
+        ruta_min = os.path.join(CONTEXT_DIR, "CONTEXT.min.md")
+        generar_brief_minimo(proj, nodes, readiness.score, ruta_min)
+        capas = medir_brief(".")
         agents_path = generar_instrucciones_agentes(proj, target_dir=".", overwrite_if_exists=False)
         skill_path = generar_skill_contextmap(proj, target_dir=".")
         print(f"brief: {brief_path}")
+        print(
+            f"brief-min: {ruta_min} "
+            f"({capas['completo_tokens']} tk → {capas['minimo_tokens']} tk, "
+            f"−{capas['ahorro_pct']}%)"
+        )
         print(f"agents: {agents_path}")
         print(f"skill: {skill_path}")
 
