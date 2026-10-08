@@ -30,6 +30,126 @@ def _ensure(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
+# --- Retención de snapshots (plan de revisión 2026-10-08) -------------------
+# El historial creaba un snapshot en CADA build: 482 ficheros y 52 MB (93% del
+# peso de .context-map) con el grafo en 0,3 MB. Se conserva el detalle reciente
+# y lo antiguo se ARCHIVA comprimido (nada se borra salvo que se pida).
+SNAPSHOT_KEEP_DEFAULT = 20
+SNAPSHOT_KEEP_DAYS_DEFAULT = 7
+
+
+def _hash_contenido(ruta: str) -> str:
+    """md5 del contenido de un fichero (cadena vacía si no se puede leer)."""
+    try:
+        with open(ruta, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
+    except OSError:
+        return ""
+
+
+def _listar_snapshots(history_dir: str) -> list[str]:
+    """Rutas de los snapshots (``*.md``) del historial, sin entrar en subcarpetas."""
+    if not os.path.isdir(history_dir):
+        return []
+    return [
+        os.path.join(history_dir, nombre)
+        for nombre in os.listdir(history_dir)
+        if nombre.endswith(".md") and os.path.isfile(os.path.join(history_dir, nombre))
+    ]
+
+
+def purgar_snapshots(
+    history_dir: str,
+    *,
+    keep: int | None = None,
+    keep_days: int | None = None,
+    archivar: bool | None = None,
+) -> dict[str, object]:
+    """Poda el historial de snapshots conservando lo reciente y archivando el resto.
+
+    Se conservan intactos los ``keep`` más recientes **y** el más reciente de cada
+    uno de los últimos ``keep_days`` días; lo demás se comprime en un ``.tar.gz``
+    dentro de ``maps/archive/`` (nada se pierde).
+
+    Configurable por entorno: ``CTXMAP_SNAPSHOT_KEEP`` (20),
+    ``CTXMAP_SNAPSHOT_KEEP_DAYS`` (7) y ``CTXMAP_SNAPSHOT_ARCHIVE`` (``0`` para
+    borrar en vez de archivar).
+
+    Args:
+        history_dir (str): Carpeta ``maps/HISTORY``.
+        keep (int | None): Snapshots recientes a conservar.
+        keep_days (int | None): Días (uno por día) a conservar.
+        archivar (bool | None): Archivar (True) o borrar (False) los sobrantes.
+
+    Returns:
+        dict[str, object]: ``conservados``, ``archivados``, ``eliminados`` y
+        ``archivo`` (ruta del tar.gz creado, si lo hubo).
+    """
+    if keep is None:
+        keep = int(os.environ.get("CTXMAP_SNAPSHOT_KEEP", SNAPSHOT_KEEP_DEFAULT) or 0)
+    if keep_days is None:
+        keep_days = int(os.environ.get("CTXMAP_SNAPSHOT_KEEP_DAYS", SNAPSHOT_KEEP_DAYS_DEFAULT) or 0)
+    if archivar is None:
+        archivar = os.environ.get("CTXMAP_SNAPSHOT_ARCHIVE", "1") != "0"
+
+    archivos = _listar_snapshots(history_dir)
+    resultado: dict[str, object] = {
+        "conservados": len(archivos), "archivados": 0, "eliminados": 0, "archivo": "",
+    }
+    if not archivos or (keep <= 0 and keep_days <= 0):
+        return resultado
+
+    orden = sorted(archivos, key=os.path.getmtime, reverse=True)
+    proteger = set(orden[:keep])
+    dias_vistos: set[str] = set()
+    for ruta in orden:
+        dia = datetime.fromtimestamp(os.path.getmtime(ruta)).strftime("%Y-%m-%d")
+        if dia in dias_vistos:
+            continue
+        dias_vistos.add(dia)
+        if len(dias_vistos) <= keep_days:
+            proteger.add(ruta)
+
+    sobrantes = [r for r in orden if r not in proteger]
+    if not sobrantes:
+        return resultado
+
+    archivo_tar = ""
+    if archivar:
+        import tarfile
+
+        carpeta = os.path.join(os.path.dirname(history_dir), "archive")
+        os.makedirs(carpeta, exist_ok=True)
+        marca = datetime.now().strftime("%Y%m%d-%H%M%S")
+        archivo_tar = os.path.join(carpeta, f"{marca}-{len(sobrantes)}snapshots.tar.gz")
+        try:
+            # Un tar por poda: nunca se reescribe un archivo existente (sin riesgo).
+            with tarfile.open(archivo_tar, "w:gz") as tar:
+                for ruta in sobrantes:
+                    tar.add(ruta, arcname=os.path.basename(ruta))
+        except Exception as err:  # noqa: BLE001 — si falla el archivado, NO se borra nada
+            logger.warning("No se pudo archivar snapshots: %s", err)
+            return resultado
+
+    eliminados = 0
+    for ruta in sobrantes:
+        try:
+            os.remove(ruta)
+            eliminados += 1
+        except OSError as err:
+            logger.warning("No se pudo podar %s: %s", ruta, err)
+
+    resultado.update({
+        "conservados": len(archivos) - eliminados,
+        "archivados": eliminados if archivar else 0,
+        "eliminados": 0 if archivar else eliminados,
+        "archivo": archivo_tar,
+    })
+    if eliminados:
+        logger.info("Snapshots podados: %s (%s)", eliminados, archivo_tar or "borrados")
+    return resultado
+
+
 def append_jsonl(path: str, records: Iterable[dict]) -> None:
     """Agrega registros serializados en formato JSONL con creación automática de carpetas.
 
@@ -146,37 +266,45 @@ def snapshot_map(
     if not os.path.exists(src):
         return None
 
+    history_dir = os.path.join(".context-map", "maps", "HISTORY")
+    hash_src = _hash_contenido(src)
+
+    # Idempotencia (plan de revisión 2026-10-08): si el mapa no cambió desde el
+    # último snapshot, no se crea otro (evita 482 copias idénticas y 52 MB).
+    existentes = sorted(_listar_snapshots(history_dir), key=os.path.getmtime, reverse=True)
+    if existentes and hash_src and _hash_contenido(existentes[0]) == hash_src:
+        # El mapa no cambió: no se duplica, pero el historial puede estar gordo
+        # (la retención debe aplicarse también en este camino).
+        purgar_snapshots(history_dir)
+        return existentes[0]
+
     if name:
         out_name = name
     elif nodes is not None and edges is not None:
         out_name = _generar_nombre_descriptivo(nodes, edges)
     else:
-        try:
-            with open(src, "rb") as f:
-                h = hashlib.md5(f.read()).hexdigest()[:8]
-        except Exception as err:
-            logger.warning("No se pudo calcular hash del snapshot %s: %s", src, err)
-            h = "00000000"
+        h = hash_src[:8] or "00000000"
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         out_name = f"{ts}-{h}.md"
 
-    dst = os.path.join(".context-map", "maps", "HISTORY", out_name)
+    dst = os.path.join(history_dir, out_name)
     if os.path.exists(dst):
         base_name = out_name.rsplit(".", 1)[0]
         contador = 2
         while os.path.exists(dst):
-            dst = os.path.join(
-                ".context-map", "maps", "HISTORY", f"{base_name}-{contador}.md"
-            )
+            dst = os.path.join(history_dir, f"{base_name}-{contador}.md")
             contador += 1
 
     _ensure(dst)
     try:
         shutil.copy2(src, dst)
-        return dst
     except Exception as err:
         logger.warning("No se pudo crear snapshot %s: %s", dst, err)
         return None
+
+    # Retención: conserva lo reciente y archiva el resto comprimido.
+    purgar_snapshots(history_dir)
+    return dst
 
 
 def nodes_to_digest(nodes: list[Node]) -> str:
