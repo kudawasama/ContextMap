@@ -7,13 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
-### 🧰 Archivo de snapshots: un tar por mes (refinamiento de v2.7.3)
+## [2.7.4] — 2026-10-08
+
+### 🧰 Visibilidad del peso (P0.2/P0.3 del plan de revisión)
+
+- **`ctxmap doctor --sizes`**: desglose del peso de `.context-map` por áreas
+  (vault, historial, archivo comprimido, estado, `_legacy`…) con aviso si supera
+  el tope. También en `--json`.
+- **`ctxmap check`**: nueva línea **«📦 Peso del contexto»** con el total, los
+  snapshots vivos y las áreas principales; avisa si el contexto pasa de 100 MB o
+  de 200 snapshots vivos (con sugerencia accionable).
+- Módulo `domain/health/pesos.py` (medición testeada; nunca lanza excepción).
+
+### 🗜️ Archivo de snapshots: un tar por mes
 
 - El archivado de la retención creaba **un tar pequeño por cada poda** (≈22 KB,
   una por build) → habría vuelto a acumular cientos de ficheros. Ahora se
   completa **un único `maps/archive/<YYYY-MM>.tar.gz`** al mes (fusión atómica con
   `os.replace`, sin duplicar nombres). Consolidados aquí: 461 snapshots en un tar
   de 5,7 MB.
+- Limpieza: restos de `.tmp-tests` (85 directorios vacíos).
 
 ### 🧩 Paquete de pi: `@kudawa/pi-contextmap`
 

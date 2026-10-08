@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from context_map.domain.analysis.models import ResultadoReadiness
+from context_map.domain.health.pesos import formatear_pesos, medir_pesos
 
 
 def formatear_readiness(resultado: ResultadoReadiness, salud_vault_fn=None) -> str:
@@ -53,6 +54,10 @@ def formatear_readiness(resultado: ResultadoReadiness, salud_vault_fn=None) -> s
                 "- 💡 Consejo: crea tus notas de sesión/decisiones en "
                 "`.context-map/vault-*/.manual/` — el build JAMÁS las borra."
             )
+
+        # Peso del contexto: visibilidad y aviso si vuelve a crecer
+        # (plan de revisión 2026-10-08: el 93% del peso eran snapshots).
+        lineas.extend(formatear_pesos(medir_pesos(resultado.ruta_raiz)))
 
     # Frescura del contexto
     if resultado.frescura.get("aviso"):

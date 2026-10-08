@@ -160,6 +160,10 @@ def create_parser() -> argparse.ArgumentParser:
     s_doctor.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a diagnosticar")
     s_doctor.add_argument("--fix", action="store_true", help="Auto-reparar anomalías e inconsistencias encontradas")
     s_doctor.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+    s_doctor.add_argument(
+        "--sizes", action="store_true",
+        help="Mostrar el desglose de peso de .context-map (y avisar si excede el tope)",
+    )
 
     s_watch = sub.add_parser("watch", help="Daemon escuchador en segundo plano para sincronización continua")
     s_watch.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a monitorear")
