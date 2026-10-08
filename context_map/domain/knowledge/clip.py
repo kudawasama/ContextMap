@@ -71,6 +71,12 @@ def desglosar_markdown(texto: str) -> tuple[str, str]:
     return coincidencia.group(1).strip(), coincidencia.group(2).strip()
 
 
+_PS_GET_CLIPBOARD_UTF8 = (
+    "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Get-Clipboard"
+)
+"""Lectura del portapapeles en Windows forzando salida UTF-8 (ver abajo)."""
+
+
 def _comandos_portapapeles() -> list[list[str]]:
     """Comandos nativos para leer el portapapeles, en orden de preferencia.
 
@@ -81,7 +87,10 @@ def _comandos_portapapeles() -> list[list[str]]:
     if sys.platform == "darwin":
         return [["pbpaste"]]
     if os.name == "nt":
-        return [["powershell", "-NoProfile", "-Command", "Get-Clipboard"]]
+        # ``[Console]::OutputEncoding=...UTF8`` es OBLIGATORIO: sin ello
+        # PowerShell escribe en la página de códigos de la consola (cp850/cp1252)
+        # y los acentos se corrompen ("Recuperación" → "Recuperaci¢n").
+        return [["powershell", "-NoProfile", "-Command", _PS_GET_CLIPBOARD_UTF8]]
     return [
         ["wl-paste", "-n"],
         ["xclip", "-selection", "clipboard", "-o"],
@@ -91,6 +100,10 @@ def _comandos_portapapeles() -> list[list[str]]:
 
 def leer_portapapeles(comandos: list[list[str]] | None = None, timeout: int = 10) -> str:
     """Lee el portapapeles del sistema con herramientas nativas (sin dependencias).
+
+    El resultado se decodifica **siempre como UTF-8** (no con la codificación
+    local): así los acentos, la eñe y los símbolos sobreviven en cualquier
+    idioma.
 
     Args:
         comandos (list[list[str]] | None): Comandos a probar (inyectable en
@@ -106,7 +119,12 @@ def leer_portapapeles(comandos: list[list[str]] | None = None, timeout: int = 10
             continue
         try:
             resultado = subprocess.run(
-                comando, capture_output=True, text=True, timeout=timeout, check=False,
+                comando,
+                capture_output=True,
+                timeout=timeout,
+                check=False,
+                encoding="utf-8",
+                errors="replace",
             )
         except Exception:  # noqa: BLE001 — portapapeles es best-effort
             continue

@@ -82,7 +82,31 @@ def test_comandos_de_portapapeles_por_plataforma(monkeypatch) -> None:
 
     monkeypatch.setattr(clip.sys, "platform", "win32")
     monkeypatch.setattr(clip.os, "name", "nt")
-    assert clip._comandos_portapapeles()[0][0] == "powershell"
+    comando = clip._comandos_portapapeles()[0]
+    assert comando[0] == "powershell"
+    assert "UTF8" in comando[-1], "PowerShell debe forzar salida UTF-8"
+
+
+def test_lectura_decodifica_siempre_como_utf8(monkeypatch) -> None:
+    """Regresión (2026-10-08): los acentos se corrompían ("Recuperación" →
+    "Recuperaci¢n") porque se leía con la codificación local de la consola.
+
+    Ahora la lectura pasa ``encoding="utf-8"`` y NUNCA ``text=True``.
+    """
+    capturado: dict[str, object] = {}
+
+    def _run(_comando, **kwargs):
+        capturado.update(kwargs)
+        return NS(returncode=0, stdout="Recuperación · ñ á é — BM25")
+
+    monkeypatch.setattr(clip.shutil, "which", lambda _cmd: "/usr/bin/falso")
+    monkeypatch.setattr(clip.subprocess, "run", _run)
+
+    texto = clip.leer_portapapeles([["falso"]])
+
+    assert texto == "Recuperación · ñ á é — BM25", "Los acentos deben sobrevivir"
+    assert capturado.get("encoding") == "utf-8"
+    assert "text" not in capturado, "No debe usarse la codificación local (text=True)"
 
 
 def test_desglosar_markdown_extrae_titulo_y_url() -> None:
