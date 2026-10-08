@@ -19,6 +19,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Guía: `docs/PI_PACKAGE.md`. (El nombre `pi-contextmap` fue rechazado por npm
   por parecido a `pi-context-map`; se publicó con ámbito `@kudawa`.)
 
+## [2.7.3] — 2026-10-08
+
+### 🚀 Rendimiento y peso
+
+- **Retención de snapshots del historial**: el build escribía un snapshot en
+  *cada* ejecución (482 ficheros y 54 MB = 93% del peso de `.context-map`, con el
+  grafo en 0,3 MB). Ahora:
+  - **Idempotencia**: si el mapa no cambió desde el último snapshot, no se crea otro.
+  - **Retención**: se conservan los 20 más recientes **y** el último de cada uno
+    de los últimos 7 días.
+  - **Archivo**: el resto se comprime en `maps/archive/<fecha>-<n>snapshots.tar.gz`
+    (nada se borra; `CTXMAP_SNAPSHOT_ARCHIVE=0` para borrar en su lugar).
+  - Configurable: `CTXMAP_SNAPSHOT_KEEP`, `CTXMAP_SNAPSHOT_KEEP_DAYS`.
+- **Resultado medido**: `.context-map` **59 MB → 16 MB**; snapshots 485 → 26, con
+  459 archivados en un `.tar.gz` de 5,5 MB (compresión ~10×). Coste: 2 ms.
+- Tests: `test_snapshots_retencion.py` (7); suite **369/369**.
+
 ## [2.7.2] — 2026-10-08
 
 ### 🐛 Arreglado
