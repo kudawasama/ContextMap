@@ -84,6 +84,8 @@ Para garantizar un Graph View de Obsidian legible, limpio y sin colisiones:
 
 El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 29 herramientas nativas:
 
+> 🧩 Para **pi** hay un paquete que registra este MCP, añade la skill `contextmap` y 3 prompts: `pi install npm:@kudawa/pi-contextmap` (ver [docs/PI_PACKAGE.md](../docs/PI_PACKAGE.md)).
+
 | Tool MCP | Descripción |
 | :--- | :--- |
 | `refresh` | Flujo completo de sincronización (scan + build con preservación + check). |

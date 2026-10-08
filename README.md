@@ -108,6 +108,8 @@ Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0
 ### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo & Skills)
 ContextMap incluye un servidor **MCP nativo (29 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
 
+> 🧩 También disponible como **paquete de [pi](https://pi.dev)**: `pi install npm:@kudawa/pi-contextmap` (trae el MCP, una skill y 3 prompts). Ver [docs/PI_PACKAGE.md](docs/PI_PACKAGE.md).
+
 ### 🛡️ 4. Reglas y Skills Universales para 10+ Editores e IAs
 Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de cada herramienta:
 * **Google Antigravity**: `.agents/skills/contextmap/SKILL.md`

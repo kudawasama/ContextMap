@@ -7,6 +7,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🧩 Paquete de pi: `@kudawa/pi-contextmap`
+
+- Publicado en npm el paquete que trae ContextMap a [pi](https://pi.dev):
+  extensión que **registra el servidor MCP** (avisa si falta el CLI), skill
+  `contextmap` y los prompts `/contextmap-contexto`, `/contextmap-cierre` y
+  `/contextmap-preguntar`.
+- Install: `pi install npm:@kudawa/pi-contextmap`. Repo propio con publicación
+  automática en npm por **Trusted Publishing (OIDC, sin tokens)**:
+  https://github.com/kudawasama/pi-contextmap
+- Guía: `docs/PI_PACKAGE.md`. (El nombre `pi-contextmap` fue rechazado por npm
+  por parecido a `pi-context-map`; se publicó con ámbito `@kudawa`.)
+
 ## [2.7.1] — 2026-10-08
 
 ### 🐛 Arreglado
