@@ -7,6 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.9.1] — 2026-10-09
+
+### 🐛 Arreglado
+
+- **Canvas determinista (P2.3)**: `00-MAPA-MENTAL.canvas` usaba `uuid4()` para los
+  ids de nodos y aristas, así que el vault cambiaba en **cada** build e impedía
+  comparar versiones o verificar por hash (frenaba cualquier auditoría). Ahora los
+  ids derivan del contenido con `uuid5`: mismo grafo → **mismo lienzo byte a byte**
+  (verificado en el proyecto real y con tests).
+- **Ruido de 191 «TODO» históricos**: la limpieza debía hacerse en la **fuente**
+  (`.context-map/raw/events.jsonl`), no solo en el grafo derivado — el `sync`
+  reinyectaba los eventos. Archivados **193 eventos** (y sus nodos) con copia de
+  seguridad; verificado que no vuelven en refrescos consecutivos. Se conservan los
+  **3** marcadores reales de comentarios.
+  - La búsqueda personal de ContextMap ya no devuelve docstrings como pendientes.
+
+### ✅ Tests
+
+- `test_canvas_determinista.py` (3); suite **391**.
+
 ## [2.9.0] — 2026-10-08
 
 ### 🧠 Búsqueda semántica de contexto (P1.3)

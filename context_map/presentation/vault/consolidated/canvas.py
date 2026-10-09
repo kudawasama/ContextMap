@@ -23,6 +23,22 @@ from context_map.core.models import Edge, Node
 from context_map.presentation.vault.consolidated.rutas import ruta_archivo_nodo
 
 
+def _canvas_id(clave: str) -> str:
+    """Identificador **estable** (uuid5) para el lienzo (P2.3 del plan de revisión).
+
+    Antes se usaba ``uuid4()`` (aleatorio) en cada build, así que el vault no era
+    reproducible byte a byte y cualquier verificación por hash fallaba. Con uuid5
+    el mismo contenido produce el mismo id: los diffs vuelven a tener sentido.
+
+    Args:
+        clave (str): Clave estable (ruta del archivo o par de aristas).
+
+    Returns:
+        str: UUID v5 determinista.
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"contextmap:canvas:{clave}"))
+
+
 def render_canvas(
     output_dir: str,
     nodes: list[Node],
@@ -75,7 +91,7 @@ def render_canvas(
         col = _columna(ruta)
         fila = filas_por_col.get(col, 0)
         filas_por_col[col] = fila + 1
-        uid = str(uuid.uuid4())
+        uid = _canvas_id(ruta)
         ids[ruta] = uid
         canvas_nodes.append({
             "id": uid,
@@ -107,7 +123,7 @@ def render_canvas(
     canvas_edges: list[dict] = []
     for r_src, r_dst in sorted(pares):
         canvas_edges.append({
-            "id": str(uuid.uuid4()),
+            "id": _canvas_id(f"{r_src}->{r_dst}"),
             "fromNode": ids[r_src],
             "fromSide": "right",
             "toNode": ids[r_dst],
