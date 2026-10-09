@@ -60,16 +60,40 @@ def do_adapt(
     return generados
 
 
+def _reportar_revision(revision: dict[str, list[str]], quiet: bool) -> None:
+    """Imprime el resultado de la revisión idempotente (salvo en modo quiet)."""
+    if quiet:
+        return
+    creadas = len(revision["creados"])
+    actualizadas = len(revision["actualizados"])
+    if creadas or actualizadas:
+        print(f"🔁 Reglas puestas al día: {creadas} nueva(s), {actualizadas} actualizada(s)")
+    else:
+        print("✅ Reglas agénticas ya al día (sin cambios).")
+
+
 def cmd_adapt(args) -> None:
-    """Detecta el ecosistema y genera las reglas agénticas adaptadas.
+    """Detecta el ecosistema y genera/actualiza las reglas agénticas adaptadas.
+
+    Con ``--revisar`` solo ejecuta la revisión idempotente de las reglas propias
+    de ContextMap (sin tocar AGENTS.md ni `.hermes/`), ideal para hooks/arranque.
 
     Args:
-        args: Namespace de argparse con ``target``, ``--project``, ``--overwrite``.
+        args: Namespace con ``target``, ``--project``, ``--overwrite``, ``--merge``,
+            ``--revisar`` y ``--quiet``.
     """
     target = getattr(args, "target", None) or "."
     proj = project_name(args)
+    quiet = bool(getattr(args, "quiet", False))
 
-    print(f"🔍 Analizando ecosistema de '{target}'...")
+    from context_map.domain.ecosystem.adaptador import revisar_reglas_agente
+
+    if getattr(args, "revisar", False):
+        _reportar_revision(revisar_reglas_agente(proj, target_dir=target), quiet)
+        return
+
+    if not quiet:
+        print(f"🔍 Analizando ecosistema de '{target}'...")
     if getattr(args, "overwrite", False):
         modo = "overwrite"
     elif getattr(args, "merge", False):
@@ -77,9 +101,6 @@ def cmd_adapt(args) -> None:
     else:
         modo = "respect"
 
-    do_adapt(
-        target=target,
-        project_name=proj,
-        modo=modo,
-        quiet=False,
-    )
+    do_adapt(target=target, project_name=proj, modo=modo, quiet=quiet)
+    # Revisión idempotente: pone al día SOLO lo nuestro (si ya está, no reescribe).
+    _reportar_revision(revisar_reglas_agente(proj, target_dir=target), quiet)

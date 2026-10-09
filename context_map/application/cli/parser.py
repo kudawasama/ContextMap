@@ -209,6 +209,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_adapt.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_adapt.add_argument("--overwrite", action="store_true", help="Sobrescribir reglas existentes")
     s_adapt.add_argument("--merge", action="store_true", help="Fusionar: anexa/actualiza bloque ContextMap preservando reglas del usuario")
+    s_adapt.add_argument("--revisar", action="store_true", help="Solo revisar/poner al día las reglas propias de ContextMap (idempotente; no toca AGENTS.md ni .hermes/)")
+    s_adapt.add_argument("--quiet", action="store_true", help="Sin salida (para hooks/arranque)")
 
     s_personal = sub.add_parser(
         "personal",
