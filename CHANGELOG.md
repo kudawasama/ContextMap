@@ -7,6 +7,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.13.0] — 2026-10-10
+
+### 🔐 Fase 2: el agente USA los secretos SIN verlos (proxy)
+
+- `ctxmap secret exec --ids id1,id2 --autorizado "comando..."`: inyecta los
+  secretos en el entorno del proceso y **sanea la salida** (cada valor se
+  reemplaza por `***`). Requiere **autorización explícita** (`--autorizado` o
+  `CTXMAP_SECRET_AUTORIZA=1`) y escribe **log de auditoría**
+  (`.context-map/secure/audit.log`).
+- `ctxmap secret receta <nombre> --ids ...` : ejecuta **solo guiones aprobados**
+  por el usuario (`.context-map/secure/recetas/<nombre>.cmd|.sh`) — la vía
+  recomendada para operaciones sensibles, para acotar el *prompt injection*.
+- Tool MCP `secret_exec(ids, comando, autorizado, ...)`: el agente pide la
+  operación y recibe la salida saneada; sin la frase maestra en el servidor
+  (`CTXMAP_MASTER_PHRASE`) se niega.
+- `ctxmap secret audit`: revisa el registro de usos (nunca valores).
+
+### ✅ Tests
+
+- `test_secret_proxy.py` (8); suite **425**.
+
 ## [2.12.0] — 2026-10-10
 
 ### 🔐 Baúl de secretos cifrado (Fase 1)

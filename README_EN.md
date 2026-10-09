@@ -6,7 +6,7 @@
 
 ### *Stop your AI from forgetting architectural decisions, burning tokens, and breaking working code.*
 
-[![Release](https://img.shields.io/badge/version-v2.12.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-v2.13.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)

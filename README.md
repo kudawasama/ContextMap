@@ -6,7 +6,7 @@
 
 ### *Que tu IA no olvide tus decisiones, no queme tokens y no rompa tu código.*
 
-[![Release](https://img.shields.io/badge/version-v2.12.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-v2.13.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
@@ -248,13 +248,17 @@ ctxmap mcp                               # servidor MCP (stdio) para agentes
 ctxmap secret init                      # crea el baúl cifrado (frase maestra)
 ctxmap secret set token_api --nota "apunte"   # guarda SIN mostrar el valor
 ctxmap secret list                      # solo nombres/metadatos
+ctxmap secret exec --ids token_api --autorizado "curl ..."   # usa sin ver (salida saneada)
+ctxmap secret receta descargar_cartola --ids cl_banca --autorizado   # guion aprobado
+ctxmap secret audit                     # registro de usos (nunca valores)
 ctxmap secret backup pendrive/baul.json # respaldo cifrado portable
 ```
 
-> 🔐 **Baúl de secretos (v2.12)**: valores cifrados con **AES-256-GCM** y clave
-> derivada de tu **frase maestra** (nunca almacenada). El agente **solo ve los
-> nombres** (`secret_list`); el valor se muestra únicamente en tu terminal o se
-> usará vía *proxy seguro* (Fase 2). El archivo cifrado viaja contigo.
+> 🔐 **Baúl de secretos**: valores cifrados con **AES-256-GCM** y clave derivada
+> de tu **frase maestra** (nunca almacenada). El agente **nunca ve los valores**:
+> `secret_list` solo nombres; `secret exec`/`secret receta` los **inyecta en el
+> proceso y sanea la salida** (`***`), con **autorización explícita** y **log de
+> auditoría**. El archivo cifrado viaja contigo (commit o pendrive).
 > Requiere el extra opcional: `pip install "context-map-ai[secure]"`.
 
 ---

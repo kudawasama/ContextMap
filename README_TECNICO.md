@@ -4,7 +4,7 @@
 
 **Documentación de Ingeniería de Software, Patrones de Diseño, AST y Protocolos**
 
-[![Version: v2.11.1](https://img.shields.io/badge/version-v2.12.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Version: v2.11.1](https://img.shields.io/badge/version-v2.13.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict%20blocking-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
 [![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
