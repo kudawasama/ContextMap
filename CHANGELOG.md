@@ -7,6 +7,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.11.1] — 2026-10-10
+
+### 🔁 Revisión al iniciar
+
+- **`ctxmap adapt --revisar [--quiet]`**: ejecuta solo la revisión idempotente de
+  las reglas propias de ContextMap (no toca `AGENTS.md` ni `.hermes/`). Pensado
+  para hooks y arranque.
+- `ctxmap adapt` (sin flag) además **pone al día** las reglas desactualizadas.
+- El **paquete de pi** la invoca en `session_start` → las reglas/skills quedan al
+  día en cada arranque (y si ya lo están, **no cambia nada**).
+
+### ✅ Tests
+
+- Suite **410**.
+
 ## [2.11.0] — 2026-10-10
 
 ### 🔁 Las reglas agénticas se revisan y se ponen al día solas
