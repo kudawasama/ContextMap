@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "context-map-ai"
-version = "2.10.1"
+version = "2.10.2"
 description = "ContextMap IA — Memoria permanente y mapa mental narrativo para agentes de IA"
 readme = "README.md"
 license = "MIT"

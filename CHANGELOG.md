@@ -7,6 +7,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.10.2] — 2026-10-09
+
+### 🧩 La skill se adapta al sistema (y vuelve a estar al día)
+
+- **Skill del IDE regenerada** (`.agents/skills/contextmap/SKILL.md`, la que leen
+  pi y Antigravity): era genérica y no mencionaba `context_diff`, la capa mínima
+  ni `seccion`; ahora enseña las herramientas y apunta al **CÓMO** del proyecto
+  en vez de duplicarlo.
+- El generador (`_generar_antigravity_skill`) pasa a ser un **envoltorio del
+  sistema**: protocolo + herramientas + comandos, con enlaces a
+  `.context-map/contextmap-skill.md` (CÓMO) y `AGENTS.md` (normas).
+- El **paquete de pi** se actualiza en paralelo (skill genérica equivalente).
+
+### ✅ Tests
+
+- Suite **407**.
+
 ## [2.10.1] — 2026-10-09
 
 ### 🪙 Menos tokens (segunda pasada)
