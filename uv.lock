@@ -249,7 +249,7 @@ wheels = [
 
 [[package]]
 name = "context-map-ai"
-version = "2.9.3"
+version = "2.10.0"
 source = { editable = "." }
 dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },

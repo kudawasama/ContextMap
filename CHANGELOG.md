@@ -7,6 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.10.0] — 2026-10-09
+
+### 🪙 Menos tokens en cada petición
+
+- **`context` devuelve la capa mínima por defecto** (`minimo=True`): una lectura
+  típica pasa de ~1.850 a **~660 tk** (−64%). El brief completo queda con
+  `minimo=False`.
+- **Nueva tool MCP `context_diff(since=<digest>)`**: al volver a una sesión
+  devuelve **solo lo que cambió** en la memoria del proyecto (nodos agregados,
+  cambiados y eliminados), usando el digest del grafo y un índice
+  `digest → snapshot` en `.context-map/state/digest_index.json`. Si nada cambió,
+  responde una sola línea.
+- **`AGENTS.md` adelgazado**: 3.499 → ~1.290 tk (−63%), conservando **todas** las
+  normas; el detalle y los diagramas se movieron a
+  [`docs/GOBERNANZA-AGENTES.md`](docs/GOBERNANZA-AGENTES.md), que se lee a demanda.
+
+### ✅ Tests
+
+- `test_context_diff.py` (5); suite **404**.
+
 ## [2.9.3] — 2026-10-09
 
 ### 🧹 Higiene de la memoria personal
