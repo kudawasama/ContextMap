@@ -9,7 +9,7 @@
 [![Release](https://img.shields.io/badge/version-v2.11.1-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
-[![Tests: 314 Passing](https://img.shields.io/badge/tests-314%2F314%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
 [![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
@@ -106,7 +106,7 @@ Scraping-Bot           🟡 Warm     21d        32       2/1          0
 ```
 
 ### 🔌 3. Autonomous Control for AI Agents (Native MCP Server & Skills)
-Includes a built-in **stdio MCP Server (29 tools)** and **Google Antigravity Skill generator**. Autonomous agents like **Antigravity, Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
+Includes a built-in **stdio MCP Server (30 tools)** and **per-IDE rule/skill generator (Antigravity, Cursor, Claude, Copilot, Windsurf, pi…)**. Autonomous agents like **Antigravity, Hermes Agent, Claude Desktop, Cursor, and Windsurf** can inspect context, retrieve lessons, and save decisions without manual CLI commands.
 
 ### 🛡️ 4. Universal Rules & Skills for 10+ IDEs
 Write project rules once, and ContextMap auto-syncs them to every tool's native format:
@@ -131,7 +131,7 @@ Write project rules once, and ContextMap auto-syncs them to every tool's native 
 | **Permanent Architecture Memory** | ❌ Lost on chat close | 🟡 Partial | **✅ Indestructible Memory** |
 | **Switch IDEs Without Loss** | ❌ No | ❌ Vendor Lock-in | **✅ 100% Portable** |
 | **Multi-Project Portfolio View** | ❌ No | ❌ No | **✅ Consolidated SQLite DB** |
-| **Native MCP Server & Skills** | ❌ No | 🟡 Proprietary | **✅ 29 Tools stdio + Antigravity Skill** |
+| **Native MCP Server & Skills** | ❌ No | 🟡 Proprietary | **✅ 30 Tools stdio + per-IDE skills** |
 
 ---
 

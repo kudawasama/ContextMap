@@ -5,7 +5,7 @@
 **Documentación de Ingeniería de Software, Patrones de Diseño, AST y Protocolos**
 
 [![Version: v2.11.1](https://img.shields.io/badge/version-v2.11.1-blue.svg?style=for-the-badge)](CHANGELOG.md)
-[![Tests: 314 Passing](https://img.shields.io/badge/tests-314%2F314%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict%20blocking-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
 [![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![MCP: 16 Tools](https://img.shields.io/badge/MCP%20Server-16%20Tools-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
@@ -82,7 +82,7 @@ Para garantizar un Graph View de Obsidian legible, limpio y sin colisiones:
 
 ## 4. Servidor MCP Nativo (Model Context Protocol)
 
-El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 29 herramientas nativas:
+El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 30 herramientas nativas:
 
 > 🧩 Para **pi** hay un paquete que registra este MCP, añade la skill `contextmap` y 3 prompts: `pi install npm:@kudawa/pi-contextmap` (ver [docs/PI_PACKAGE.md](../docs/PI_PACKAGE.md)).
 
@@ -98,7 +98,8 @@ El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre tr
 | `personal_query` | Búsqueda Full-Text Search (FTS5) en milisegundos. |
 | `personal_repair` | Saneamiento de eventos, deduplicación y optimización SQLite. |
 | `adapt` | Inyección de directrices en formatos `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, etc. |
-| `context` | Lectura directa del brief ejecutivo destilado. |
+| `context` | Lectura directa del brief ejecutivo (capa mínima por defecto; `seccion="riesgos"` para una sola parte). |
+| `context_diff` | Cambios desde un digest: al volver a una sesión, solo lo que cambió (idempotente). |
 | `export` | Exportación portable a XML, JSON o Markdown. |
 | `import_sessions` | Importación y reconciliación de sesiones de trabajo de Hermes (`state.db`). |
 | `import_git` | Extracción de historial enriquecido de commits. |

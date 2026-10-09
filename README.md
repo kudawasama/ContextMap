@@ -2,96 +2,160 @@
 
 <div align="center">
 
-# La Memoria Permanente para tus Asistentes de IA
+# La memoria permanente para tus asistentes de IA
 
-### *Evita que tu IA olvide tus decisiones, gaste dinero en tokens y rompa tu código.*
+### *Que tu IA no olvide tus decisiones, no queme tokens y no rompa tu código.*
 
 [![Release](https://img.shields.io/badge/version-v2.11.1-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
-[![Tests: 314 Passing](https://img.shields.io/badge/tests-314%2F314%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Tests](https://img.shields.io/badge/tests-410%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
-[![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-[English Version 🇬🇧](README_EN.md) • [📖 Documentación Técnica y Arquitectura 🏛️](README_TECNICO.md) • [Historial de Versiones](CHANGELOG.md)
+[English version 🇬🇧](README_EN.md) · [Documentación técnica 🏛️](README_TECNICO.md) · [Historial de versiones](CHANGELOG.md)
 
 </div>
 
 ---
 
-## 😫 El Gran Problema al Programar con Inteligencia Artificial
+## El problema: cada chat empieza de cero
 
-Si usas **Cursor, Claude, Copilot, ChatGPT, Antigravity o Windsurf**, seguro te ha pasado esto:
+Si programas con **Cursor, Claude Code, Copilot, ChatGPT, Antigravity, Windsurf o Hermes**, esto te resulta familiar:
 
-1. 🧠 **Amnesia Constante**: Abres un nuevo chat y la IA olvidó todo lo que conversaron ayer. Tienes que volver a explicarle el proyecto desde cero.
-2. 💸 **Desperdicio de Tokens y Dinero**: Copiar y pegar 100 archivos en cada pregunta satura el límite de contexto, cuesta caro y confunde al modelo.
-3. 💥 **Refactorizaciones a Ciegas**: La IA cambia código que ya funcionaba porque desconoce las decisiones pasadas y las reglas de negocio.
-4. 🔒 **Vendor Lock-in**: Si cambias de editor (de Cursor a Claude o a VS Code), pierdes todo el contexto acumulado.
-
----
-
-## 💡 La Solución: ContextMap
-
-**ContextMap es como darle un "disco duro de memoria viva" a tus IAs.**
-
-Escanea tu proyecto, entiende su estructura y propósito, y genera dos cosas mágicas:
-1. 🗺️ **Un Mapa Mental Visual en Obsidian**: Una bóveda interactiva hermosa donde puedes ver en tiempo real cómo se conectan las ideas, módulos, riesgos y decisiones.
-2. 📄 **Un Brief Ejecutivo Ultra-Compacto (`CONTEXT.md`)**: Un resumen de alta densidad de solo **~1.600 tokens** que le enseña al instante a cualquier IA todo lo que necesita saber sin saturar su memoria (**>99% de ahorro de tokens**).
-
-```
-   ┌───────────────────────────────────────────────────────────────┐
-   │                   TU PROYECTO DE SOFTWARE                     │
-   └───────────────────────────────┬───────────────────────────────┘
-                                   │
-                           [ ctxmap refresh ]
-                                   │
-                 ┌─────────────────┴─────────────────┐
-                 ▼                                   ▼
-        🗺️ BÓVEDA OBSIDIAN                  📄 BRIEF EJECUTIVO
-     (Visual, Interactiva,              (Solo ~1.600 tokens,
-      Conexiones y Grafos)               Ahorro >99% en LLMs)
-                 │                                   │
-                 └─────────────────┬─────────────────┘
-                                   ▼
-          🤖 COMPATIBLE CON CUALQUIER ASISTENTE DE IA
-        Cursor · Claude Code · Copilot · Antigravity · Hermes
-```
+| Síntoma | Qué cuesta |
+|---|---|
+| 🧠 **Amnesia entre sesiones** | Vuelves a explicar el proyecto desde cero en cada chat. |
+| 💸 **Contexto quemado** | Pegar 100 archivos satura la ventana, encarece cada respuesta y confunde al modelo. |
+| 💥 **Refactors a ciegas** | La IA cambia código que funcionaba porque no conoce las decisiones ni las reglas de negocio. |
+| 🔒 **Dependencia del editor** | Si cambias de IDE, pierdes todo el contexto acumulado. |
 
 ---
 
-## 🚀 Inicio Rápido en 3 Pasos
+## La solución: un disco duro de memoria viva para tus IAs
 
-### 1. Instálalo en 1 comando
+**ContextMap** escanea tu proyecto, entiende su estructura y su propósito, y produce **dos artefactos portables** que cualquier agente puede leer:
+
+1. 🗺️ **Una bóveda de Obsidian** — el mapa mental del proyecto: ideas, decisiones, riesgos y su historia, navegable como un grafo.
+2. 📄 **Un brief ejecutivo (`CONTEXT.md`)** — un resumen de alta densidad. La capa mínima pesa **~700 tokens** e incluye identidad, estado, riesgos y pendientes.
+
+> **Principio de diseño:** *el script propone, el agente dispone*. ContextMap no "adivina" tu proyecto: genera el borrador, y el agente lo revisa y lo humaniza. El contexto solo se da por bueno cuando alguien lo ha verificado.
+
+```
+                    TU PROYECTO
+                         │
+                 ctxmap refresh .
+                         │
+        ┌────────────────┴────────────────┐
+        ▼                                 ▼
+ 🗺️ Bóveda Obsidian              📄 Brief (CONTEXT.md)
+ (grafo navegable +             (~700 tk con la capa
+  memoria manual)                mínima; cacheable)
+        └────────────────┬────────────────┘
+                         ▼
+      🤖 Cualquier agente: Cursor · Claude · Copilot ·
+         Antigravity · Windsurf · Hermes · pi (MCP)
+```
+
+---
+
+## Cómo funciona (4 etapas)
+
+| Etapa | Comando | Qué hace |
+|---|---|---|
+| **1. Escanear** | `ctxmap scan .` | Analiza estructura, símbolos y cambios → eventos (idea, riesgo, cambio, base…). |
+| **2. Sintetizar** | `ctxmap build --brief` | Escribe el grafo y la bóveda, y genera el brief para agentes. |
+| **3. Servir** | `ctxmap mcp` | Expone **30 herramientas MCP** para que el agente consulte la memoria sin leer archivos. |
+| **4. Revisar y adaptar** | `ctxmap check .` · `ctxmap adapt` | Audita la salud del contexto y genera las reglas nativas de cada IDE. |
+
+Todo en un paso:
+
 ```bash
-pip install context-map-ai
+ctxmap refresh .     # = scan + build (preservando tus notas) + check + revisión de reglas
 ```
-*(O con `uv`: `uv tool install context-map-ai`)*
 
-### 2. Inicializa tu proyecto
-Dentro de la carpeta de tu proyecto, dile a tu IA en el chat:
-> 💬 *"Inicializa ContextMap para este proyecto"*
+---
 
-O ejecútalo tú mismo en la terminal:
+## Inicio rápido
+
+### 1. Instalar
+
+```bash
+pip install context-map-ai            # o: uv tool install context-map-ai
+```
+
+Con el servidor MCP para agentes:
+
+```bash
+pip install "context-map-ai[mcp]"
+```
+
+### 2. Inicializar el proyecto
+
 ```bash
 ctxmap auto .
 ```
 
-### 3. ¡Listo! Mantén el contexto al día tras hacer cambios
-Cada vez que avances en tu código o tomes acuerdos importantes:
+```text
+[auto] Proyecto: Mi-Tienda-Online
+[auto] Stack detectado: Python 3.12 · FastAPI · pytest
+[auto] Ecosistema: Cursor, Claude Code, GitHub Copilot
+[auto]         + AGENTS.md · .cursor/rules/contextmap.mdc · .github/copilot-instructions.md
+[auto] Vault: .context-map/vault-Mi-Tienda-Online/  (312 notas)
+[auto] Brief: .context-map/CONTEXT.md  (1.852 tk → 695 tk con la capa mínima)
+[auto] Readiness: 100/100 — ready
+```
+
+### 3. Mantenerlo al día
+
+Cada vez que avances:
+
 ```bash
 ctxmap refresh .
 ```
 
 ---
 
-## ✨ ¿Por Qué ContextMap Enamora a los Desarrolladores?
+## Ejemplos reales
 
-### 🧠 1. Memoria Indestructible (`7.0-MANUAL/`)
-¿Tomaste una decisión crítica con el cliente o tu equipo? Anótala en tu diario o notas manuales. El motor de ContextMap **jamás borrará tus notas** (`preserve: true`). La IA recordará ese acuerdo para siempre.
+### 🧠 Ejemplo 1 — La IA recuerda la decisión de ayer
 
-### 🌐 2. Tablero de Control Multi-Proyecto (`ctxmap personal panorama`)
-¿Trabajas en 5, 10 o 20 proyectos a la vez? Con un solo comando tienes un semáforo visual de qué proyectos están activos, cuáles dormidos y qué tareas urgentes tienen pendientes:
+Anoche acordaste: *«usamos SQLite + FTS5, no embeddings, para la búsqueda personal»*.
+Lo dejaste en tu diario (`.context-map/vault-*/7.0-MANUAL/Diario/`), que el build **nunca borra**.
+
+Hoy, en un chat nuevo, la IA pide el brief y **ya lo sabe**:
+
+```text
+ctxmap search "por qué no usamos embeddings"
+```
+
+```text
+[search] 3 pasaje(s) para: por qué no usamos embeddings
+
+1. [NOTA] Diario — 2026-10-07
+   cita: .context-map/vault-MiApp/7.0-MANUAL/Diario/2026-10-07.md
+   …se descartaron embeddings pesados; SQLite+FTS5 ya cubre la búsqueda personal y no añade dependencias…
+
+2. [NOTA] Plan de Revisión (mediciones)
+   cita: .context-map/vault-MiApp/7.0-MANUAL/MEJORAS/PLAN-REVISION.md
+   …el peso estaba en copias de texto sin retención, no en el almacenamiento…
+```
+
+> El resultado trae **citas** al archivo real: la IA puede profundizar solo en lo que necesita, en vez de leer carpetas enteras.
+
+### 🔎 Ejemplo 2 — Recuperar contexto sin leer 100 archivos
+
+```text
+ctxmap search "retención de snapshots"
+```
+
+Devuelve los 5 fragmentos más afines **con su cita**, en lugar de volcar el repositorio. Ese es el ahorro: el agente pide un pasaje, no un proyecto.
+
+### 🌐 Ejemplo 3 — Todos tus proyectos, de un vistazo
+
+```bash
+ctxmap personal panorama
+```
 
 ```text
 ============================================================================
@@ -99,73 +163,123 @@ ctxmap refresh .
 ============================================================================
 Proyecto               Semáforo   Inactivo   Eventos  Lecc/Dec   Sesiones
 ----------------------------------------------------------------------------
-Mi-Tienda-Online       🟢 Activo   1d         582      4/2        3       
-App-Finanzas           🟢 Activo   5d         336      4/0        1       
-Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0       
+Mi-Tienda-Online       🟢 Activo   1d         582      4/2        3
+App-Finanzas           🟢 Activo   5d         336      4/0        1
+Bot-Automatizacion     🟡 Tibio    21d        32       2/1        0
 ----------------------------------------------------------------------------
 ```
 
-### 🔌 3. Control Directo para Agentes de IA (Servidor MCP Nativo & Skills)
-ContextMap incluye un servidor **MCP nativo (29 herramientas)** y generador de **Skills para Antigravity**. Asistentes como **Antigravity, Hermes Agent, Claude Desktop, Cursor o Windsurf** pueden sincronizar el mapa, consultar lecciones y registrar decisiones de forma completamente autónoma sin que toques la terminal.
+Las lecciones y decisiones se consolidan en una base **SQLite + FTS5** común a todos tus proyectos.
 
-> 🧩 También disponible como **paquete de [pi](https://pi.dev)**: `pi install npm:@kudawa/pi-contextmap` (trae el MCP, una skill y 3 prompts). Ver [docs/PI_PACKAGE.md](docs/PI_PACKAGE.md).
+### 🛡️ Ejemplo 4 — Las reglas del equipo que la IA respeta
 
-### 🛡️ 4. Reglas y Skills Universales para 10+ Editores e IAs
-Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de cada herramienta:
-* **Google Antigravity**: `.agents/skills/contextmap/SKILL.md`
-* **Hermes Agent**: `.hermes/workflows/contextmap.yaml` y `.hermes/config.yaml`
-* **Universal**: `AGENTS.md`
-* **Claude Code**: `CLAUDE.md`
-* **Cursor**: `.cursor/rules/contextmap.mdc` y `.cursorrules`
-* **GitHub Copilot**: `.github/copilot-instructions.md`
-* **Windsurf**: `.windsurfrules`
-* **Cline / Roo Code**: `.clinerules`
+`ctxmap adapt` escribe tus normas **una sola vez** y las traduce al formato nativo de cada herramienta:
 
----
+| Herramienta | Archivo generado |
+|---|---|
+| Universal | `AGENTS.md` |
+| Claude Code | `CLAUDE.md` |
+| Cursor | `.cursor/rules/contextmap.mdc` y `.cursorrules` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Windsurf | `.windsurfrules` |
+| Cline / Roo | `.clinerules` |
+| Antigravity / pi | `.agents/skills/contextmap/SKILL.md` |
+| Hermes | `.hermes/workflows/contextmap.yaml` |
 
-## ⚖️ Comparativa: ContextMap vs. Otras Soluciones
-
-| ¿Qué necesitas? | Copiar y Pegar Todo<br>*(Repomix / Gitingest)* | Indexadores de Editor<br>*(Cursor / Windsurf)* | **ContextMap v2.11.1** |
-| :--- | :---: | :---: | :---: |
-| **Gasto de Tokens** | 🔴 Altísimo (quema tu dinero) | 🟡 Medio | 🟢 **Mínimo (>99% de ahorro)** |
-| **Prompt Caching Determinista** | ❌ Incompatible (cambia el hash) | 🟡 Parcial | **✅ Prefijo congelado (>90% Hit Rate)** |
-| **Mapa Visual Interactivo** | ❌ No existe | ❌ No existe | **✅ Bóveda en Obsidian** |
-| **No Olvidar Acuerdos** | ❌ Pierde todo al cerrar chat | 🟡 Parcial | **✅ Memoria Permanente** |
-| **Cambiar de Editor sin Perder Datos** | ❌ No | ❌ Atrapado en su app | **✅ Totalmente Portable** |
-| **Visión de Múltiples Proyectos** | ❌ No | ❌ No | **✅ Base SQLite Consolidada** |
-| **Herramientas MCP & Skills Nativas** | ❌ No | 🟡 Cerradas | **✅ 29 Tools stdio + Antigravity Skill** |
+En cada `refresh`/arranque, ContextMap **revisa** esas reglas: si están al día **no las toca**; si tu plantilla cambió (versión nueva) **las actualiza**; y si las editaste a mano, **las respeta**.
 
 ---
 
-## 💻 Comandos Principales
+## 🪙 Presupuesto de contexto (medido, no prometido)
+
+El ahorro no es magia: es quitar del prompt lo que no aporta.
+
+| Artefacto | Coste | Cuándo se carga |
+|---|---|---|
+| Brief completo (`CONTEXT.md`) | ~1.850 tk | a demanda |
+| Brief mínimo (`CONTEXT.min.md`) | **~700 tk** | por defecto |
+| Una sola sección (`seccion="riesgos"`) | **~300 tk** | cuando la pides |
+| Cambios desde un digest (`context_diff`) | **1 línea** si nada cambió | al volver a una sesión |
+
+Frente a "pegar el repositorio entero", un brief de ~700 tokens es un ahorro superior al **99%**. Además, el brief separa un **prefijo invariante** (cacheable por el proveedor) de la parte que cambia, para maximizar el *prompt caching*.
+
+---
+
+## ✨ Características
+
+- **🧠 Memoria permanente** — tu diario y tus notas manuales (`7.0-MANUAL/`) sobreviven a cada build (`preserve: true`). La historia no se borra: lo tosco se redacta.
+- **🌐 Multi-proyecto** — base SQLite + FTS5 con lecciones, decisiones y sesiones de todos tus proyectos.
+- **🔌 Servidor MCP nativo** — **30 herramientas** (`context`, `context_diff`, `context_search`, `personal_*`, `knowledge_*`, `refresh`, `check`…) para agentes locales.
+- **🧩 Paquete de pi** — `pi install npm:@kudawa/pi-contextmap` (MCP + skill + prompts). Ver [docs/PI_PACKAGE.md](docs/PI_PACKAGE.md).
+- **🛡️ Adaptación por IDE** — reglas nativas para 10+ editores (ver Ejemplo 4).
+- **📚 Second Brain** — captura la web, artículos y vídeos; sintetiza respuestas **con citas** sobre tu propia wiki (`ctxmap wiki ask`).
+- **🧩 Opcional, no obligatorio** — OCR de PDF, embeddings y síntesis con LLM se activan solo si los necesitas; la base no añade dependencias pesadas.
+
+---
+
+## ⚖️ ContextMap frente a otras soluciones
+
+| Necesidad | Pegar todo *(Repomix)* | Indexadores de editor *(Cursor)* | **ContextMap** |
+|---|:---:|:---:|:---:|
+| Gasto de tokens | 🔴 Altísimo | 🟡 Medio | 🟢 **Brief ~700 tk (>99% menos)** |
+| Memoria entre sesiones | ❌ | 🟡 Parcial | **✅ Permanente** |
+| Mapa visual navegable | ❌ | ❌ | **✅ Bóveda Obsidian** |
+| Cambiar de editor sin perder contexto | ❌ | ❌ Atrapado | **✅ Portable** |
+| Visión multi-proyecto | ❌ | ❌ | **✅ Base consolidada** |
+| Herramientas nativas para el agente | ❌ | 🟡 Cerradas | **✅ 30 tools MCP + skill** |
+
+---
+
+## 💻 Comandos principales
 
 ```bash
-# 🚀 Día a día: sincroniza y actualiza todo el contexto
-ctxmap refresh .
+ctxmap auto .                            # inicializar: detecta el ecosistema y crea todo
+ctxmap refresh .                         # día a día: scan + build + check + revisión de reglas
+ctxmap check .                           # salud y readiness (0-100)
+ctxmap search "tema"                     # pasajes con citas (sin leer ficheros enteros)
 
-# 🌐 Vista global: semáforo de todos tus proyectos
-ctxmap personal panorama
+ctxmap personal panorama                 # semáforo de todos tus proyectos
+ctxmap personal timeline --dias 7        # qué se trabajó esta semana
+ctxmap personal query "autenticación jwt"  # busca en lecciones y decisiones
 
-# ⏱️ Línea de tiempo: qué se trabajó en los últimos días
-ctxmap personal timeline --dias 7
-
-# 🔍 Búsqueda ultra-rápida: consulta lecciones y decisiones pasadas
-ctxmap personal query "autenticación jwt"
-
-# 🏥 Diagnóstico: revisa la salud de tu contexto
-ctxmap check .
+ctxmap adapt                             # genera/actualiza reglas nativas por IDE
+ctxmap mcp                               # servidor MCP (stdio) para agentes
 ```
 
 ---
 
-## 📚 Documentación Técnica Avanzada
+## 🔌 Integración con agentes (MCP)
 
-Si eres arquitecto de software o desarrollador y quieres conocer los detalles de bajo nivel (inspección AST de Python, cálculo de Complejidad Ciclomática de McCabe, Entropía de Shannon para escaneo de secretos, protocolo MCP stdio y topología acíclica de grafos):
+```bash
+pip install "context-map-ai[mcp]"
+```
 
-👉 **[Consulta la Documentación Técnica y de Arquitectura (README_TECNICO.md)](README_TECNICO.md)**
+Configura el servidor en tu agente (ejemplo, Hermes):
+
+```yaml
+mcp_servers:
+  ctxmap:
+    command: "ctxmap"
+    args: ["mcp"]
+```
+
+El agente gana herramientas como:
+
+- `context(minimo=True)` — leer el brief sin gastar tokens de más.
+- `context_diff(since="<digest>")` — al volver a una sesión, recibir **solo lo que cambió**.
+- `context_search("tema")` — pasajes de la memoria **con cita**.
+- `personal_query("tema")` — el historial de **todos** tus proyectos.
+
+---
+
+## 📚 Más documentación
+
+- 🏛️ **[Documentación técnica y de arquitectura](README_TECNICO.md)** — AST, complejidad ciclomática, MCP stdio, topología del grafo.
+- 🧩 **[Paquete de pi](docs/PI_PACKAGE.md)** · 🖥️ **[Web Clipper](docs/WEB_CLIPPER.md)** · 🤖 **[LLM opcional](docs/LLM.md)**
+- 📜 **[Historial de versiones](CHANGELOG.md)**
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está liberado bajo la Licencia **MIT**. Eres libre de usarlo, modificarlo e integrarlo en proyectos personales o comerciales.
+**MIT**. Úsalo, modifícalo e intégralo en proyectos personales o comerciales.
