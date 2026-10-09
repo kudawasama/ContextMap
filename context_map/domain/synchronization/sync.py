@@ -7,6 +7,7 @@ duplicaciones o reescritura innecesaria del estado guardado.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -25,15 +26,23 @@ logger = logging.getLogger(__name__)
 
 
 def _hash_evento(e: Event) -> str:
-    """Calcula un hash identitario simple para un evento.
+    """Calcula la huella sha1 hexadecimal de un evento (una sola línea).
+
+    La firma incluye el texto COMPLETO del evento. Antes se truncaba a 80
+    caracteres y se guardaba tal cual en ``processed_events.txt`` (una marca por
+    línea): si el texto contenía saltos de línea, la marca se partía en varias
+    líneas y nunca volvía a coincidir, de modo que esos eventos se reprocesaban
+    en CADA `sync` (el resumen mostraba siempre ``nodos 333 -> 344``). Una
+    huella hexadecimal es determinista, ocupa una línea y no colisiona.
 
     Args:
         e (Event): Evento a procesar.
 
     Returns:
-        str: Identificador hash.
+        str: Huella sha1 hexadecimal de 40 caracteres.
     """
-    return f"{e.type}|{e.text[:80]}|{e.source}"
+    firma = f"{e.type}|{e.text}|{e.source}"
+    return hashlib.sha1(firma.encode("utf-8")).hexdigest()
 
 
 def _eventos_procesados(state_dir: str) -> set[str]:
