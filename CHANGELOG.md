@@ -7,6 +7,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.10.1] — 2026-10-09
+
+### 🪙 Menos tokens (segunda pasada)
+
+- **`contextmap-skill.md` adelgazado** (2.715 → **~1.020 tk**, −62%): se eliminó
+  lo que duplicaba `AGENTS.md`; queda solo el **CÓMO** operativo (comandos,
+  criterios de calidad y metodología narrativa).
+- **`context(seccion="riesgos")`**: devuelve **solo** esa sección del brief
+  (~300 tk) en vez de todo (695 con el mínimo, 1.852 con el completo).
+- **Caps de salida**: `personal_query` trunca cada resultado a ~240 caracteres
+  (antes podía devolver mensajes de chat completos).
+
+### ✅ Tests
+
+- `test_context_seccion.py` (3); suite **407**.
+
 ## [2.10.0] — 2026-10-09
 
 ### 🪙 Menos tokens en cada petición
