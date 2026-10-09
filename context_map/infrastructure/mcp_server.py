@@ -109,6 +109,38 @@ def _leer_brief_min(target: str, project: str) -> str:
     return _leer_brief(target, project)
 
 
+def _seccion_brief(target: str, project: str, seccion: str) -> str:
+    """Devuelve solo la sección del brief cuyo título contiene ``seccion``.
+
+    Normaliza acentos y mayúsculas; si no encuentra la sección, lista las
+    disponibles para que el agente elija.
+
+    Args:
+        target: Directorio del proyecto.
+        project: Nombre del proyecto (opcional).
+        seccion: Texto a buscar en el título (p. ej. "riesgos", "estado").
+
+    Returns:
+        str: La sección encontrada o la lista de secciones disponibles.
+    """
+    import re
+    import unicodedata
+
+    def _norm(texto: str) -> str:
+        descompuesto = unicodedata.normalize("NFD", texto.lower())
+        return "".join(c for c in descompuesto if unicodedata.category(c) != "Mn")
+
+    objetivo = _norm(seccion)
+    disponibles: list[str] = []
+    for parte in re.split(r"(?m)^##\s+", _leer_brief(target, project))[1:]:
+        titulo, _, cuerpo = parte.partition("\n")
+        titulo = titulo.strip()
+        disponibles.append(titulo)
+        if objetivo in _norm(titulo):
+            return f"## {titulo}\n{cuerpo}".strip()
+    return "Sección no encontrada. Disponibles: " + " · ".join(disponibles)
+
+
 def _target_abs(target: str) -> str:
     """Resuelve y valida el directorio de proyecto apuntado por la tool.
 
@@ -236,7 +268,7 @@ def adapt(target: str = ".", project: str = "") -> str:
 
 
 @_tool
-def context(target: str = ".", project: str = "", minimo: bool = True) -> str:
+def context(target: str = ".", project: str = "", minimo: bool = True, seccion: str = "") -> str:
     """Lee el CONTEXT.md (brief) del proyecto: qué es, por qué existe, estado y cómo trabajar. LEER ANTES de trabajar en el proyecto.
 
     Args:
@@ -245,11 +277,16 @@ def context(target: str = ".", project: str = "", minimo: bool = True) -> str:
         minimo: Por defecto devuelve la capa MÍNIMA (~600 tk): identidad, estado,
             títulos de riesgos y pendientes, Second Brain y cómo ampliar. Usa
             ``minimo=False`` SOLO si necesitas el brief completo (~1.600 tk).
+        seccion: Si se indica (p. ej. "riesgos", "estado", "propósito"), devuelve
+            **solo esa sección** del brief (todavía menos tokens). Vacío = brief.
     """
     try:
+        raiz = _target_abs(target)
+        if seccion:
+            return _seccion_brief(raiz, project, seccion)
         if minimo:
-            return _leer_brief_min(_target_abs(target), project)
-        return _leer_brief(_target_abs(target), project)
+            return _leer_brief_min(raiz, project)
+        return _leer_brief(raiz, project)
     except Exception as err:  # noqa: BLE001 — devolver el error al agente
         return f"ERROR en context: {err}"
 
@@ -357,7 +394,10 @@ def personal_query(consulta: str, proyecto: str = "", limite: int = 5) -> str:
             for i, r in enumerate(resultados, 1):
                 proy = f" [{r.proyecto}]" if r.proyecto else " [personal]"
                 lineas.append(f"{i:2d}. ({r.tabla}){proy}")
-                lineas.append(f"    {r.texto}")
+                texto = " ".join((r.texto or "").split())
+                if len(texto) > 240:
+                    texto = texto[:240].rstrip() + "…"
+                lineas.append(f"    {texto}")
             return "\n".join(lineas)
         finally:
             db.cerrar()
