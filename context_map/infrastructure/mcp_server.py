@@ -341,6 +341,39 @@ def context_diff(since: str = "", target: str = ".", project: str = "") -> str:
 
 
 @_tool
+def secret_list(scope: str = "proyecto", target: str = ".") -> str:
+    """Lista los secretos del baúl cifrado de ContextMap: SOLO NOMBRES y metadatos, NUNCA los valores.
+
+    El baúl se cifra con AES-256-GCM y el agente no recibe las credenciales: usa
+    esta tool para saber qué secretos existen y su finalidad.
+
+    Args:
+        scope: "proyecto" (default) o "global".
+        target: Ruta del proyecto (para el baúl de proyecto).
+    """
+    try:
+        from context_map.core.secrets import cargar, listar
+
+        if scope == "global":
+            base = os.environ.get("CTXMAP_SECURE_DIR") or os.path.join(
+                os.path.expanduser("~"), ".context-map", "secure"
+            )
+            ruta = os.path.join(base, "vault.json")
+        else:
+            ruta = os.path.join(_target_abs(target), ".context-map", "secure", "vault.json")
+        entradas = listar(cargar(ruta))
+        if not entradas:
+            return "secret_list: no hay secretos guardados."
+        lineas = [f"secret_list: {len(entradas)} secreto(s):"]
+        for e in entradas:
+            nota = f" — {e['nota']}" if e.get("nota") else ""
+            lineas.append(f"- {e['id']} [{e['scope']}]{nota}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001 — devolver el error al agente
+        return f"ERROR en secret_list: {err}"
+
+
+@_tool
 def context_search(consulta: str, limite: int = 5, target: str = ".", semantico: bool = True) -> str:
     """Busca pasajes relevantes de la memoria del proyecto (nodos del grafo y notas del vault) CON CITAS.
 

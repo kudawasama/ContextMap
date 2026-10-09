@@ -212,6 +212,46 @@ def create_parser() -> argparse.ArgumentParser:
     s_adapt.add_argument("--revisar", action="store_true", help="Solo revisar/poner al día las reglas propias de ContextMap (idempotente; no toca AGENTS.md ni .hermes/)")
     s_adapt.add_argument("--quiet", action="store_true", help="Sin salida (para hooks/arranque)")
 
+    s_secret = sub.add_parser(
+        "secret",
+        help="Baúl de secretos cifrados (AES-256-GCM + frase maestra; por proyecto o global)",
+    )
+    sp_secret = s_secret.add_subparsers(dest="secret_cmd", help="Acciones del baúl")
+
+    s_secret_init = sp_secret.add_parser("init", help="Crear el baúl (frase maestra)")
+    s_secret_init.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_init.add_argument("--global", dest="global_", action="store_true", help="Baúl global (~/.context-map/secure)")
+
+    s_secret_set = sp_secret.add_parser("set", help="Guardar/cifrar un secreto (el valor no se muestra)")
+    s_secret_set.add_argument("ident", help="Nombre único del secreto")
+    s_secret_set.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_set.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+    s_secret_set.add_argument("--nota", default="", help="Descripción breve (se guarda en claro)")
+
+    s_secret_list = sp_secret.add_parser("list", help="Listar secretos (solo nombres/metadatos)")
+    s_secret_list.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_list.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+    s_secret_list.add_argument("--json", action="store_true", help="Salida JSON (nombres/metadatos)")
+
+    s_secret_get = sp_secret.add_parser("get", help="Mostrar un valor EN TU TERMINAL")
+    s_secret_get.add_argument("ident", help="Nombre del secreto")
+    s_secret_get.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_get.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
+    s_secret_rm = sp_secret.add_parser("rm", help="Eliminar un secreto")
+    s_secret_rm.add_argument("ident", help="Nombre del secreto")
+    s_secret_rm.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_rm.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
+    s_secret_backup = sp_secret.add_parser("backup", help="Respaldar el baúl cifrado a otra ruta")
+    s_secret_backup.add_argument("destino", help="Archivo destino (pendrive, nube…)")
+    s_secret_backup.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_backup.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
+    s_secret_where = sp_secret.add_parser("where", help="Mostrar la ruta del baúl")
+    s_secret_where.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_where.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
     s_personal = sub.add_parser(
         "personal",
         help="Base de datos personal consolidada (SQLite + FTS5, transportable en F:/pendrive)",

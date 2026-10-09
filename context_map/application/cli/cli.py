@@ -41,6 +41,7 @@ from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.export import exportar_contexto
 from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.personal import cmd_personal
+from context_map.application.commands.secrets import cmd_secret
 from context_map.core.logging_setup import setup_logging
 
 
@@ -128,6 +129,7 @@ def main() -> None:
         "review": cmd_review,
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
+        "secret": cmd_secret,
         "personal": cmd_personal,
         "export": cmd_export,
         "enrich": cmd_enrich,
