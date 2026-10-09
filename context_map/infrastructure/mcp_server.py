@@ -255,22 +255,25 @@ def context(target: str = ".", project: str = "", minimo: bool = False) -> str:
 
 
 @_tool
-def context_search(consulta: str, limite: int = 5, target: str = ".") -> str:
+def context_search(consulta: str, limite: int = 5, target: str = ".", semantico: bool = True) -> str:
     """Busca pasajes relevantes de la memoria del proyecto (nodos del grafo y notas del vault) CON CITAS.
 
     USAR cuando necesites contexto del proyecto sin cargar ficheros completos: devuelve
-    solo los fragmentos más afines (BM25 local, sin red) con su cita para profundizar.
-    Complementa a `context` (brief completo o mínimo).
+    solo los fragmentos más afines con su cita para profundizar. Fusiona BM25 con
+    similitud semantica opcional (si sentence-transformers esta instalado).
 
     Args:
-        consulta: Términos a buscar (ej. "topologia del vault", "riesgos de ingesta").
-        limite: Máximo de pasajes (default 5).
+        consulta: Terminos a buscar (ej. "topologia del vault", "riesgos de ingesta").
+        limite: Maximo de pasajes (default 5).
         target: Ruta del proyecto.
+        semantico: Usar embeddings si estan disponibles (default True); False = solo BM25.
     """
     from context_map.domain.retrieval import buscar_contexto, formatear_resultados
 
     try:
-        resultados = buscar_contexto(_target_abs(target), consulta, limite=limite)
+        resultados = buscar_contexto(
+            _target_abs(target), consulta, limite=limite, semantico=bool(semantico)
+        )
         if not resultados:
             return f"context_search: sin resultados para: {consulta}"
         return "\n".join(

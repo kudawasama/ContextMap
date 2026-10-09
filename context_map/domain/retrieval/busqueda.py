@@ -15,6 +15,7 @@ Unificar ambos BM25 en un helper común queda como refactor futuro (P2).
 
 from __future__ import annotations
 
+import contextlib
 import math
 import os
 import re
@@ -22,6 +23,7 @@ import unicodedata
 from collections import Counter
 from typing import Any
 
+import context_map.core.vectorial as vectorial
 from context_map.core.storage import load_jsonl
 
 _PATRON_TERMINO = re.compile(r"[a-z0-9]{3,}")
@@ -36,6 +38,9 @@ _STOPWORDS = {
 
 K1, B = 1.5, 0.75
 ANCHO_EXTRACTO = 240
+PESO_SEMANTICO = 0.5
+"""Peso de la señal semántica al fusionar con BM25 (mismo criterio que la wiki)."""
+ESTADO_RELATIVO = os.path.join("state", "embeddings-contexto.json")
 
 
 def _sin_acentos(texto: str) -> str:
@@ -130,25 +135,63 @@ def _extracto(texto: str, terminos: set[str], ancho: int = ANCHO_EXTRACTO) -> st
     return ("…" if inicio else "") + trozo + ("…" if inicio + ancho < len(plano) else "")
 
 
+def _similitudes_contexto(
+    project_dir: str,
+    docs: list[dict[str, str]],
+    consulta: str,
+    codificador: vectorial.Codificador | None = None,
+) -> dict[str, float]:
+    """Similitud semántica (opcional) de la consulta contra el corpus del proyecto.
+
+    Reutiliza el núcleo vectorial con su **propia caché** (``state/embeddings-contexto.json``)
+    para no mezclarla con la de la wiki. Si ``sentence-transformers`` no está
+    instalado (y no se inyecta codificador), devuelve ``{}``.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+        docs (list[dict[str, str]]): Documentos del corpus (con ``cita`` y ``texto``).
+        consulta (str): Texto de la consulta.
+        codificador (vectorial.Codificador | None): Codificador inyectable (tests).
+
+    Returns:
+        dict[str, float]: ``{cita: similitud}``.
+    """
+    documentos = [(d["cita"], d["texto"]) for d in docs]
+    ruta_cache = os.path.join(project_dir, ".context-map", ESTADO_RELATIVO)
+    indice = vectorial.construir_indice(
+        documentos, ruta_cache=ruta_cache, codificador=codificador
+    )
+    return vectorial.similitudes(consulta, indice, codificador=codificador)
+
+
 def buscar_contexto(
     project_dir: str = ".",
     consulta: str = "",
     limite: int = 5,
+    *,
+    semantico: bool = True,
+    codificador: vectorial.Codificador | None = None,
 ) -> list[dict[str, Any]]:
-    """Recupera los pasajes más relevantes de la memoria del proyecto (BM25).
+    """Recupera los pasajes más relevantes de la memoria del proyecto.
+
+    Fusiona **BM25** (solape de términos, siempre disponible) con **similitud
+    semántica** opcional (P1.3): así una paráfrasis sin solape léxico también
+    encuentra su página. Sin ``sentence-transformers`` el comportamiento es BM25.
 
     Args:
         project_dir (str): Raíz del proyecto.
         consulta (str): Términos a buscar.
         limite (int): Máximo de resultados (default 5).
+        semantico (bool): Usar embeddings si están disponibles (default True).
+        codificador (vectorial.Codificador | None): Codificador inyectable (tests).
 
     Returns:
         list[dict[str, Any]]: Resultados con ``titulo``, ``tipo``, ``cita``,
         ``ruta``, ``extracto`` y ``puntaje``, ordenados por relevancia.
     """
-    terminos = set(_terminos(consulta))
-    if not terminos or limite <= 0:
+    if limite <= 0 or not (consulta or "").strip():
         return []
+    terminos = set(_terminos(consulta))
 
     docs = _documentos(project_dir)
     if not docs:
@@ -161,25 +204,45 @@ def buscar_contexto(
     for tokens in tokenizados:
         frecuencia_doc.update(set(tokens))
 
+    # BM25 (k1/b como en la wiki): pondera frecuencia, rareza del término y longitud.
+    puntajes_bm25: dict[str, float] = {}
+    if terminos:
+        for doc, tokens in zip(docs, tokenizados, strict=True):
+            tf = Counter(tokens)
+            largo = len(tokens) or 1
+            puntaje = 0.0
+            for termino in terminos:
+                if termino not in tf:
+                    continue
+                df = frecuencia_doc[termino]
+                idf = math.log(1 + (n_docs - df + 0.5) / (df + 0.5))
+                puntaje += idf * (tf[termino] * (K1 + 1)) / (
+                    tf[termino] + K1 * (1 - B + B * largo / largo_medio)
+                )
+            if puntaje > 0:
+                puntajes_bm25[doc["cita"]] = puntaje
+
+    semanticas: dict[str, float] = {}
+    if semantico:
+        with contextlib.suppress(Exception):
+            semanticas = _similitudes_contexto(project_dir, docs, consulta, codificador)
+
+    if not puntajes_bm25 and not semanticas:
+        return []
+
+    max_bm25 = max(puntajes_bm25.values(), default=0.0) or 1.0
     resultados: list[tuple[float, dict[str, Any]]] = []
-    for doc, tokens in zip(docs, tokenizados, strict=True):
-        tf = Counter(tokens)
-        largo = len(tokens) or 1
-        puntaje = 0.0
-        for termino in terminos:
-            if termino not in tf:
-                continue
-            df = frecuencia_doc[termino]
-            idf = math.log(1 + (n_docs - df + 0.5) / (df + 0.5))
-            puntaje += idf * (tf[termino] * (K1 + 1)) / (
-                tf[termino] + K1 * (1 - B + B * largo / largo_medio)
-            )
+    for doc in docs:
+        cita = doc["cita"]
+        puntaje = puntajes_bm25.get(cita, 0.0) / max_bm25 + (
+            PESO_SEMANTICO * semanticas.get(cita, 0.0)
+        )
         if puntaje <= 0:
             continue
         resultados.append((puntaje, {
             "titulo": doc["titulo"],
             "tipo": doc["tipo"],
-            "cita": doc["cita"],
+            "cita": cita,
             "ruta": doc["ruta"],
             "extracto": _extracto(doc["texto"], terminos),
             "puntaje": round(puntaje, 3),

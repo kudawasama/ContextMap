@@ -24,7 +24,12 @@ def cmd_search(args: Any) -> None:
     target = getattr(args, "target", ".") or "."
     as_json = bool(getattr(args, "json", False))
 
-    resultados = buscar_contexto(target, consulta, limite=limite)
+    resultados = buscar_contexto(
+        target,
+        consulta,
+        limite=limite,
+        semantico=not getattr(args, "no_semantico", False),
+    )
 
     if as_json:
         print(json.dumps(resultados, ensure_ascii=False, indent=2))

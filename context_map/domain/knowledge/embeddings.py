@@ -28,20 +28,17 @@ Instalación opcional::
 
 from __future__ import annotations
 
-import hashlib
-import importlib.util
-import json
-import math
 import os
-from collections.abc import Callable
 from typing import Any
 
-MODELO_DEFAULT = "paraphrase-multilingual-MiniLM-L12-v2"
+import context_map.core.vectorial as vectorial
+
+MODELO_DEFAULT = vectorial.MODELO_DEFAULT
 ESTADO_RELATIVO = os.path.join("state", "embeddings.json")
 PESO_SEMANTICO = 0.5
 """Peso de la señal semántica al fusionar con BM25 en ``wiki.consultar``."""
 
-Codificador = Callable[[list[str]], list[list[float]]]
+Codificador = vectorial.Codificador
 
 
 def _spec_instalada(nombre: str) -> bool:
@@ -53,10 +50,7 @@ def _spec_instalada(nombre: str) -> bool:
     Returns:
         bool: True si ``find_spec`` lo encuentra.
     """
-    try:
-        return importlib.util.find_spec(nombre) is not None
-    except (ImportError, ValueError):
-        return False
+    return vectorial._spec_instalada(nombre)
 
 
 def disponible() -> tuple[bool, str]:
@@ -116,64 +110,26 @@ def _huella(documentos: list[tuple[str, str]]) -> str:
     Returns:
         str: Digest hexadecimal; cadena vacía si no hay documentos.
     """
-    if not documentos:
-        return ""
-    h = hashlib.sha256()
-    for clave, texto in sorted(documentos):
-        h.update(clave.encode("utf-8"))
-        h.update(b"\x00")
-        h.update(texto.encode("utf-8"))
-        h.update(b"\x01")
-    return h.hexdigest()
+    return vectorial.hash_documentos(documentos)
 
 
 def leer_cache(vault_dir: str) -> dict[str, Any]:
     """Lee el índice vectorial cacheado; ``{}`` si no existe o está corrupto."""
-    ruta = ruta_cache(vault_dir)
-    if not os.path.exists(ruta):
-        return {}
-    try:
-        with open(ruta, encoding="utf-8") as f:
-            datos = json.load(f)
-        if isinstance(datos, dict) and isinstance(datos.get("paginas"), dict):
-            return datos
-    except Exception:  # noqa: BLE001 — una caché inválida se regenera
-        pass
-    return {}
+    return vectorial.leer_cache(ruta_cache(vault_dir))
 
 
 def _escribir_cache(vault_dir: str, datos: dict[str, Any]) -> None:
     """Persiste el índice vectorial (best-effort: un fallo de disco no rompe)."""
-    ruta = ruta_cache(vault_dir)
-    try:
-        os.makedirs(os.path.dirname(ruta), exist_ok=True)
-        with open(ruta, "w", encoding="utf-8") as f:
-            json.dump(datos, f, ensure_ascii=False)
-    except OSError:
-        pass
+    vectorial.escribir_cache(ruta_cache(vault_dir), datos)
 
 
 def _codificador_por_defecto() -> Codificador | None:
-    """Carga perezosa del modelo de ``sentence-transformers``.
+    """Carga perezosa del modelo de ``sentence-transformers`` (delega en el núcleo).
 
     Returns:
-        Codificador | None: Función ``textos → vectores`` normalizados, o None
-        si la librería o el modelo no están disponibles.
+        Codificador | None: Función ``textos → vectores`` normalizados, o None.
     """
-    if not _spec_instalada("sentence_transformers"):
-        return None
-    try:
-        from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]
-
-        modelo = SentenceTransformer(MODELO_DEFAULT)
-    except Exception:  # noqa: BLE001 — sin modelo se sigue con BM25
-        return None
-
-    def _codificar(textos: list[str]) -> list[list[float]]:
-        vectores = modelo.encode(textos, normalize_embeddings=True)
-        return [[float(x) for x in v] for v in vectores]
-
-    return _codificar
+    return vectorial.codificador_por_defecto()
 
 
 def construir_indice(
@@ -203,56 +159,33 @@ def construir_indice(
         (os.path.relpath(ruta, vault_dir), _texto_pagina(ruta, titulo))
         for ruta, titulo in paginas
     ]
-    huella = _huella(documentos)
 
-    cache = leer_cache(vault_dir)
-    if not forzar and cache.get("huella") == huella and cache.get("paginas"):
-        return cache
-
+    # Los hooks locales (``disponible`` / ``_codificador_por_defecto``) se resuelven
+    # aquí: son los que los tests parchean.
     if codificador is None:
         ok, motivo = disponible()
         if not ok:
-            return {"modelo": "", "huella": huella, "paginas": {}, "motivo": motivo}
+            return {"modelo": "", "huella": _huella(documentos), "paginas": {}, "motivo": motivo}
         codificador = _codificador_por_defecto()
         if codificador is None:
             return {
                 "modelo": "",
-                "huella": huella,
+                "huella": _huella(documentos),
                 "paginas": {},
                 "motivo": "No se pudo cargar el modelo de embeddings (¿sin conexión?).",
             }
 
-    try:
-        vectores = codificador([texto for _clave, texto in documentos])
-        if len(vectores) != len(documentos):
-            raise ValueError("El codificador devolvió un número de vectores incorrecto.")
-        indexado = {
-            clave: [round(float(x), 6) for x in vector]
-            for (clave, _texto), vector in zip(documentos, vectores, strict=True)
-        }
-    except Exception as err:  # noqa: BLE001 — la semántica es best-effort
-        return {
-            "modelo": "",
-            "huella": huella,
-            "paginas": {},
-            "motivo": f"El cálculo de embeddings falló: {err}",
-        }
-
-    datos: dict[str, Any] = {"modelo": MODELO_DEFAULT, "huella": huella, "paginas": indexado}
-    _escribir_cache(vault_dir, datos)
-    return datos
+    return vectorial.construir_indice(
+        documentos,
+        ruta_cache=ruta_cache(vault_dir),
+        forzar=forzar,
+        codificador=codificador,
+    )
 
 
 def _coseno(a: list[float], b: list[float]) -> float:
     """Similitud coseno entre dos vectores (0.0 si alguno es nulo o no encaja)."""
-    if not a or not b or len(a) != len(b):
-        return 0.0
-    punto = sum(x * y for x, y in zip(a, b, strict=True))
-    norma_a = math.sqrt(sum(x * x for x in a))
-    norma_b = math.sqrt(sum(y * y for y in b))
-    if norma_a == 0 or norma_b == 0:
-        return 0.0
-    return punto / (norma_a * norma_b)
+    return vectorial.coseno(a, b)
 
 
 def similitudes(
@@ -285,17 +218,8 @@ def similitudes(
         if codificador is None:
             return {}
 
-    try:
-        vector_consulta = codificador([pregunta])[0]
-    except Exception:  # noqa: BLE001 — best-effort
-        return {}
-
-    resultado: dict[str, float] = {}
-    for clave, vector in vectores.items():
-        similitud = _coseno(list(vector_consulta), list(vector))
-        if similitud > 0:
-            resultado[os.path.join(vault_dir, clave)] = similitud
-    return resultado
+    similitudes_clave = vectorial.similitudes(pregunta, indice, codificador=codificador)
+    return {os.path.join(vault_dir, clave): sim for clave, sim in similitudes_clave.items()}
 
 
 def buscar(

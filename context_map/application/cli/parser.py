@@ -159,6 +159,10 @@ def create_parser() -> argparse.ArgumentParser:
     )
     s_search.add_argument("consulta", help="Términos a buscar (ej. \"topologia del vault\")")
     s_search.add_argument("--limite", type=int, default=5, help="Máximo de pasajes (default: 5)")
+    s_search.add_argument(
+        "--no-semantico", action="store_true",
+        help="Forzar solo BM25 (sin embeddings, aunque sentence-transformers esté instalado)",
+    )
     s_search.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     s_search.add_argument("--target", default=".", help="Ruta del proyecto")
 

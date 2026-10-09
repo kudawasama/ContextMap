@@ -7,6 +7,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.9.0] — 2026-10-08
+
+### 🧠 Búsqueda semántica de contexto (P1.3)
+
+- `ctxmap search` / tool MCP `context_search` **fusionan BM25 con similitud
+  semántica** (peso 0.5): una paráfrasis sin solape léxico (“amnesia entre
+  sesiones”) recupera su página (“memoria viva del proyecto”).
+- Sin `sentence-transformers` el comportamiento es **BM25 puro** (cero regresión);
+  la opción se puede desactivar con `ctxmap search --no-semantico` o
+  `context_search(..., semantico=False)`.
+- **Núcleo reutilizable**: el índice vectorial (caché por hash, coseno, degradación
+  elegante) se extrae a `core/vectorial.py` y lo comparten la **wiki** (G3) y la
+  **búsqueda de contexto** (P1.3); cada una con su propia caché
+  (`state/embeddings.json` y `state/embeddings-contexto.json`).
+- Tests: `test_busqueda_semantica.py` (4, con codificador falso y verificación de
+  caché); los 8 de embeddings de la wiki siguen verdes tras el refactor.
+
 ## [2.8.1] — 2026-10-08
 
 ### ⚡ Rendimiento del build (P2.1 del plan de revisión)
