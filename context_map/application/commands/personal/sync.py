@@ -21,6 +21,7 @@ from context_map.core.parsing import (
     load_events_from_jsonl,
 )
 from context_map.core.personal import PersonalDB
+from context_map.core.personal.ruido import es_evento_ruido
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,14 @@ def _cmd_personal_sync(args) -> None:
                 eventos.append(ev.to_dict())
             for ev in load_events_from_chat_folder(chats_path):
                 eventos.append(ev.to_dict())
+            # No ingerir ruido (mismo criterio que `personal repair --purge-ruido`).
+            eventos = [
+                e
+                for e in eventos
+                if not es_evento_ruido(
+                    str(e.get("type") or ""), str(e.get("text") or ""), str(e.get("source") or "")
+                )
+            ]
 
             lecciones = _leer_lecciones_vault(vault_base, nombre)
             decisiones = _leer_decisiones_vault(vault_base, nombre)

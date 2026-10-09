@@ -15,6 +15,7 @@ from context_map.core.parsing import (
     load_events_from_jsonl,
 )
 from context_map.core.personal import Decision, Leccion, PersonalDB
+from context_map.core.personal.ruido import es_evento_ruido
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,14 @@ def sincronizar_proyecto_automatico(
                 eventos.append(ev.to_dict())
             for ev in load_events_from_chat_folder(chats_path):
                 eventos.append(ev.to_dict())
+            # No ingerir ruido (mismo criterio que `personal repair --purge-ruido`).
+            eventos = [
+                e
+                for e in eventos
+                if not es_evento_ruido(
+                    str(e.get("type") or ""), str(e.get("text") or ""), str(e.get("source") or "")
+                )
+            ]
 
             nuevos = db.cargar_eventos(proj_name, eventos, os.path.abspath(target_dir))
             lecciones = 0

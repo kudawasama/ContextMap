@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from context_map.core.personal.bd import PersonalDB
+from context_map.core.personal.ruido import es_evento_ruido
 
 logger = logging.getLogger(__name__)
 
@@ -86,47 +86,19 @@ def _purgar_eventos_ruido(db: PersonalDB, dry_run: bool = False) -> int:
         int: Cantidad de eventos purgados o identificados.
     """
     cursor = db._conn.cursor()
-
-    # 1. Archivos del sistema y binarios ingeridos
-    condiciones = [
-        "fuente LIKE '%desktop.ini%'",
-        "fuente LIKE '%thumbs.db%'",
-        "texto LIKE '%.vercel/%'",
-        "texto LIKE '%.next/%'",
-        "texto LIKE '%archive-v0/%'",
-        "texto = '['",
-        "texto = ''",
+    cursor.execute("SELECT id, tipo, texto, fuente FROM eventos")
+    ids_ruido = [
+        fila[0]
+        for fila in cursor.fetchall()
+        if es_evento_ruido(fila[1] or "", fila[2] or "", fila[3] or "")
     ]
 
-    query_conteo = f"SELECT count(*) FROM eventos WHERE {' OR '.join(condiciones)}"
-    cursor.execute(query_conteo)
-    fila_conteo = cursor.fetchone()
-    total_ruido = int(fila_conteo[0]) if fila_conteo else 0
-
-    # 2. TODOs falsos históricos (tipo FUTURO que no contengan TODO/FIXME/HACK en comentario)
-    cursor.execute("SELECT id, texto FROM eventos WHERE tipo = 'FUTURO'")
-    filas_futuro = cursor.fetchall()
-    re_marcador_real = re.compile(r"(?:#|//|/\*|<!--|--)\s*(?:TODO|FIXME|HACK|XXX)\b", re.I)
-    ids_falsos_todo: list[int] = []
-
-    for fila in filas_futuro:
-        txt = fila[1] or ""
-        # Si el texto dice "TODO (...):" pero en el cuerpo del código no hay un marcador real
-        if "TODO (" in txt:
-            cuerpo = txt.split("):", 1)[-1] if "):" in txt else txt
-            if not re_marcador_real.search(cuerpo):
-                ids_falsos_todo.append(fila[0])
-
-    total_purgados = int(total_ruido + len(ids_falsos_todo))
-
-    if not dry_run and total_purgados > 0:
-        cursor.execute(f"DELETE FROM eventos WHERE {' OR '.join(condiciones)}")
-        if ids_falsos_todo:
-            placeholders = ",".join(["?"] * len(ids_falsos_todo))
-            cursor.execute(f"DELETE FROM eventos WHERE id IN ({placeholders})", ids_falsos_todo)
+    if not dry_run and ids_ruido:
+        placeholders = ",".join(["?"] * len(ids_ruido))
+        cursor.execute(f"DELETE FROM eventos WHERE id IN ({placeholders})", ids_ruido)
         db._conn.commit()
 
-    return total_purgados
+    return len(ids_ruido)
 
 
 def _fusionar_proyectos_duplicados(db: PersonalDB, dry_run: bool = False) -> list[str]:
