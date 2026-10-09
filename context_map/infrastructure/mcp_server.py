@@ -236,15 +236,15 @@ def adapt(target: str = ".", project: str = "") -> str:
 
 
 @_tool
-def context(target: str = ".", project: str = "", minimo: bool = False) -> str:
+def context(target: str = ".", project: str = "", minimo: bool = True) -> str:
     """Lee el CONTEXT.md (brief) del proyecto: qué es, por qué existe, estado y cómo trabajar. LEER ANTES de trabajar en el proyecto.
 
     Args:
         target: Ruta del proyecto.
         project: Nombre del proyecto (opcional).
-        minimo: Devolver la capa mínima del brief (~600 tk) en vez del completo
-            (~1.600 tk). El mínimo conserva identidad, estado, títulos de riesgos
-            y pendientes, y explica cómo ampliar con `context_search`.
+        minimo: Por defecto devuelve la capa MÍNIMA (~600 tk): identidad, estado,
+            títulos de riesgos y pendientes, Second Brain y cómo ampliar. Usa
+            ``minimo=False`` SOLO si necesitas el brief completo (~1.600 tk).
     """
     try:
         if minimo:
@@ -252,6 +252,55 @@ def context(target: str = ".", project: str = "", minimo: bool = False) -> str:
         return _leer_brief(_target_abs(target), project)
     except Exception as err:  # noqa: BLE001 — devolver el error al agente
         return f"ERROR en context: {err}"
+
+
+@_tool
+def context_diff(since: str = "", target: str = ".", project: str = "") -> str:
+    """Devuelve SOLO lo que cambió en la memoria del proyecto desde un digest, sin releer todo el brief.
+
+    Flujo recomendado: llama sin `since` al empezar (obtienes el digest actual) y
+    con `since=<digest>` al volver. Si nada cambió, devuelve una línea.
+
+    Args:
+        since: Digest devuelto en una llamada anterior (vacío = solo devuelve el actual).
+        target: Ruta del proyecto.
+        project: Nombre del proyecto (opcional).
+    """
+    try:
+        from context_map.core.models import Node
+        from context_map.core.storage import load_jsonl
+        from context_map.domain.analysis.diff_contexto import (
+            cargar_indice,
+            comparar,
+            digest_de,
+            formatear_diff,
+            guardar_indice,
+            snapshot_de_nodos,
+        )
+
+        state_dir = os.path.join(_target_abs(target), ".context-map", "state")
+        nodos = [Node.from_dict(r) for r in load_jsonl(os.path.join(state_dir, "graph.jsonl"))]
+        digest = digest_de(nodos)
+        snap = snapshot_de_nodos(nodos)
+
+        idx_path = os.path.join(state_dir, "digest_index.json")
+        indice = cargar_indice(idx_path)
+        indice[digest] = snap
+        guardar_indice(idx_path, indice)
+
+        if not since:
+            return (
+                f"digest: {digest}\n"
+                "Guarda este digest y pasalo como `since` la proxima vez para recibir SOLO los cambios."
+            )
+        if since == digest:
+            return f"Sin cambios desde {since} (digest {digest})."
+        antes = indice.get(since)
+        if not antes:
+            return f"Digest {since} desconocido (indice vacio o antiguo). Digest actual: {digest}."
+        return formatear_diff(since, digest, comparar(antes, snap))
+    except Exception as err:  # noqa: BLE001 — devolver el error al agente
+        return f"ERROR en context_diff: {err}"
 
 
 @_tool

@@ -69,6 +69,8 @@ def como_ampliar_contexto() -> str:
         "",
         '- `ctxmap search "<tema>"` / tool MCP `context_search` → pasajes de nodos y',
         "  notas con citas (sin cargar ficheros completos).",
+        "- Al volver a una sesión: `context_diff(since=<digest>)` → **solo lo que cambió**",
+        "  (evita releer el brief si nada cambió).",
         "- Pendientes: `7.0-MANUAL/BACKLOG.md` · historia: `7.0-MANUAL/Diario/` · lecciones: `8.0-KNOWLEDGE/`.",
         "- Salud: `ctxmap check .` · peso: `ctxmap doctor --sizes` · vault: `.context-map/vault-*/`.",
     ])
