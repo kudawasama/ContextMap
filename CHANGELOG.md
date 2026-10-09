@@ -7,6 +7,28 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.12.0] — 2026-10-10
+
+### 🔐 Baúl de secretos cifrado (Fase 1)
+
+- Nuevo `ctxmap secret` (**por proyecto o global**): `init` (frase maestra),
+  `set` (cifra sin mostrar el valor), `list` (solo nombres/metadatos),
+  `get` (solo en tu terminal), `rm` y `backup` (respaldo cifrado).
+- **AES-256-GCM** con clave derivada de la **frase maestra**
+  (PBKDF2-HMAC-SHA256, solo stdlib). La frase **nunca se almacena**: es la única
+  llave de recuperación.
+- Los valores **nunca** entran en el contexto del LLM ni en logs: el MCP expone
+  solo `secret_list` (nombres). El **uso real** del secreto llega en la Fase 2
+  (proxy `secret exec` / recetas).
+- El archivo cifrado **viaja seguro**: puede commitearse o copiarse a un pendrive;
+  sin la frase no se descifra. El AAD ata cada valor a su identidad
+  (anti-intercambio).
+- Extra opcional `[secure]` (`pip install "context-map-ai[secure]"`).
+
+### ✅ Tests
+
+- `test_secrets_vault.py` (7); suite **417**.
+
 ## [2.11.1] — 2026-10-10
 
 ### 🔁 Revisión al iniciar

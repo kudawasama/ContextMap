@@ -249,7 +249,7 @@ wheels = [
 
 [[package]]
 name = "context-map-ai"
-version = "2.11.1"
+version = "2.12.0"
 source = { editable = "." }
 dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
@@ -257,6 +257,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "cryptography" },
     { name = "isort" },
     { name = "mypy" },
     { name = "pytest" },
@@ -269,9 +270,14 @@ mcp = [
 pdf = [
     { name = "pymupdf" },
 ]
+secure = [
+    { name = "cryptography" },
+]
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", marker = "extra == 'dev'", specifier = ">=41.0.0" },
+    { name = "cryptography", marker = "extra == 'secure'", specifier = ">=41.0.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2.0,<2.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10.0" },
@@ -281,7 +287,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.0" },
 ]
-provides-extras = ["pdf", "mcp", "dev"]
+provides-extras = ["pdf", "mcp", "secure", "dev"]
 
 [[package]]
 name = "cryptography"
