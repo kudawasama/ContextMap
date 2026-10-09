@@ -394,46 +394,51 @@ Después de cada commit:
 
 
 def _generar_antigravity_skill(project_name: str, eco: EcosistemaInfo) -> str:
-    """Genera la skill nativa de Antigravity (.agents/skills/contextmap/SKILL.md)."""
+    """Genera la skill nativa para agentes con `.agents/skills/` (Antigravity, pi).
+
+    Es el **envoltorio del sistema**: enseña las herramientas de ContextMap y el
+    protocolo, y apunta al CÓMO del proyecto (`.context-map/contextmap-skill.md`)
+    y a las normas (`AGENTS.md`) en vez de duplicarlos.
+    """
     test = _test_command(eco)
     safe = project_name.strip().replace(" ", "-").replace("/", "-")
     return f"""---
 name: contextmap
-description: Protocolo, flujos y comandos esenciales para gobernar el contexto, consultar la memoria permanente y mantener vivo el grafo del proyecto con ContextMap IA.
+description: Memoria viva de ContextMap para {project_name} (brief, vault de Obsidian, Second Brain y memoria multi-proyecto). Úsala al empezar a trabajar, al preguntar «qué quedó pendiente», al cerrar sesión o al buscar en la memoria de otros proyectos.
 ---
 
-# Skill de ContextMap IA — {project_name}
+# ContextMap — memoria viva de {project_name}
 
-Esta skill proporciona las directivas operativas para interactuar con la memoria permanente, los documentos de referencia y el grafo conceptual de **{project_name}**.
+El script propone, **el agente dispone**: el contexto solo vale cuando el agente
+lo revisó y lo corrigió.
 
-## Comandos Esenciales
+## Protocolo de inicio (en este orden)
+1. **Proyecto correcto**: el vault es `.context-map/vault-{safe}/`. Si preguntan por otro proyecto, dilo ANTES de responder.
+2. **Brief**: `mcp__contextmap__context` (capa mínima por defecto) o `.context-map/CONTEXT.md`. Si su sección «Estado del Contexto» avisa de diario más nuevo que el build → `ctxmap refresh .` primero.
+3. **Pendientes REALES** (nunca una sola fuente): `7.0-MANUAL/BACKLOG.md` + `7.0-MANUAL/Diario/` + `5.0-BACKLOG/5.1-Tareas.md` + `3.2-DOCUMENTOS/`.
+4. **Riesgos y propósito** (`4.0-RIESGOS/`, `1.0-PROPOSITO/`) y **código real** antes de proponer cambios.
+5. **Al volver a una sesión**: `mcp__contextmap__context_diff(since=<digest>)` → solo lo que cambió desde la última lectura.
 
+## Herramientas MCP
+- Lectura (siempre visibles): `context` (`minimo=True` por defecto; `seccion="riesgos"` para una sola parte), `context_diff`, `context_search` (pasajes con citas), `personal_panorama`, `personal_query`, `knowledge_wiki_ask`.
+- Operación (en codemode): `refresh`, `scan`, `build`, `check`, `doctor`, `knowledge_*`, `review`, `export`.
+
+## Comandos
 ```bash
-# 1. Poner todo el contexto al día en un solo paso (scan + build con preservación + auto-ingesta + check)
-ctxmap refresh .
-
-# 2. Ingerir documentos brutos manualmente (MD, TXT, PDF)
-ctxmap ingest .context-map/raw/docs/
-
-# 3. Verificar la salud, integridad y enlaces rotos del vault
-ctxmap check .
-
-# 4. Sincronizar memoria personal / multi-proyecto
-ctxmap personal sync
-
-# 5. Consultar decisiones o conocimiento histórico
-ctxmap personal query "tema de consulta"
+ctxmap refresh .                      # scan + build (preserva manuales) + check
+ctxmap check .                        # readiness + salud del vault
+ctxmap search "tema"                  # pasajes con citas
+ctxmap ingest .context-map/raw/docs/  # MD/TXT/PDF -> DOCUMENTO
+ctxmap personal query "tema"          # memoria multi-proyecto
 ```
 
-## Protocolo de Inicio y Memoria Viva para Agentes
+## Detalle
+- **CÓMO operativo** (ciclo de actualización, metodología narrativa, comandos exactos): `.context-map/contextmap-skill.md`.
+- **Normas y topología del vault**: `AGENTS.md` (detalle en `docs/GOBERNANZA-AGENTES.md`).
+- **Memoria viva**: ideas/decisiones/lecciones → `7.0-MANUAL/Diario/`; reutilizables → `8.0-KNOWLEDGE/`. `7.0-MANUAL/` es zona protegida (el build nunca la borra).
 
-1. **Inspeccionar Brief**: Leer `.context-map/CONTEXT.md` (identidad, propósito, métricas y estado).
-2. **Consultar Documentos y Backlog**: Revisar `.context-map/vault-{safe}/3.2-DOCUMENTOS/`, `7.0-MANUAL/BACKLOG.md` y notas de diario recientes.
-3. **Memoria Viva Multicanal**: Para incorporar contexto externo (conversaciones, transcripciones o especificaciones), colócalos en `.context-map/chats/` o `.context-map/raw/docs/`. `ctxmap refresh .` los asimilará automáticamente.
-4. **Verificar Antes de Commit**:
-   - Tests: `{test}`
-   - Refrescar grafo y vault: `ctxmap refresh .`
-   - Sin archivos sueltos en raíz.
+## Verificar antes de commit
+- Tests: `{test}` · `ctxmap refresh .` · sin archivos sueltos en la raíz.
 """
 
 
