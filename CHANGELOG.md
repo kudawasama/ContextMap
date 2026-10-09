@@ -7,6 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.11.0] — 2026-10-10
+
+### 🔁 Las reglas agénticas se revisan y se ponen al día solas
+
+- **Revisión idempotente** (`revisar_reglas_agente`) que ahora se ejecuta en cada
+  `build`/`refresh`: detecta el ecosistema (IDE/agentes), compara cada regla
+  generada con su plantilla actual y:
+  - la **crea** si falta;
+  - la **actualiza** si es de ContextMap y su plantilla cambió (versión nueva);
+  - la **omite sin reescribir** si ya está al día (sin cambios espurios);
+  - la **respeta** si el usuario la editó a mano.
+- La propiedad se recuerda en `.context-map/state/reglas_generadas.json`
+  (ruta → hash) y por el marcador `CONTEXTMAP:BEGIN` (actualiza solo el bloque,
+  preservando lo que el usuario escribió alrededor).
+- Corrige de paso una duplicación en `.github/copilot-instructions.md`.
+
+### ✅ Tests
+
+- `test_revision_reglas.py` (3); suite **410**.
+
 ## [2.10.2] — 2026-10-09
 
 ### 🧩 La skill se adapta al sistema (y vuelve a estar al día)
