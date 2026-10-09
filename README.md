@@ -6,7 +6,7 @@
 
 ### *Evita que tu IA olvide tus decisiones, gaste dinero en tokens y rompa tu código.*
 
-[![Release](https://img.shields.io/badge/version-v2.9.1-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-v2.9.2-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
 [![Tests: 314 Passing](https://img.shields.io/badge/tests-314%2F314%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
@@ -125,7 +125,7 @@ Escribe tus normas una sola vez y ContextMap las inyecta en el formato nativo de
 
 ## ⚖️ Comparativa: ContextMap vs. Otras Soluciones
 
-| ¿Qué necesitas? | Copiar y Pegar Todo<br>*(Repomix / Gitingest)* | Indexadores de Editor<br>*(Cursor / Windsurf)* | **ContextMap v2.9.1** |
+| ¿Qué necesitas? | Copiar y Pegar Todo<br>*(Repomix / Gitingest)* | Indexadores de Editor<br>*(Cursor / Windsurf)* | **ContextMap v2.9.2** |
 | :--- | :---: | :---: | :---: |
 | **Gasto de Tokens** | 🔴 Altísimo (quema tu dinero) | 🟡 Medio | 🟢 **Mínimo (>99% de ahorro)** |
 | **Prompt Caching Determinista** | ❌ Incompatible (cambia el hash) | 🟡 Parcial | **✅ Prefijo congelado (>90% Hit Rate)** |

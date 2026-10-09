@@ -7,6 +7,24 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.9.2] — 2026-10-09
+
+### 🐛 Arreglado
+
+- **`sync` idempotente (P2.4)**: `_hash_evento` guardaba la firma cruda
+  `type|text[:80]|source`; si el texto del evento tenía saltos de línea, la marca
+  de procesado se partía en varias líneas en `processed_events.txt` y **nunca
+  volvía a coincidir**, así que esos eventos se **reprocesaban en cada `sync`**
+  (el resumen mostraba `nodos 333 -> 344` de forma perpetua, aunque el dedup
+  mantuviera el grafo). Ahora es una **huella sha1** del texto completo: el
+  segundo `sync` reporta **0** eventos nuevos.
+  - *Nota*: el primer `sync` tras actualizar reprocesa una vez (formato de marca
+    nuevo) y a partir de ahí el grafo es estable.
+
+### ✅ Tests
+
+- `test_sync_idempotencia.py` (3); suite **396**.
+
 ## [2.9.1] — 2026-10-09
 
 ### 🐛 Arreglado
