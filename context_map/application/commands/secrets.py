@@ -9,19 +9,24 @@ from __future__ import annotations
 
 import getpass
 import os
+import re
 import shutil
+import subprocess
 import sys
 
 from context_map.core.secrets import (
     SecureVaultError,
     agregar,
+    auditar,
     cargar,
     crear_documento,
     eliminar,
+    entorno_con_secretos,
     guardar,
     listar,
     obtener,
     requerir_cryptography,
+    sanear_salida,
 )
 
 _ENV_FRASE = "CTXMAP_MASTER_PHRASE"
@@ -159,6 +164,104 @@ def _cmd_secret_where(args) -> None:
     print(_ruta_vault(args.target, _obtener_global(args)))
 
 
+def _cmd_secret_exec(args) -> None:
+    """Fase 2: ejecuta un comando con secretos inyectados y la salida saneada."""
+    requerir_cryptography()
+    ruta = _ruta_vault(args.target, _obtener_global(args))
+    doc = cargar(ruta)
+    if not _autorizado(args):
+        raise SystemExit(
+            "[secret] ACCIÓN DENEGADA: ejecutar con tus credenciales requiere "
+            "pasar --autorizado (o definir CTXMAP_SECRET_AUTORIZA=1)."
+        )
+    ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
+    if not ids:
+        raise SystemExit("[secret] Indica --ids id1,id2 con los secretos a inyectar.")
+    comando = args.comando
+    try:
+        valores = _valores_por_ids(doc, _leer_frase(), ids)
+    except SecureVaultError as err:
+        raise SystemExit(f"[secret] {err}") from err
+    env = entorno_con_secretos(valores)
+    timeout = min(max(int(getattr(args, "timeout", 60) or 60), 5), 600)
+    try:
+        proc = subprocess.run(
+            comando, shell=True, capture_output=True, text=True,
+            env=env, timeout=timeout, errors="replace",
+        )
+    except subprocess.TimeoutExpired:
+        raise SystemExit(f"[secret] Tiempo agotado ({timeout}s): {comando[:80]!r}") from None
+    _registrar_uso(ruta, f"exec ids={','.join(ids)} rc={proc.returncode} cmd={comando[:120]!r}")
+    sys.stdout.write(sanear_salida(proc.stdout or "", valores))
+    if proc.stderr:
+        sys.stderr.write(sanear_salida(proc.stderr or "", valores))
+    raise SystemExit(proc.returncode)
+
+
+def _cmd_secret_receta(args) -> None:
+    """Fase 2: ejecuta una receta del usuario (guion aprobado) con secretos inyectados."""
+    requerir_cryptography()
+    ruta = _ruta_vault(args.target, _obtener_global(args))
+    doc = cargar(ruta)
+    if not _autorizado(args):
+        raise SystemExit("[secret] ACCIÓN DENEGADA: pasa --autorizado para usar recetas.")
+    nombre = re.sub(r"[^A-Za-z0-9\-_]", "", args.nombre)
+    base = os.path.join(os.path.dirname(ruta), "recetas")
+    script = next(
+        (os.path.join(base, f"{nombre}{ext}") for ext in (".cmd", ".bat", ".sh") if os.path.exists(os.path.join(base, f"{nombre}{ext}"))),
+        None,
+    )
+    if not script:
+        raise SystemExit(
+            f"[secret] No existe la receta '{args.nombre}' en {base} — "
+            "crea recetas/<nombre>.cmd|.sh con el guion aprobado."
+        )
+    ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
+    try:
+        valores = _valores_por_ids(doc, _leer_frase(), ids)
+    except SecureVaultError as err:
+        raise SystemExit(f"[secret] {err}") from err
+    env = entorno_con_secretos(valores)
+    env["CTXMAP_SECRET_ARGS"] = " ".join(getattr(args, "rest", []) or [])
+    cmdline = ["sh", script, *getattr(args, "rest", [])] if script.endswith(".sh") else ["cmd", "/c", script, *getattr(args, "rest", [])]
+    timeout = min(max(int(getattr(args, "timeout", 120) or 120), 5), 1800)
+    try:
+        proc = subprocess.run(cmdline, capture_output=True, text=True, env=env, timeout=timeout, errors="replace")
+    except subprocess.TimeoutExpired:
+        raise SystemExit(f"[secret] Tiempo agotado con la receta '{nombre}'.") from None
+    _registrar_uso(ruta, f"receta={nombre} ids={','.join(ids) or '-'} rc={proc.returncode}")
+    sys.stdout.write(sanear_salida(proc.stdout or "", valores))
+    if proc.stderr:
+        sys.stderr.write(sanear_salida(proc.stderr or "", valores))
+    raise SystemExit(proc.returncode)
+
+
+def _cmd_secret_audit(args) -> None:
+    """Muestra las últimas líneas del registro de auditoría (nunca valores)."""
+    ruta = os.path.join(os.path.dirname(_ruta_vault(args.target, _obtener_global(args))), "audit.log")
+    if not os.path.exists(ruta):
+        print("[secret] Todavía no hay usos registrados.")
+        return
+    with open(ruta, encoding="utf-8") as f:
+        lineas = f.read().splitlines()
+    for linea in lineas[-int(getattr(args, "n", 20) or 20):]:
+        print(linea)
+
+
+def _autorizado(args) -> bool:
+    """Uso autorizado: flag por llamada o sesión (CTXMAP_SECRET_AUTORIZA=1)."""
+    return bool(getattr(args, "autorizado", False)) or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"
+
+
+def _valores_por_ids(doc, frase: str, ids: list[str]) -> dict[str, str]:
+    return {ident: obtener(doc, frase, ident) for ident in ids}
+
+
+def _registrar_uso(ruta_vault: str, linea: str) -> None:
+    ruta_audit = os.path.join(os.path.dirname(ruta_vault), "audit.log")
+    auditar(ruta_audit, linea)
+
+
 def cmd_secret(args) -> None:
     """Dispatcher del baúl de secretos."""
     sub = getattr(args, "secret_cmd", "")
@@ -170,9 +273,12 @@ def cmd_secret(args) -> None:
         "rm": _cmd_secret_rm,
         "backup": _cmd_secret_backup,
         "where": _cmd_secret_where,
+        "exec": _cmd_secret_exec,
+        "receta": _cmd_secret_receta,
+        "audit": _cmd_secret_audit,
     }
     if sub not in acciones:
-        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where} [args]")
+        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where|exec|receta|audit} [args]")
     try:
         acciones[sub](args)
     except SecureVaultError as err:

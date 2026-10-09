@@ -374,6 +374,68 @@ def secret_list(scope: str = "proyecto", target: str = ".") -> str:
 
 
 @_tool
+def secret_exec(ids: str, comando: str, autorizado: bool, target: str = ".", timeout: int = 60) -> str:
+    """Ejecuta un comando con secretos del baúl inyectados en el entorno; la SALIDA se SANA (el agente nunca ve los valores).
+
+    Requiere autorización explícita del usuario (autorizado=True o
+    CTXMAP_SECRET_AUTORIZA=1) y que el servidor tenga la frase maestra
+    (CTXMAP_MASTER_PHRASE) para el baúl. Se registra un log de auditoría.
+
+    Args:
+        ids: Ids separados por coma a inyectar como CTXMAP_SECRET_<ID>.
+        comando: Comando (shell) a ejecutar. El valor se redacta de la salida.
+        autorizado: Confirmación del usuario para usar sus credenciales.
+        target: Ruta del proyecto.
+        timeout: Segundos máximos (default 60).
+    """
+    try:
+        import subprocess
+
+        from context_map.core.secrets import (
+            auditar,
+            cargar,
+            entorno_con_secretos,
+            obtener,
+            sanear_salida,
+        )
+
+        raiz = _target_abs(target)
+        ruta = os.path.join(raiz, ".context-map", "secure", "vault.json")
+        doc = cargar(ruta)
+        frase = os.environ.get("CTXMAP_MASTER_PHRASE")
+        if not frase:
+            return "ERROR en secret_exec: el servidor no tiene CTXMAP_MASTER_PHRASE (frase del baúl)."
+        ids_lista = [i.strip() for i in ids.split(",") if i.strip()]
+        valores = {i: obtener(doc, frase, i) for i in ids_lista}
+        if not valores:
+            return "ERROR en secret_exec: no se desbloqueó ningún secreto."
+        if not (autorizado or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"):
+            return "ERROR en secret_exec: no autorizado. El usuario debe autorizar el uso de sus credenciales."
+
+        proc = subprocess.run(
+            comando,
+            shell=True,
+            capture_output=True,
+            text=True,
+            env=entorno_con_secretos(valores),
+            timeout=max(5, min(int(timeout or 60), 600)),
+            errors="replace",
+        )
+        auditar(
+            os.path.join(os.path.dirname(ruta), "audit.log"),
+            f"mcp executar ids={','.join(ids_lista)} rc={proc.returncode} cmd={comando[:120]!r}",
+        )
+        salida = sanear_salida(proc.stdout or "", valores)
+        error = sanear_salida(proc.stderr or "", valores)
+        res = f"{salida}\n[exit {proc.returncode}]".strip() if salida else f"[exit {proc.returncode}]"
+        if error:
+            res += f"\n[stderr] {error[:1500]}"
+        return res
+    except Exception as err:  # noqa: BLE001 — devolver el error al agente
+        return f"ERROR en secret_exec: {err}"
+
+
+@_tool
 def context_search(consulta: str, limite: int = 5, target: str = ".", semantico: bool = True) -> str:
     """Busca pasajes relevantes de la memoria del proyecto (nodos del grafo y notas del vault) CON CITAS.
 

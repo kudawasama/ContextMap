@@ -252,6 +252,28 @@ def create_parser() -> argparse.ArgumentParser:
     s_secret_where.add_argument("--target", default=".", help="Proyecto (default: .)")
     s_secret_where.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
 
+    s_secret_exec = sp_secret.add_parser("exec", help="Ejecutar un comando con secretos inyectados (salida saneada)")
+    s_secret_exec.add_argument("comando", help="Comando a ejecutar (shell)")
+    s_secret_exec.add_argument("--ids", required=True, help="Ids de secretos separados por coma")
+    s_secret_exec.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_exec.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+    s_secret_exec.add_argument("--autorizado", action="store_true", help="Autorizar este uso (o CTXMAP_SECRET_AUTORIZA=1)")
+    s_secret_exec.add_argument("--timeout", type=int, default=60, help="Segundos máximos (default 60)")
+
+    s_secret_receta = sp_secret.add_parser("receta", help="Ejecutar una receta aprobada (.cmd/.sh) con secretos")
+    s_secret_receta.add_argument("nombre", help="Nombre de la receta (recetas/<nombre>.cmd|.sh)")
+    s_secret_receta.add_argument("--ids", default="", help="Ids de secretos separados por coma")
+    s_secret_receta.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_receta.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+    s_secret_receta.add_argument("--autorizado", action="store_true", help="Autorizar este uso (o CTXMAP_SECRET_AUTORIZA=1)")
+    s_secret_receta.add_argument("--timeout", type=int, default=120, help="Segundos máximos (default 120)")
+    s_secret_receta.add_argument("rest", nargs="*", help="Argumentos para la receta")
+
+    s_secret_audit = sp_secret.add_parser("audit", help="Ver el registro de auditoría (nunca valores)")
+    s_secret_audit.add_argument("--n", type=int, default=20, help="Líneas a mostrar (default 20)")
+    s_secret_audit.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_audit.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
     s_personal = sub.add_parser(
         "personal",
         help="Base de datos personal consolidada (SQLite + FTS5, transportable en F:/pendrive)",

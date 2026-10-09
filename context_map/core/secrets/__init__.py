@@ -6,6 +6,13 @@ cifrados. La frase maestra es la única llave (nunca se almacena): respáldala.
 
 from __future__ import annotations
 
+from context_map.core.secrets.proxy import (
+    SANEO_MIN,
+    auditar,
+    entorno_con_secretos,
+    normalizar_var,
+    sanear_salida,
+)
 from context_map.core.secrets.vault import (
     ALGO,
     FRASE_MIN,
@@ -26,6 +33,11 @@ from context_map.core.secrets.vault import (
 )
 
 __all__ = [
+    "SANEO_MIN",
+    "auditar",
+    "entorno_con_secretos",
+    "normalizar_var",
+    "sanear_salida",
     "ALGO",
     "FRASE_MIN",
     "KDF_ITER",
