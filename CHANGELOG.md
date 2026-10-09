@@ -7,6 +7,25 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.9.3] — 2026-10-09
+
+### 🧹 Higiene de la memoria personal
+
+- **El ruido ya no entra en la BD personal**: la ingesta de `personal sync` (y la
+  consolidación automática tras `refresh`/`build`) **filtra los eventos basura**
+  antes de guardarlos — falsos positivos del extractor antiguo de TODO
+  (`logger.debug`, docstrings, la palabra «todos»), `desktop.ini`, `.vercel/`,
+  `.next/` y `archive-v0/`.
+  - Antes había que limpiarlos a posteriori con `personal repair --purge-ruido`,
+    y el siguiente `sync` los **volvía a meter**. Verificado: tras
+    `personal sync --todos`, la purga queda en **0**.
+- El criterio vive en un único sitio (`core/personal/ruido.py`) y lo comparten la
+  ingesta y `personal repair --purge-ruido`, para que no diverjan.
+
+### ✅ Tests
+
+- `test_personal_ruido.py` (3); suite **399**.
+
 ## [2.9.2] — 2026-10-09
 
 ### 🐛 Arreglado
