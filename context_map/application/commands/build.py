@@ -166,7 +166,18 @@ def cmd_build(args) -> None:
 
     # Auto-adaptación del ecosistema agéntico tras cada build (solo crea reglas faltantes)
     from context_map.application.commands.adapt import do_adapt
+
     do_adapt(target=".", project_name=proj, modo="respect", quiet=True)
+
+    # Revisión idempotente: pone al día SOLO las reglas propias de ContextMap.
+    # Si ya están al día, NO reescribe nada (sin cambios espurios).
+    from context_map.domain.ecosystem.adaptador import revisar_reglas_agente
+
+    revision = revisar_reglas_agente(proj, target_dir=".")
+    creadas = len(revision["creados"])
+    actualizadas = len(revision["actualizados"])
+    if creadas or actualizadas:
+        print(f"reglas: {creadas} nueva(s), {actualizadas} actualizada(s)")
 
     print("build:ok -> ACTIVE.md")
     print(f"vault ({vault_mode}):ok -> {vault_path}")

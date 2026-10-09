@@ -8,6 +8,8 @@ del proyecto detectados por el módulo detector.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import os
 import re
@@ -338,9 +340,118 @@ def adaptar_ecosistema(
     return generados
 
 
+_REGLAS_MANIFEST = os.path.join(".context-map", "state", "reglas_generadas.json")
+
+
+def _hash_texto(texto: str) -> str:
+    """sha256 del texto (huella para el manifiesto de reglas generadas)."""
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
+
+
+def _cargar_reglas_manifest(target_dir: str) -> dict[str, str]:
+    """Carga el manifiesto ``ruta -> hash`` de reglas escritas por ContextMap."""
+    try:
+        with open(os.path.join(target_dir, _REGLAS_MANIFEST), encoding="utf-8") as f:
+            datos = json.load(f)
+        return datos if isinstance(datos, dict) else {}
+    except Exception:
+        return {}
+
+
+def _leer_texto(ruta: str) -> str:
+    """Lee un archivo como texto (cadena vacía si no se puede)."""
+    try:
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            return f.read()
+    except Exception:
+        return ""
+
+
+def _guardar_reglas_manifest(target_dir: str, manifest: dict[str, str]) -> None:
+    """Persiste el manifiesto de reglas generadas (best-effort)."""
+    ruta = os.path.join(target_dir, _REGLAS_MANIFEST)
+    try:
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with open(ruta, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=0, sort_keys=True)
+    except Exception as err:  # noqa: BLE001 — el manifiesto es una caché
+        logger.debug("No se pudo guardar el manifiesto de reglas %s: %s", ruta, err)
+
+
+def revisar_reglas_agente(
+    project_name: str,
+    target_dir: str = ".",
+) -> dict[str, list[str]]:
+    """Revisa y pone al día SOLO las reglas agénticas propias de ContextMap.
+
+    Idempotente: si el archivo ya coincide con lo que ContextMap generaría, se
+    **omite** (no se reescribe → sin cambios espurios). Si ContextMap lo generó
+    antes y su plantilla cambió con una versión nueva, se **actualiza**. Si el
+    usuario lo editó a mano, se **respeta**.
+
+    La propiedad de un archivo se recuerda en el manifiesto
+    ``.context-map/state/reglas_generadas.json`` (ruta → hash de lo que escribió
+    ContextMap), de modo que una edición manual se detecta y no se pisa.
+
+    Args:
+        project_name (str): Nombre del proyecto.
+        target_dir (str): Raíz del proyecto.
+
+    Returns:
+        dict[str, list[str]]: rutas por estado (``creados``, ``actualizados``,
+        ``omitidos``, ``respetados``).
+    """
+    from context_map.domain.ecosystem.detector import detectar_ecosistema
+
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
+    eco = detectar_ecosistema(target_dir)
+    manifest = _cargar_reglas_manifest(target_dir)
+    resultado: dict[str, list[str]] = {
+        "creados": [],
+        "actualizados": [],
+        "omitidos": [],
+        "respetados": [],
+    }
+
+    for ruta_rel, contenido in _reglas_por_agente(project_name, eco, target_dir, fecha):
+        ruta = os.path.join(target_dir, ruta_rel)
+        if not os.path.exists(ruta):
+            _volcar_archivo(ruta, contenido)
+            manifest[ruta_rel] = _hash_texto(contenido)
+            resultado["creados"].append(ruta_rel)
+            continue
+
+        actual = _leer_texto(ruta)
+        if not actual:
+            resultado["respetados"].append(ruta_rel)
+            continue
+
+        # ¿Es un archivo nuestro? (ya en el manifiesto, o con el marcador del bloque)
+        marcado = _es_generado_ctxmap(ruta)
+        es_nuestro = marcado or manifest.get(ruta_rel) == _hash_texto(actual)
+        # Estado deseado: si esta marcado, se reemplaza SOLO el bloque (preserva lo
+        # que el usuario puso alrededor); si no, el contenido generado completo.
+        deseado = _mergear_bloque(actual, contenido) if marcado else contenido
+        deseado_hash = _hash_texto(deseado)
+
+        if deseado_hash == _hash_texto(actual):
+            manifest[ruta_rel] = deseado_hash  # al dia: se OMITE (sin reescribir)
+            resultado["omitidos"].append(ruta_rel)
+        elif es_nuestro:
+            _volcar_archivo(ruta, deseado)  # nuestro y desactualizado -> actualizar
+            manifest[ruta_rel] = deseado_hash
+            resultado["actualizados"].append(ruta_rel)
+        else:
+            resultado["respetados"].append(ruta_rel)
+
+    _guardar_reglas_manifest(target_dir, manifest)
+    return resultado
+
+
 __all__ = [
     "REGLA_AGENTES",
     "adaptar_ecosistema",
+    "revisar_reglas_agente",
     "_es_generado_ctxmap",
     "_tiene_memoria_viva",
     "_test_command",
