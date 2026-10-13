@@ -82,8 +82,12 @@ def test_receta_ejecuta_y_sanea(tmp_path, monkeypatch, capsys) -> None:
     _preparar_baul(tmp_path)
     recetas = os.path.join(str(tmp_path), ".context-map", "secure", "recetas")
     os.makedirs(recetas, exist_ok=True)
-    with open(os.path.join(recetas, "demo.cmd"), "w", encoding="utf-8") as f:
-        f.write("@echo off\necho %CTXMAP_SECRET_TK%\n")
+    if os.name == "nt":
+        nombre_archivo, contenido = "demo.cmd", "@echo off\necho %CTXMAP_SECRET_TK%\n"
+    else:
+        nombre_archivo, contenido = "demo.sh", "#!/bin/sh\necho \"$CTXMAP_SECRET_TK\"\n"
+    with open(os.path.join(recetas, nombre_archivo), "w", encoding="utf-8") as f:
+        f.write(contenido)
     monkeypatch.setenv("CTXMAP_MASTER_PHRASE", FRASE)
 
     args = SimpleNamespace(
