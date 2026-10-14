@@ -152,6 +152,39 @@ ctxmap personal query "autenticación jwt"
 
 # 🏥 Diagnóstico: revisa la salud de tu contexto
 ctxmap check .
+
+# 🗂️ Historial: cuántos snapshots guardas y poda los que sobran
+ctxmap history list
+ctxmap history prune --dry-run
+```
+
+---
+
+## 🗂️ Retención del historial y daemon seguro
+
+`ctxmap` guarda una copia del mapa en `.context-map/maps/HISTORY/` en cada `build`/`refresh`. Desde la v2.5.0 ese historial tiene límites y guardas (antes podía crecer sin cota y llenar el disco):
+
+- **Retención**: se conservan los **20 snapshots** más recientes y como máximo **512 MB**; el resto se poda en cada snapshot.
+- **Deduplicado**: si el mapa no cambió, no se crea un snapshot idéntico.
+- **Guarda de disco**: si quedan menos de **512 MB libres**, no se escribe nada y se registra un aviso en el log.
+- **Daemon**: `ctxmap watch` refresca como máximo una vez cada `--min-interval-s` (60 s por defecto), ignora las salidas que él mismo genera (`AGENTS.md`, `CONTEXT.md`, `version.json`…) y **no** escribe historial.
+
+Ajustes en `.contextmap.toml` (o `[tool.contextmap]` en `pyproject.toml`):
+
+```toml
+max_snapshots = 20        # snapshots a conservar por proyecto
+history_max_mb = 512      # tope de tamaño de maps/HISTORY
+history_min_free_mb = 512 # espacio libre mínimo para crear un snapshot
+watch_min_interval_s = 60 # intervalo mínimo entre refrescos del daemon
+```
+
+Control manual del historial:
+
+```bash
+ctxmap history list                # snapshots, tamaño y retención configurada
+ctxmap history prune --dry-run     # simula la poda
+ctxmap history prune --keep 10     # poda dejando 10 snapshots
+ctxmap doctor                      # el chequeo `history` avisa si te pasaste
 ```
 
 ---

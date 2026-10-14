@@ -5,6 +5,24 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-10-13
+
+### 🛡️ Retención del historial de snapshots y watcher seguro
+
+Incidente de referencia: en el servidor «kudawa» el historial `.context-map/maps/HISTORY/` acumuló **103.354 archivos / 148 GB** en unas dos semanas y dejó la raíz del disco al 100 % (1,2 GB libres), rompiendo tareas del sistema como `logrotate` (`gzip: No space left on device`). Causa: cada `build`/`refresh` copiaba el mapa completo al historial sin retención ni deduplicado ni guarda de disco, y el daemon `ctxmap watch` re-disparaba con cualquier escritura del árbol (incluidas las de otros despliegues, como `version.json` cada minuto).
+
+- **feat(`storage`)**: nuevo módulo `context_map/core/storage/history.py` con métricas del historial (`estadisticas`), huella de contenido (`huella_archivo`), poda por cantidad y por tamaño (`podar`) y comprobación de espacio libre (`hay_espacio` / `espacio_libre_mb`).
+- **feat(`storage`)**: `snapshot_map` aplica tres guardas y acepta `keep` / `max_mb` / `min_free_mb`: (1) no escribe si quedan menos de 512 MB libres, (2) omite el snapshot cuando el contenido es idéntico al último, (3) poda el historial a 20 elementos / 512 MB después de cada copia.
+- **fix(`storage`)**: las colisiones de nombre ya no generan series `-2…-N` sin cota; se resuelven con marca temporal y, dentro del mismo segundo, con la huella del contenido.
+- **feat(`config`)**: `.contextmap.toml` / `[tool.contextmap]` aceptan `max_snapshots`, `history_max_mb`, `history_min_free_mb` y `watch_min_interval_s` (defaults seguros: 20 / 512 / 512 / 60).
+- **fix(`watcher`)**: ignora las salidas generadas (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CONTEXT.md`, `.cursorrules`, `.windsurfrules`, `version.json`) y aplica `min_interval_s` (default 60 s) con ventana de supresión de los eventos producidos por el propio refresco, tanto en la ruta `watchdog` como en el fallback por polling.
+- **feat(`build`/`refresh`)**: nuevo flag `--no-snapshot`; el daemon refresca con `no_snapshot=True`, de modo que `ctxmap watch` ya no escribe historial (el snapshot es un acto deliberado).
+- **feat(`cli`)**: nuevo comando `ctxmap history list|prune` (`--keep`, `--max-mb`, `--dry-run`, `--json`) para inspeccionar y podar el historial.
+- **feat(`doctor`)**: chequeo `history` que avisa (WARN) si el historial supera 100 snapshots o 512 MB y, con `ctxmap doctor --fix`, lo poda a los topes por defecto.
+- **test**: 24 pruebas nuevas (`test_history`, `test_snapshot_history`, `test_history_config`, `test_history_cmd`, `test_watcher`, `test_cli`, `test_doctor`); suite completa en 287 pruebas pasadas y los 2 fallos preexistentes (pydantic/MCP y Ollama en `enrich`) sin cambios.
+
+---
+
 ## [2.4.1] — 2026-09-26
 
 ### 🔧 Correcciones — Refresco automático del watcher restaurado
