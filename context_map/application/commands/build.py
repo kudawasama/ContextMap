@@ -137,10 +137,14 @@ def cmd_build(args) -> None:
         print(f"graph-groups: (sin grupos) {err}")
 
     # Snapshot
-    snapshot_name = getattr(args, "snapshot_name", "") or None
-    snap = snapshot_map(nodes=nodes, edges=edges, name=snapshot_name)
-    if snap:
-        print(f"snapshot: {snap}")
+    # Snapshot (omitido en modo daemon: el historial es un acto deliberado)
+    if getattr(args, "no_snapshot", False):
+        print("snapshot: omitido (--no-snapshot)")
+    else:
+        snapshot_name = getattr(args, "snapshot_name", "") or None
+        snap = snapshot_map(nodes=nodes, edges=edges, name=snapshot_name)
+        if snap:
+            print(f"snapshot: {snap}")
 
     # Brief y AGENTS.md si se pide
     if getattr(args, "brief", False):

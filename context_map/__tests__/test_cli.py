@@ -29,6 +29,19 @@ def test_cli_parser_defaults() -> None:
     assert args_scan.target == "."
 
 
+def test_cli_parser_flags_de_seguridad_del_historial() -> None:
+    """Flags añadidos tras el incidente: --no-snapshot y --min-interval-s."""
+    parser = create_parser()
+
+    assert parser.parse_args(["build", ".", "--no-snapshot"]).no_snapshot is True
+    assert parser.parse_args(["refresh", ".", "--no-snapshot"]).no_snapshot is True
+    assert parser.parse_args(["build", "."]).no_snapshot is False
+
+    args_watch = parser.parse_args(["watch", ".", "--min-interval-s", "120"])
+    assert args_watch.min_interval_s == 120
+    assert parser.parse_args(["watch", "."]).min_interval_s == 60
+
+
 def test_cli_parser_auto_mode() -> None:
     """Verifica los flags por defecto del comando auto."""
     parser = create_parser()

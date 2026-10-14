@@ -42,6 +42,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_refresh.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_refresh.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_refresh.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
+    s_refresh.add_argument("--no-snapshot", action="store_true", dest="no_snapshot",
+                           help="No crear snapshot en maps/HISTORY (modo daemon/CI)")
 
     s_wrap = sub.add_parser(
         "wrap",
@@ -68,6 +70,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_build.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_build.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_build.add_argument("--snapshot-name", default="", help="Nombre del snapshot")
+    s_build.add_argument("--no-snapshot", action="store_true", dest="no_snapshot",
+                         help="No crear snapshot en maps/HISTORY (modo daemon/CI)")
     s_build.add_argument("--brief", action="store_true", help="Generar brief para agentes")
     s_build.add_argument(
         "--mode",
@@ -154,6 +158,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_watch = sub.add_parser("watch", help="Daemon escuchador en segundo plano para sincronización continua")
     s_watch.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a monitorear")
     s_watch.add_argument("--debounce-ms", type=int, default=500, help="Tiempo en ms a esperar tras modificaciones (default: 500)")
+    s_watch.add_argument("--min-interval-s", type=int, default=60, dest="min_interval_s",
+                         help="Segundos mínimos entre dos refrescos consecutivos (default: 60)")
 
     s_export = sub.add_parser(
         "export",

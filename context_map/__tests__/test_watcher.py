@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import threading
+import time
 
 from context_map.application.commands import refresh as refresh_module
 from context_map.domain.synchronization.watcher import (
@@ -85,3 +87,82 @@ def test_cmd_refresh_normaliza_mapping(tmp_path, monkeypatch):
     refresh_module.cmd_refresh({"target_dir": str(tmp_path), "quiet": True})
 
     assert capturado["target"] == str(tmp_path)
+
+
+def test_es_archivo_relevante_ignora_salidas_generadas():
+    """Las salidas de gobernanza y de despliegue no disparan el watcher.
+
+    Regresión del incidente 2026-10-13: el daemon se disparaba con los archivos
+    que él mismo (u otro deploy) escribía en la raíz del proyecto.
+    """
+    for nombre in (
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        "CONTEXT.md",
+        ".cursorrules",
+        ".windsurfrules",
+        "version.json",
+    ):
+        assert not _es_archivo_relevante(f"/proyecto/{nombre}"), nombre
+    assert _es_archivo_relevante("/proyecto/src/app.py")
+    assert _es_archivo_relevante("/proyecto/notas/idea.md")
+
+
+def test_watcher_respeta_intervalo_minimo(tmp_path):
+    """Un bucle de realimentación no produce más de un refresco por intervalo.
+
+    Regresión del incidente 2026-10-13: sin intervalo mínimo ni ventana de
+    supresión, cada escritura (incluidas las del propio refresco) disparaba otro
+    refresco, y con él otro snapshot de ~2,9 MB en maps/HISTORY.
+    """
+    (tmp_path / "app.py").write_text("print('a')", encoding="utf-8")
+    llamadas: list[str] = []
+
+    def _escribir_despues_de_arrancar() -> None:
+        """Genera el primer cambio DESPUÉS de que el watcher esté escuchando."""
+        time.sleep(0.2)
+        (tmp_path / "cambio.py").write_text("print('b')", encoding="utf-8")
+
+    def _cb(ruta):
+        llamadas.append(ruta)
+        # Realimentación deliberada: cada refresco escribe archivos relevantes…
+        (tmp_path / f"generado_{len(llamadas)}.py").write_text("print('x')", encoding="utf-8")
+        # …y también salidas que el watcher debe ignorar.
+        (tmp_path / "AGENTS.md").write_text("x", encoding="utf-8")
+        (tmp_path / "version.json").write_text("{}", encoding="utf-8")
+
+    hilo = threading.Thread(target=_escribir_despues_de_arrancar, daemon=True)
+    hilo.start()
+
+    inicio = time.time()
+    iniciar_watcher(
+        str(tmp_path),
+        debounce_ms=10,
+        callback=_cb,
+        max_iterations=15,
+        min_interval_s=1,
+    )
+    transcurrido = time.time() - inicio
+
+    # Debe refrescar, pero como máximo una vez por intervalo (con un margen de
+    # uno por el límite del ciclo). Sin la guarda habría ~15 refrescos.
+    assert len(llamadas) >= 1, llamadas
+    assert len(llamadas) <= transcurrido / 1.0 + 1, (len(llamadas), transcurrido)
+
+
+def test_ejecutar_refresco_default_no_escribe_historial(tmp_path, monkeypatch):
+    """El refresco del daemon pide ``no_snapshot=True`` al build."""
+    capturado: dict[str, object] = {}
+
+    def _fake_cmd_refresh(args):
+        capturado["no_snapshot"] = getattr(args, "no_snapshot", None)
+        capturado["target"] = getattr(args, "target", None)
+        capturado["quiet"] = getattr(args, "quiet", None)
+
+    monkeypatch.setattr(refresh_module, "cmd_refresh", _fake_cmd_refresh)
+    _ejecutar_refresco_default(str(tmp_path))
+
+    assert capturado["no_snapshot"] is True
+    assert capturado["target"] == str(tmp_path)
+    assert capturado["quiet"] is True
