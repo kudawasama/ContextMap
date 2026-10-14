@@ -43,6 +43,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_refresh.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_refresh.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_refresh.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
+    s_refresh.add_argument("--no-snapshot", action="store_true", dest="no_snapshot",
+                           help="No crear snapshot en maps/HISTORY (modo daemon/CI)")
 
     s_wrap = sub.add_parser(
         "wrap",
@@ -69,6 +71,8 @@ def create_parser() -> argparse.ArgumentParser:
     s_build.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_build.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_build.add_argument("--snapshot-name", default="", help="Nombre del snapshot")
+    s_build.add_argument("--no-snapshot", action="store_true", dest="no_snapshot",
+                         help="No crear snapshot en maps/HISTORY (modo daemon/CI)")
     s_build.add_argument("--brief", action="store_true", help="Generar brief para agentes")
     s_build.add_argument(
         "--mode",
@@ -184,6 +188,24 @@ def create_parser() -> argparse.ArgumentParser:
     s_watch = sub.add_parser("watch", help="Daemon escuchador en segundo plano para sincronización continua")
     s_watch.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a monitorear")
     s_watch.add_argument("--debounce-ms", type=int, default=500, help="Tiempo en ms a esperar tras modificaciones (default: 500)")
+    s_watch.add_argument("--min-interval-s", type=int, default=60, dest="min_interval_s",
+                         help="Segundos mínimos entre dos refrescos consecutivos (default: 60)")
+
+    s_hist = sub.add_parser(
+        "history", help="Inspecciona y poda el historial de snapshots (maps/HISTORY)"
+    )
+    s_hist.add_argument("action", nargs="?", choices=["list", "prune"], default="list",
+                        help="Acción: list (por defecto) o prune")
+    s_hist.add_argument("--target", default=".", help="Ruta del proyecto")
+    s_hist.add_argument("--keep", type=int, default=None,
+                        help="Snapshots recientes a conservar (default: CTXMAP_SNAPSHOT_KEEP o 20)")
+    s_hist.add_argument("--keep-days", type=int, default=None, dest="keep_days",
+                        help="Días a conservar, uno por día (default: CTXMAP_SNAPSHOT_KEEP_DAYS o 7)")
+    s_hist.add_argument("--delete", action="store_true",
+                        help="Borrar los sobrantes en vez de archivarlos en maps/archive/*.tar.gz")
+    s_hist.add_argument("--dry-run", action="store_true", dest="dry_run",
+                        help="Solo informa de lo que se podaría, sin tocar el disco")
+    s_hist.add_argument("--json", action="store_true", help="Salida JSON")
 
     s_export = sub.add_parser(
         "export",
