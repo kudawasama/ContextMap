@@ -12,6 +12,13 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 
+from context_map.core.storage.history import (
+    HISTORY_DIR,
+    KEEP_DEFAULT,
+    MAX_MB_DEFAULT,
+    estadisticas,
+    podar,
+)
 from context_map.presentation.briefs.extractors import vault_nombre
 from context_map.presentation.vault.preservar import ZONAS_MANUALES
 
@@ -283,12 +290,59 @@ def check_manual_notes_preservation(report: DoctorReport, fix: bool = False, pro
     report.add(check)
 
 
+def check_history(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica el tamaño del historial de snapshots y ofrece poda.
+
+    Regresión del incidente 2026-10-13: sin este chequeo el crecimiento del
+    historial (148 GB) solo se detectaba cuando el disco ya estaba lleno.
+
+    Args:
+        report (DoctorReport): Reporte donde registrar el chequeo.
+        fix (bool): Si es True aplica la poda con los valores por defecto.
+        project_dir (str): Directorio del proyecto a diagnosticar.
+    """
+    hist = os.path.join(project_dir, HISTORY_DIR)
+    stats = estadisticas(hist)
+
+    if stats.files == 0:
+        report.add(DoctorCheck("history", "OK", "Sin snapshots en maps/HISTORY"))
+        return
+
+    umbral_archivos = KEEP_DEFAULT * 5
+    if stats.mb > MAX_MB_DEFAULT or stats.files > umbral_archivos:
+        mensaje = (
+            f"{stats.files} snapshots / {stats.mb} MB — por encima del umbral "
+            f"({KEEP_DEFAULT} snapshots, {MAX_MB_DEFAULT} MB). "
+            "Ejecuta `ctxmap history prune`."
+        )
+        if fix:
+            res = podar(hist, keep=KEEP_DEFAULT, max_mb=MAX_MB_DEFAULT)
+            report.add(
+                DoctorCheck(
+                    "history",
+                    "OK" if res.restantes else "WARN",
+                    mensaje,
+                    fix_applied=True,
+                    fix_message=(
+                        f"{len(res.borrados)} snapshot(s) borrado(s) · "
+                        f"{res.liberado_mb} MB liberados"
+                    ),
+                )
+            )
+            return
+        report.add(DoctorCheck("history", "WARN", mensaje))
+        return
+
+    report.add(DoctorCheck("history", "OK", f"{stats.files} snapshots / {stats.mb} MB"))
+
+
 CHECKS = [
     check_git_available,
     check_update_dir,
     check_vault_default,
     check_project_name_consistency,
     check_manual_notes_preservation,
+    check_history,
 ]
 
 
