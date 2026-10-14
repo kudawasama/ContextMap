@@ -17,6 +17,15 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from context_map.core.models import Edge, Node
+from context_map.core.storage.config_loader import load_project_config
+from context_map.core.storage.history import (
+    HISTORY_DIR,
+    es_duplicado,
+    espacio_libre_mb,
+    hay_espacio,
+    huella_archivo,
+    podar,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,20 +139,54 @@ def snapshot_map(
     name: str | None = None,
     nodes: list[Node] | None = None,
     edges: list[Edge] | None = None,
+    keep: int | None = None,
+    max_mb: int | None = None,
+    min_free_mb: int | None = None,
 ) -> str | None:
     """Guarda una copia de respaldo (snapshot) del mapa en `.context-map/maps/HISTORY/`.
+
+    Guardas añadidas tras el incidente 2026-10-13 (148 GB acumulados en el
+    historial): nunca escribe si quedan menos de ``min_free_mb`` MB libres,
+    nunca duplica un contenido idéntico al último snapshot y poda el historial a
+    ``keep`` elementos / ``max_mb`` MB. Las colisiones de nombre se resuelven con
+    marca temporal (y huella de contenido como desempate), sin series ``-2..-N``
+    sin cota.
 
     Args:
         from_rel (str): Origen relativo del mapa activo.
         name (Optional[str]): Nombre explícito para el snapshot.
         nodes (Optional[List[Node]]): Nodos del grafo.
         edges (Optional[List[Edge]]): Aristas del grafo.
+        keep (Optional[int]): Snapshots a conservar (default: configuración).
+        max_mb (Optional[int]): Tope de tamaño del historial en MB.
+        min_free_mb (Optional[int]): Espacio libre mínimo exigido en MB.
 
     Returns:
-        Optional[str]: Ruta completa del snapshot creado o None en caso de fallo.
+        Optional[str]: Ruta completa del snapshot creado o None si se omitió.
     """
+    cfg = load_project_config(".")
+    keep = cfg.max_snapshots if keep is None else keep
+    max_mb = cfg.history_max_mb if max_mb is None else max_mb
+    min_free_mb = cfg.history_min_free_mb if min_free_mb is None else min_free_mb
+
     src = os.path.join(".context-map", from_rel)
     if not os.path.exists(src):
+        return None
+
+    # Guarda 1 — disco: jamás escribir con el sistema al borde del colapso.
+    if not hay_espacio(".", min_free_mb=min_free_mb):
+        logger.warning(
+            "Snapshot omitido: solo %.0f MB libres (mínimo %s MB). Revisa maps/HISTORY",
+            espacio_libre_mb("."),
+            min_free_mb,
+        )
+        return None
+
+    # Guarda 2 — contenido idéntico al último snapshot: no aporta historial.
+    if es_duplicado(src, HISTORY_DIR):
+        logger.info(
+            "Snapshot omitido: contenido idéntico al último snapshot de %s", HISTORY_DIR
+        )
         return None
 
     if name:
@@ -160,23 +203,33 @@ def snapshot_map(
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         out_name = f"{ts}-{h}.md"
 
-    dst = os.path.join(".context-map", "maps", "HISTORY", out_name)
+    dst = os.path.join(HISTORY_DIR, out_name)
     if os.path.exists(dst):
-        base_name = out_name.rsplit(".", 1)[0]
-        contador = 2
-        while os.path.exists(dst):
+        base_name, ext = os.path.splitext(out_name)
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        dst = os.path.join(HISTORY_DIR, f"{base_name}-{ts}{ext}")
+        if os.path.exists(dst):  # misma marca temporal: desempata por contenido
             dst = os.path.join(
-                ".context-map", "maps", "HISTORY", f"{base_name}-{contador}.md"
+                HISTORY_DIR, f"{base_name}-{ts}-{huella_archivo(src) or 'na'}{ext}"
             )
-            contador += 1
 
     _ensure(dst)
     try:
         shutil.copy2(src, dst)
-        return dst
     except Exception as err:
         logger.warning("No se pudo crear snapshot %s: %s", dst, err)
         return None
+
+    # Guarda 3 — retención: el historial no puede crecer sin cota.
+    res = podar(HISTORY_DIR, keep=int(keep), max_mb=int(max_mb))
+    if res.borrados:
+        logger.info(
+            "Historial podado: %d snapshots eliminados (%.2f MB liberados), %d restantes",
+            len(res.borrados),
+            res.liberado_mb,
+            res.restantes,
+        )
+    return dst
 
 
 def nodes_to_digest(nodes: list[Node]) -> str:
