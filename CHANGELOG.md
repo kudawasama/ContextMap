@@ -7,6 +7,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🛡️ Watcher seguro y control del historial (incidente 2026-10-13)
+
+Incidente de referencia: en el servidor «kudawa» el historial `.context-map/maps/HISTORY/` acumuló **103.354 archivos / 148 GB** en unas dos semanas y dejó la raíz del disco al 100 % (1,2 GB libres), rompiendo servicios del sistema (`logrotate`: `No space left on device`). La retención y el deduplicado de la v2.10.0 no bastaban: el daemon `ctxmap watch` re-disparaba con cualquier escritura del árbol —incluidas las de otros despliegues como `version.json` cada minuto— y nada medía el espacio libre antes de escribir.
+
+- **fix(`watcher`)**: ignora las salidas generadas (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CONTEXT.md`, `.cursorrules`, `.windsurfrules`, `version.json`) para no re-dispararse con su propio output ni con el de otros despliegues.
+- **fix(`watcher`)**: nueva opción `--min-interval-s` (60 s por defecto) y ventana de supresión de los eventos producidos durante el propio refresco, tanto en la ruta `watchdog` como en el fallback por polling. Sin ella, cada escritura encadenaba otro refresco completo.
+- **feat(`build`/`refresh`)**: flag `--no-snapshot`; el daemon refresca con `no_snapshot=True`, de modo que `ctxmap watch` ya no escribe historial (el snapshot queda como acto deliberado).
+- **feat(`storage`)**: guarda de disco en `snapshot_map` — no se escribe si quedan menos de `CTXMAP_SNAPSHOT_MIN_FREE_MB` MB libres (512 por defecto) y se registra el motivo. También `espacio_libre_mb()`.
+- **fix(`storage`)**: las colisiones de nombre de snapshot se resuelven con marca temporal (+ huella de contenido como desempate) en lugar de una serie `-2…-N` sin cota.
+- **feat(`storage`)**: `purgar_snapshots(..., dry_run=True)` permite calcular la poda sin archivar ni borrar.
+- **feat(`cli`)**: nuevo comando `ctxmap history list|prune` (`--keep`, `--keep-days`, `--delete`, `--dry-run`, `--json`) que expone la retención que ya aplicaba `snapshot_map`.
+- **feat(`doctor`)**: chequeo `history` que avisa (WARN) si el historial supera 5× la retención configurada y, con `ctxmap doctor --fix`, archiva lo sobrante.
+- **test**: 14 pruebas nuevas entre `test_watcher.py`, `test_snapshots_retencion.py`, `test_history_cmd.py`, `test_doctor.py` y `test_cli.py`.
+
 ## [2.13.0] — 2026-10-10
 
 ### 🔐 Fase 2: el agente USA los secretos SIN verlos (proxy)

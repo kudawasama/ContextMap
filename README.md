@@ -263,6 +263,31 @@ ctxmap secret backup pendrive/baul.json # respaldo cifrado portable
 
 ---
 
+## 🗂️ Historial de snapshots: inspección y poda
+
+Cada `build`/`refresh` guarda una copia del mapa en `.context-map/maps/HISTORY/`. La retención por defecto conserva los **20 snapshots más recientes** más el último de cada uno de los **últimos 7 días**; lo sobrante se **archiva** comprimido en `maps/archive/AAAA-MM.tar.gz` (nada se borra salvo que lo pidas).
+
+```bash
+ctxmap history list                 # snapshots activos, tamaño, archivados y retención
+ctxmap history prune                # aplica la retención (archiva lo sobrante)
+ctxmap history prune --keep 5       # conserva 5 snapshots recientes
+ctxmap history prune --dry-run      # solo informa, sin tocar el disco
+ctxmap history prune --delete       # borra en vez de archivar (opt-in)
+```
+
+Ajustes por entorno (los mismos que usa el propio `snapshot_map`):
+
+```bash
+CTXMAP_SNAPSHOT_KEEP=20           # snapshots recientes a conservar
+CTXMAP_SNAPSHOT_KEEP_DAYS=7       # días a conservar (uno por día)
+CTXMAP_SNAPSHOT_ARCHIVE=0         # 0 = borrar en vez de archivar
+CTXMAP_SNAPSHOT_MIN_FREE_MB=512   # si hay menos espacio libre, no se escribe snapshot
+```
+
+Y dos guardas más desde este cambio: el **daemon no escribe historial** (`ctxmap watch` refresca con `--no-snapshot` y como máximo una vez cada `--min-interval-s`, 60 s por defecto) y `ctxmap doctor` avisa si el historial se sale de rango (con `--fix` lo archiva).
+
+---
+
 ## 🔌 Integración con agentes (MCP)
 
 ```bash
