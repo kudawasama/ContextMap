@@ -38,6 +38,14 @@ def load_project_config(target_dir: str = ".") -> ContextMapConfig:
                 config.mode = data.get("mode", "hierarchical")
                 config.brief_enabled = data.get("brief_enabled", True)
                 config.quiet = data.get("quiet", False)
+                config.max_snapshots = int(data.get("max_snapshots", config.max_snapshots))
+                config.history_max_mb = int(data.get("history_max_mb", config.history_max_mb))
+                config.history_min_free_mb = int(
+                    data.get("history_min_free_mb", config.history_min_free_mb)
+                )
+                config.watch_min_interval_s = int(
+                    data.get("watch_min_interval_s", config.watch_min_interval_s)
+                )
                 return config
         except Exception as err:
             logger.warning("No se pudo cargar %s: %s", custom_toml, err)
@@ -56,6 +64,18 @@ def load_project_config(target_dir: str = ".") -> ContextMapConfig:
                     config.mode = tool_cfg.get("mode", "hierarchical")
                     config.brief_enabled = tool_cfg.get("brief_enabled", True)
                     config.quiet = tool_cfg.get("quiet", False)
+                    config.max_snapshots = int(
+                        tool_cfg.get("max_snapshots", config.max_snapshots)
+                    )
+                    config.history_max_mb = int(
+                        tool_cfg.get("history_max_mb", config.history_max_mb)
+                    )
+                    config.history_min_free_mb = int(
+                        tool_cfg.get("history_min_free_mb", config.history_min_free_mb)
+                    )
+                    config.watch_min_interval_s = int(
+                        tool_cfg.get("watch_min_interval_s", config.watch_min_interval_s)
+                    )
         except Exception as err:
             logger.warning("No se pudo cargar %s: %s", pyproject_path, err)
 
