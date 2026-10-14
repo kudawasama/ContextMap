@@ -161,6 +161,20 @@ def create_parser() -> argparse.ArgumentParser:
     s_watch.add_argument("--min-interval-s", type=int, default=60, dest="min_interval_s",
                          help="Segundos mínimos entre dos refrescos consecutivos (default: 60)")
 
+    s_hist = sub.add_parser(
+        "history", help="Inspecciona y poda el historial de snapshots (maps/HISTORY)"
+    )
+    s_hist.add_argument("action", nargs="?", choices=["list", "prune"], default="list",
+                        help="Acción: list (por defecto) o prune")
+    s_hist.add_argument("--target", default=".", help="Ruta del proyecto")
+    s_hist.add_argument("--keep", type=int, default=None,
+                        help="Snapshots a conservar en prune (default: configuración del proyecto)")
+    s_hist.add_argument("--max-mb", type=int, default=None, dest="max_mb",
+                        help="Tope de tamaño del historial en MB (default: configuración del proyecto)")
+    s_hist.add_argument("--dry-run", action="store_true", dest="dry_run",
+                        help="Simula la poda sin borrar")
+    s_hist.add_argument("--json", action="store_true", help="Salida JSON")
+
     s_export = sub.add_parser(
         "export",
         help="Exporta el contexto en formato portable (XML/JSON/Markdown) para chats web de LLMs",

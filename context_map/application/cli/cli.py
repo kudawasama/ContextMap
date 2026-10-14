@@ -35,6 +35,7 @@ from context_map.application.commands import (
 )
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.export import exportar_contexto
+from context_map.application.commands.history_cmd import cmd_history
 from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.personal import cmd_personal
 from context_map.core.logging_setup import setup_logging
@@ -118,6 +119,7 @@ def main() -> None:
         "doctor": lambda a: _dispatch_cmd(cmd_doctor, a),
         "hook": lambda a: _dispatch_cmd(cmd_hook, a),
         "watch": lambda a: _dispatch_cmd(cmd_watch, a),
+        "history": lambda a: _dispatch_cmd(cmd_history, a),
         "ingest": cmd_ingest,
         "adapt": cmd_adapt,
         "personal": cmd_personal,
