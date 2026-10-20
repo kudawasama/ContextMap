@@ -20,6 +20,7 @@ from context_map.core.secrets import (
     auditar,
     cargar,
     crear_documento,
+    desbloquear,
     eliminar,
     entorno_con_secretos,
     guardar,
@@ -236,6 +237,28 @@ def _cmd_secret_receta(args) -> None:
     raise SystemExit(proc.returncode)
 
 
+def _cmd_secret_restore(args) -> None:
+    """Fase 3: restaura el baúl desde un respaldo cifrado (otro PC, pendrive…)."""
+    ruta_destino = _ruta_vault(args.target, _obtener_global(args))
+    if os.path.exists(ruta_destino) and not getattr(args, "overwrite", False):
+        raise SystemExit(
+            f"[secret] El baúl destino ya existe ({ruta_destino}). Usa --overwrite para reemplazarlo."
+        )
+    origen = getattr(args, "origen", "")
+    if not origen or not os.path.exists(origen):
+        raise SystemExit(f"[secret] No existe el respaldo {origen!r}.")
+    doc = cargar(origen)  # valida que sea un baúl de ContextMap
+    if getattr(args, "verificar", False):
+        desbloquear(doc, _leer_frase())
+    os.makedirs(os.path.dirname(ruta_destino) or ".", exist_ok=True)
+    shutil.copy2(origen, ruta_destino)
+    _reportar(
+        ruta_destino,
+        "baúl restaurado desde " + origen,
+        "recuerda la frase maestra: sin ella no descifrarás.",
+    )
+
+
 def _cmd_secret_audit(args) -> None:
     """Muestra las últimas líneas del registro de auditoría (nunca valores)."""
     ruta = os.path.join(os.path.dirname(_ruta_vault(args.target, _obtener_global(args))), "audit.log")
@@ -276,9 +299,10 @@ def cmd_secret(args) -> None:
         "exec": _cmd_secret_exec,
         "receta": _cmd_secret_receta,
         "audit": _cmd_secret_audit,
+        "restore": _cmd_secret_restore,
     }
     if sub not in acciones:
-        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where|exec|receta|audit} [args]")
+        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where|exec|receta|audit|restore} [args]")
     try:
         acciones[sub](args)
     except SecureVaultError as err:

@@ -274,6 +274,13 @@ def create_parser() -> argparse.ArgumentParser:
     s_secret_audit.add_argument("--target", default=".", help="Proyecto (default: .)")
     s_secret_audit.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
 
+    s_secret_restore = sp_secret.add_parser("restore", help="Restaurar el baúl desde un respaldo cifrado (otro PC/pendrive)")
+    s_secret_restore.add_argument("origen", help="Archivo respaldado (vault.json o backup)")
+    s_secret_restore.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_restore.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+    s_secret_restore.add_argument("--overwrite", action="store_true", help="Reemplazar un baúl existente")
+    s_secret_restore.add_argument("--verificar", action="store_true", help="Comprobar la frase maestra antes de instalar")
+
     s_personal = sub.add_parser(
         "personal",
         help="Base de datos personal consolidada (SQLite + FTS5, transportable en F:/pendrive)",
