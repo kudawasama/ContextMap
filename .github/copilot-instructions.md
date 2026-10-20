@@ -1,6 +1,6 @@
 # GitHub Copilot — Instrucciones para ContextMap
 
-> Generado automáticamente por **ContextMap** (2026-10-13).
+> Generado automáticamente por **ContextMap** (2026-10-20).
 
 ## Antes de sugerir código
 

@@ -7,6 +7,44 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🎚️ Clasificación calibrada (motor de decisiones tipadas)
+
+- Nuevo `context_map/core/decisiones.py`: motor **local, determinista y sin coste**
+  con primitivas tipadas `noul` / `choice` / `score`, `softmax` sobre la evidencia
+  acumulada, **confianza calibrada** `(p_max − 1/n)/(1 − 1/n)`, entropía normalizada,
+  margen entre las dos primeras etiquetas y traza de **evidencias**.
+- **Anti-señales**: un peso negativo resta evidencia en vez de sumarla (por ejemplo
+  «todo» en minúsculas es prosa en español, no una tarea pendiente).
+- `context_map/core/normalization/paneles.py`: las tres preguntas (`tipo`,
+  `clasificacion`, `concepto`) se derivan de `mappings.py` como **fuente única**,
+  con peso decreciente por posición histórica: sin evidencia el resultado es
+  **idéntico al anterior** y en empate gana el grupo que ganaba antes.
+- Integración real en `parsing/clasificacion.py` (`_heuristic_event`),
+  `normalization/inference.py` (`inferir_classification`, `inferir_concepto`,
+  `clasificar_tipo`). Las **reglas duras** (Conventional Commits, origen git, tipo
+  explícito) siguen decidiendo primero y son irrevocables (`por_regla=True`).
+- **Cola de revisión** `revision:clasificacion`: los nodos con evidencia en
+  conflicto se marcan en el vault en vez de resolverse por accidente.
+- Caché `lru_cache` en las decisiones repetidas: coste marginal ~0.
+- Patrón replicado **localmente** del modelo *System One* de Jev (TypeSafe AI),
+  cuya API sigue en *early access* (waitlist) y no se usa: ver
+  `docs/INVESTIGACION-JEV.md`, `docs/COMPARATIVO-ECOSISTEMA-CONTEXTO.md` y
+  `docs/plans/PLAN-CLASIFICACION-CALIBRADA-2026-10-13.md`.
+
+### 🔐 Fase 3: portabilidad y recuperación del baúl
+
+- `ctxmap secret restore <origen> [--target] [--global] [--verificar] [--overwrite]`:
+  restaura el baúl cifrado desde otro equipo o pendrive. Valida que el origen sea
+  un baúl de ContextMap y, con `--verificar`, comprueba la **frase maestra**
+  **antes** de instalar nada (si falla, no se escribe el destino).
+- Guía de portabilidad y recuperación en `docs/PORTABILIDAD.md`: opción **A** vía
+  Git (el baúl cifrado puede commitearse: sin la frase no se descifra) y opción
+  **B** vía pendrive/Drive.
+
+### ✅ Tests
+
+- `test_decisiones.py` (19) y `test_secret_restore.py` (4); suite **448**.
+
 ## [2.13.0] — 2026-10-10
 
 ### 🔐 Fase 2: el agente USA los secretos SIN verlos (proxy)
