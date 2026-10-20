@@ -1,41 +1,31 @@
-"""Clasificación heurística de eventos no tipados.
+"""Clasificación tipada de eventos no tipados (chats, JSONL y agentes).
 
-Define los tipos normalizados y los patrones léxicos determinísticos
-utilizados para inferir la categoría de eventos cuando el texto libre
-no trae un tipo explícito.
+Históricamente esta clasificación usaba una lista de patrones donde ganaba el
+**primero** que coincidía: un ``feature`` en la frase anulaba el ``fix`` que
+realmente describía el trabajo, y no había forma de saber cuán segura era la
+etiqueta.
+
+Ahora delega en el panel tipado (:mod:`context_map.core.normalization.paneles`),
+que acumula evidencia ponderada, calcula una distribución de probabilidad y
+expone la confianza. Cuando el texto recibe evidencia fuerte de dos tipos
+distintos, el evento se marca con ``revision:clasificacion`` para que la
+ambigüedad sea visible en el vault en lugar de resolverse en silencio.
 """
 
 from __future__ import annotations
 
-import re
-
 from context_map.core.models import Event
+from context_map.core.normalization.paneles import (
+    JSONL_TYPES,
+    TAG_REVISION,
+    decidir_tipo,
+)
 
-JSONL_TYPES: set[str] = {"IDEA", "BASE", "PRUEBA", "FUTURO", "CORRECCION", "RIESGO", "CAMBIO", "HITO", "REGLA"}
-
-# Patrones determinísticos para clasificación heurística del tipo de evento.
-# El orden importa: gana el primer patrón que coincide.
-#
-# `todo` (minúsculas) NO se usa como marcador de tarea: en un corpus en español
-# es prosa («todo el rango», «ya está todo») y marcaba como pendiente cualquier
-# frase. Los marcadores reales van en MAYÚSCULAS. `hit` se retiró de HITO porque
-# coincidía con usos verbales («hit the API») y `correc` no coincidía con nada
-# (el límite de palabra impedía que casara con «corrección»).
-_LINE_PATTERNS: list[tuple[str | re.Pattern[str], str]] = [
-    (re.compile(r"\b(adding|added|feat|feature)\b", re.I), "IDEA"),
-    (re.compile(r"\b(fix|fixing|correc\w*|arregl\w*|patch)\b", re.I), "CORRECCION"),
-    (re.compile(r"\b(test|tested|pytest|spec|qa)\b", re.I), "PRUEBA"),
-    (re.compile(r"\b(next|future|planned|roadmap)\b", re.I), "FUTURO"),
-    (re.compile(r"\b(?:TODO|FIXME|HACK)\b"), "FUTURO"),
-    (re.compile(r"\b(risk|bug|issue|danger|blocked)\b", re.I), "RIESGO"),
-    (re.compile(r"\b(change|changed|update|updated)\b", re.I), "CAMBIO"),
-    (re.compile(r"\b(base|init|seed|bootstrap|setup)\b", re.I), "BASE"),
-    (re.compile(r"\b(release|milestone)\b", re.I), "HITO"),
-]
+__all__ = ["JSONL_TYPES", "TAG_REVISION", "_heuristic_event"]
 
 
 def _heuristic_event(raw: str, source_hint: str, timestamp: str = "") -> Event:
-    """Clasifica texto libre usando patrones heurísticos léxicos.
+    """Clasifica texto libre usando el motor de decisiones tipadas.
 
     Args:
         raw (str): Texto plano del mensaje o línea.
@@ -44,12 +34,27 @@ def _heuristic_event(raw: str, source_hint: str, timestamp: str = "") -> Event:
             la fuente no tiene fecha; sin ella el historial por día se pierde.
 
     Returns:
-        Event: Evento clasificado e instanciado.
+        Event: Evento clasificado, con la confianza del motor en ``meta`` y la
+            etiqueta de revisión cuando hay evidencia en conflicto.
     """
     text = raw.strip()
-    kind = "IDEA"
-    for pat, k in _LINE_PATTERNS:
-        if isinstance(pat, re.Pattern) and pat.search(text):
-            kind = k
-            break
-    return Event(type=kind, text=text, timestamp=timestamp, source=source_hint)
+    decision = decidir_tipo(text)
+
+    tags: list[str] = [TAG_REVISION] if decision.en_conflicto() else []
+    meta = {
+        "clasificacion": {
+            "motor": "lexico-calibrado",
+            "confianza": round(decision.confianza, 4),
+            "margen": round(decision.margen, 4),
+            "evidencias": [str(ev) for ev in decision.evidencias[:3]],
+        }
+    }
+
+    return Event(
+        type=decision.eleccion,
+        text=text,
+        timestamp=timestamp,
+        source=source_hint,
+        tags=tags,
+        meta=meta,
+    )

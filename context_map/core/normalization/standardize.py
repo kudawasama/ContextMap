@@ -27,6 +27,7 @@ from context_map.core.normalization.cleaning import (
     estandarizar_tags,
 )
 from context_map.core.normalization.inference import (
+    clasificar_tipo,
     classification_tag,
     corregir_tipo,
     inferir_classification,
@@ -43,6 +44,7 @@ from context_map.core.normalization.mappings import (
     TAG_MERGE,
     TAGS_ELIMINAR,
 )
+from context_map.core.normalization.paneles import TAG_REVISION
 
 
 def estandarizar_nodo(node: Node) -> Node:
@@ -66,7 +68,6 @@ def estandarizar_nodo(node: Node) -> Node:
     class_tag = classification_tag(classif_id)
     if class_tag not in tags:
         tags.append(class_tag)
-
     # Normalizar título para eliminar volátiles numéricos en RIESGO
     title = node.title
     if node.type == "RIESGO":
@@ -76,7 +77,11 @@ def estandarizar_nodo(node: Node) -> Node:
         title = title.rstrip(';,').strip()
         title = _restaurar_paths_legibles(title)
 
-    nuevo_tipo = corregir_tipo(node)
+    nuevo_tipo, tipo_decision = clasificar_tipo(node)
+    # Cola de revisión: si dos tipos distintos acumularon evidencia comparable,
+    # la etiqueta queda visible en el vault en lugar de resolverse en silencio.
+    if tipo_decision.en_conflicto() and TAG_REVISION not in tags:
+        tags.append(TAG_REVISION)
     nodo_temp = Node(
         id=node.id,
         type=nuevo_tipo,
@@ -137,6 +142,7 @@ __all__ = [
     "inferir_status",
     "inferir_evidence",
     "corregir_tipo",
+    "clasificar_tipo",
     "_restaurar_paths_legibles",
     "estandarizar_nodo",
     "estandarizar_nodos",

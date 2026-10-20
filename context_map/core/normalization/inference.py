@@ -2,19 +2,65 @@
 
 Proporciona funciones para inferir concepto, clasificación, estado, tipo
 y evidencias técnicas de un nodo basándose en sus atributos y contenido.
+
+La inferencia de **clasificación**, **concepto** y **tipo** ya no resuelve con
+«gana la primera palabra clave»: delega en el panel de decisiones tipadas
+(:mod:`context_map.core.normalization.paneles`), que acumula evidencia
+ponderada, publica una distribución de probabilidad y expone la confianza.
+Las reglas duras (Conventional Commits, origen git, tipo explícito) siguen
+decidiendo primero y tienen prioridad absoluta sobre el motor léxico.
 """
 
 from __future__ import annotations
 
 import re
 
+from context_map.core.decisiones import Decision
 from context_map.core.models import Node
 from context_map.core.normalization.mappings import (
     CLASSIFICATION_PATTERNS,
-    CONCEPT_PATTERNS,
     DEFAULT_CLASSIFICATION,
-    DEFAULT_CONCEPT,
 )
+from context_map.core.normalization.paneles import (
+    ETIQUETAS_TIPO,
+    decidir_clasificacion,
+    decidir_concepto,
+    decidir_tipo,
+)
+
+#: Etiqueta legible de cada clasificación semántica.
+_ETIQUETAS_CLASIFICACION: dict[str, str] = {
+    class_id: label for _palabras, class_id, label in CLASSIFICATION_PATTERNS
+}
+_ETIQUETAS_CLASIFICACION.setdefault(DEFAULT_CLASSIFICATION[0], DEFAULT_CLASSIFICATION[1])
+
+#: Prefijos *Conventional Commits* que deciden la clasificación sin ambigüedad.
+_PREFIJOS_CONVENCIONALES: tuple[tuple[str, str], ...] = (
+    ("feat:", "feature"),
+    ("feature:", "feature"),
+    ("fix:", "fix"),
+    ("docs:", "docs"),
+    ("refactor:", "refactor"),
+    ("test:", "test"),
+    ("tests:", "test"),
+    ("chore:", "chore"),
+    ("style:", "style"),
+    ("perf:", "perf"),
+    ("ci:", "chore"),
+    ("build:", "chore"),
+)
+
+
+def _etiqueta_clasificacion(class_id: str) -> str:
+    """Devuelve la etiqueta legible de una clasificación semántica.
+
+    Args:
+        class_id (str): Identificador de clasificación.
+
+    Returns:
+        str: Etiqueta legible; la de defecto si el identificador no existe.
+    """
+    return _ETIQUETAS_CLASIFICACION.get(class_id, DEFAULT_CLASSIFICATION[1])
 
 
 def inferir_concepto(node: Node) -> str:
@@ -24,20 +70,17 @@ def inferir_concepto(node: Node) -> str:
         node (Node): Nodo a analizar.
 
     Returns:
-        str: ID de concepto ('BASEDEDATOS', 'TUI', 'CLI', 'ETL', ...).
+        str: ID de concepto ('BASEDEDATOS', 'TUI', 'CLI', 'ETL', ...) o
+            'GENERAL' cuando ninguna señal acumula evidencia.
     """
-    text = f"{node.title} {node.summary or ''}".lower()
-
-    for keywords, concept_id in CONCEPT_PATTERNS:
-        for kw in keywords:
-            if kw in text:
-                return concept_id
-
-    return DEFAULT_CONCEPT
+    return decidir_concepto(f"{node.title} {node.summary or ''}").eleccion
 
 
 def inferir_classification(node: Node) -> tuple[str, str]:
-    """Infiere el id y la etiqueta de clasificación semántica del nodo a partir de su contenido.
+    """Infiere el id y la etiqueta de clasificación semántica del nodo.
+
+    Los prefijos *Conventional Commits* deciden primero; para el resto del
+    corpus decide el motor de evidencia ponderada.
 
     Args:
         node (Node): Nodo a analizar.
@@ -46,31 +89,12 @@ def inferir_classification(node: Node) -> tuple[str, str]:
         tuple[str, str]: Tupla con (classification_id, classification_label).
     """
     title_lower = node.title.lower()
-    if title_lower.startswith("feat:") or title_lower.startswith("feature:"):
-        return "feature", "Feature"
-    elif title_lower.startswith("fix:"):
-        return "fix", "Fix"
-    elif title_lower.startswith("docs:"):
-        return "docs", "Documentación"
-    elif title_lower.startswith("refactor:"):
-        return "refactor", "Refactor"
-    elif title_lower.startswith("test:") or title_lower.startswith("tests:"):
-        return "test", "Test"
-    elif title_lower.startswith("chore:"):
-        return "chore", "Chore"
-    elif title_lower.startswith("style:"):
-        return "style", "Style"
-    elif title_lower.startswith("perf:"):
-        return "perf", "Performance"
+    for prefijo, class_id in _PREFIJOS_CONVENCIONALES:
+        if title_lower.startswith(prefijo):
+            return class_id, _etiqueta_clasificacion(class_id)
 
-    text = f"{node.title} {node.summary or ''}".lower()
-
-    for keywords, class_id, class_label in CLASSIFICATION_PATTERNS:
-        for kw in keywords:
-            if kw in text:
-                return class_id, class_label
-
-    return DEFAULT_CLASSIFICATION
+    class_id = decidir_clasificacion(f"{node.title} {node.summary or ''}").eleccion
+    return class_id, _etiqueta_clasificacion(class_id)
 
 
 def classification_tag(classification_id: str) -> str:
@@ -157,53 +181,126 @@ def inferir_evidence(node: Node) -> list[str]:
     return evidence
 
 
-def corregir_tipo(node: Node) -> str:
-    """Corrige y ajusta el tipo de nodo según su contenido semántico.
+#: Reglas duras de tipo, en orden de precedencia histórica.
+#: Cada entrada es ``(tipo, motivo, palabras_clave)``; ``palabras_clave`` vacío
+#: significa que la regla se decide por el origen o el tipo del nodo.
+_REGLAS_TIPO_TEXTO: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("RIESGO", "palabra clave de riesgo", ("riesgo", "complejidad", "complejo", "alerta", "vulnerabilidad", "sin test")),
+    (
+        "CORRECCION",
+        "palabra clave de corrección",
+        ("fix:", "corregir", "arreglar", "solucionar", "parche", "bug", "fallo"),
+    ),
+    (
+        "PRUEBA",
+        "palabra clave de prueba",
+        ("test:", "testing", "pytest", "unit test", "prueba unitaria", "cobertura", "conftest"),
+    ),
+    (
+        "FUTURO",
+        "marcador de trabajo pendiente",
+        ("todo:", "fixme:", "futuro", "roadmap", "proxima version", "tarea pendiente"),
+    ),
+    ("HITO", "marcador de hito", ("hito", "milestone", "release", "version", "v1.", "v2.", "v0.")),
+    (
+        "BASE",
+        "palabra clave estructural",
+        (
+            "proyecto",
+            "estructura",
+            "entrypoint",
+            "readme",
+            "configuracion",
+            "paquete",
+            "modulo",
+            "base de datos",
+            "fundamento",
+            "archivos",
+            "carpeta",
+            "documentación",
+            "capa",
+            "__init__",
+            "db_schema",
+        ),
+    ),
+    (
+        "CAMBIO",
+        "palabra clave de cambio",
+        ("refactor", "chore", "cambio", "actualizacion", "modificacion", "update"),
+    ),
+)
+
+
+def _tipo_por_regla(node: Node, text: str) -> tuple[str, str] | None:
+    """Resuelve el tipo con reglas duras (origen git, tipo explícito o palabras clave).
+
+    Args:
+        node (Node): Nodo original.
+        text (str): Título y resumen en minúsculas.
+
+    Returns:
+        tuple[str, str] | None: Par ``(tipo, motivo)``, o ``None`` si ninguna
+            regla aplica y debe decidir el motor de evidencia.
+    """
+    if node.type == "DOCUMENTO":
+        return "DOCUMENTO", "tipo explícito del nodo"
+
+    if node.source == "git":
+        if "feat:" in text or "feature:" in text:
+            return "IDEA", "Conventional Commit «feat»"
+        if "fix:" in text or "bug:" in text:
+            return "CORRECCION", "Conventional Commit «fix»"
+        if "docs:" in text or "chore:" in text:
+            return "CAMBIO", "Conventional Commit «docs/chore»"
+        if "test:" in text:
+            return "PRUEBA", "Conventional Commit «test»"
+        return "CAMBIO", "commit de git sin prefijo conocido"
+
+    for tipo, motivo, palabras in _REGLAS_TIPO_TEXTO:
+        if any(kw in text for kw in palabras):
+            return tipo, motivo
+
+    return None
+
+
+def clasificar_tipo(node: Node) -> tuple[str, Decision]:
+    """Clasifica el tipo del nodo y devuelve la decisión que lo sustenta.
+
+    Devuelve la decisión calibrada para que el consumidor pueda distinguir un
+    acierto seguro de uno ambiguo: las reglas duras (git, DOCUMENTO, palabras
+    clave) se marcan como ``por_regla`` y no entran en revisión; el resto expone
+    confianza, evidencias y posible conflicto.
 
     Args:
         node (Node): Nodo original.
 
     Returns:
-        str: Tipo de nodo corregido (BASE, IDEA, RIESGO, CAMBIO, CORRECCION, PRUEBA, FUTURO, HITO).
+        tuple[str, Decision]: Tipo corregido y decisión asociada.
     """
     title_lower = node.title.lower()
     summary_lower = node.summary.lower() if node.summary else ""
     text = f"{title_lower} {summary_lower}"
 
-    if node.type == "DOCUMENTO":
-        return "DOCUMENTO"
+    regla = _tipo_por_regla(node, text)
+    if regla is not None:
+        tipo, motivo = regla
+        return tipo, Decision.por_regla_dura("tipo_nodo", tipo, ETIQUETAS_TIPO, motivo)
 
-    if node.source == "git":
-        if "feat:" in text or "feature:" in text:
-            return "IDEA"
-        elif "fix:" in text or "bug:" in text:
-            return "CORRECCION"
-        elif "docs:" in text or "chore:" in text:
-            return "CAMBIO"
-        elif "test:" in text:
-            return "PRUEBA"
-        else:
-            return "CAMBIO"
+    decision = decidir_tipo(text)
+    return decision.eleccion, decision
 
-    if any(kw in text for kw in ["riesgo", "complejidad", "complejo", "alerta", "vulnerabilidad", "sin test"]):
-        return "RIESGO"
 
-    if any(kw in text for kw in ["fix:", "corregir", "arreglar", "solucionar", "parche", "bug", "fallo"]):
-        return "CORRECCION"
+def corregir_tipo(node: Node) -> str:
+    """Corrige y ajusta el tipo de nodo según su contenido semántico.
 
-    if any(kw in text for kw in ["test:", "testing", "pytest", "unit test", "prueba unitaria", "cobertura", "conftest"]):
-        return "PRUEBA"
+    Envoltorio compatible de :func:`clasificar_tipo` para los consumidores que
+    solo necesitan la etiqueta.
 
-    if any(kw in text for kw in ["todo:", "fixme:", "futuro", "roadmap", "proxima version", "tarea pendiente"]):
-        return "FUTURO"
+    Args:
+        node (Node): Nodo original.
 
-    if any(kw in text for kw in ["hito", "milestone", "release", "version", "v1.", "v2.", "v0."]):
-        return "HITO"
-
-    if any(kw in text for kw in ["proyecto", "estructura", "entrypoint", "readme", "configuracion", "paquete", "modulo", "base de datos", "fundamento", "archivos", "carpeta", "documentación", "capa", "__init__", "db_schema"]):
-        return "BASE"
-
-    if any(kw in text for kw in ["refactor", "chore", "cambio", "actualizacion", "modificacion", "update"]):
-        return "CAMBIO"
-
-    return "IDEA"
+    Returns:
+        str: Tipo de nodo corregido (BASE, IDEA, RIESGO, CAMBIO, CORRECCION,
+            PRUEBA, FUTURO, HITO, DOCUMENTO).
+    """
+    return clasificar_tipo(node)[0]

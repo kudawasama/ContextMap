@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+from context_map.core.normalization.paneles import (
+    TAG_REVISION,
+    decidir_clasificacion,
+    decidir_concepto,
+    decidir_tipo,
+    evaluar,
+)
 from context_map.core.normalization.standardize import (
+    clasificar_tipo,
     classification_tag,
     corregir_tipo,
     dedup_nodes,
@@ -21,7 +29,13 @@ __all__ = [
     "inferir_status",
     "inferir_evidence",
     "corregir_tipo",
+    "clasificar_tipo",
     "estandarizar_nodo",
     "estandarizar_nodos",
     "dedup_nodes",
+    "TAG_REVISION",
+    "decidir_tipo",
+    "decidir_clasificacion",
+    "decidir_concepto",
+    "evaluar",
 ]
