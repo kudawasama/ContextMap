@@ -39,6 +39,29 @@ try:
 except ImportError:  # mcp no instalado: el módulo se importa pero sin servidor
     _fastmcp = None
 
+#: Frase maestra del baúl, tomada del entorno al arrancar. Vive solo en memoria:
+#: si siguiera en ``os.environ``, cualquier proceso hijo la heredaría.
+_FRASE_MAESTRA: str | None = None
+
+
+def _frase_maestra() -> str | None:
+    """Devuelve la frase maestra y la borra del entorno en la primera lectura.
+
+    El servidor MCP necesita la frase para descifrar, pero no debe dejarla en
+    ``os.environ``: los comandos que ejecuta ``secret_exec`` heredan el entorno
+    y podrían exfiltrarla. Se conserva en memoria durante la sesión.
+
+    Returns:
+        str | None: Frase maestra, o ``None`` si el servidor no la tiene.
+    """
+    global _FRASE_MAESTRA
+    if _FRASE_MAESTRA:
+        return _FRASE_MAESTRA
+    valor = os.environ.pop("CTXMAP_MASTER_PHRASE", None)
+    if valor:
+        _FRASE_MAESTRA = valor
+    return _FRASE_MAESTRA
+
 
 def _tool(fn):
     """Decorador condicional: registra en FastMCP solo si el SDK está disponible."""
@@ -375,16 +398,20 @@ def secret_list(scope: str = "proyecto", target: str = ".") -> str:
 
 @_tool
 def secret_exec(ids: str, comando: str, autorizado: bool, target: str = ".", timeout: int = 60) -> str:
-    """Ejecuta un comando con secretos del baúl inyectados en el entorno; la SALIDA se SANA (el agente nunca ve los valores).
+    """Ejecuta un comando con secretos del baúl inyectados; la salida se sanea (higiene, no frontera de seguridad).
 
-    Requiere autorización explícita del usuario (autorizado=True o
-    CTXMAP_SECRET_AUTORIZA=1) y que el servidor tenga la frase maestra
-    (CTXMAP_MASTER_PHRASE) para el baúl. Se registra un log de auditoría.
+    Requiere autorización explícita (autorizado=True o CTXMAP_SECRET_AUTORIZA=1)
+    y que el servidor tenga la frase maestra (CTXMAP_MASTER_PHRASE) para el baúl.
+    Se registra un log de auditoría.
+
+    Aviso: el flag ``autorizado`` lo aporta el cliente MCP, no una persona; no
+    es una confirmación humana fuerte. El saneo de la salida es higiene, no una
+    frontera de seguridad: no expongas esta tool a agentes no confiables.
 
     Args:
         ids: Ids separados por coma a inyectar como CTXMAP_SECRET_<ID>.
         comando: Comando (shell) a ejecutar. El valor se redacta de la salida.
-        autorizado: Confirmación del usuario para usar sus credenciales.
+        autorizado: Flag del cliente MCP para autorizar el uso (no es una confirmación humana).
         target: Ruta del proyecto.
         timeout: Segundos máximos (default 60).
     """
@@ -399,18 +426,19 @@ def secret_exec(ids: str, comando: str, autorizado: bool, target: str = ".", tim
             sanear_salida,
         )
 
+        if not (autorizado or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"):
+            return "ERROR en secret_exec: no autorizado. El usuario debe autorizar el uso de sus credenciales."
+
         raiz = _target_abs(target)
         ruta = os.path.join(raiz, ".context-map", "secure", "vault.json")
         doc = cargar(ruta)
-        frase = os.environ.get("CTXMAP_MASTER_PHRASE")
+        frase = _frase_maestra()
         if not frase:
             return "ERROR en secret_exec: el servidor no tiene CTXMAP_MASTER_PHRASE (frase del baúl)."
         ids_lista = [i.strip() for i in ids.split(",") if i.strip()]
         valores = {i: obtener(doc, frase, i) for i in ids_lista}
         if not valores:
             return "ERROR en secret_exec: no se desbloqueó ningún secreto."
-        if not (autorizado or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"):
-            return "ERROR en secret_exec: no autorizado. El usuario debe autorizar el uso de sus credenciales."
 
         proc = subprocess.run(
             comando,
@@ -1041,5 +1069,8 @@ def run() -> None:
     """Arranca el servidor MCP en stdio (bloqueante)."""
     if _fastmcp is None:
         raise SystemExit("mcp no instalado. Ejecuta: pip install mcp  (o: uv pip install mcp)")
+    # La frase se toma al arrancar y se borra del entorno: los hijos de
+    # secret_exec no deben poder heredarla (ver _frase_maestra).
+    _frase_maestra()
     _fastmcp.run()
 

@@ -16,6 +16,11 @@ from datetime import datetime, timezone
 #: producir falsos positivos en textos legítimos).
 SANEO_MIN = 4
 
+#: Prefijo reservado del propio ContextMap. Ninguna variable con este prefijo
+#: debe llegar al proceso hijo: la frase maestra y el flag de autorización son
+#: credenciales del servidor, no del comando que se ejecuta.
+PREFIJO_RESERVADO = "CTXMAP_"
+
 
 def normalizar_var(ident: str) -> str:
     """Convierte un id de secreto en una variable de entorno segura."""
@@ -27,8 +32,25 @@ def entorno_con_secretos(
     valores: dict[str, str],
     base_env: dict[str, str] | None = None,
 ) -> dict[str, str]:
-    """Entorno con los secretos inyectados (no se imprimen nunca aquí)."""
-    env = dict(base_env or os.environ)
+    """Entorno con los secretos inyectados (no se imprimen nunca aquí).
+
+    Del entorno base se eliminan **todas** las variables ``CTXMAP_*``: la frase
+    maestra, el flag de autorización y cualquier secreto de una llamada previa.
+    Solo llegan al hijo los valores pedidos explícitamente, como
+    ``CTXMAP_SECRET_<ID>``.
+
+    Args:
+        valores: Mapa ``id`` → valor a inyectar.
+        base_env: Entorno de partida (por defecto, ``os.environ``).
+
+    Returns:
+        dict[str, str]: Entorno saneado con los secretos solicitados.
+    """
+    env = {
+        clave: valor
+        for clave, valor in dict(base_env or os.environ).items()
+        if not clave.upper().startswith(PREFIJO_RESERVADO)
+    }
     for ident, valor in valores.items():
         env[normalizar_var(ident)] = valor
     return env

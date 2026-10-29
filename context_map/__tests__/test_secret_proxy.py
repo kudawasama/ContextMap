@@ -13,14 +13,25 @@ from context_map.application.commands.secrets import (
 )
 from context_map.core.secrets import entorno_con_secretos, normalizar_var, sanear_salida
 from context_map.core.secrets.vault import agregar, crear_documento, guardar
+from context_map.infrastructure import mcp_server
 
 FRASE = "Frase-De-Test-2026"
 ITER = 10_000
 VALOR = "valor-secreto-abc"
 
 
+@pytest.fixture(autouse=True)
+def _reset_frase_maestra(monkeypatch):
+    """Aísla la caché en memoria de la frase maestra entre tests."""
+    monkeypatch.setattr(mcp_server, "_FRASE_MAESTRA", None, raising=False)
+
+
 def _eco() -> str:
     return "echo %CTXMAP_SECRET_TK%" if os.name == "nt" else "echo $CTXMAP_SECRET_TK"
+
+
+def _eco_var(nombre: str) -> str:
+    return f"echo %{nombre}%" if os.name == "nt" else f"echo ${nombre}"
 
 
 def _preparar_baul(tmp_path) -> str:
@@ -43,6 +54,38 @@ def test_normalizar_var_es_seguro() -> None:
 def test_entorno_inyecta() -> None:
     env = entorno_con_secretos({"tk": VALOR}, base_env={})
     assert env["CTXMAP_SECRET_TK"] == VALOR
+
+
+def test_entorno_no_hereda_variables_ctxmap() -> None:
+    """La frase maestra, el flag de autorización y secretos previos no pasan al hijo."""
+    base = {
+        "PATH": "/bin",
+        "CTXMAP_MASTER_PHRASE": FRASE,
+        "CTXMAP_SECRET_AUTORIZA": "1",
+        "CTXMAP_SECRET_VIEJO": "valor-viejo",
+        "OTRA": "ok",
+    }
+    env = entorno_con_secretos({"tk": VALOR}, base_env=base)
+    assert env["CTXMAP_SECRET_TK"] == VALOR
+    assert "CTXMAP_MASTER_PHRASE" not in env
+    assert "CTXMAP_SECRET_AUTORIZA" not in env
+    assert "CTXMAP_SECRET_VIEJO" not in env
+    assert env["PATH"] == "/bin"
+    assert env["OTRA"] == "ok"
+
+
+def test_exec_no_hereda_frase_maestra(tmp_path, monkeypatch, capsys) -> None:
+    """El comando ejecutado no puede leer CTXMAP_MASTER_PHRASE del entorno."""
+    _preparar_baul(tmp_path)
+    monkeypatch.setenv("CTXMAP_MASTER_PHRASE", FRASE)
+    args = SimpleNamespace(
+        target=str(tmp_path), global_=False, autorizado=True,
+        ids="tk", comando=_eco_var("CTXMAP_MASTER_PHRASE"), timeout=30,
+    )
+    with pytest.raises(SystemExit):
+        _cmd_secret_exec(args)
+    salida = capsys.readouterr().out
+    assert FRASE not in salida
 
 
 def test_exec_sin_autorizacion_se_niega(tmp_path) -> None:
@@ -121,3 +164,39 @@ def test_mcp_secret_exec_sin_frase_da_error(tmp_path, monkeypatch) -> None:
     salida = secret_exec(ids="tk", comando="echo x", autorizado=True, target=str(tmp_path), timeout=30)
     assert "ERROR" in salida
     assert VALOR not in salida
+
+
+def test_mcp_secret_exec_no_hereda_frase(tmp_path, monkeypatch) -> None:
+    """El hijo del MCP tampoco puede leer la frase maestra."""
+    _preparar_baul(tmp_path)
+    monkeypatch.setenv("CTXMAP_MASTER_PHRASE", FRASE)
+    salida = mcp_server.secret_exec(
+        ids="tk",
+        comando=_eco_var("CTXMAP_MASTER_PHRASE"),
+        autorizado=True,
+        target=str(tmp_path),
+        timeout=30,
+    )
+    assert FRASE not in salida
+
+
+def test_mcp_frase_maestra_se_borra_del_entorno(monkeypatch) -> None:
+    """La frase se conserva en memoria, pero desaparece de os.environ."""
+    monkeypatch.setenv("CTXMAP_MASTER_PHRASE", FRASE)
+    assert mcp_server._frase_maestra() == FRASE
+    assert "CTXMAP_MASTER_PHRASE" not in os.environ
+
+
+def test_mcp_no_autorizado_antes_de_descifrar(tmp_path, monkeypatch) -> None:
+    """Sin autorización no se intenta descifrar ni se revela si la frase es válida."""
+    _preparar_baul(tmp_path)
+    monkeypatch.setenv("CTXMAP_MASTER_PHRASE", "frase-equivocada")
+    salida = mcp_server.secret_exec(
+        ids="tk",
+        comando="echo x",
+        autorizado=False,
+        target=str(tmp_path),
+        timeout=30,
+    )
+    assert "no autorizado" in salida
+    assert "frase" not in salida.lower()
