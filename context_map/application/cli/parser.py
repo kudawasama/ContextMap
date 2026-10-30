@@ -258,6 +258,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_secret_exec.add_argument("--target", default=".", help="Proyecto (default: .)")
     s_secret_exec.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
     s_secret_exec.add_argument("--autorizado", action="store_true", help="Autorizar este uso (o CTXMAP_SECRET_AUTORIZA=1)")
+    s_secret_exec.add_argument("--token", default=None, help="Token de aprobación de un solo uso (ctxmap secret approve)")
     s_secret_exec.add_argument("--timeout", type=int, default=60, help="Segundos máximos (default 60)")
 
     s_secret_receta = sp_secret.add_parser("receta", help="Ejecutar una receta aprobada (.cmd/.sh) con secretos")
@@ -266,6 +267,7 @@ def create_parser() -> argparse.ArgumentParser:
     s_secret_receta.add_argument("--target", default=".", help="Proyecto (default: .)")
     s_secret_receta.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
     s_secret_receta.add_argument("--autorizado", action="store_true", help="Autorizar este uso (o CTXMAP_SECRET_AUTORIZA=1)")
+    s_secret_receta.add_argument("--token", default=None, help="Token de aprobación de un solo uso (ctxmap secret approve)")
     s_secret_receta.add_argument("--timeout", type=int, default=120, help="Segundos máximos (default 120)")
     s_secret_receta.add_argument("rest", nargs="*", help="Argumentos para la receta")
 
@@ -280,6 +282,16 @@ def create_parser() -> argparse.ArgumentParser:
     s_secret_restore.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
     s_secret_restore.add_argument("--overwrite", action="store_true", help="Reemplazar un baúl existente")
     s_secret_restore.add_argument("--verificar", action="store_true", help="Comprobar la frase maestra antes de instalar")
+
+    s_secret_approve = sp_secret.add_parser("approve", help="Genera un token de aprobación de un solo uso")
+    s_secret_approve.add_argument("--ids", required=True, help="Ids de secretos separados por coma")
+    s_secret_approve.add_argument("--ttl", type=int, default=300, help="Segundos de validez (default 300)")
+    s_secret_approve.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_approve.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
+
+    s_secret_rekey = sp_secret.add_parser("rekey", help="Re-cifra el baúl con una nueva frase maestra")
+    s_secret_rekey.add_argument("--target", default=".", help="Proyecto (default: .)")
+    s_secret_rekey.add_argument("--global", dest="global_", action="store_true", help="Baúl global")
 
     s_personal = sub.add_parser(
         "personal",

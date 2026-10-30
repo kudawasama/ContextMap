@@ -250,6 +250,8 @@ ctxmap secret set token_api --nota "apunte"   # guarda SIN mostrar el valor
 ctxmap secret list                      # solo nombres/metadatos
 ctxmap secret exec --ids token_api --autorizado "curl ..."   # usa sin ver (salida saneada)
 ctxmap secret receta descargar_cartola --ids cl_banca --autorizado   # guion aprobado
+ctxmap secret approve --ids token_api --ttl 300             # token de aprobación de un solo uso
+ctxmap secret rekey                                         # re-cifra el baúl con nueva frase
 ctxmap secret audit                     # registro de usos (nunca valores)
 ctxmap secret backup pendrive/baul.json # respaldo cifrado portable
 ```

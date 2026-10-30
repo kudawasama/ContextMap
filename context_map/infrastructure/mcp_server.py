@@ -397,27 +397,29 @@ def secret_list(scope: str = "proyecto", target: str = ".") -> str:
 
 
 @_tool
-def secret_exec(ids: str, comando: str, autorizado: bool, target: str = ".", timeout: int = 60) -> str:
-    """Ejecuta un comando con secretos del baúl inyectados; la salida se sanea (higiene, no frontera de seguridad).
+def secret_exec(ids: str, comando: str, autorizado: bool = False, token: str | None = None, target: str = ".", timeout: int = 60) -> str:
+    """Ejecuta un comando con secretos del baul inyectados; la salida se sanea (higiene, no frontera).
 
-    Requiere autorización explícita (autorizado=True o CTXMAP_SECRET_AUTORIZA=1)
-    y que el servidor tenga la frase maestra (CTXMAP_MASTER_PHRASE) para el baúl.
-    Se registra un log de auditoría.
-
-    Aviso: el flag ``autorizado`` lo aporta el cliente MCP, no una persona; no
-    es una confirmación humana fuerte. El saneo de la salida es higiene, no una
-    frontera de seguridad: no expongas esta tool a agentes no confiables.
+    Por defecto esta **deshabilitada** en el MCP: requiere
+    ``CTXMAP_MCP_SECRET_EXEC=1`` en el entorno del servidor, o un token de
+    aprobacion de un solo uso (``ctxmap secret approve``).
 
     Args:
         ids: Ids separados por coma a inyectar como CTXMAP_SECRET_<ID>.
         comando: Comando (shell) a ejecutar. El valor se redacta de la salida.
-        autorizado: Flag del cliente MCP para autorizar el uso (no es una confirmación humana).
+        autorizado: Flag del cliente MCP (debil).
+        token: Token de aprobacion de un solo uso (recomendado).
         target: Ruta del proyecto.
-        timeout: Segundos máximos (default 60).
+        timeout: Segundos maximos (default 60).
     """
+    import os as _os
+    habilitado = _os.environ.get("CTXMAP_MCP_SECRET_EXEC") == "1"
+    if not habilitado and not token:
+        return "ERROR en secret_exec: deshabilitado en el MCP por defecto. Usa un token (`ctxmap secret approve`) o define CTXMAP_MCP_SECRET_EXEC=1."
     try:
         import subprocess
 
+        from context_map.application.commands.secrets import _consumir_token, _validar_token
         from context_map.core.secrets import (
             auditar,
             cargar,
@@ -425,42 +427,55 @@ def secret_exec(ids: str, comando: str, autorizado: bool, target: str = ".", tim
             obtener,
             sanear_salida,
         )
+        from context_map.core.secrets.proxy import validar_ids_sin_colision
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en secret_exec: dependencias no disponibles ({err})."
 
-        if not (autorizado or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"):
-            return "ERROR en secret_exec: no autorizado. El usuario debe autorizar el uso de sus credenciales."
+    if not (autorizado or _os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1" or token):
+        return "ERROR en secret_exec: no autorizado. El usuario debe autorizar el uso de sus credenciales."
 
-        raiz = _target_abs(target)
-        ruta = os.path.join(raiz, ".context-map", "secure", "vault.json")
+    raiz = _target_abs(target)
+    ruta = _os.path.join(raiz, ".context-map", "secure", "vault.json")
+    try:
         doc = cargar(ruta)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en secret_exec: {err}"
+
+    ids_lista = [i.strip() for i in ids.split(",") if i.strip()]
+    if not ids_lista:
+        return "ERROR en secret_exec: indica ids."
+    try:
+        validar_ids_sin_colision(ids_lista)
+    except ValueError as err:
+        return f"ERROR en secret_exec: {err}"
+    if token and not _validar_token(target, False, token, ids_lista):
+        return "ERROR en secret_exec: token invalido, expirado o no cubre los ids."
+    try:
         frase = _frase_maestra()
         if not frase:
-            return "ERROR en secret_exec: el servidor no tiene CTXMAP_MASTER_PHRASE (frase del baúl)."
-        ids_lista = [i.strip() for i in ids.split(",") if i.strip()]
+            return "ERROR en secret_exec: el servidor no tiene CTXMAP_MASTER_PHRASE (frase del baul)."
         valores = {i: obtener(doc, frase, i) for i in ids_lista}
         if not valores:
-            return "ERROR en secret_exec: no se desbloqueó ningún secreto."
-
-        proc = subprocess.run(
-            comando,
-            shell=True,
-            capture_output=True,
-            text=True,
-            env=entorno_con_secretos(valores),
-            timeout=max(5, min(int(timeout or 60), 600)),
-            errors="replace",
-        )
-        auditar(
-            os.path.join(os.path.dirname(ruta), "audit.log"),
-            f"mcp executar ids={','.join(ids_lista)} rc={proc.returncode} cmd={comando[:120]!r}",
-        )
-        salida = sanear_salida(proc.stdout or "", valores)
-        error = sanear_salida(proc.stderr or "", valores)
-        res = f"{salida}\n[exit {proc.returncode}]".strip() if salida else f"[exit {proc.returncode}]"
-        if error:
-            res += f"\n[stderr] {error[:1500]}"
-        return res
-    except Exception as err:  # noqa: BLE001 — devolver el error al agente
+            return "ERROR en secret_exec: no se desbloqueo ningun secreto."
+    except Exception as err:  # noqa: BLE001
         return f"ERROR en secret_exec: {err}"
+
+    env = entorno_con_secretos(valores)
+    try:
+        proc = subprocess.run(comando, shell=True, capture_output=True, text=True, env=env, timeout=timeout, errors="replace")
+    except subprocess.TimeoutExpired:
+        return f"ERROR en secret_exec: tiempo agotado ({timeout}s)."
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en secret_exec: {err}"
+
+    if token:
+        from context_map.application.commands.secrets import _consumir_token
+        _consumir_token(target, False, token)
+    auditar(_os.path.join(_os.path.dirname(ruta), "audit.log"), f"exec ids={','.join(ids_lista)} rc={proc.returncode}")
+    salida = sanear_salida(proc.stdout or "", valores, frase_maestra=frase, variantes=True)
+    if proc.stderr:
+        salida += sanear_salida(proc.stderr or "", valores, frase_maestra=frase, variantes=True)
+    return salida + "\n[exit " + str(proc.returncode) + "]"
 
 
 @_tool

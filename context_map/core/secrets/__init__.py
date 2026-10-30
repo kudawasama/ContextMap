@@ -12,6 +12,8 @@ from context_map.core.secrets.proxy import (
     entorno_con_secretos,
     normalizar_var,
     sanear_salida,
+    validar_ids_sin_colision,
+    variantes_de_valor,
 )
 from context_map.core.secrets.vault import (
     ALGO,
@@ -38,6 +40,8 @@ __all__ = [
     "entorno_con_secretos",
     "normalizar_var",
     "sanear_salida",
+    "validar_ids_sin_colision",
+    "variantes_de_valor",
     "ALGO",
     "FRASE_MIN",
     "KDF_ITER",

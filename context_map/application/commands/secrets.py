@@ -8,11 +8,14 @@ Fase 2 vía proxy (`secret exec` / `secret use`), nunca en el contexto del LLM.
 from __future__ import annotations
 
 import getpass
+import json
 import os
 import re
+import secrets as rng_secrets
 import shutil
 import subprocess
 import sys
+import time
 
 from context_map.core.secrets import (
     SecureVaultError,
@@ -28,12 +31,60 @@ from context_map.core.secrets import (
     obtener,
     requerir_cryptography,
     sanear_salida,
+    validar_ids_sin_colision,
 )
 
 _ENV_FRASE = "CTXMAP_MASTER_PHRASE"
 
 #: Entrada que protege el material sensible del baúl frente a `git add`.
 _ENTRADA_GITIGNORE = ".context-map/secure/"
+
+#: Directorio (dentro de secure/) donde se guardan los tokens de aprobación de un solo uso.
+_DIR_APROBACIONES = "approvals"
+
+
+def _dir_aprobaciones(target: str, global_: bool) -> str:
+    return os.path.join(os.path.dirname(_ruta_vault(target, global_)), _DIR_APROBACIONES)
+
+
+def _generar_token() -> str:
+    return rng_secrets.token_urlsafe(32)
+
+
+def _ruta_token(target: str, global_: bool, token: str) -> str:
+    return os.path.join(_dir_aprobaciones(target, global_), f"{token}.json")
+
+
+def _validar_token(target: str, global_: bool, token: str | None, ids: list[str]) -> bool:
+    """Valida un token de aprobación de un solo uso sin consumirlo."""
+    if not token:
+        return False
+    ruta = _ruta_token(target, global_, token)
+    if not os.path.exists(ruta):
+        return False
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if data.get("used"):
+        return False
+    if data.get("expires", 0) < time.time():
+        return False
+    token_ids = set(data.get("ids", []))
+    return token_ids.issuperset(ids)
+
+
+def _consumir_token(target: str, global_: bool, token: str | None) -> None:
+    """Marca el token como usado y lo elimina (un solo uso)."""
+    if not token:
+        return
+    ruta = _ruta_token(target, global_, token)
+    try:
+        if os.path.exists(ruta):
+            os.remove(ruta)
+    except OSError:
+        pass
 
 
 def _raiz_git(project_dir: str) -> str | None:
@@ -240,6 +291,10 @@ def _cmd_secret_exec(args) -> None:
     ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
     if not ids:
         raise SystemExit("[secret] Indica --ids id1,id2 con los secretos a inyectar.")
+    try:
+        validar_ids_sin_colision(ids)
+    except ValueError as err:
+        raise SystemExit(f"[secret] {err}") from err
     comando = args.comando
     try:
         valores = _valores_por_ids(doc, _leer_frase(), ids)
@@ -254,10 +309,11 @@ def _cmd_secret_exec(args) -> None:
         )
     except subprocess.TimeoutExpired:
         raise SystemExit(f"[secret] Tiempo agotado ({timeout}s): {comando[:80]!r}") from None
-    _registrar_uso(ruta, f"exec ids={','.join(ids)} rc={proc.returncode} cmd={comando[:120]!r}")
-    sys.stdout.write(sanear_salida(proc.stdout or "", valores))
+    _consumir_token(getattr(args, "target", ".") or ".", _obtener_global(args), getattr(args, "token", None))
+    _registrar_uso(ruta, f"exec ids={','.join(ids)} rc={proc.returncode}")
+    sys.stdout.write(sanear_salida(proc.stdout or "", valores, frase_maestra=os.environ.get(_ENV_FRASE)))
     if proc.stderr:
-        sys.stderr.write(sanear_salida(proc.stderr or "", valores))
+        sys.stderr.write(sanear_salida(proc.stderr or "", valores, frase_maestra=os.environ.get(_ENV_FRASE)))
     raise SystemExit(proc.returncode)
 
 
@@ -281,6 +337,10 @@ def _cmd_secret_receta(args) -> None:
         )
     ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
     try:
+        validar_ids_sin_colision(ids)
+    except ValueError as err:
+        raise SystemExit(f"[secret] {err}") from err
+    try:
         valores = _valores_por_ids(doc, _leer_frase(), ids)
     except SecureVaultError as err:
         raise SystemExit(f"[secret] {err}") from err
@@ -292,10 +352,11 @@ def _cmd_secret_receta(args) -> None:
         proc = subprocess.run(cmdline, capture_output=True, text=True, env=env, timeout=timeout, errors="replace")
     except subprocess.TimeoutExpired:
         raise SystemExit(f"[secret] Tiempo agotado con la receta '{nombre}'.") from None
+    _consumir_token(getattr(args, "target", ".") or ".", _obtener_global(args), getattr(args, "token", None))
     _registrar_uso(ruta, f"receta={nombre} ids={','.join(ids) or '-'} rc={proc.returncode}")
-    sys.stdout.write(sanear_salida(proc.stdout or "", valores))
+    sys.stdout.write(sanear_salida(proc.stdout or "", valores, frase_maestra=os.environ.get(_ENV_FRASE)))
     if proc.stderr:
-        sys.stderr.write(sanear_salida(proc.stderr or "", valores))
+        sys.stderr.write(sanear_salida(proc.stderr or "", valores, frase_maestra=os.environ.get(_ENV_FRASE)))
     raise SystemExit(proc.returncode)
 
 
@@ -336,8 +397,16 @@ def _cmd_secret_audit(args) -> None:
 
 
 def _autorizado(args) -> bool:
-    """Uso autorizado: flag por llamada o sesión (CTXMAP_SECRET_AUTORIZA=1)."""
-    return bool(getattr(args, "autorizado", False)) or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1"
+    """Uso autorizado: flag por llamada, sesión, o token de un solo uso válido."""
+    if bool(getattr(args, "autorizado", False)) or os.environ.get("CTXMAP_SECRET_AUTORIZA") == "1":
+        return True
+    token = getattr(args, "token", None)
+    if token:
+        target = getattr(args, "target", ".") or "."
+        global_ = _obtener_global(args)
+        ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
+        return _validar_token(target, global_, token, ids)
+    return False
 
 
 def _valores_por_ids(doc, frase: str, ids: list[str]) -> dict[str, str]:
@@ -364,10 +433,56 @@ def cmd_secret(args) -> None:
         "receta": _cmd_secret_receta,
         "audit": _cmd_secret_audit,
         "restore": _cmd_secret_restore,
+        "approve": _cmd_secret_approve,
+        "rekey": _cmd_secret_rekey,
     }
     if sub not in acciones:
-        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where|exec|receta|audit|restore} [args]")
+        raise SystemExit("Uso: ctxmap secret {init|set|list|get|rm|backup|where|exec|receta|audit|restore|approve|rekey} [args]")
     try:
         acciones[sub](args)
     except SecureVaultError as err:
         raise SystemExit(f"[secret] {err}") from err
+
+def _cmd_secret_approve(args) -> None:
+    target = getattr(args, "target", ".") or "."
+    global_ = _obtener_global(args)
+    ids = [i.strip() for i in (getattr(args, "ids", "") or "").split(",") if i.strip()]
+    if not ids:
+        raise SystemExit("[secret] Indica --ids id1,id2 con los secretos a autorizar.")
+    try:
+        validar_ids_sin_colision(ids)
+    except ValueError as err:
+        raise SystemExit(f"[secret] {err}") from err
+    ttl = min(max(int(getattr(args, "ttl", 300) or 300), 30), 3600)
+    token = _generar_token()
+    os.makedirs(_dir_aprobaciones(target, global_), exist_ok=True)
+    ruta_token = _ruta_token(target, global_, token)
+    with open(ruta_token, "w", encoding="utf-8") as f:
+        json.dump({"ids": ids, "expires": time.time() + ttl, "used": False}, f, ensure_ascii=False)
+    print(f"[secret] Token de aprobación (un solo uso, {ttl}s): {token}")
+    print("[secret] Úsalo con: ctxmap secret exec ... --token " + token)
+
+
+def _cmd_secret_rekey(args) -> None:
+    requerir_cryptography()
+    target = getattr(args, "target", ".") or "."
+    global_ = _obtener_global(args)
+    ruta = _ruta_vault(target, global_)
+    doc = cargar(ruta)
+    frase_vieja = _leer_frase()
+    desbloquear(doc, frase_vieja)
+    valores_por_entrada = []
+    for e in doc.get("entries", []):
+        ident = e["id"]
+        valor = obtener(doc, frase_vieja, ident)
+        valores_por_entrada.append((ident, valor, e.get("scope", "proyecto"), e.get("proyecto", ""), e.get("nota", "")))
+    frase_nueva = getpass.getpass("Nueva frase maestra: ")
+    if frase_nueva != getpass.getpass("Repite la nueva frase maestra: "):
+        raise SystemExit("[secret] Las frases nuevas no coinciden.")
+    if len(frase_nueva) < 8:
+        raise SystemExit("[secret] La nueva frase debe tener al menos 8 caracteres.")
+    nuevo_doc = crear_documento(frase_nueva)
+    for ident, valor, scope, proyecto, nota in valores_por_entrada:
+        agregar(nuevo_doc, frase_nueva, ident, valor, scope=scope, proyecto=proyecto, nota=nota)
+    guardar(ruta, nuevo_doc)
+    _reportar(ruta, "baúl re-cifrado con la nueva frase maestra", "respalda la nueva frase")

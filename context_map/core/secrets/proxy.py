@@ -8,8 +8,10 @@ imprimiera el secreto, este nunca llega al contexto.
 
 from __future__ import annotations
 
+import base64
 import os
 import re
+import urllib.parse
 from datetime import datetime, timezone
 
 #: Longitud mínima de un valor para redactarlo (valores más cortos podrían
@@ -26,6 +28,62 @@ def normalizar_var(ident: str) -> str:
     """Convierte un id de secreto en una variable de entorno segura."""
     limpio = re.sub(r"[^A-Za-z0-9_]", "_", ident).upper()
     return f"CTXMAP_SECRET_{limpio}"
+
+
+def validar_ids_sin_colision(ids: list[str]) -> None:
+    """Lanza ``ValueError`` si dos ids normalizan a la misma variable.
+
+    ``a-b`` y ``a_b`` producen ambos ``CTXMAP_SECRET_A_B`` y colisionarían en
+    el entorno del proceso, provocando que un secreto sobrescriba a otro.
+
+    Args:
+        ids: Lista de ids de secreto a validar.
+
+    Raises:
+        ValueError: Si hay colisión.
+    """
+    vistos: dict[str, str] = {}
+    for ident in ids:
+        var = normalizar_var(ident)
+        if var in vistos and vistos[var] != ident:
+            raise ValueError(
+                f"Colisión de variables: '{ident}' y '{vistos[var]}' "
+                f"normalizan ambos a '{var}'. Renombra uno de ellos."
+            )
+        vistos[var] = ident
+
+
+def variantes_de_valor(valor: str) -> list[str]:
+    """Genera variantes ofuscadas de un valor para sanearlas también.
+
+    El saneo por coincidencia exacta se evita con ``rev``, ``base64``, una
+    codificación URL o hexadecimal. Se generan las variantes más comunes para
+    cerrar esas vías de exfiltración por accidente.
+
+    Args:
+        valor: Valor original a proteger.
+
+    Returns:
+        list[str]: Lista de variantes (incluye el original) sin duplicados.
+    """
+    if not valor:
+        return []
+    variantes: list[str] = [valor]
+    variantes.append(valor[::-1])
+    variantes.append(urllib.parse.quote(valor, safe=""))
+    variantes.append(urllib.parse.quote_plus(valor))
+    variantes.append(base64.b64encode(valor.encode()).decode())
+    variantes.append(base64.urlsafe_b64encode(valor.encode()).decode().rstrip("="))
+    variantes.append(valor.encode().hex())
+    variantes.append(valor.lower())
+    variantes.append(valor.upper())
+    vistas: set[str] = set()
+    resultado: list[str] = []
+    for v in variantes:
+        if v and v not in vistas:
+            vistas.add(v)
+            resultado.append(v)
+    return resultado
 
 
 def entorno_con_secretos(
@@ -51,16 +109,47 @@ def entorno_con_secretos(
         for clave, valor in dict(base_env or os.environ).items()
         if not clave.upper().startswith(PREFIJO_RESERVADO)
     }
+    validar_ids_sin_colision(list(valores.keys()))
     for ident, valor in valores.items():
         env[normalizar_var(ident)] = valor
     return env
 
 
-def sanear_salida(texto: str, valores: dict[str, str]) -> str:
-    """Redacta los valores en la salida para que no lleguen al llamante."""
+def sanear_salida(
+    texto: str,
+    valores: dict[str, str],
+    *,
+    frase_maestra: str | None = None,
+    variantes: bool = True,
+) -> str:
+    """Redacta los valores (y sus variantes) en la salida.
+
+    Args:
+        texto: Salida a sanear.
+        valores: Mapa id → valor.
+        frase_maestra: Si se proporciona, también se redacta (y sus variantes).
+        variantes: Si True, redacta variantes ofuscadas además del valor exacto.
+
+    Returns:
+        str: Texto con los valores redactados.
+    """
+    candidatos: list[str] = []
     for valor in valores.values():
-        if valor and len(valor) >= SANEO_MIN:
-            texto = texto.replace(valor, "***")
+        if not valor:
+            continue
+        if variantes:
+            candidatos.extend(variantes_de_valor(valor))
+        else:
+            candidatos.append(valor)
+    if frase_maestra:
+        if variantes:
+            candidatos.extend(variantes_de_valor(frase_maestra))
+        else:
+            candidatos.append(frase_maestra)
+    candidatos.sort(key=len, reverse=True)
+    for candidato in candidatos:
+        if len(candidato) >= SANEO_MIN:
+            texto = texto.replace(candidato, "***")
     return texto
 
 
