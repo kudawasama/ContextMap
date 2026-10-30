@@ -45,6 +45,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 - `test_decisiones.py` (19) y `test_secret_restore.py` (4); suite **448**.
 
+### 🔐 Seguridad del baúl (P0 + P1)
+
+- Entorno mínimo en `secret_exec`: se eliminan todas las variables `CTXMAP_*` del
+  hijo; la frase maestra vive solo en memoria del servidor MCP.
+- Autorización comprobada **antes** de descifrar.
+- Hook pre-commit excluye `secure/`, `raw/`, `chats/`, `state/` y `_legacy/`;
+  `secret init|set|restore` añaden `.context-map/secure/` al `.gitignore`.
+- Saneo por variantes (invertido, base64, hex, URL) y de la frase maestra.
+- MCP `secret_exec` deshabilitado por defecto (opt-in o token de aprobación).
+- Token de aprobación de un solo uso (`ctxmap secret approve`).
+- `secret rekey` para re-cifrar con nueva frase maestra.
+- `normalizar_var` rechaza colisiones (`a-b` vs `a_b`).
+- `audit.log` sin comandos completos (solo ids y rc).
+- README y `PORTABILIDAD.md` documentan el saneo como higiene, no frontera.
+
 ## [2.13.0] — 2026-10-10
 
 ### 🔐 Fase 2: el agente USA los secretos SIN verlos (proxy)
