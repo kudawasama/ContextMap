@@ -1,0 +1,1012 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA.">
+      
+      
+        <meta name="author" content="kudawasama">
+      
+      
+        <link rel="canonical" href="https://kudawasama.github.io/ContextMap/plans/PLAN-CLASIFICACION-CALIBRADA-2026-10-13/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Clasificación Calibrada (patrón System One / Jev) — Plan de Implementación - ContextMap — Narrative Mental Map for AI Agents</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#clasificacion-calibrada-patron-system-one-jev-plan-de-implementacion" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-header__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ContextMap — Narrative Mental Map for AI Agents
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Clasificación Calibrada (patrón System One / Jev) — Plan de Implementación
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏠 Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../README_EN.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🇬🇧 English Docs
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CHANGELOG.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Historial (Changelog)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CONTRIBUTING.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🤝 Contribuir
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../CODE_OF_CONDUCT.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Código de Conducta
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-nav__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ContextMap — Narrative Mental Map for AI Agents
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏠 Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../README_EN.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🇬🇧 English Docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Historial (Changelog)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🤝 Contribuir
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CODE_OF_CONDUCT.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Código de Conducta
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#estado-actual-fase-0-completada-y-verificada-en-esta-sesion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado actual (Fase 0 completada y verificada en esta sesión)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-1-documentar-sin-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 1 — Documentar (sin código)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 1 — Documentar (sin código)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-11-docsinvestigacion-jevmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.1: docs/INVESTIGACION-JEV.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-12-docscomparativo-ecosistema-contextomd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.2: docs/COMPARATIVO-ECOSISTEMA-CONTEXTO.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-2-tests-propios-del-motor-tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 2 — Tests propios del motor (TDD)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 2 — Tests propios del motor (TDD)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-21-context_map__tests__test_decisionespy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.1: context_map/__tests__/test_decisiones.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-22-regresion-de-la-integracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.2: Regresión de la integración
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-3-verificacion-del-pipeline-inamovible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Verificación del pipeline (inamovible)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-4-memoria-viva-gobernanza" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Memoria viva (gobernanza)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 4 — Memoria viva (gobernanza)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-41-diario-y-conocimiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4.1: Diario y conocimiento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-42-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 4.2: Dominio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-5-adaptador-jev-remoto-opcional-bloqueado-hoy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 5 — Adaptador Jev remoto (OPCIONAL, bloqueado hoy)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuera-de-alcance-explicito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuera de alcance (explícito)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orden-de-ejecucion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orden de ejecución
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resultado-de-la-ejecucion-2026-10-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resultado de la ejecución (2026-10-13)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="clasificacion-calibrada-patron-system-one-jev-plan-de-implementacion">Clasificación Calibrada (patrón System One / Jev) — Plan de Implementación</h1>
+<blockquote>
+<p><strong>Restricción que gobierna este plan:</strong> la API de <strong>Jev (TypeSafe AI) no es
+usable hoy</strong>: está en <em>early access</em> con lista de espera, es propietaria y
+exige <code>TYPESAFE_API_KEY</code>. Por tanto <strong>nada</strong> del plan depende de ella: se
+replica el <em>patrón</em> (decisiones tipadas + confianza calibrada + evidencias)
+de forma <strong>local, determinista y sin coste</strong>. El adaptador remoto queda como
+fase opcional (Fase 5), desactivado por defecto y sin llamadas en tests.</p>
+</blockquote>
+<p><strong>Goal:</strong> sustituir la clasificación «gana el primer patrón» de ContextMap por
+un motor de decisiones tipadas que (1) acumule evidencia ponderada, (2) publique
+distribución de probabilidad y <strong>confianza calibrada</strong>, (3) marque la ambigüedad
+en una <strong>cola de revisión</strong> visible en el vault y (4) documente el ecosistema
+frente al que se compara.</p>
+<p><strong>Arquitectura:</strong> capa de decisión <strong>sin dependencias externas</strong> en
+<code>core/decisiones.py</code> (stdlib puro) + panel de preguntas derivado de
+<code>normalization/mappings.py</code> (una sola fuente de verdad) + integración en los
+tres puntos reales de clasificación (<code>_heuristic_event</code>, <code>inferir_classification</code>,
+<code>inferir_concepto</code>, <code>clasificar_tipo</code>). Las <strong>reglas duras</strong> (Conventional
+Commits, origen git, tipo explícito) deciden primero y son irrevocables
+(<code>por_regla=True</code>).</p>
+<p><strong>Tech Stack:</strong> Python 3.10+, dataclasses frozen, <code>re</code>, <code>functools.lru_cache</code>,
+pytest. Sin red, sin modelos, sin claves.</p>
+<p><strong>Principios:</strong> TDD (test → fail → implement → pass), DRY (catálogos existentes
+como fuente única), determinismo (mismo texto → misma distribución: el build
+sigue siendo reproducible byte a byte), YAGNI (nada de embeddings ni de LLM en
+esta capa).</p>
+<hr />
+<h2 id="estado-actual-fase-0-completada-y-verificada-en-esta-sesion">Estado actual (Fase 0 completada y verificada en esta sesión)</h2>
+<table>
+<thead>
+<tr>
+<th>Artefacto</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>context_map/core/decisiones.py</code> — motor tipado (<code>noul</code>/<code>choice</code>/<code>score</code>)</td>
+<td>✅ implementado</td>
+</tr>
+<tr>
+<td><code>context_map/core/normalization/paneles.py</code> — <code>PREGUNTA_TIPO/CLASIFICACION/CONCEPTO</code> derivadas de <code>mappings.py</code></td>
+<td>✅ implementado</td>
+</tr>
+<tr>
+<td>Integración en <code>parsing/clasificacion.py</code> (<code>_heuristic_event</code>)</td>
+<td>✅ implementado</td>
+</tr>
+<tr>
+<td>Integración en <code>normalization/inference.py</code> (<code>inferir_classification</code>, <code>inferir_concepto</code>, <code>clasificar_tipo</code>)</td>
+<td>✅ implementado</td>
+</tr>
+<tr>
+<td>Cola de revisión <code>revision:clasificacion</code> en <code>estandarizar_nodo</code></td>
+<td>✅ implementado</td>
+</tr>
+<tr>
+<td>Verificación</td>
+<td>23 tests OK (<code>test_parsing</code>, <code>test_clasificacion_chat</code>, <code>test_standardize</code>, <code>test_hermes_clasificacion</code>, <code>test_topologia_arbol</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evidencia del cambio:</strong> <code>"feature: fix del parser"</code> antes → <code>IDEA</code> en silencio;
+ahora → <code>IDEA</code> con confianza <code>0.11</code>, margen <code>0.00</code> y dos evidencias en conflicto
+(<code>IDEA: feature/adding</code>, <code>CORRECCION: fix/corrección</code>) → queda marcado para
+revisión en lugar de resolverse por accidente.</p>
+<hr />
+<h2 id="fase-1-documentar-sin-codigo">Fase 1 — Documentar (sin código)</h2>
+<h3 id="task-11-docsinvestigacion-jevmd">Task 1.1: <code>docs/INVESTIGACION-JEV.md</code></h3>
+<p><strong>Objective:</strong> Dejar por escrito qué es Jev, cómo funciona, pros/contras y por
+qué se replica localmente en vez de consumirlo.</p>
+<p><strong>Files:</strong> Create <code>docs/INVESTIGACION-JEV.md</code></p>
+<p><strong>Contenido mínimo:</strong> definición (discriminativo, no generativo, <em>System One</em>),
+primitivas <code>noul</code>/<code>choice</code>/<code>score</code>, fórmula de confianza
+<code>(p_max − 1/n)/(1 − 1/n)</code>, RLCD + datos sintéticos, latencia 70–500 ms, precio
+$0.042/M entrada y salida gratis, pros, contras (paper no publicado, evals
+propias sesgadas, delega umbrales al usuario, preguntas independientes) y la
+sección <strong>«Por qué ContextMap no depende de Jev»</strong>.</p>
+<h3 id="task-12-docscomparativo-ecosistema-contextomd">Task 1.2: <code>docs/COMPARATIVO-ECOSISTEMA-CONTEXTO.md</code></h3>
+<p><strong>Objective:</strong> Comparativa honesta de ContextMap contra Second Brain, Obsidian
+y capas de memoria/contexto, con datos objetivos (★ de GitHub) y qué tenemos y
+qué no.</p>
+<p><strong>Files:</strong> Create <code>docs/COMPARATIVO-ECOSISTEMA-CONTEXTO.md</code></p>
+<p><strong>Contenido mínimo:</strong> tablas por área (PKM, Obsidian+agente, memoria de agentes,
+contexto de código, ingesta), tabla «capacidad → quién la tiene → ContextMap»,
+y la lista explícita de <strong>brechas</strong> (grafo temporal tipo Graphiti, spec-driven
+tipo spec-kit/OpenSpec, sync bidireccional Obsidian).</p>
+<hr />
+<h2 id="fase-2-tests-propios-del-motor-tdd">Fase 2 — Tests propios del motor (TDD)</h2>
+<h3 id="task-21-context_map__tests__test_decisionespy">Task 2.1: <code>context_map/__tests__/test_decisiones.py</code></h3>
+<p><strong>Objective:</strong> Fijar el contrato del motor: probabilidades, calibración,
+desempate histórico, anti-señales, conflicto y determinismo.</p>
+<p><strong>Files:</strong>
+- Create: <code>context_map/__tests__/test_decisiones.py</code>
+- Referencia: <code>context_map/core/decisiones.py</code>, <code>context_map/core/normalization/paneles.py</code></p>
+<p><strong>Casos obligatorios</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_softmax_suma_uno_y_uniforme_sin_evidencia</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_confianza_cero_con_distribucion_uniforme</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_confianza_uno_con_distribucion_degenerada</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_senal_negativa_reduce_probabilidad_de_su_etiqueta</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_desempate_respeta_orden_historico</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>      <span class="c1"># "feature fix" -&gt; IDEA</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_decidir_tipo_elige_por_evidencia_no_por_orden</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_ambiguedad_real_se_marca_como_conflicto</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>  <span class="c1"># feature + fix</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_regla_dura_no_requiere_revision</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_pregunta_rechaza_senal_de_etiqueta_desconocida</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_score_devuelve_puntuacion_ponderada</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_mismo_texto_misma_decision</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>               <span class="c1"># determinismo</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_anti_senal_todo_en_minusculas_no_es_futuro</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<p><strong>Step 1:</strong> escribir los tests → <strong>Step 2:</strong> <code>pytest</code> → los que fallen, <strong>Step 3:</strong>
+ajustar motor/panel, <strong>Step 4:</strong> verde.</p>
+<h3 id="task-22-regresion-de-la-integracion">Task 2.2: Regresión de la integración</h3>
+<p><strong>Objective:</strong> Garantizar que la integración no rompió los contratos previos.</p>
+<p><strong>Files:</strong> ya existentes (<code>test_parsing.py</code>, <code>test_clasificacion_chat.py</code>,
+<code>test_standardize.py</code>); añadir a <code>test_decisiones.py</code> un caso end-to-end por
+<code>estandarizar_nodo</code> que verifique la etiqueta <code>revision:clasificacion</code>.</p>
+<hr />
+<h2 id="fase-3-verificacion-del-pipeline-inamovible">Fase 3 — Verificación del pipeline (inamovible)</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w">                                   </span><span class="c1"># 1. tests</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>python<span class="w"> </span>-m<span class="w"> </span>context_map.cli<span class="w"> </span>scan<span class="w"> </span>.<span class="w">                    </span><span class="c1"># 2. escanear</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>python<span class="w"> </span>-m<span class="w"> </span>context_map.cli<span class="w"> </span>build<span class="w"> </span>--clean<span class="w"> </span>--brief<span class="w">     </span><span class="c1"># 3. vault + brief</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>python<span class="w"> </span>-m<span class="w"> </span>context_map.cli<span class="w"> </span>check<span class="w"> </span>.<span class="w">                   </span><span class="c1"># 4. readiness</span>
+</code></pre></div>
+<p><strong>Criterios de aceptación</strong></p>
+<ol>
+<li><code>test_topologia_arbol.py</code> en verde (0 sin padre, 0 colisiones, 0 wikilinks rotos).</li>
+<li><code>check .</code> con readiness ≥ el valor previo (100/100).</li>
+<li>Ningún test que pasaba antes falla por este cambio.</li>
+<li>Los 8 fallos preexistentes de MCP/pydantic 2.9 quedan <strong>fuera del alcance</strong>
+   (no se tocan aquí).</li>
+</ol>
+<p><strong>Riesgo conocido y mitigación:</strong> el cambio de clasificación mueve nodos entre
+tipos (IDEAS/BASES/etc.) y añade <code>revision:clasificacion</code>. Mitigación: los
+catálogos se derivan de <code>mappings.py</code> con <strong>peso decreciente por posición
+histórica</strong>, de modo que en caso de empate gana exactamente el grupo que ganaba
+antes; la primera etiqueta de cada pregunta es el valor por defecto histórico
+(<code>IDEA</code>, <code>other</code>, <code>GENERAL</code>) para que «sin evidencia» no cambie nada.</p>
+<hr />
+<h2 id="fase-4-memoria-viva-gobernanza">Fase 4 — Memoria viva (gobernanza)</h2>
+<h3 id="task-41-diario-y-conocimiento">Task 4.1: Diario y conocimiento</h3>
+<p><strong>Objective:</strong> Dejar la lección reutilizable, no solo el código.</p>
+<p><strong>Files:</strong>
+- Update <code>.context-map/vault-ContextMap/7.0-MANUAL/Diario/2026-10-13.md</code>
+- Create nota en <code>.context-map/vault-ContextMap/8.0-KNOWLEDGE/</code> con la estructura
+  <strong>Lección · Cómo se resolvió · Prompt · Instrucción · Conexiones</strong>
+- Update <code>7.0-MANUAL/BACKLOG.md</code> solo si queda trabajo pendiente real.</p>
+<h3 id="task-42-dominio">Task 4.2: Dominio</h3>
+<p><strong>Objective:</strong> Documentar la lógica nuclear en el manual del proyecto.</p>
+<p><strong>Files:</strong> <code>7.0-MANUAL/DOMINIO.md</code> (si no existe, crearlo) con la sección
+«Clasificación calibrada: motor, panel, umbrales y cola de revisión».</p>
+<hr />
+<h2 id="fase-5-adaptador-jev-remoto-opcional-bloqueado-hoy">Fase 5 — Adaptador Jev remoto (OPCIONAL, bloqueado hoy)</h2>
+<p><strong>Estado: NO ejecutable</strong> — sin acceso a la API (waitlist) no hay nada que
+probar, y el proyecto prohíbe generar coste sin autorización explícita.</p>
+<p><strong>Diseño ya previsto (para cuando haya acceso):</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MotorJevRemoto</span><span class="p">(</span><span class="n">MotorLexicoCalibrado</span><span class="p">):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""Adaptador al contrato HTTP de TypeSafe. Requiere TYPESAFE_API_KEY."""</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">nombre</span> <span class="o">=</span> <span class="s2">"jev-remoto"</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="c1"># decidir(): state + questions -&gt; distribuciones; mapea a Distribucion/Decision</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="c1"># Si falta la clave o falla la red -&gt; delega en el motor local (degradación).</span>
+</code></pre></div>
+<p><strong>Guardas obligatorias:</strong> (a) solo se activa con <code>CTXMAP_MOTOR=jev</code> <strong>y</strong>
+<code>TYPESAFE_API_KEY</code>; (b) nunca en tests ni en <code>build</code>; (c) si falla, <em>fallback</em>
+silencioso al motor local y registro en log. La firma pública
+(<code>decidir(estado, pregunta) -&gt; Decision</code>) ya es compatible, así que el cambio es
+aditivo y no toca a los consumidores.</p>
+<hr />
+<h2 id="fuera-de-alcance-explicito">Fuera de alcance (explícito)</h2>
+<ul>
+<li>Embeddings semánticos en la capa de decisión (ya existen como opcionales aparte).</li>
+<li>Grafo temporal de entidades (Graphiti) y spec-driven (spec-kit/OpenSpec):
+  son brechas <strong>identificadas</strong> en el comparativo, no parte de este plan.</li>
+<li>Arreglar los 8 fallos preexistentes de MCP/pydantic.</li>
+</ul>
+<hr />
+<h2 id="orden-de-ejecucion">Orden de ejecución</h2>
+<ol>
+<li>Fase 1 (documentos) → 2. Fase 2 (tests del motor) → 3. Fase 3 (pipeline) →</li>
+<li>Fase 4 (diario/DOMINIO) → 5. Fase 5 queda bloqueada hasta que exista acceso a Jev.</li>
+</ol>
+<hr />
+<h2 id="resultado-de-la-ejecucion-2026-10-13">Resultado de la ejecución (2026-10-13)</h2>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Estado</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 — Código del motor</td>
+<td>✅</td>
+<td><code>core/decisiones.py</code>, <code>normalization/paneles.py</code>, integración</td>
+</tr>
+<tr>
+<td>1 — Documentos</td>
+<td>✅</td>
+<td><code>docs/INVESTIGACION-JEV.md</code>, <code>docs/COMPARATIVO-ECOSISTEMA-CONTEXTO.md</code></td>
+</tr>
+<tr>
+<td>2 — Tests del motor</td>
+<td>✅</td>
+<td><code>context_map/__tests__/test_decisiones.py</code> — <strong>19 passed</strong></td>
+</tr>
+<tr>
+<td>3 — Pipeline</td>
+<td>✅</td>
+<td>pytest <strong>422 passed</strong> (+19) y los mismos 8 fallos preexistentes; <code>scan</code> OK; <code>build --clean --brief</code> OK; <code>check</code> → <strong>readiness 100/100</strong></td>
+</tr>
+<tr>
+<td>4 — Memoria viva</td>
+<td>✅</td>
+<td><code>7.0-MANUAL/DOMINIO.md</code>, nota <code>8.0-KNOWLEDGE/Clasificacion-Calibrada-Sin-Depender-de-Jev.md</code> (+ entrada 18 en el índice), Diario 2026-10-13, <code>7.0-MANUAL.md</code> enlaza el manual</td>
+</tr>
+<tr>
+<td>5 — Adaptador Jev</td>
+<td>⛔ bloqueado</td>
+<td>Sin acceso a la API (waitlist). No se probó nada: el plan prohíbe generar coste sin autorización</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Criterios de aceptación:</strong> (1) topología en verde ✅ · (2) readiness 100/100 ✅ ·
+(3) 0 regresiones ✅ · (4) fallos MCP/pydantic fuera de alcance ✅.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
