@@ -255,10 +255,14 @@ ctxmap secret backup pendrive/baul.json # respaldo cifrado portable
 ```
 
 > 🔐 **Baúl de secretos**: valores cifrados con **AES-256-GCM** y clave derivada
-> de tu **frase maestra** (nunca almacenada). El agente **nunca ve los valores**:
-> `secret_list` solo nombres; `secret exec`/`secret receta` los **inyecta en el
-> proceso y sanea la salida** (`***`), con **autorización explícita** y **log de
-> auditoría**. El archivo cifrado viaja contigo (commit o pendrive).
+> de tu **frase maestra** (nunca almacenada). `secret_list` solo muestra nombres;
+> `secret exec`/`secret receta` inyectan el valor en el proceso y **sanean la
+> salida** (`***`). Ese saneo es **higiene, no una frontera de seguridad**: evita
+> el eco accidental, no la exfiltración deliberada. El flag `--autorizado` lo
+> aporta quien llama (el agente), así que no sustituye una confirmación humana:
+> usa `secret receta` con guiones aprobados y no registres el MCP con la frase
+> maestra. El baúl cifrado viaja contigo (commit explícito o pendrive); el
+> `audit.log` no debe commitearse.
 > Requiere el extra opcional: `pip install "context-map-ai[secure]"`.
 
 ---

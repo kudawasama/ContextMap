@@ -26,6 +26,15 @@ else
 fi
 """
 
+#: Rutas que el hook NUNCA debe añadir al índice: material sensible o efímero.
+#: `secure/` guarda el baúl cifrado y el audit.log; `raw/` y `chats/` pueden
+#: contener conversaciones y documentos privados; `state/` y `_legacy/` son
+#: artefactos internos que no deben viajar al remoto por accidente.
+_GIT_ADD_EXCLUSIONES = (
+    "':!.context-map/secure' ':!.context-map/raw' ':!.context-map/chats' "
+    "':!.context-map/state' ':!.context-map/_legacy'"
+)
+
 PRE_COMMIT_SCRIPT = """#!/bin/sh
 # ContextMap Auto-Sync Pre-Commit Hook
 # Usa el código LOCAL del repo (python -m context_map.cli) antes que el binario
@@ -35,12 +44,14 @@ PRE_COMMIT_SCRIPT = """#!/bin/sh
 # del vault (zona protegida .manual/ y notas con preserve: true).
 # --import-sessions: cada commit registra la memoria viva (sesiones de Hermes).
 """ + _SELECTOR_PYTHON + """if $CTXMAP_PY -m context_map.cli build --brief --quiet --import-sessions 2>/dev/null; then
-    git add .context-map CONTEXT.md AGENTS.md ACTIVE.md 2>/dev/null || true
+    git add .context-map """ + _GIT_ADD_EXCLUSIONES + """ 2>/dev/null || true
+    git add CONTEXT.md AGENTS.md ACTIVE.md 2>/dev/null || true
     exit 0
 fi
 if command -v ctxmap >/dev/null 2>&1; then
     ctxmap build --brief --quiet --import-sessions
-    git add .context-map CONTEXT.md AGENTS.md ACTIVE.md 2>/dev/null || true
+    git add .context-map """ + _GIT_ADD_EXCLUSIONES + """ 2>/dev/null || true
+    git add CONTEXT.md AGENTS.md ACTIVE.md 2>/dev/null || true
 fi
 """
 

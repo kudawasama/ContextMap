@@ -32,6 +32,64 @@ from context_map.core.secrets import (
 
 _ENV_FRASE = "CTXMAP_MASTER_PHRASE"
 
+#: Entrada que protege el material sensible del baúl frente a `git add`.
+_ENTRADA_GITIGNORE = ".context-map/secure/"
+
+
+def _raiz_git(project_dir: str) -> str | None:
+    """Busca la raíz del repositorio Git que contiene el proyecto.
+
+    Acepta tanto un directorio ``.git`` (repo normal) como un archivo ``.git``
+    (worktrees y submódulos), donde Git guarda un puntero al repositorio real.
+    """
+    actual = os.path.abspath(project_dir or ".")
+    while True:
+        if os.path.exists(os.path.join(actual, ".git")):
+            return actual
+        padre = os.path.dirname(actual)
+        if padre == actual:
+            return None
+        actual = padre
+
+
+def _asegurar_gitignore(project_dir: str) -> bool:
+    """Añade `.context-map/secure/` al `.gitignore` del repositorio (idempotente).
+
+    El hook pre-commit hace ``git add .context-map``; sin esta entrada, el baúl
+    cifrado y el ``audit.log`` podrían acabar en el remoto. Solo actúa si el
+    proyecto está dentro de un repositorio Git.
+
+    Args:
+        project_dir: Directorio del proyecto donde vive el baúl.
+
+    Returns:
+        bool: ``True`` si añadió la entrada; ``False`` si ya estaba o no hay Git.
+    """
+    raiz = _raiz_git(project_dir)
+    if not raiz:
+        return False
+    ruta = os.path.join(raiz, ".gitignore")
+    try:
+        contenido = ""
+        if os.path.exists(ruta):
+            with open(ruta, encoding="utf-8", errors="ignore") as f:
+                contenido = f.read()
+        if any(
+            linea.strip().rstrip("/") == ".context-map/secure"
+            for linea in contenido.splitlines()
+        ):
+            return False
+        with open(ruta, "a", encoding="utf-8", newline="\n") as f:
+            if contenido and not contenido.endswith("\n"):
+                f.write("\n")
+            f.write(
+                "\n# ContextMap: material sensible (no se commitea automáticamente)\n"
+                f"{_ENTRADA_GITIGNORE}\n"
+            )
+        return True
+    except OSError:
+        return False
+
 
 def _ruta_vault(target: str, global_: bool) -> str:
     """Resuelve la ruta del baúl según el alcance."""
@@ -84,6 +142,8 @@ def _cmd_secret_init(args) -> None:
         )
     frase = _leer_frase(confirmar=True)
     guardar(ruta, crear_documento(frase))
+    if not _obtener_global(args):
+        _asegurar_gitignore(getattr(args, "target", ".") or ".")
     _reportar(
         ruta, "baúl creado",
         "RESPALDA esta frase: sin ella no hay recuperación de los secretos.",
@@ -110,6 +170,8 @@ def _cmd_secret_set(args) -> None:
         nota=getattr(args, "nota", "") or "",
     )
     guardar(ruta, doc)
+    if not global_:
+        _asegurar_gitignore(target)
     _reportar(ruta, f"secreto '{args.ident}' guardado (cifrado AES-256-GCM)", "el valor no se muestra ni se registra")
 
 
@@ -252,6 +314,8 @@ def _cmd_secret_restore(args) -> None:
         desbloquear(doc, _leer_frase())
     os.makedirs(os.path.dirname(ruta_destino) or ".", exist_ok=True)
     shutil.copy2(origen, ruta_destino)
+    if not _obtener_global(args):
+        _asegurar_gitignore(getattr(args, "target", ".") or ".")
     _reportar(
         ruta_destino,
         "baúl restaurado desde " + origen,

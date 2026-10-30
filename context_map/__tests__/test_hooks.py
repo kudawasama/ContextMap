@@ -56,6 +56,16 @@ def test_hooks_priorizan_codigo_local(tmp_path):
         )
 
 
+def test_pre_commit_excluye_material_sensible() -> None:
+    """El `git add` automático nunca debe publicar el baúl, chats ni estado interno."""
+    from context_map.domain.ecosystem.hooks import PRE_COMMIT_SCRIPT
+
+    for ruta in ("secure", "raw", "chats", "state", "_legacy"):
+        assert f":!.context-map/{ruta}" in PRE_COMMIT_SCRIPT
+    assert "git add .context-map " in PRE_COMMIT_SCRIPT
+    assert "git add CONTEXT.md AGENTS.md ACTIVE.md" in PRE_COMMIT_SCRIPT
+
+
 def test_hooks_usan_el_interprete_del_venv(tmp_path):
     """Los hooks prefieren el venv del proyecto antes que el `python` del PATH.
 

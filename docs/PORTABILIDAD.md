@@ -9,14 +9,22 @@ Por defecto `.context-map/` está en `.gitignore` (para no ensuciar el repo).
 Si quieres que la memoria viaje con `git pull`:
 
 1. **Deja de ignorarlo**: quita la línea `.context-map/` de tu `.gitignore`
-   (o añade con fuerza la primera vez: `git add -f .context-map`).
+   (o añade con fuerza la primera vez: `git add -f .context-map`). El hook
+   pre-commit **no** añadirá `secure/`, `raw/`, `chats/`, `state/` ni `_legacy/`
+   de forma automática: si quieres llevar el baúl, hazlo explícito con
+   `git add -f .context-map/secure/vault.json`.
 2. Ejecuta `ctxmap refresh .` y **commitea**.
 3. En el otro PC: `git pull` y `ctxmap refresh .` — la memoria y el brief quedan
    al día, y la **revisión automática** regenera las reglas de ese IDE.
 
-**Los secretos viajan cifrados**: `secure/vault.json` se puede commitear con
-tranquilidad — sin la **frase maestra** nadie lo descifra. `audit.log` no
-contiene valores y `recetas/` son tus guiones.
+**Qué viaja y qué no**: `secure/vault.json` está cifrado (AES-256-GCM) y puede
+viajar si aceptas el riesgo de un ataque offline contra la frase maestra.
+`audit.log` **no** debe commitearse: es texto plano con los primeros 120
+caracteres de cada comando. `ctxmap secret init|set|restore` añade
+`.context-map/secure/` al `.gitignore` y el hook excluye `secure/`, `raw/`,
+`chats/`, `state/` y `_legacy/` del `git add` automático. Si el baúl ya estaba
+trackeado, sácalo con `git rm --cached .context-map/secure/vault.json`.
+`recetas/` son tus guiones: revísalos antes de commitearlos.
 
 > ⚠️ **Nunca** commitees la frase maestra ni valores en claro (busca el aviso
 > de detección de secretos de `ctxmap` si un valor se cuela en una nota).
