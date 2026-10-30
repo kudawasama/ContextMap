@@ -209,6 +209,7 @@ def cmd_refresh(args) -> None:
             clean=False,
             quiet=quiet,
             aviso_pre=False,  # refresh ya imprime el aviso de versión al inicio
+            no_snapshot=getattr(args, "no_snapshot", False),
         )
         cmd_build(build_args)
 

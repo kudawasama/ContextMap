@@ -37,6 +37,8 @@ def _ensure(path: str) -> None:
 # y lo antiguo se ARCHIVA comprimido (nada se borra salvo que se pida).
 SNAPSHOT_KEEP_DEFAULT = 20
 SNAPSHOT_KEEP_DAYS_DEFAULT = 7
+#: Espacio libre mínimo (MB) exigido antes de escribir un snapshot.
+SNAPSHOT_MIN_FREE_MB_DEFAULT = 512
 
 
 def _hash_contenido(ruta: str) -> str:
@@ -46,6 +48,27 @@ def _hash_contenido(ruta: str) -> str:
             return hashlib.md5(f.read()).hexdigest()
     except OSError:
         return ""
+
+
+def espacio_libre_mb(path: str = ".") -> float:
+    """Espacio libre (MB) del sistema de archivos que contiene ``path``.
+
+    Guarda previa a escribir un snapshot: en el incidente 2026-10-13 el
+    historial llegó a 148 GB y dejó la raíz del disco al 100 %, lo que rompió
+    servicios del sistema (logrotate: ``No space left on device``).
+
+    Args:
+        path (str): Ruta dentro del sistema de archivos a consultar.
+
+    Returns:
+        float: Megabytes libres (0.0 si la consulta falla).
+    """
+    try:
+        uso = shutil.disk_usage(path)
+    except OSError as err:
+        logger.warning("No se pudo consultar el espacio libre de %s: %s", path, err)
+        return 0.0
+    return round(uso.free / (1024 * 1024), 2)
 
 
 def _listar_snapshots(history_dir: str) -> list[str]:
@@ -65,6 +88,7 @@ def purgar_snapshots(
     keep: int | None = None,
     keep_days: int | None = None,
     archivar: bool | None = None,
+    dry_run: bool = False,
 ) -> dict[str, object]:
     """Poda el historial de snapshots conservando lo reciente y archivando el resto.
 
@@ -81,6 +105,7 @@ def purgar_snapshots(
         keep (int | None): Snapshots recientes a conservar.
         keep_days (int | None): Días (uno por día) a conservar.
         archivar (bool | None): Archivar (True) o borrar (False) los sobrantes.
+        dry_run (bool): Solo calcula lo que se podaría, sin tocar el disco.
 
     Returns:
         dict[str, object]: ``conservados``, ``archivados``, ``eliminados`` y
@@ -113,6 +138,15 @@ def purgar_snapshots(
 
     sobrantes = [r for r in orden if r not in proteger]
     if not sobrantes:
+        return resultado
+
+    if dry_run:
+        resultado.update({
+            "conservados": len(archivos) - len(sobrantes),
+            "archivados": len(sobrantes) if archivar else 0,
+            "eliminados": 0 if archivar else len(sobrantes),
+            "archivo": "",
+        })
         return resultado
 
     archivo_tar = ""
@@ -271,6 +305,11 @@ def snapshot_map(
 ) -> str | None:
     """Guarda una copia de respaldo (snapshot) del mapa en `.context-map/maps/HISTORY/`.
 
+    Guardas (incidente 2026-10-13): no se escribe si el mapa no cambió desde el
+    último snapshot ni si quedan menos de ``CTXMAP_SNAPSHOT_MIN_FREE_MB`` MB
+    libres (512 por defecto). Las colisiones de nombre se resuelven con marca
+    temporal, sin series ``-2..-N``.
+
     Args:
         from_rel (str): Origen relativo del mapa activo.
         name (Optional[str]): Nombre explícito para el snapshot.
@@ -282,6 +321,21 @@ def snapshot_map(
     """
     src = os.path.join(".context-map", from_rel)
     if not os.path.exists(src):
+        return None
+
+    # Guarda de disco: el historial sin tope llenó la raíz del servidor (148 GB)
+    # y dejó sin espacio a servicios del sistema. Mejor no escribir que romper.
+    min_free_mb = float(
+        os.environ.get("CTXMAP_SNAPSHOT_MIN_FREE_MB", SNAPSHOT_MIN_FREE_MB_DEFAULT)
+    )
+    libre_mb = espacio_libre_mb(".")
+    if libre_mb < min_free_mb:
+        logger.warning(
+            "Snapshot omitido: solo %.0f MB libres (mínimo %.0f MB). "
+            "Revisa maps/HISTORY o ejecuta `ctxmap history prune`.",
+            libre_mb,
+            min_free_mb,
+        )
         return None
 
     history_dir = os.path.join(".context-map", "maps", "HISTORY")
@@ -308,10 +362,10 @@ def snapshot_map(
     dst = os.path.join(history_dir, out_name)
     if os.path.exists(dst):
         base_name = out_name.rsplit(".", 1)[0]
-        contador = 2
-        while os.path.exists(dst):
-            dst = os.path.join(history_dir, f"{base_name}-{contador}.md")
-            contador += 1
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        dst = os.path.join(history_dir, f"{base_name}-{ts}.md")
+        if os.path.exists(dst):  # misma marca temporal: desempata por contenido
+            dst = os.path.join(history_dir, f"{base_name}-{ts}-{hash_src[:8] or 'na'}.md")
 
     _ensure(dst)
     try:

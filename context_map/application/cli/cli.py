@@ -39,6 +39,7 @@ from context_map.application.commands import (
 )
 from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.export import exportar_contexto
+from context_map.application.commands.history_cmd import cmd_history
 from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.personal import cmd_personal
 from context_map.application.commands.secrets import cmd_secret
@@ -125,6 +126,7 @@ def main() -> None:
         "hook": lambda a: _dispatch_cmd(cmd_hook, a),
         "inbox": cmd_inbox,
         "watch": lambda a: _dispatch_cmd(cmd_watch, a),
+        "history": lambda a: _dispatch_cmd(cmd_history, a),
         "wiki": cmd_wiki,
         "review": cmd_review,
         "ingest": cmd_ingest,

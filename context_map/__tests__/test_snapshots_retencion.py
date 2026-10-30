@@ -7,10 +7,13 @@ no cambió, se conserva el detalle reciente y lo antiguo se **archiva** comprimi
 
 from __future__ import annotations
 
+import logging
 import os
+import re
 import tarfile
 import time
 
+from context_map.core.storage import store
 from context_map.core.storage.store import purgar_snapshots, snapshot_map
 
 
@@ -167,3 +170,55 @@ def test_historial_vacio_no_falla(tmp_path) -> None:
     """Sin historial no hay nada que podar (y no revienta)."""
     res = purgar_snapshots(str(tmp_path / "no-existe"))
     assert res["conservados"] == 0 and res["archivados"] == 0
+
+
+def test_guarda_de_disco_omite_el_snapshot(tmp_path, monkeypatch, caplog) -> None:
+    """Sin espacio libre no se escribe snapshot: se avisa y se sale.
+
+    Regresión del incidente 2026-10-13: el historial llegó a 148 GB y dejó la
+    raíz al 100 %; el tool siguió escribiendo hasta el colapso.
+    """
+    monkeypatch.chdir(tmp_path)
+    activo = tmp_path / ".context-map" / "maps" / "ACTIVE.md"
+    activo.parent.mkdir(parents=True)
+    activo.write_text("# mapa\n", encoding="utf-8")
+
+    monkeypatch.setattr(store, "espacio_libre_mb", lambda *a, **k: 7.5)
+    with caplog.at_level(logging.WARNING, logger="context_map.core.storage.store"):
+        resultado = snapshot_map()
+
+    assert resultado is None
+    assert not (tmp_path / ".context-map" / "maps" / "HISTORY").exists()
+    assert "Snapshot omitido" in caplog.text
+
+
+def test_nombres_de_colision_sin_series_infinitas(tmp_path, monkeypatch) -> None:
+    """Una colisión de nombre se resuelve con marca temporal, no con -2..-N."""
+    monkeypatch.chdir(tmp_path)
+    history = tmp_path / ".context-map" / "maps" / "HISTORY"
+    history.mkdir(parents=True)
+    (history / "forzado.md").write_text("contenido ajeno\n", encoding="utf-8")
+    activo = tmp_path / ".context-map" / "maps" / "ACTIVE.md"
+    activo.write_text("# mapa v1\n", encoding="utf-8")
+
+    assert snapshot_map(name="forzado.md") is not None
+    activo.write_text("# mapa v2 (cambió)\n", encoding="utf-8")
+    assert snapshot_map(name="forzado.md") is not None
+
+    nombres = sorted(p.name for p in history.glob("*.md"))
+    assert len(nombres) == 3, nombres
+    sin_marca = [re.sub(r"-\d{8}-\d{6}", "", n) for n in nombres]
+    assert not any(re.search(r"-\d+\.md$", n) for n in sin_marca), nombres
+
+
+def test_purgar_dry_run_no_toca_el_disco(tmp_path, monkeypatch) -> None:
+    """``dry_run`` calcula la poda sin archivar ni borrar nada."""
+    monkeypatch.setenv("CTXMAP_SNAPSHOT_KEEP", "3")
+    monkeypatch.setenv("CTXMAP_SNAPSHOT_KEEP_DAYS", "0")
+    history = _crear_historial(tmp_path, n=8)
+
+    res = purgar_snapshots(history, dry_run=True)
+
+    assert len(os.listdir(history)) == 8
+    assert res["archivados"] == 5 and res["archivo"] == ""
+    assert not os.path.exists(os.path.join(str(tmp_path), ".context-map", "maps", "archive"))

@@ -12,6 +12,11 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 
+from context_map.core.storage.store import (
+    SNAPSHOT_KEEP_DEFAULT,
+    _listar_snapshots,
+    purgar_snapshots,
+)
 from context_map.presentation.briefs.extractors import vault_nombre
 from context_map.presentation.vault.preservar import ZONAS_MANUALES
 
@@ -283,12 +288,66 @@ def check_manual_notes_preservation(report: DoctorReport, fix: bool = False, pro
     report.add(check)
 
 
+def check_history(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica el tamaño del historial de snapshots y ofrece poda.
+
+    Regresión del incidente 2026-10-13: el historial acumuló 148 GB sin que nada
+    avisara hasta que el disco quedó al 100 % y fallaron servicios del sistema.
+
+    Args:
+        report (DoctorReport): Reporte donde registrar el chequeo.
+        fix (bool): Si es True aplica la poda/archivado con los valores por defecto.
+        project_dir (str): Directorio del proyecto a diagnosticar.
+    """
+    hist = os.path.join(project_dir, ".context-map", "maps", "HISTORY")
+    rutas = _listar_snapshots(hist)
+
+    if not rutas:
+        report.add(DoctorCheck("history", "OK", "Sin snapshots en maps/HISTORY"))
+        return
+
+    bytes_totales = 0
+    for ruta in rutas:
+        try:
+            bytes_totales += os.path.getsize(ruta)
+        except OSError:
+            continue
+    total_mb = round(bytes_totales / (1024 * 1024), 2)
+
+    umbral = SNAPSHOT_KEEP_DEFAULT * 5
+    if len(rutas) > umbral:
+        mensaje = (
+            f"{len(rutas)} snapshots / {total_mb} MB — por encima del umbral "
+            f"({umbral}). Ejecuta `ctxmap history prune`."
+        )
+        if fix:
+            res = purgar_snapshots(hist)
+            report.add(
+                DoctorCheck(
+                    "history",
+                    "OK",
+                    mensaje,
+                    fix_applied=True,
+                    fix_message=(
+                        f"{res['archivados']} archivados · {res['eliminados']} eliminados · "
+                        f"{res['conservados']} conservados"
+                    ),
+                )
+            )
+            return
+        report.add(DoctorCheck("history", "WARN", mensaje))
+        return
+
+    report.add(DoctorCheck("history", "OK", f"{len(rutas)} snapshots / {total_mb} MB"))
+
+
 CHECKS = [
     check_git_available,
     check_update_dir,
     check_vault_default,
     check_project_name_consistency,
     check_manual_notes_preservation,
+    check_history,
 ]
 
 
