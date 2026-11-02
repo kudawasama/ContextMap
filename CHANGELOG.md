@@ -5,6 +5,28 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🐛 Corregido
+
+- `ctxmap adapt --modo merge` sobre **YAML/TOML** (`adaptador.py`): el bloque
+  delimitado usa ahora comentarios de almohadilla (`# CONTEXTMAP:BEGIN` /
+  `# CONTEXTMAP:END`) en lugar de `<!-- ... -->`. El comentario HTML dejaba el
+  archivo sintácticamente inválido y duplicaba las claves del bloque anterior.
+  El merge de un archivo con marcas HTML heredadas las migra a la sintaxis
+  correcta en la primera reescritura. Reparado `.hermes/config.yaml`, que había
+  quedado con el YAML completo repetido dentro del bloque.
+- El mismo merge **no toca archivos JSON** (`opencode.json`): no admiten
+  comentarios, así que se respeta el contenido del usuario sin anexar bloque.
+- Documentación alineada con el servidor real: `PI_PACKAGE.md` y `LAUNCH_KIT.md`
+  anunciaban 29 y 11 herramientas MCP; el servidor expone **33**.
+
+### 🔧 Infraestructura
+
+- GitHub Pages publicaba la rama `master` con el tema Jekyll (404 en
+  `PI_PACKAGE/`, `LLM/`, `PORTABILIDAD/`…) mientras `docs.yml` desplegaba un
+  sitio MkDocs en `gh-pages` que nadie servía. La fuente pasa a `gh-pages`.
+
 ## [2.14.0] — 2026-10-30
 
 ### 🎚️ Clasificación calibrada (motor de decisiones tipadas)

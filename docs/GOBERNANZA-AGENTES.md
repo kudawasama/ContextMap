@@ -1,6 +1,6 @@
 # Gobernanza de Agentes — Detalle y ejemplos
 
-> Documento de **referencia** de [`AGENTS.md`](../AGENTS.md). `AGENTS.md` contiene
+> Documento de **referencia** de [`AGENTS.md`](https://github.com/kudawasama/ContextMap/blob/master/AGENTS.md). `AGENTS.md` contiene
 > las normas obligatorias (tersas y autosuficientes); aquí vive el **detalle**, los
 > **diagramas** y los **ejemplos** que no hacen falta en cada sesión.
 

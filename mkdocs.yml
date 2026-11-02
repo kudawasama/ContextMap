@@ -56,8 +56,13 @@ markdown_extensions:
   - attr_list
 
 nav:
-  - 🏠 Inicio: README.md
-  - 🇬🇧 English Docs: README_EN.md
-  - 📜 Historial (Changelog): CHANGELOG.md
-  - 🤝 Contribuir: CONTRIBUTING.md
-  - 📜 Código de Conducta: CODE_OF_CONDUCT.md
+  - 🏠 Inicio: index.md
+  - 📦 Paquete e instalación: PI_PACKAGE.md
+  - 🧭 Gobernanza de agentes: GOBERNANZA-AGENTES.md
+  - 🔐 Portabilidad y secretos: PORTABILIDAD.md
+  - ✂️ Web Clipper: WEB_CLIPPER.md
+  - 🧠 LLM y conocimiento: LLM.md
+  - 🚀 Launch Kit: LAUNCH_KIT.md
+  - 📊 Comparativa del ecosistema: COMPARATIVO-ECOSISTEMA-CONTEXTO.md
+  - 🔬 Investigación Jev: INVESTIGACION-JEV.md
+  - 📜 Changelog: https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md
