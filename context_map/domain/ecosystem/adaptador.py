@@ -43,6 +43,11 @@ logger = logging.getLogger(__name__)
 
 MARCA_INICIO = "<!-- CONTEXTMAP:BEGIN -->"
 MARCA_FIN = "<!-- CONTEXTMAP:END -->"
+# Los formatos sin comentarios HTML (YAML/TOML) usan el comentario de almohadilla:
+# meter `<!-- ... -->` dentro de un .yaml lo deja sintácticamente inválido.
+MARCA_INICIO_ALMOHADILLA = "# CONTEXTMAP:BEGIN"
+MARCA_FIN_ALMOHADILLA = "# CONTEXTMAP:END"
+_EXTENSIONES_ALMOHADILLA = frozenset({".yaml", ".yml", ".toml"})
 
 
 def _es_generado_ctxmap(ruta: str) -> bool:
@@ -108,29 +113,56 @@ def _respaldar_antes_de_sobrescribir(ruta: str) -> None:
         logger.warning("No se pudo escribir el respaldo %s.bak.", ruta)
 
 
-def _mergear_bloque(actual: str, contenido: str) -> str:
+def _delimitadores_para(ruta: str) -> tuple[str, str]:
+    """Devuelve los delimitadores de bloque válidos para la sintaxis del archivo.
+
+    Args:
+        ruta (str): Ruta (absoluta o relativa) del archivo de reglas.
+
+    Returns:
+        tuple[str, str]: Par (marca de inicio, marca de fin). YAML/TOML usan
+        comentario de almohadilla; el resto, comentario HTML.
+    """
+    if os.path.splitext(ruta)[1].lower() in _EXTENSIONES_ALMOHADILLA:
+        return MARCA_INICIO_ALMOHADILLA, MARCA_FIN_ALMOHADILLA
+    return MARCA_INICIO, MARCA_FIN
+
+
+def _mergear_bloque(actual: str, contenido: str, ruta: str = "") -> str:
     """Inserta o reemplaza el bloque ContextMap delimitado en el contenido actual.
 
-    Si el archivo ya contiene el marcador de inicio, reemplaza únicamente el
-    bloque delimitado (preserva las reglas del usuario alrededor). En caso
+    Si el archivo ya contiene el marcador de inicio (en la sintaxis propia de
+    ``ruta`` o en la histórica de comentario HTML), reemplaza únicamente el
+    bloque delimitado y preserva las reglas del usuario alrededor. En caso
     contrario, anexa el bloque completo al final respetando la última línea.
+
+    Los archivos JSON no admiten comentarios, así que no se les anexa bloque:
+    se devuelven intactos para no romper su sintaxis.
 
     Args:
         actual (str): Contenido previo del archivo de reglas.
         contenido (str): Nuevo contenido del bloque ContextMap.
+        ruta (str): Ruta del archivo, usada para elegir la sintaxis del
+            delimitador (YAML/TOML frente a Markdown/JSON).
 
     Returns:
         str: Contenido final con el bloque ContextMap aplicado.
     """
-    bloque = f"\n\n{MARCA_INICIO}\n\n{contenido.strip()}\n\n{MARCA_FIN}\n"
-    if MARCA_INICIO in actual:
-        return re.sub(
-            re.escape(MARCA_INICIO) + r".*?" + re.escape(MARCA_FIN),
-            bloque.strip(),
-            actual,
-            flags=re.DOTALL,
-        )
-    return actual.rstrip() + "\n" + bloque
+    if os.path.splitext(ruta)[1].lower() == ".json":
+        logger.debug("JSON sin soporte de comentarios, no se mergea: %s", ruta)
+        return actual
+
+    inicio, fin = _delimitadores_para(ruta)
+    bloque = f"{inicio}\n\n{contenido.strip()}\n\n{fin}"
+    for inicio_presente, fin_presente in ((inicio, fin), (MARCA_INICIO, MARCA_FIN)):
+        if inicio_presente in actual:
+            return re.sub(
+                re.escape(inicio_presente) + r".*?" + re.escape(fin_presente),
+                lambda _match: bloque,
+                actual,
+                flags=re.DOTALL,
+            )
+    return actual.rstrip() + "\n\n" + bloque + "\n"
 
 
 def _escribir_regla(
@@ -166,14 +198,14 @@ def _escribir_regla(
     if modo == "merge":
         with open(ruta, encoding="utf-8") as f:
             actual = f.read()
-        _volcar_archivo(ruta, _mergear_bloque(actual, contenido))
+        _volcar_archivo(ruta, _mergear_bloque(actual, contenido, ruta))
         generados.append(f"{ruta_rel} (merge)")
         return
 
     if _es_generado_ctxmap(ruta) and not _tiene_memoria_viva(ruta):
         with open(ruta, encoding="utf-8") as f:
             actual = f.read()
-        _volcar_archivo(ruta, _mergear_bloque(actual, contenido))
+        _volcar_archivo(ruta, _mergear_bloque(actual, contenido, ruta))
         generados.append(f"{ruta_rel} (upgrade memoria viva)")
         return
     logger.debug("Regla existente, se respeta: %s", ruta_rel)
@@ -431,7 +463,7 @@ def revisar_reglas_agente(
         es_nuestro = marcado or manifest.get(ruta_rel) == _hash_texto(actual)
         # Estado deseado: si esta marcado, se reemplaza SOLO el bloque (preserva lo
         # que el usuario puso alrededor); si no, el contenido generado completo.
-        deseado = _mergear_bloque(actual, contenido) if marcado else contenido
+        deseado = _mergear_bloque(actual, contenido, ruta) if marcado else contenido
         deseado_hash = _hash_texto(deseado)
 
         if deseado_hash == _hash_texto(actual):

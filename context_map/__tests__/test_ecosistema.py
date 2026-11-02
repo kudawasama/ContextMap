@@ -7,6 +7,7 @@ genera las reglas por agente (AGENTS.md contextual, CLAUDE.md,
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import tempfile
@@ -459,6 +460,60 @@ def test_adaptar_antigravity_skill_y_hermes_workflow() -> None:
             hermes_content = f.read()
         assert "name: \"contextmap-governance\"" in hermes_content
         assert "action: \"read_file\"" in hermes_content
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_yaml_usa_marcas_de_almohadilla() -> None:
+    """El merge sobre un YAML usa comentarios `#` y no rompe la sintaxis."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        config_path = os.path.join(temp_dir, ".hermes", "config.yaml")
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write('equipo:\n  dueno: "yo"\n\nreglas_propias:\n  - No tocar secretos\n')
+
+        eco = detectar_ecosistema(temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+
+        with open(config_path, encoding="utf-8") as f:
+            contenido = f.read()
+
+        assert "# CONTEXTMAP:BEGIN" in contenido, "Falta marca de inicio en formato YAML"
+        assert "# CONTEXTMAP:END" in contenido, "Falta marca de fin en formato YAML"
+        assert "<!--" not in contenido, "Comentario HTML inválido dentro de un YAML"
+        assert "reglas_propias" in contenido, "Se perdieron claves propias del usuario"
+
+        # Idempotencia: un segundo merge no duplica el bloque ni las claves
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+        with open(config_path, encoding="utf-8") as f:
+            contenido_2 = f.read()
+        assert contenido_2.count("CONTEXTMAP:BEGIN") == 1, "El bloque se duplicó en YAML"
+        assert contenido_2.count('description: "Proyecto gestionado con ContextMap"') == 1, (
+            "Se duplicaron las claves generadas en YAML"
+        )
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def test_adaptar_json_no_anexa_bloque() -> None:
+    """Un JSON (sin sintaxis de comentarios) no debe recibir el bloque de marcas."""
+    temp_dir = _crear_proyecto_python()
+    try:
+        os.makedirs(os.path.join(temp_dir, ".opencode"), exist_ok=True)
+        json_path = os.path.join(temp_dir, "opencode.json")
+        original = '{\n  "project": "Manual",\n  "instructions": ["no tocar"]\n}\n'
+        with open(json_path, "w", encoding="utf-8") as f:
+            f.write(original)
+
+        eco = detectar_ecosistema(temp_dir)
+        adaptar_ecosistema("DemoProj", eco, target_dir=temp_dir, modo="merge")
+
+        with open(json_path, encoding="utf-8") as f:
+            contenido = f.read()
+
+        assert contenido == original, "El merge modificó un JSON sin soporte de comentarios"
+        json.loads(contenido)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
