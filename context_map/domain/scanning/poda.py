@@ -25,6 +25,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 from context_map.core.models import Edge, Event, Node
 
@@ -160,19 +161,105 @@ def rutas_del_nodo(node: Node) -> list[str]:
     return vistas
 
 
-def es_nodo_podable(node: Node, raiz: str) -> bool:
-    """Indica si un nodo quedó huérfano (todas sus rutas ya no existen).
+_CARPETAS_IGNORADAS_STEMS = frozenset(
+    {
+        ".git",
+        ".venv",
+        "venv",
+        "node_modules",
+        "__pycache__",
+        "site-packages",
+    }
+)
+"""Carpetas que no aportan documentos propios al buscar el origen de un DOCUMENTO."""
 
-    Un nodo sin rutas citadas nunca se poda: no hay evidencia de que haya
-    quedado obsoleto. Los nodos que no vienen del escáner tampoco se tocan.
+_PREFIJOS_IGNORADOS_STEMS = (
+    ".context-map/state",
+    ".context-map/maps",
+    ".context-map/vault-",
+    ".context-map/_legacy",
+)
+"""Estado derivado (no es la fuente de un documento ingerido)."""
+
+
+def _slug_archivo(nombre: str) -> str:
+    """Normaliza un nombre de archivo para comparar títulos con fuentes.
+
+    Args:
+        nombre (str): Título del nodo o nombre de archivo sin extensión.
+
+    Returns:
+        str: Nombre en minúsculas, sin espacios ni guiones bajos, para comparar
+        ``Carta Buffett 2012`` con ``carta-buffett-2012.md``.
+    """
+    return re.sub(r"[\s_\-]+", "", nombre.strip().lower())
+
+
+@lru_cache(maxsize=8)
+def _stems_vivos(raiz: str) -> frozenset[str]:
+    """Reúne los nombres de archivo (sin extensión) que existen en el proyecto.
+
+    Sirve para saber si un nodo DOCUMENTO conserva su fuente. Se calcula una
+    sola vez por raíz y se ignora el estado derivado (``state``, ``maps``,
+    ``vault-*``), que no es fuente de nada.
+
+    Args:
+        raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        frozenset[str]: Nombres normalizados con :func:`_slug_archivo`.
+    """
+    stems: set[str] = set()
+    for actual, dirs, archivos in os.walk(raiz):
+        relativo = os.path.relpath(actual, raiz).replace("\\", "/")
+        if relativo.startswith("./"):
+            relativo = relativo[2:]
+        dirs[:] = [d for d in dirs if d not in _CARPETAS_IGNORADAS_STEMS]
+        if relativo != "." and relativo.startswith(_PREFIJOS_IGNORADOS_STEMS):
+            dirs[:] = []
+            continue
+        for archivo in archivos:
+            stems.add(_slug_archivo(os.path.splitext(archivo)[0]))
+    return frozenset(stems)
+
+
+def es_documento_huerfano(node: Node, raiz: str) -> bool:
+    """Indica si un DOCUMENTO ingerido perdió su archivo fuente.
+
+    ``ctxmap ingest`` crea nodos DOCUMENTO a partir de archivos locales; si el
+    archivo se mueve o se borra, el nodo queda citando algo que ya no está.
 
     Args:
         node (Node): Nodo candidato.
         raiz (str): Directorio raíz del proyecto.
 
     Returns:
-        bool: True si es del escáner, cita rutas y ninguna sigue viva.
+        bool: True si es un DOCUMENTO de ingesta cuya fuente ya no existe.
     """
+    if node.type != "DOCUMENTO" or node.source != "ingest":
+        return False
+    if node.classification != "docs":
+        return False
+    return _slug_archivo(node.title) not in _stems_vivos(raiz)
+
+
+def es_nodo_podable(node: Node, raiz: str) -> bool:
+    """Indica si un nodo quedó huérfano (todas sus rutas ya no existen).
+
+    Un nodo sin rutas citadas nunca se poda: no hay evidencia de que haya
+    quedado obsoleto. Los nodos que no vienen del escáner tampoco se tocan,
+    salvo los DOCUMENTO de ingesta cuya fuente desapareció.
+
+    Args:
+        node (Node): Nodo candidato.
+        raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        bool: True si es del escáner y ninguna de sus rutas sigue viva, o si es
+        un DOCUMENTO ingerido que ya no tiene archivo fuente.
+    """
+    if es_documento_huerfano(node, raiz):
+        return True
     if node.source != "scanner" or node.namespace != "code":
         return False
     rutas = rutas_del_nodo(node)

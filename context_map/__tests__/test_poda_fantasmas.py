@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 
 from context_map.core.models import Edge, Event, Node
 from context_map.domain.scanning.poda import (
+    _stems_vivos,
+    es_documento_huerfano,
     es_nodo_podable,
     evento_de_ruta_muerta,
     podar_estado,
@@ -28,6 +31,51 @@ def _escribir_jsonl(ruta: str, registros: list[dict]) -> None:
     with open(ruta, "w", encoding="utf-8") as f:
         for registro in registros:
             f.write(json.dumps(registro, ensure_ascii=False) + "\n")
+
+
+def test_documento_ingerido_pierde_su_fuente_y_se_poda(tmp_path: Path) -> None:
+    """Un DOCUMENTO de ingesta sin archivo fuente deja de existir en el grafo."""
+    docs = tmp_path / ".context-map" / "raw" / "docs"
+    docs.mkdir(parents=True)
+    (docs / "carta-buffett-2012.md").write_text("texto", encoding="utf-8")
+
+    nodo = Node(
+        id="DOC-CARTA-BUFFETT-2012",
+        type="DOCUMENTO",
+        title="carta-buffett-2012",
+        summary="citas",
+        source="ingest",
+        classification="docs",
+    )
+    raiz = str(tmp_path)
+    _stems_vivos.cache_clear()
+
+    assert not es_documento_huerfano(nodo, raiz)
+    assert not es_nodo_podable(nodo, raiz)
+
+    (docs / "carta-buffett-2012.md").unlink()
+    _stems_vivos.cache_clear()
+
+    assert es_documento_huerfano(nodo, raiz)
+    assert es_nodo_podable(nodo, raiz)
+
+
+def test_documentos_que_no_son_de_ingesta_no_se_podan(tmp_path: Path) -> None:
+    """Un DOCUMENTO del usuario o del vault nunca se retira por esta vía."""
+    _stems_vivos.cache_clear()
+    raiz = str(tmp_path)
+    manual = Node(id="DOC-1", type="DOCUMENTO", title="notas", summary="")
+    wiki = Node(
+        id="DOC-2",
+        type="DOCUMENTO",
+        title="apunte",
+        summary="",
+        source="knowledge",
+        classification="docs",
+    )
+
+    assert not es_documento_huerfano(manual, raiz)
+    assert not es_documento_huerfano(wiki, raiz)
 
 
 def test_evento_de_ruta_muerta_frena_la_reingesta() -> None:

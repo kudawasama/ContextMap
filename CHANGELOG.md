@@ -5,6 +5,32 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] — 2026-11-03
+
+### 🧹 Poda de documentos ingeridos huérfanos
+
+- El grafo de este repo arrastraba dos nodos `DOCUMENTO` de **contenido demo**
+  (`carta-buffett-2012`, `inversion-largo-plazo`): se ingirieron el 2026-10-09
+  para probar `ctxmap ingest` y se quedaron como conocimiento del proyecto
+  (el vault los publicaba bajo `VALOR` y `ESTRATEGIA` como si fueran doctrina
+  propia).
+- `es_documento_huerfano()` (`poda.py`): un `DOCUMENTO` con `source == "ingest"`
+  y `classification == "docs"` cuya fuente ya no existe en el proyecto se poda.
+  La búsqueda de fuentes ignora el estado derivado (`state`, `maps`, `vault-*`,
+  `_legacy`) para no darse por viva con sus propias copias, y se calcula una
+  sola vez por raíz (`_stems_vivos`, `lru_cache`).
+- Lo que **no** se toca: cualquier `DOCUMENTO` manual, de agente o de otro
+  `source`, y cualquier nodo que conserve al menos una ruta viva.
+- Las dos fixtures demo salen de `.context-map/raw/docs/` a
+  `.context-map/state/archive/docs-demo-2026-11-03/` (archivadas, no borradas).
+  Grafo: **359 → 357 nodos**, 0 nodos de tipo `DOCUMENTO` inventados.
+
+### ✅ Pruebas
+
+- `test_poda_fantasmas.py` (+2): documento huérfano al desaparecer su archivo
+  (con limpieza de caché entre pasos) y documentos ajenos a la ingesta que
+  nunca se podan. Suite total: **490 tests**.
+
 ## [2.15.0] — 2026-11-03
 
 ### 🧹 Poda de nodos fantasma (rutas que ya no existen)
