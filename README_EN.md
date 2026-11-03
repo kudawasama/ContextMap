@@ -6,10 +6,10 @@
 
 ### *Stop your AI from forgetting architectural decisions, burning tokens, and breaking working code.*
 
-[![Release](https://img.shields.io/badge/version-v2.14.1-blue.svg?style=for-the-badge)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-v2.15.0-blue.svg?style=for-the-badge)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-479%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
+[![Tests](https://img.shields.io/badge/tests-488%20passing-brightgreen.svg?style=for-the-badge)](context_map/__tests__/)
 [![Type Check: Strict MyPy](https://img.shields.io/badge/mypy-100%25%20strict-00599C.svg?style=for-the-badge&logo=python&logoColor=white)](.github/workflows/ci.yml)
 [![Prompt Cache: Optimized](https://img.shields.io/badge/Prompt%20Cache->90%25%20Hit%20Rate-orange.svg?style=for-the-badge)](context_map/presentation/briefs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
@@ -123,7 +123,7 @@ Write project rules once, and ContextMap auto-syncs them to every tool's native 
 
 ## ⚖️ Comparison: ContextMap vs. Alternatives
 
-| What do you need? | Raw Dumps<br>*(Repomix / Gitingest)* | IDE-Locked Indexers<br>*(Cursor / Windsurf)* | **ContextMap v2.14.1** |
+| What do you need? | Raw Dumps<br>*(Repomix / Gitingest)* | IDE-Locked Indexers<br>*(Cursor / Windsurf)* | **ContextMap v2.15.0** |
 | :--- | :---: | :---: | :---: |
 | **Token Consumption** | 🔴 Massive (expensive & slow) | 🟡 Medium | 🟢 **Ultra-efficient (>99% savings)** |
 | **Deterministic Prompt Caching** | ❌ Incompatible (breaks hash) | 🟡 Partial | **✅ Frozen Prefix (>90% Hit Rate)** |
