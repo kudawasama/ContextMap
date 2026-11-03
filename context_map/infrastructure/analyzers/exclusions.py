@@ -57,6 +57,10 @@ CARPETAS_EXCLUIDAS: frozenset[str] = frozenset(
         ".idea",
         ".vscode",
         ".vs",
+        # Scratch y worktrees locales: son copias desechables del repo (el
+        # escáner los analizó una vez y sus nodos quedaron como fantasmas al
+        # borrarlos; ver domain/scanning/poda.py).
+        ".work",
         # Directorios temporales del propio repositorio
         ".tmp-verif",
         ".tmp-tests",

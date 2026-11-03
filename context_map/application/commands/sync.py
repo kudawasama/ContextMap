@@ -24,6 +24,7 @@ from context_map.application.commands.personal import sincronizar_proyecto_autom
 from context_map.core.models import Edge, Node
 from context_map.core.storage import load_jsonl, write_map
 from context_map.domain.analysis import analizar_readiness
+from context_map.domain.scanning.poda import podar_estado
 from context_map.domain.synchronization import sync_incremental
 from context_map.presentation.briefs import generar_brief
 from context_map.presentation.vault import render_active_map, render_obsidian_vault
@@ -54,7 +55,17 @@ def do_sync(
         chats_dir=CHATS_DIR,
         raw_dir=RAW_DIR,
         state_dir=STATE_DIR,
+        project_root=os.path.abspath(getattr(args, "target", None) or "."),
     )
+
+    # Poda de nodos fantasma: rutas citadas que ya no existen en disco (los
+    # worktrees de `.work/` dejaron su rastro en el grafo). Idempotente.
+    poda = podar_estado(STATE_DIR, os.path.abspath(getattr(args, "target", None) or "."))
+    if poda.aplicado:
+        print(
+            f"poda: {len(poda.nodos_eliminados)} nodo(s) con rutas inexistentes, "
+            f"{len(poda.nodos_saneados)} saneado(s), {poda.aristas_eliminadas} arista(s) retirada(s)"
+        )
 
     records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
     e_records = load_jsonl(os.path.join(STATE_DIR, "edges.jsonl"))

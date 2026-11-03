@@ -21,6 +21,7 @@ from context_map.core.parsing import (
     load_events_from_jsonl,
 )
 from context_map.core.storage import append_jsonl, load_jsonl
+from context_map.domain.scanning.poda import evento_de_ruta_muerta
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,7 @@ def sync_incremental(
     chats_dir: str,
     raw_dir: str,
     state_dir: str,
+    project_root: str = ".",
 ) -> dict:
     """Ejecuta la sincronización incremental del grafo.
 
@@ -175,6 +177,8 @@ def sync_incremental(
         chats_dir (str): Ruta a carpeta de chats.
         raw_dir (str): Ruta a carpeta de JSONL crudos.
         state_dir (str): Ruta del estado del grafo.
+        project_root (str): Raíz del proyecto para descartar eventos cuyas rutas
+            ya no existen (evita reintroducir nodos fantasma).
 
     Returns:
         dict: Estadísticas de la sincronización.
@@ -211,7 +215,11 @@ def sync_incremental(
             "aristas_agregadas": 0,
         }
 
-    eventos_reales_nuevos = _encontrar_nodos_nuevos(eventos_nuevos, nodos_existentes)
+    eventos_reales_nuevos = [
+        e
+        for e in _encontrar_nodos_nuevos(eventos_nuevos, nodos_existentes)
+        if not evento_de_ruta_muerta(e, project_root)
+    ]
 
     if eventos_reales_nuevos:
         offset_id = len(nodos_existentes) + 1

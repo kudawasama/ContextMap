@@ -5,6 +5,53 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] — 2026-11-03
+
+### 🧹 Poda de nodos fantasma (rutas que ya no existen)
+
+- Nuevo `context_map/domain/scanning/poda.py`: el grafo es **acumulativo** y
+  nadie retiraba los nodos de archivos borrados. Consecuencia real: mientras
+  existían los worktrees de `.work/wt-base` y `.work/scratch`, el escáner los
+  analizó; al borrarlos, 5 nodos (2 entrypoints y 3 TODOs) y un RIESGO de
+  complejidad siguieron en `state/graph.jsonl` y el vault dibujó un riesgo
+  sobre `.work/wt-base/context_map/infrastructure/mcp_server.py`, inexistente.
+- `podar_estado()` se ejecuta en `build` y en `do_sync` (scan/refresh/importers).
+  Es **conservadora**: solo toca nodos `source == "scanner"` del mundo código,
+  elimina un nodo únicamente si **todas** sus rutas citadas están muertas, y
+  retira las aristas que quedan colgando. Es **idempotente** (no reescribe si
+  no hay fantasmas) y escribe el estado de forma atómica (`os.replace`).
+- Los nodos que sobreviven con rutas mixtas se **sanean** (solo RIESGO, donde
+  las rutas son una lista literal): se reescriben título, resumen y evidencias
+  conservando las rutas vivas. 4 riesgos dejaron de citar archivos borrados
+  (`common.py`, `keywords.py`, `personal.py`) sin perder los reales.
+- La comprobación de existencia es tolerante al saneado de nombres del vault
+  (`context_map/__tests__/x.py` se escribe `context_map/__/tests__/x.py` en
+  títulos y evidencias).
+
+### 🚫 `.work/` fuera del análisis
+
+- `infrastructure/analyzers/exclusions.py`: `.work` (worktrees y scratch
+  locales) entra en `CARPETAS_EXCLUIDAS` — era la causa raíz de los fantasmas.
+  `work`, `workers`, `workflows` y `.workspace` **no** se excluyen.
+
+### 🔁 Fin del bucle de reingesta
+
+- `evento_de_ruta_muerta()` (`poda.py`) descarta, antes de convertirse en nodo,
+  los eventos del escáner cuyas rutas ya no existen. `raw/events.jsonl` es
+  memoria histórica y conserva 8 eventos de `.work`, así que cada build
+  regeneraba los 5 nodos y la poda los retiraba otra vez (churn medido).
+  Ahora el filtro se aplica en `build` (`collect_events`) y en
+  `sync_incremental` (`project_root`). Medido tras dos builds seguidos:
+  `poda: 0 nodo(s) fantasma`.
+
+### ✅ Pruebas
+
+- `test_poda_fantasmas.py` (7): extracción de rutas, tolerancia al mangle de
+  `__tests__`, predicado de poda, saneo de riesgo mixto, retirada de aristas,
+  idempotencia del estado y filtro de reingesta.
+- `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
+  respetados. Suite total: **488 tests**.
+
 ## [2.14.1] — 2026-11-02
 
 ### 🐛 Corregido

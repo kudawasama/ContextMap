@@ -28,6 +28,25 @@ def test_carpetas_de_despliegue_y_cache_excluidas() -> None:
         assert es_carpeta_excluida(nombre), f"no se excluye {nombre}"
 
 
+def test_directorio_de_worktrees_locales_excluido() -> None:
+    """`.work/` (worktrees y scratch locales) no se analiza como código propio.
+
+    Caso real (auditoría 2026-11-03): mientras existían, el escáner analizó
+    `.work/wt-base` y `.work/scratch`; al borrarlos quedaron nodos fantasma en
+    el grafo (ver ``domain/scanning/poda.py``).
+    """
+    assert es_carpeta_excluida(".work")
+    assert es_carpeta_excluida(".WORK")
+    assert es_ruta_excluida(".work/wt-base/context_map/cli.py")
+    assert es_ruta_excluida(".work\\scratch\\1e21d95a1807\\app.py")
+
+
+def test_nombres_parecidos_a_work_no_se_excluyen() -> None:
+    """`workflows` o `work` no son worktrees: siguen siendo código legítimo."""
+    for nombre in ("work", "workflows", "workers", ".workspace"):
+        assert not es_carpeta_excluida(nombre), f"se excluye código legítimo: {nombre}"
+
+
 def test_carpetas_ambiguas_no_se_excluyen() -> None:
     """Nombres que pueden ser código legítimo NO se excluyen (criterio conservador)."""
     for nombre in ("target", "vendor", "app", "context_map", "src", "lib"):

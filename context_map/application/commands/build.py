@@ -26,6 +26,7 @@ from context_map.core.normalization import estandarizar_nodo, estandarizar_nodos
 from context_map.core.parsing import events_to_model
 from context_map.core.storage import load_jsonl, snapshot_map, write_map
 from context_map.domain.analysis import analizar_readiness
+from context_map.domain.scanning.poda import evento_de_ruta_muerta, podar_estado
 from context_map.presentation.briefs import (
     generar_brief,
     generar_instrucciones_agentes,
@@ -86,12 +87,28 @@ def cmd_build(args) -> None:
     else:
         registrar_build_info(proj, clean=False)
 
-    extra_events = collect_events()
+    raiz_proyecto = os.path.abspath(".")
+    extra_events = [
+        e for e in collect_events()
+        if not evento_de_ruta_muerta(e, raiz_proyecto)
+    ]
     if extra_events:
         nodes, edges = events_to_model(extra_events)
         # Estandarizar nodos nuevos antes de persistir
         nodes = estandarizar_nodos(nodes)
         append_nodes_edges(nodes, edges)
+
+    # Poda de nodos fantasma (rutas que ya no existen en disco). El grafo es
+    # acumulativo: sin esta poda el vault dibuja riesgos y TODOs de archivos
+    # borrados — p. ej. los de los worktrees de `.work/` (auditoría 2026-11-03).
+    # Idempotente: si no hay fantasmas no reescribe el estado.
+    poda = podar_estado(STATE_DIR, raiz_proyecto)
+    if poda.aplicado and not getattr(args, "quiet", False):
+        print(
+            f"[build] poda: {len(poda.nodos_eliminados)} nodo(s) fantasma, "
+            f"{len(poda.nodos_saneados)} nodo(s) saneado(s), "
+            f"{poda.aristas_eliminadas} arista(s) retirada(s)"
+        )
 
     # Cargar nodos y re-estandarizar todo (por si quedaron viejos)
     records = load_jsonl(os.path.join(STATE_DIR, "graph.jsonl"))
