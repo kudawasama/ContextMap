@@ -1,30 +1,30 @@
 """Estandarización y clasificación semántica de nodos del grafo.
 
-Proporciona funciones para:
-- Clasificación semántica basada en Conventional Commits.
-- Normalización y estandarización de tags.
-- Inferencia de estado del nodo (completado, pendiente, activo).
-- Corrección de tipo según contenido real.
-- Inferencia de evidencias.
-- Deduplicación de nodos por (tipo, título) para mantener el grafo limpio.
+Este módulo es el **orquestador** del proceso: decide en qué orden se aplican
+las piezas y compone el nodo final. Las piezas viven en los submódulos
+especializados:
 
-Este módulo actúa como facade orquestador reexportando las funciones
-e inferencias de los submódulos especializados:
-- ``mappings.py`` (constantes y patrones)
-- ``inference.py`` (inferencias semánticas)
-- ``cleaning.py`` (limpieza, depuración y dedup)
+- ``mappings.py``: constantes y patrones.
+- ``inference.py``: clasificación, concepto, estado y evidencias.
+- ``cleaning.py``: tags, título y deduplicación.
+- ``paneles.py``: motor de decisión y cola de revisión.
+
+El orden importa: el estado se infiere del nodo **ya normalizado** (título y
+tags limpios), no del original, porque los volátiles numéricos de los títulos
+de ``RIESGO`` alteraban la inferencia. Los ``DOCUMENTO`` son la excepción: su
+estado y su clasificación vienen de la ingesta y no se reinterpretan.
 """
 
 from __future__ import annotations
 
-import re
-
 from context_map.core.models import Node
 from context_map.core.normalization.cleaning import (
     _restaurar_paths_legibles,
+    ajustar_tags,
     dedup_nodes,
     depurar_nodos_obsoletos,
     estandarizar_tags,
+    normalizar_titulo,
 )
 from context_map.core.normalization.inference import (
     clasificar_tipo,
@@ -48,7 +48,7 @@ from context_map.core.normalization.paneles import TAG_REVISION
 
 
 def estandarizar_nodo(node: Node) -> Node:
-    """Aplica el proceso completo de estandarización y clasificación a un solo nodo.
+    """Aplica el proceso completo de estandarización y clasificación a un nodo.
 
     Args:
         node (Node): Nodo original.
@@ -57,35 +57,26 @@ def estandarizar_nodo(node: Node) -> Node:
         Node: Nuevo nodo estandarizado.
     """
     es_documento = node.type == "DOCUMENTO"
-    classif_id, _ = inferir_classification(node) if not es_documento else (node.classification or "docs", "Documento")
-    concept_id = inferir_concepto(node) if not es_documento else (node.concept or "GENERAL")
-    tags = estandarizar_tags(node.tags)
 
-    # Limpiar tags legacy "class{X}" sin colon (ej: "classchore", "classfeature")
-    tags = [t for t in tags if not re.match(r'^class[a-z]+$', t)]
+    if es_documento:
+        classif_id = node.classification or "docs"
+        concept_id = node.concept or DEFAULT_CONCEPT
+    else:
+        classif_id, _ = inferir_classification(node)
+        concept_id = inferir_concepto(node)
 
-    # Agregar class_tag solo si no existe ya en formato limpio
-    class_tag = classification_tag(classif_id)
-    if class_tag not in tags:
-        tags.append(class_tag)
-    # Normalizar título para eliminar volátiles numéricos en RIESGO
-    title = node.title
-    if node.type == "RIESGO":
-        title = re.sub(r'\s*\(\d+\s*(?:l[ií]neas?|l[ií]n|total|l(?!\w))\)?', '', title)
-        title = re.sub(r';\s*[^;]+\(\d+\s*l[ií]neas?\)?', '', title)
-        title = re.sub(r'\s*;\s*', ', ', title)
-        title = title.rstrip(';,').strip()
-        title = _restaurar_paths_legibles(title)
+    tags = ajustar_tags(estandarizar_tags(node.tags), classif_id)
 
     nuevo_tipo, tipo_decision = clasificar_tipo(node)
     # Cola de revisión: si dos tipos distintos acumularon evidencia comparable,
     # la etiqueta queda visible en el vault en lugar de resolverse en silencio.
     if tipo_decision.en_conflicto() and TAG_REVISION not in tags:
         tags.append(TAG_REVISION)
-    nodo_temp = Node(
+
+    estandarizado = Node(
         id=node.id,
         type=nuevo_tipo,
-        title=title,
+        title=normalizar_titulo(node),
         summary=node.summary,
         tags=tags,
         source=node.source,
@@ -98,21 +89,14 @@ def estandarizar_nodo(node: Node) -> Node:
         concept=concept_id,
     )
 
-    return Node(
-        id=node.id,
-        type=nuevo_tipo,
-        title=title,
-        summary=node.summary,
-        tags=tags,
-        source=node.source,
-        status=node.status if es_documento else inferir_status(nodo_temp),
-        version=node.version,
-        evidence=inferir_evidence(node) or node.evidence,
-        created_at=node.created_at,
-        updated_at=node.updated_at,
-        classification=classif_id,
-        concept=concept_id,
-    )
+    if not es_documento:
+        estandarizado.status = inferir_status(estandarizado)
+
+    evidencia_inferida = inferir_evidence(node)
+    if evidencia_inferida:
+        estandarizado.evidence = evidencia_inferida
+
+    return estandarizado
 
 
 def estandarizar_nodos(nodes: list[Node]) -> list[Node]:
@@ -144,6 +128,8 @@ __all__ = [
     "corregir_tipo",
     "clasificar_tipo",
     "_restaurar_paths_legibles",
+    "ajustar_tags",
+    "normalizar_titulo",
     "estandarizar_nodo",
     "estandarizar_nodos",
     "depurar_nodos_obsoletos",

@@ -10,6 +10,7 @@ import os
 import re
 
 from context_map.core.models import Node
+from context_map.core.normalization.inference import classification_tag
 from context_map.core.normalization.mappings import (
     TAG_FILE_MAP,
     TAG_MERGE,
@@ -43,6 +44,52 @@ def estandarizar_tags(tags: list[str]) -> list[str]:
             tags_estandarizados.append(tag)
 
     return sorted(tags_estandarizados)
+
+
+def ajustar_tags(tags: list[str], classif_id: str) -> list[str]:
+    """Deja la lista de tags lista para persistir con su ``class:<id>``.
+
+    Retira las etiquetas legacy sin dos puntos (``classchore``,
+    ``classfeature``…) que dejaron escaneos antiguos y garantiza que la
+    etiqueta de clasificación aparezca una sola vez y en formato limpio.
+
+    Args:
+        tags (list[str]): Etiquetas ya estandarizadas por
+            :func:`estandarizar_tags`.
+        classif_id (str): Clasificación semántica calculada para el nodo.
+
+    Returns:
+        list[str]: Etiquetas sin legacy y con ``class:<classif_id>`` presente.
+    """
+    limpios = [t for t in tags if not re.match(r"^class[a-z]+$", t)]
+    etiqueta = classification_tag(classif_id)
+    if etiqueta not in limpios:
+        limpios.append(etiqueta)
+    return limpios
+
+
+def normalizar_titulo(node: Node) -> str:
+    """Devuelve el título del nodo sin volátiles numéricos de complejidad.
+
+    Los scans antiguos escribían ``RIESGO`` con el recuento de líneas pegado al
+    título (``… (151 líneas); … (120 líneas)``). Ese número cambia con cualquier
+    edición, así que rompe la deduplicación por título: se retira y se
+    reconstruyen los paths aplanados (``context_mapcore…``) que dejaban esos
+    mismos scans.
+
+    Args:
+        node (Node): Nodo original.
+
+    Returns:
+        str: Título limpio; intacto si el nodo no es ``RIESGO``.
+    """
+    if node.type != "RIESGO":
+        return node.title
+
+    titulo = re.sub(r"\s*\(\d+\s*(?:l[ií]neas?|l[ií]n|total|l(?!\w))\)?", "", node.title)
+    titulo = re.sub(r";\s*[^;]+\(\d+\s*l[ií]neas?\)?", "", titulo)
+    titulo = re.sub(r"\s*;\s*", ", ", titulo)
+    return _restaurar_paths_legibles(titulo.rstrip(";,").strip())
 
 
 def _restaurar_paths_legibles(titulo: str) -> str:
