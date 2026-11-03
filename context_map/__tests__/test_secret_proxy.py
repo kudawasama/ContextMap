@@ -16,6 +16,7 @@ from context_map.application.commands.secrets import (
 from context_map.core.secrets import entorno_con_secretos, sanear_salida, validar_ids_sin_colision
 from context_map.core.secrets.vault import agregar, crear_documento, guardar
 from context_map.infrastructure import mcp_server
+from context_map.infrastructure.mcp_tools import base as mcp_base
 
 FRASE = "Frase-De-Test-2026"
 ITER = 10_000
@@ -25,7 +26,7 @@ VALOR = "valor-secreto-abc"
 @pytest.fixture(autouse=True)
 def _reset_frase_maestra(monkeypatch):
     """Aísla la caché en memoria de la frase maestra entre tests."""
-    monkeypatch.setattr(mcp_server, "_FRASE_MAESTRA", None, raising=False)
+    monkeypatch.setattr(mcp_base, "_FRASE_MAESTRA", None, raising=False)
 
 
 def _eco() -> str:

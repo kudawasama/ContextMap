@@ -45,7 +45,8 @@ context_map/
 ├── infrastructure/              # Integraciones externas y analizadores AST
 │   ├── integrations/            # Git, Hermes Agent, Antigravity, SQLite, Chat exports
 │   ├── analyzers/               # Inspección AST Python, complejidad ciclomática y seguridad
-│   └── mcp_server.py            # Servidor MCP stdio nativo (FastMCP)
+│   ├── mcp_tools/               # Las 33 tools MCP repartidas por dominio (core, secretos, personal, conocimiento)
+│   └── mcp_server.py            # Fachada del servidor MCP stdio (FastMCP): instancia, registro y reexportes
 └── presentation/                # Generadores de artefactos visuales y de contexto
     ├── vault/                   # Motor de renderizado del Vault Obsidian (Topología estricta)
     └── briefs/                  # Generador de brief ejecutivo para LLMs (CONTEXT.md con Prompt Cache)
@@ -82,7 +83,7 @@ Para garantizar un Graph View de Obsidian legible, limpio y sin colisiones:
 
 ## 4. Servidor MCP Nativo (Model Context Protocol)
 
-El módulo `infrastructure/mcp_server.py` implementa el protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 30 herramientas nativas:
+El módulo `infrastructure/mcp_server.py` es la **fachada** del protocolo **MCP sobre transporte `stdio`**, permitiendo que agentes como **Hermes Agent**, **Cursor**, **Claude Desktop** y **Windsurf** ejecuten 33 herramientas nativas. Las tools viven repartidas por dominio en `infrastructure/mcp_tools/` (`core`, `secretos`, `personal`, `conocimiento`) y `mcp_server.py` solo crea el servidor, importa cada grupo (eso es lo que las registra) y reexporta los nombres históricos:
 
 > 🧩 Para **pi** hay un paquete que registra este MCP, añade la skill `contextmap` y 3 prompts: `pi install npm:@kudawa/pi-contextmap` (ver [docs/PI_PACKAGE.md](../docs/PI_PACKAGE.md)).
 

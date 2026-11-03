@@ -65,7 +65,7 @@ Si programas con **Cursor, Claude Code, Copilot, ChatGPT, Antigravity, Windsurf 
 |---|---|---|
 | **1. Escanear** | `ctxmap scan .` | Analiza estructura, símbolos y cambios → eventos (idea, riesgo, cambio, base…). |
 | **2. Sintetizar** | `ctxmap build --brief` | Escribe el grafo y la bóveda, y genera el brief para agentes. |
-| **3. Servir** | `ctxmap mcp` | Expone **30 herramientas MCP** para que el agente consulte la memoria sin leer archivos. |
+| **3. Servir** | `ctxmap mcp` | Expone **33 herramientas MCP** para que el agente consulte la memoria sin leer archivos. |
 | **4. Revisar y adaptar** | `ctxmap check .` · `ctxmap adapt` | Audita la salud del contexto y genera las reglas nativas de cada IDE. |
 
 Todo en un paso:
@@ -209,7 +209,7 @@ Frente a "pegar el repositorio entero", un brief de ~700 tokens es un ahorro sup
 
 - **🧠 Memoria permanente** — tu diario y tus notas manuales (`7.0-MANUAL/`) sobreviven a cada build (`preserve: true`). La historia no se borra: lo tosco se redacta.
 - **🌐 Multi-proyecto** — base SQLite + FTS5 con lecciones, decisiones y sesiones de todos tus proyectos.
-- **🔌 Servidor MCP nativo** — **30 herramientas** (`context`, `context_diff`, `context_search`, `personal_*`, `knowledge_*`, `refresh`, `check`…) para agentes locales.
+- **🔌 Servidor MCP nativo** — **33 herramientas** (`context`, `context_diff`, `context_search`, `personal_*`, `knowledge_*`, `refresh`, `check`…) para agentes locales.
 - **🧩 Paquete de pi** — `pi install npm:@kudawa/pi-contextmap` (MCP + skill + prompts). Ver [docs/PI_PACKAGE.md](docs/PI_PACKAGE.md).
 - **🛡️ Adaptación por IDE** — reglas nativas para 10+ editores (ver Ejemplo 4).
 - **📚 Second Brain** — captura la web, artículos y vídeos; sintetiza respuestas **con citas** sobre tu propia wiki (`ctxmap wiki ask`).
@@ -226,7 +226,7 @@ Frente a "pegar el repositorio entero", un brief de ~700 tokens es un ahorro sup
 | Mapa visual navegable | ❌ | ❌ | **✅ Bóveda Obsidian** |
 | Cambiar de editor sin perder contexto | ❌ | ❌ Atrapado | **✅ Portable** |
 | Visión multi-proyecto | ❌ | ❌ | **✅ Base consolidada** |
-| Herramientas nativas para el agente | ❌ | 🟡 Cerradas | **✅ 30 tools MCP + skill** |
+| Herramientas nativas para el agente | ❌ | 🟡 Cerradas | **✅ 33 tools MCP + skill** |
 
 ---
 
