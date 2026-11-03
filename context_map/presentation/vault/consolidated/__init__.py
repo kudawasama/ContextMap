@@ -10,6 +10,9 @@ Submódulos:
 - nodos: Clasificación y deduplicación de nodos.
 - escritura: Escritura de notas Markdown y del grafo de conexiones.
 - consolidado: Modo consolidado (8 notas temáticas sintéticas).
+- consolidado_base: Frontmatter, pie y secciones comunes de esas 8 notas.
+- consolidado_meta: Índice MOC, propósito y estructura del proyecto.
+- consolidado_contenido: Ideas, riesgos, backlog e historial.
 - jerarquico: Modo jerárquico en árbol (secciones 1.0-6.0 y notas atómicas).
 """
 
