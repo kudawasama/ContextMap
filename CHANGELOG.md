@@ -78,6 +78,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
   respetados. Suite total: **488 tests**.
 
+## [Unreleased]
+
+### ✨ Añadido
+
+- `ctxmap search` ahora usa un **índice FTS5** derivado del vault
+  (`.context-map/state/vault_index.db`), regenerado en cada `build`/`refresh`.
+  Búsqueda full-text en milisegundos con filtros por sección y tipo.
+- Nueva tool MCP `context_search_vault` (búsqueda FTS5 del vault).
+- `core/storage/vault_index.py`: `abrir_indice`, `indexar_vault`, `buscar`
+  (parser de frontmatter tolerante, sin dependencia de `yaml`).
+
 ## [2.14.1] — 2026-11-02
 
 ### 🐛 Corregido
