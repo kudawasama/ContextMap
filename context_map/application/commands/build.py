@@ -153,6 +153,23 @@ def cmd_build(args) -> None:
     except Exception as err:  # noqa: BLE001
         print(f"graph-groups: (sin grupos) {err}")
 
+    # Índice FTS5 derivado del vault (búsqueda rápida; no es fuente de verdad).
+    # Se regenera completo en cada build para no driftar respecto al Markdown.
+    try:
+        from context_map.core.storage.vault_index import abrir_indice, indexar_vault
+
+        _db_path = os.path.join(STATE_DIR, "vault_index.db")
+        _conn = abrir_indice(_db_path)
+        try:
+            _n_notas = indexar_vault(_conn, vault_path)
+        finally:
+            _conn.close()
+        if not getattr(args, "quiet", False):
+            print(f"vault-index: {_n_notas} notas indexadas (FTS5)")
+    except Exception as _err:  # noqa: BLE001 — no romper el build por el índice
+        if not getattr(args, "quiet", False):
+            print(f"vault-index: (sin índice) {_err}")
+
     # Snapshot (omitido en modo daemon/CI: el historial es un acto deliberado)
     if getattr(args, "no_snapshot", False):
         print("snapshot: omitido (--no-snapshot)")

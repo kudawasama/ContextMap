@@ -201,6 +201,62 @@ def context_search(consulta: str, limite: int = 5, target: str = ".", semantico:
         return f"ERROR en context_search: {err}"
 
 @_tool
+def context_search_vault(
+    consulta: str,
+    limite: int = 10,
+    target: str = ".",
+    seccion: str = "",
+    tipo: str = "",
+) -> str:
+    """Busca texto libre en el vault Obsidian del proyecto con FTS5 (rapido, sin cargar ficheros).
+
+    USAR para recuperar notas del vault por contenido (ideas, riesgos, lecciones,
+    diario) con snippet y ruta. Requiere haber ejecutado ``ctxmap build``/``refresh``
+    para que exista el indice ``.context-map/state/vault_index.db``.
+
+    Args:
+        consulta: Terminos a buscar (sintaxis FTS5: AND/OR/"frase").
+        limite: Maximo de notas (default 10).
+        target: Ruta del proyecto.
+        seccion: Filtra por seccion del vault (ej. "2.0", "4.0"). Vacio = todas.
+        tipo: Filtra por tipo de nota (IDEA, RIESGO, CAMBIO, BASE, ...). Vacio = todos.
+    """
+    from context_map.core.storage.vault_index import abrir_indice, buscar as buscar_vault
+    import os
+
+    target_abs = _target_abs(target)
+    db_path = os.path.join(target_abs, ".context-map", "state", "vault_index.db")
+    if not os.path.isfile(db_path):
+        return (
+            "context_search_vault: sin indice FTS5. "
+            "Ejecuta `ctxmap refresh .` (o `ctxmap build`) para generarlo."
+        )
+    try:
+        conn = abrir_indice(db_path)
+        try:
+            resultados = buscar_vault(
+                conn,
+                consulta,
+                seccion=seccion or None,
+                tipo=tipo or None,
+                limite=limite,
+            )
+        finally:
+            conn.close()
+        if not resultados:
+            return f"context_search_vault: sin resultados para: {consulta}"
+        lineas = [f"context_search_vault: {len(resultados)} nota(s)"]
+        for r in resultados:
+            lineas.append(
+                f"- {r['ruta']}  ({r['seccion']} · {r['tipo'] or 'sin tipo'})"
+            )
+            lineas.append(f"  {r['snippet']}")
+        return "\n".join(lineas)
+    except Exception as err:  # noqa: BLE001
+        return f"ERROR en context_search_vault: {err}"
+
+
+@_tool
 def export(
     target: str = ".",
     format: str = "xml",

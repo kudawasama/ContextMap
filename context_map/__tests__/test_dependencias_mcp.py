@@ -43,6 +43,7 @@ TOOLS_ESPERADAS = frozenset({
     "context",
     "context_diff",
     "context_search",
+    "context_search_vault",
     "doctor",
     "export",
     "import_chat",
@@ -74,7 +75,7 @@ TOOLS_ESPERADAS = frozenset({
 
 
 def test_inventario_de_tools_completo() -> None:
-    """El servidor expone exactamente las 33 tools del inventario histórico."""
+    """El servidor expone exactamente las 34 tools del inventario histórico."""
     import asyncio
 
     import pytest
@@ -86,4 +87,4 @@ def test_inventario_de_tools_completo() -> None:
     registradas = {t.name for t in asyncio.run(mcp_server._fastmcp.list_tools())}
 
     assert registradas == TOOLS_ESPERADAS
-    assert len(registradas) == 33
+    assert len(registradas) == 34

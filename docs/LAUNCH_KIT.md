@@ -10,7 +10,7 @@ Guía completa con plantillas listas para publicar y masificar **ContextMap** en
 1. Ingresa a [Glama.ai MCP Submit](https://glama.ai/mcp/servers).
 2. Completa los datos:
    - **Name:** ContextMap
-   - **Description:** Narrative Mental Map & Context Governance for AI Agents (Obsidian Vault, CLI, 33 Tools).
+   - **Description:** Narrative Mental Map & Context Governance for AI Agents (Obsidian Vault, CLI, 34 Tools).
    - **Repository:** `https://github.com/kudawasama/ContextMap`
    - **Command:** `uvx context-map-ai mcp` o `python -m context_map.cli mcp`
 
@@ -29,7 +29,7 @@ Guía completa con plantillas listas para publicar y masificar **ContextMap** en
 ```text
 Hi HN! We built ContextMap, an open-source tool that bridge the context gap for AI Coding Agents (Antigravity, Cursor, Claude Code, Hermes, Copilot).
 
-Instead of dumping raw code snippets or giant prompt exports into context windows, ContextMap scans Python projects, builds a hierarchical Obsidian Vault with narrative context, and exposes an official MCP server (33 tools) and CLI.
+Instead of dumping raw code snippets or giant prompt exports into context windows, ContextMap scans Python projects, builds a hierarchical Obsidian Vault with narrative context, and exposes an official MCP server (34 tools) and CLI.
 
 Key Features:
 - 🗺️ Hierarchical Obsidian Vault: Pure tree graph topology (0 broken links).

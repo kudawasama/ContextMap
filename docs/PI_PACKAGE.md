@@ -26,7 +26,7 @@ deja errores de conexión ruidosos).
 
 | Recurso | Nombre | Para qué |
 |---|---|---|
-| Extensión | MCP `contextmap` | Registra `ctxmap mcp` (33 herramientas). Las 4 de lectura (`context`, `personal_panorama`, `personal_query`, `knowledge_wiki_ask`) van `direct`; el resto en `codemode` |
+| Extensión | MCP `contextmap` | Registra `ctxmap mcp` (34 herramientas). Las 4 de lectura (`context`, `personal_panorama`, `personal_query`, `knowledge_wiki_ask`) van `direct`; el resto en `codemode` |
 | Skill | `/skill:contextmap` | Protocolo: ponerse en contexto, actualizar sin ensuciar, memoria viva, topología del vault |
 | Prompt | `/contextmap-contexto` | Arrancar con brief + pendientes reales |
 | Prompt | `/contextmap-cierre` | Cerrar sesión: refresh → verificar → documentar |
