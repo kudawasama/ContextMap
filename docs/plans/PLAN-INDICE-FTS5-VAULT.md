@@ -32,8 +32,8 @@ romper el flujo `ctxmap refresh .` ni los tests de topología.
 | Bóveda Obsidian (`.md` por nota) | ✅ fuente de verdad |
 | `ctxmap personal` (SQLite + FTS5) | ✅ multi-proyecto, patrón a replicar |
 | `context_map/core/storage` (SQLite) | ✅ base a reutilizar |
-| Búsqueda local en el vault | ❌ solo `grep`/lectura secuencial |
-| Índice FTS5 por proyecto | ❌ no existe |
+| Búsqueda local en el vault | ✅ `ctxmap search` (FTS5, con fallback BM25) |
+| Índice FTS5 por proyecto | ✅ `core/storage/vault_index.py` + `vault_index.db` |
 
 ---
 
