@@ -1,0 +1,1145 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA.">
+      
+      
+        <meta name="author" content="kudawasama">
+      
+      
+        <link rel="canonical" href="https://kudawasama.github.io/ContextMap/plans/PLAN-INDICE-FTS5-VAULT/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Índice FTS5 del vault — Plan de Implementación - ContextMap — Narrative Mental Map for AI Agents</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#indice-fts5-del-vault-plan-de-implementacion" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-header__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ContextMap — Narrative Mental Map for AI Agents
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Índice FTS5 del vault — Plan de Implementación
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏠 Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../PI_PACKAGE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📦 Paquete e instalación
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../GOBERNANZA-AGENTES/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🧭 Gobernanza de agentes
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../PORTABILIDAD/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🔐 Portabilidad y secretos
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../WEB_CLIPPER/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ✂️ Web Clipper
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../LLM/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🧠 LLM y conocimiento
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../LAUNCH_KIT/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🚀 Launch Kit
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../COMPARATIVO-ECOSISTEMA-CONTEXTO/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📊 Comparativa del ecosistema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../INVESTIGACION-JEV/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🔬 Investigación Jev
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-nav__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ContextMap — Narrative Mental Map for AI Agents
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏠 Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PI_PACKAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📦 Paquete e instalación
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GOBERNANZA-AGENTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧭 Gobernanza de agentes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PORTABILIDAD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔐 Portabilidad y secretos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WEB_CLIPPER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ✂️ Web Clipper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LLM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧠 LLM y conocimiento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LAUNCH_KIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🚀 Launch Kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COMPARATIVO-ECOSISTEMA-CONTEXTO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📊 Comparativa del ecosistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INVESTIGACION-JEV/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔬 Investigación Jev
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#estado-actual-fase-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado actual (Fase 0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-1-especificacion-sin-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 1 — Especificación (sin código)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 1 — Especificación (sin código)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-11-docsplanesindice-fts5-vaultmd-este-documento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.1: docs/planes/INDICE-FTS5-VAULT.md (este documento)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-2-implementacion-tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 2 — Implementación (TDD)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 2 — Implementación (TDD)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-21-modulo-corestoragevault_indexpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.1: módulo core/storage/vault_index.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-22-comando-cli-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.2: comando CLI search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-23-integracion-en-buildrefresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.3: integración en build/refresh
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-24-herramienta-mcp-context_search_vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.4: herramienta MCP context_search_vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-3-verificacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Verificación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-4-documentacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Documentación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#riesgos-y-decisiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riesgos y decisiones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-abierta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisión abierta
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="indice-fts5-del-vault-plan-de-implementacion">Índice FTS5 del vault — Plan de Implementación</h1>
+<blockquote>
+<p><strong>Motivación:</strong> el vault es Markdown-first (fuente de verdad, portátil,
+diff-friendly y navegable en Obsidian). Las consultas de texto libre hoy
+dependen de <code>grep</code>/lectura secuencial, que escala mal cuando el vault crece.
+La memoria personal (<code>ctxmap personal</code>) ya usa SQLite + FTS5 y es rápida;
+la idea es replicar ese patrón <strong>sobre el vault local</strong>, sin abandonar el
+Markdown como fuente de verdad.</p>
+</blockquote>
+<p><strong>Goal:</strong> añadir un índice FTS5 derivado del vault local que permita búsquedas
+de texto libre en milisegundos (<code>ctxmap search "término"</code>), regenerado en cada
+<code>build</code>/<code>refresh</code>, sin romper la portabilidad ni la topología del grafo.</p>
+<p><strong>Arquitectura:</strong> el índice es un artefacto <strong>derivado y reproducible</strong> (no se
+versiona, se regenera). Fuente de verdad sigue siendo el árbol de <code>.md</code> del
+vault; la DB es caché/índice, como ya se hace con <code>personal</code>. Se reutiliza el
+módulo de storage existente (<code>core/storage</code>) y el patrón de <code>ctxmap personal</code>.</p>
+<p><strong>Tech Stack:</strong> Python 3.10+, <code>sqlite3</code> (stdlib), FTS5 (ya disponible en el
+proyecto), pytest. Sin dependencias nuevas.</p>
+<p><strong>Principios:</strong> YAGNI (solo texto libre + filtros básicos), determinismo
+(mismo vault → mismo índice), no tocar la topología ni el frontmatter, y no
+romper el flujo <code>ctxmap refresh .</code> ni los tests de topología.</p>
+<hr />
+<h2 id="estado-actual-fase-0">Estado actual (Fase 0)</h2>
+<table>
+<thead>
+<tr>
+<th>Artefacto</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bóveda Obsidian (<code>.md</code> por nota)</td>
+<td>✅ fuente de verdad</td>
+</tr>
+<tr>
+<td><code>ctxmap personal</code> (SQLite + FTS5)</td>
+<td>✅ multi-proyecto, patrón a replicar</td>
+</tr>
+<tr>
+<td><code>context_map/core/storage</code> (SQLite)</td>
+<td>✅ base a reutilizar</td>
+</tr>
+<tr>
+<td>Búsqueda local en el vault</td>
+<td>✅ <code>ctxmap search</code> (FTS5, con fallback BM25)</td>
+</tr>
+<tr>
+<td>Índice FTS5 por proyecto</td>
+<td>✅ <code>core/storage/vault_index.py</code> + <code>vault_index.db</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="fase-1-especificacion-sin-codigo">Fase 1 — Especificación (sin código)</h2>
+<h3 id="task-11-docsplanesindice-fts5-vaultmd-este-documento">Task 1.1: <code>docs/planes/INDICE-FTS5-VAULT.md</code> (este documento)</h3>
+<p><strong>Objective:</strong> dejar por escrito el contrato del índice para no improvisar.</p>
+<p><strong>Contrato del índice:</strong></p>
+<ul>
+<li>Ubicación: <code>.context-map/state/vault_index.db</code> (junto al manifiesto de reglas).</li>
+<li>Tabla <code>notas (ruta, titulo, seccion, tipo, estado, contenido)</code> + virtual
+  <code>notas_fts</code> (FTS5 sobre <code>titulo, contenido</code>).</li>
+<li>Regeneración completa en cada <code>build</code>/<code>refresh</code> (no incremental en v1).</li>
+<li><code>.gitignore</code>: <code>vault_index.db</code> y <code>*.db-wal</code>/<code>*.db-shm</code> (artefacto derivado).</li>
+<li>Comando: <code>ctxmap search "término" [--seccion X] [--tipo IDEA] [--limite N]</code>.</li>
+</ul>
+<hr />
+<h2 id="fase-2-implementacion-tdd">Fase 2 — Implementación (TDD)</h2>
+<h3 id="task-21-modulo-corestoragevault_indexpy">Task 2.1: módulo <code>core/storage/vault_index.py</code></h3>
+<p><strong>Objective:</strong> crear/abrir la DB y poblarla desde un directorio de vault.</p>
+<ul>
+<li><code>abrir_indice(ruta_db) -&gt; sqlite3.Connection</code> (crea esquema si no existe).</li>
+<li><code>indexar_vault(conn, vault_dir) -&gt; int</code> (borra y reinserta; devuelve nº de notas).</li>
+<li>Parseo mínimo del frontmatter YAML-like (sin dependencia de <code>yaml</code>): <code>titulo</code>,
+  <code>seccion</code>, <code>tipo</code>, <code>estado</code>. Si falta, valores por defecto.</li>
+<li>Tests: <code>test_vault_index.py</code> con vault temporal de 3 notas.</li>
+</ul>
+<h3 id="task-22-comando-cli-search">Task 2.2: comando CLI <code>search</code></h3>
+<p><strong>Objective:</strong> exponer la búsqueda al usuario y a los agentes.</p>
+<ul>
+<li><code>ctxmap search "término" [--seccion X] [--tipo IDEA] [--limite N]</code>.</li>
+<li>Salida: tabla compacta (ruta, título, extracto con highlight).</li>
+<li>JSON opcional (<code>--json</code>) para consumo por agentes/MCP.</li>
+<li>Tests: <code>test_cli_search.py</code>.</li>
+</ul>
+<h3 id="task-23-integracion-en-buildrefresh">Task 2.3: integración en <code>build</code>/<code>refresh</code></h3>
+<p><strong>Objective:</strong> el índice se regenera automáticamente.</p>
+<ul>
+<li>En <code>build</code> (tras escribir el vault): <code>indexar_vault(conn, vault_dir)</code>.</li>
+<li>En <code>refresh</code>: ya llama a <code>build</code>, así que queda cubierto.</li>
+<li>Si el vault no cambió, saltar el reindexado por hash del directorio (YAGNI:
+  solo si el coste del reindexado completo se vuelve notable).</li>
+</ul>
+<h3 id="task-24-herramienta-mcp-context_search_vault">Task 2.4: herramienta MCP <code>context_search_vault</code></h3>
+<p><strong>Objective:</strong> exponer la búsqueda al MCP (hoy <code>context_search</code> busca en código).</p>
+<ul>
+<li>Nueva tool <code>context_search_vault(query, seccion?, tipo?, limite?)</code>.</li>
+<li>Reutiliza <code>core/storage/vault_index</code>.</li>
+<li>Tests: <code>test_mcp_server_seguridad.py</code> (sin regresiones).</li>
+</ul>
+<hr />
+<h2 id="fase-3-verificacion">Fase 3 — Verificación</h2>
+<ul>
+<li><code>python -m pytest</code> → 100% verde (hoy 479; objetivo ≥ 490).</li>
+<li><code>ctxmap refresh .</code> → índice regenerado, sin cambios en el árbol de <code>.md</code>.</li>
+<li><code>ctxmap search "arquitectura"</code> → resultados en &lt; 50 ms para el vault actual.</li>
+<li><code>git status</code> limpio tras el build (el <code>.db</code> está en <code>.gitignore</code>).</li>
+<li><code>test_topologia_arbol.py</code> sigue pasando (0 rotos).</li>
+</ul>
+<hr />
+<h2 id="fase-4-documentacion">Fase 4 — Documentación</h2>
+<ul>
+<li><code>docs/</code> o <code>7.0-MANUAL/DOMINIO.md</code>: sección «Búsqueda en el vault».</li>
+<li><code>CHANGELOG.md</code>: entrada en <code>[Unreleased]</code>.</li>
+<li><code>AGENTS.md</code>/brief: mencionar <code>ctxmap search</code> como vía rápida.</li>
+</ul>
+<hr />
+<h2 id="riesgos-y-decisiones">Riesgos y decisiones</h2>
+<table>
+<thead>
+<tr>
+<th>Riesgo</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Drift entre <code>.md</code> y el índice</td>
+<td>Regeneración completa en cada build; el índice nunca es fuente de verdad.</td>
+</tr>
+<tr>
+<td><code>.db</code> versionado por error</td>
+<td><code>.gitignore</code> explícito + test que falla si aparece en <code>git status</code>.</td>
+</tr>
+<tr>
+<td>Frontmatter no estándar</td>
+<td>Parser tolerante con valores por defecto; nunca rompe el build.</td>
+</tr>
+<tr>
+<td>Coste del reindexado</td>
+<td>Medir; si es alto, hash del directorio para saltar.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="estimacion">Estimación</h2>
+<ul>
+<li>Fase 1: 0.5 h (este documento).</li>
+<li>Fase 2: 3–4 h (módulo + comando + integración + MCP).</li>
+<li>Fase 3–4: 1 h.</li>
+</ul>
+<p><strong>Total: ~5 h.</strong> Se puede entregar por fases (primero 2.1+2.2, luego 2.3+2.4).</p>
+<hr />
+<h2 id="decision-abierta">Decisión abierta</h2>
+<p>¿Se incluye en v2.15.0 o se deja para v2.16.0 junto a otras mejoras del vault?
+Recomendación: v2.15.0, porque es aditivo, no rompe nada y mejora la UX de
+búsqueda sin cambiar el modelo de datos.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
