@@ -1,5 +1,9 @@
 # 🗺️ ContextMap
 
+[![Release](https://img.shields.io/badge/version-v2.16.0-blue.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md)
+[![PyPI](https://img.shields.io/pypi/v/context-map-ai.svg?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/context-map-ai/)
+[![Tests](https://img.shields.io/badge/tests-479%20passing-brightgreen.svg?style=for-the-badge)](https://github.com/kudawasama/ContextMap/tree/master/context_map/__tests__)
+
 **La memoria permanente para tus asistentes de IA.**
 Que tu IA no olvide tus decisiones, no queme tokens y no rompa tu código.
 

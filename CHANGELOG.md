@@ -78,7 +78,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
   respetados. Suite total: **488 tests**.
 
-## [Unreleased]
+## [2.16.0] — 2026-11-04
 
 ### ✨ Añadido
 
