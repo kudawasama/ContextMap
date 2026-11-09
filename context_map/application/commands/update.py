@@ -96,6 +96,22 @@ def cmd_update(args) -> None:
             print("✅ Actualización completada exitosamente con uv.")
             _mostrar_version_final()
             return
+        # En Windows, uv no puede borrar el directorio mientras ctxmap está
+        # corriendo (bloqueo del proceso actual). Lanzar la instalación en un
+        # proceso separado que espera a que salgamos.
+        if "Acceso denegado" in (res.stderr or "") or "os error 5" in (res.stderr or ""):
+            print("   (El proceso actual bloquea el directorio; lanzando instalación diferida...)")
+            detached = (
+                f'timeout /t 3 /nobreak >nul & uv tool install --force "git+{ref}"'
+            )
+            subprocess.Popen(
+                ["cmd", "/c", "start", "ContextMap Update", "cmd", "/c", detached],
+                creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_CONSOLE,
+            )
+            print("   Se abrirá una ventana que completará la instalación en unos segundos.")
+            print("   Cierra esta terminal y, cuando termine, abre una nueva y ejecuta `ctxmap --version`.")
+            return
+        print(res.stderr.strip() or "Error desconocido en uv.")
 
     # Método 2: pipx install --force
     if shutil.which("pipx"):
