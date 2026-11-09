@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from typing import Any
 
 from context_map.domain.health.doctor import diagnosticar_salud, reparar_salud
@@ -41,6 +42,7 @@ def cmd_doctor(args: dict[str, Any]) -> None:
     fix = bool(args.get("fix", False))
     as_json = bool(args.get("json", False))
     sizes = bool(args.get("sizes", False))
+    strict = bool(args.get("strict", False))
 
     if sizes:
         datos = medir_pesos(target_dir)
@@ -83,3 +85,5 @@ def cmd_doctor(args: dict[str, Any]) -> None:
         print("✨ [OK] Sistema saludable y libre de fallos críticos.")
     else:
         print(f"⚠️ [ATENCIÓN] Encontrados {len(report.failed)} fallos. Corre `ctxmap doctor --fix` para reparar.")
+    if strict and not report.ok:
+        sys.exit(1)

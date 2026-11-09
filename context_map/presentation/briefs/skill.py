@@ -44,12 +44,21 @@ def generar_skill_contextmap(
 ctxmap refresh .     # = scan + build (preservando manuales) + check
 ```
 
+## 🩺 Auto-diagnóstico (antes de trabajar)
+
+```bash
+ctxmap doctor --json   # salud del entorno; si hay FAIL, repara o repórtalo
+```
+
+No ejecutes `--fix` sin confirmación explícita del usuario.
+
 ## 🧰 Comandos
 
 ```bash
 ctxmap scan .                  # escanear cambios del código -> nodos
 ctxmap build --brief           # regenerar vault + brief (SIN --clean)
 ctxmap check .                 # readiness + salud del vault
+ctxmap doctor --json           # salud del entorno (CLI, MCP, índice FTS5, skills, reglas)
 ctxmap search "<tema>"         # pasajes con citas (sin leer ficheros enteros)
 ctxmap import-git .            # historial de commits y decisiones
 ctxmap import-sessions         # sesiones de Hermes Agent

@@ -413,6 +413,7 @@ def _guardar_reglas_manifest(target_dir: str, manifest: dict[str, str]) -> None:
 def revisar_reglas_agente(
     project_name: str,
     target_dir: str = ".",
+    dry_run: bool = False,
 ) -> dict[str, list[str]]:
     """Revisa y pone al día SOLO las reglas agénticas propias de ContextMap.
 
@@ -448,7 +449,8 @@ def revisar_reglas_agente(
     for ruta_rel, contenido in _reglas_por_agente(project_name, eco, target_dir, fecha):
         ruta = os.path.join(target_dir, ruta_rel)
         if not os.path.exists(ruta):
-            _volcar_archivo(ruta, contenido)
+            if not dry_run:
+                _volcar_archivo(ruta, contenido)
             manifest[ruta_rel] = _hash_texto(contenido)
             resultado["creados"].append(ruta_rel)
             continue
@@ -470,13 +472,15 @@ def revisar_reglas_agente(
             manifest[ruta_rel] = deseado_hash  # al dia: se OMITE (sin reescribir)
             resultado["omitidos"].append(ruta_rel)
         elif es_nuestro:
-            _volcar_archivo(ruta, deseado)  # nuestro y desactualizado -> actualizar
+            if not dry_run:
+                _volcar_archivo(ruta, deseado)  # nuestro y desactualizado -> actualizar
             manifest[ruta_rel] = deseado_hash
             resultado["actualizados"].append(ruta_rel)
         else:
             resultado["respetados"].append(ruta_rel)
 
-    _guardar_reglas_manifest(target_dir, manifest)
+    if not dry_run:
+        _guardar_reglas_manifest(target_dir, manifest)
     return resultado
 
 

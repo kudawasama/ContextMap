@@ -17,8 +17,12 @@ from context_map.core.storage.store import (
     _listar_snapshots,
     purgar_snapshots,
 )
+from context_map.core.storage.vault_index import abrir_indice, indexar_vault
+from context_map.domain.ecosystem.adaptador import revisar_reglas_agente
+from context_map.infrastructure.version_check import hay_actualizacion, version_local
 from context_map.presentation.briefs.extractors import vault_nombre
 from context_map.presentation.vault.preservar import ZONAS_MANUALES
+from context_map.presentation.vault.topologia import analizar_topologia
 
 logger = logging.getLogger(__name__)
 
@@ -341,6 +345,308 @@ def check_history(report: DoctorReport, fix: bool = False, project_dir: str = ".
     report.add(DoctorCheck("history", "OK", f"{len(rutas)} snapshots / {total_mb} MB"))
 
 
+# --- Nuevos chequeos (plan doctor & autocorrección) -------------------------
+
+
+def check_update_available(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="update_available")
+    try:
+        local = version_local()
+        hay, _l, remota = hay_actualizacion()
+    except Exception as exc:  # noqa: BLE001
+        check.status = "OK"
+        check.message = f"No se pudo verificar actualizaciones: {exc}"
+        report.add(check)
+        return
+    if hay:
+        check.status = "WARN"
+        check.message = f"Actualización disponible: v{remota} (tienes {local})."
+    else:
+        check.status = "OK"
+        check.message = f"ContextMap al día (v{local})."
+    report.add(check)
+
+
+def check_mcp_deps(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="mcp_deps")
+    try:
+        import importlib.metadata as md
+
+        mcp_v = md.version("mcp")
+        pydantic_v = md.version("pydantic")
+    except Exception:
+        check.status = "OK"
+        check.message = "Extra [mcp] no instalado; no aplica."
+        report.add(check)
+        return
+    try:
+        mayor, menor = (int(x) for x in pydantic_v.split(".")[:2])
+    except ValueError:
+        mayor, menor = 0, 0
+    if (mayor, menor) < (2, 13):
+        check.status = "FAIL"
+        check.message = (
+            f"pydantic {pydantic_v} < 2.13: el servidor MCP no importa. "
+            "Instala `ctxmap-ai[mcp]`."
+        )
+    else:
+        check.status = "OK"
+        check.message = f"mcp {mcp_v}, pydantic {pydantic_v} (OK)."
+    report.add(check)
+
+
+def check_vault_index(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="vault_index")
+    context_dir = os.path.join(project_dir, ".context-map")
+    if not os.path.isdir(context_dir):
+        check.status = "OK"
+        check.message = "Sin directorio .context-map/ aún."
+        report.add(check)
+        return
+
+    repo_name = os.path.basename(os.path.abspath(project_dir))
+    expected_vault = vault_nombre(repo_name)
+    vault_path = os.path.join(context_dir, expected_vault)
+    if not os.path.isdir(vault_path):
+        vaults = [
+            d for d in os.listdir(context_dir)
+            if d.startswith("vault-") and os.path.isdir(os.path.join(context_dir, d))
+        ]
+        if not vaults:
+            check.status = "OK"
+            check.message = "Sin vault aún."
+            report.add(check)
+            return
+        vault_path = os.path.join(context_dir, vaults[0])
+
+    db_path = os.path.join(context_dir, "state", "vault_index.db")
+    if not os.path.isfile(db_path):
+        check.status = "WARN"
+        check.message = "Índice FTS5 ausente. Ejecuta `ctxmap build`."
+        if fix:
+            try:
+                conn = abrir_indice(db_path)
+                try:
+                    n = indexar_vault(conn, vault_path)
+                finally:
+                    conn.close()
+                check.fix_applied = True
+                check.fix_message = f"Reindexadas {n} notas."
+                check.status = "OK"
+            except Exception as exc:  # noqa: BLE001
+                check.fix_message = f"No se pudo reindexar: {exc}"
+        report.add(check)
+        return
+
+    try:
+        newest_md = 0.0
+        for root, _d, files in os.walk(vault_path):
+            for fn in files:
+                if fn.lower().endswith(".md"):
+                    newest_md = max(newest_md, os.path.getmtime(os.path.join(root, fn)))
+        db_mtime = os.path.getmtime(db_path)
+    except OSError as exc:
+        check.status = "WARN"
+        check.message = f"No se pudo verificar frescura del índice: {exc}"
+        report.add(check)
+        return
+
+    if newest_md > db_mtime:
+        check.status = "WARN"
+        check.message = "Índice FTS5 desactualizado (vault más nuevo)."
+        if fix:
+            try:
+                conn = abrir_indice(db_path)
+                try:
+                    n = indexar_vault(conn, vault_path)
+                finally:
+                    conn.close()
+                check.fix_applied = True
+                check.fix_message = f"Reindexadas {n} notas."
+                check.status = "OK"
+            except Exception as exc:  # noqa: BLE001
+                check.fix_message = f"No se pudo reindexar: {exc}"
+    else:
+        check.status = "OK"
+        check.message = "Índice FTS5 presente y al día."
+    report.add(check)
+
+
+def check_context_freshness(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="context_freshness")
+    try:
+        from context_map.domain.analysis import analizar_readiness
+
+        resultado = analizar_readiness(project_dir)
+        frescura = getattr(resultado, "frescura", {}) or {}
+        aviso = frescura.get("aviso") if isinstance(frescura, dict) else None
+    except Exception as exc:  # noqa: BLE001
+        check.status = "OK"
+        check.message = f"No se pudo evaluar frescura: {exc}"
+        report.add(check)
+        return
+    if aviso:
+        check.status = "WARN"
+        check.message = str(aviso)
+    else:
+        check.status = "OK"
+        check.message = "Contexto al día (sin actividad posterior al último build)."
+    report.add(check)
+
+
+def check_skill_collisions(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="skill_collisions")
+    import glob as _glob
+
+    home = os.path.expanduser("~")
+    raices: list[str] = []
+    for r in (
+        os.path.join(home, ".agents", "skills"),
+        os.path.join(project_dir, ".agents", "skills"),
+        os.path.join(home, ".claude", "skills"),
+        os.path.join(home, ".pi", "agent", "npm", "node_modules"),
+        os.path.join(project_dir, "node_modules"),
+    ):
+        if os.path.isdir(r):
+            raices.append(r)
+
+    skills: dict[str, list[str]] = {}
+
+    def _parse_name(path: str) -> str | None:
+        try:
+            with open(path, encoding="utf-8") as f:
+                texto = f.read(2048)
+        except OSError:
+            return None
+        if not texto.startswith("---"):
+            return None
+        for line in texto.splitlines()[1:]:
+            if line.strip() == "---":
+                break
+            if ":" in line:
+                k, v = line.split(":", 1)
+                if k.strip().lower() == "name":
+                    return v.strip().strip('"').strip("'")
+        return None
+
+    def _escanear(raiz: str, profundidad: int = 0) -> None:
+        if profundidad > 4:
+            return
+        try:
+            with os.scandir(raiz) as it:
+                for entry in it:
+                    if entry.is_symlink():
+                        continue
+                    if entry.is_dir(follow_symlinks=False):
+                        _escanear(entry.path, profundidad + 1)
+                    elif entry.name == "SKILL.md":
+                        name = _parse_name(entry.path)
+                        if name:
+                            skills.setdefault(name, []).append(entry.path)
+        except (OSError, PermissionError):
+            return
+
+    for r in raices:
+        _escanear(r)
+
+    # Raíces de paquetes npm acotadas: solo */*/skills
+    for patron in (
+        os.path.join(home, ".pi", "agent", "npm", "node_modules", "*", "*", "skills"),
+        os.path.join(project_dir, "node_modules", "@*", "*", "skills"),
+    ):
+        for skills_dir in _glob.glob(patron):
+            if os.path.isdir(skills_dir):
+                _escanear(skills_dir, 0)
+
+    colisiones = {n: ps for n, ps in skills.items() if len(ps) > 1}
+    if colisiones:
+        detalle = "; ".join(f"{n}: {', '.join(ps)}" for n, ps in colisiones.items())
+        check.status = "WARN"
+        check.message = (
+            f"Skill duplicada detectada (el agente usa la primera descubierta): "
+            f"{detalle}"
+        )
+    else:
+        check.status = "OK"
+        check.message = "Sin colisiones de skills entre orígenes."
+    report.add(check)
+
+
+def check_generated_rules(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="generated_rules")
+    try:
+        resultado = revisar_reglas_agente(
+            os.path.basename(os.path.abspath(project_dir)),
+            target_dir=project_dir,
+            dry_run=True,
+        )
+    except TypeError:
+        # dry_run no soportado aún: degradar a solo diagnóstico del manifiesto
+        resultado = None
+    except Exception as exc:  # noqa: BLE001
+        check.status = "OK"
+        check.message = f"No se pudo revisar reglas generadas: {exc}"
+        report.add(check)
+        return
+
+    if resultado is None:
+        check.status = "OK"
+        check.message = "Manifiesto de reglas no disponible."
+        report.add(check)
+        return
+
+    actualizados = resultado.get("actualizados", [])
+    respetados = resultado.get("respetados", [])
+    if actualizados or respetados:
+        check.status = "WARN"
+        partes = []
+        if actualizados:
+            partes.append(f"{len(actualizados)} desactualizada(s): {', '.join(actualizados)}")
+        if respetados:
+            partes.append(f"{len(respetados)} editada(s) manualmente: {', '.join(respetados)}")
+        check.message = "; ".join(partes) + ". Ejecuta `ctxmap adapt`."
+        if fix and actualizados:
+            try:
+                revisar_reglas_agente(
+                    os.path.basename(os.path.abspath(project_dir)),
+                    target_dir=project_dir,
+                )
+                check.fix_applied = True
+                check.fix_message = "Reglas gestionadas actualizadas."
+                check.status = "OK"
+            except Exception as exc:  # noqa: BLE001
+                check.fix_message = f"No se pudo actualizar: {exc}"
+    else:
+        check.status = "OK"
+        check.message = "Reglas agénticas gestionadas al día."
+    report.add(check)
+
+
+def check_topologia(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    check = DoctorCheck(name="topologia")
+    context_dir = os.path.join(project_dir, ".context-map")
+    vaults = []
+    if os.path.isdir(context_dir):
+        vaults = [
+            d for d in os.listdir(context_dir)
+            if d.startswith("vault-") and os.path.isdir(os.path.join(context_dir, d))
+        ]
+    if not vaults:
+        check.status = "OK"
+        check.message = "Sin vault aún."
+        report.add(check)
+        return
+    vault_path = os.path.join(context_dir, sorted(vaults)[0])
+    resultado = analizar_topologia(vault_path)
+    if resultado.ok:
+        check.status = "OK"
+        check.message = f"Topología OK ({resultado.archivos} notas)."
+    else:
+        check.status = "WARN"
+        check.message = f"{len(resultado.errores)} violación(es): {resultado.errores[0]}"
+    report.add(check)
+
+
 CHECKS = [
     check_git_available,
     check_update_dir,
@@ -348,6 +654,13 @@ CHECKS = [
     check_project_name_consistency,
     check_manual_notes_preservation,
     check_history,
+    check_update_available,
+    check_mcp_deps,
+    check_vault_index,
+    check_context_freshness,
+    check_skill_collisions,
+    check_generated_rules,
+    check_topologia,
 ]
 
 

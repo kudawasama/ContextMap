@@ -22,34 +22,13 @@ import tempfile
 from context_map.core.models import Edge, Node
 from context_map.presentation.vault import render_obsidian_vault
 
-LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
-
-# Nodos raíz permitidos sin padre (no cuentan como violación).
-# 90-CONOCIMIENTO.md es la raíz del mundo PKM: una segunda raíz independiente
-# del mundo de código (isla separada, sin enlaces cruzados).
-SIN_PADRE_PERMITIDOS = {"00-INDICE.md", "00-CONEXIONES.md", "90-CONOCIMIENTO.md"}
-
-# Wikilink del README incrustado en 1.1-Mapa-Mental-Narrativo (contenido
-# documental del proyecto, no parte de la topología)
-ENLACES_DOCUMENTALES_PERMITIDOS = {"entre-notas"}
-
-
-def _namespace(rel: str) -> str:
-    """Namespace de un archivo del vault según su ruta.
-
-    El mundo PKM vive en ``90-CONOCIMIENTO/`` (más su raíz ``90-CONOCIMIENTO.md``);
-    todo lo demás pertenece al mundo de código.
-
-    Args:
-        rel (str): Ruta relativa del archivo dentro del vault.
-
-    Returns:
-        str: ``"knowledge"`` o ``"code"``.
-    """
-    if rel == "90-CONOCIMIENTO.md" or rel.startswith("90-CONOCIMIENTO/"):
-        return "knowledge"
-    return "code"
-
+from context_map.presentation.vault.topologia import (
+    ENLACES_DOCUMENTALES_PERMITIDOS,
+    LINK_RE,
+    SIN_PADRE_PERMITIDOS,
+    _namespace,
+    analizar_topologia,
+)
 
 def _crear_nodos_con_estados() -> list[Node]:
     """Genera nodos con los 3 estados de idea para validar las ramas.

@@ -181,6 +181,10 @@ def create_parser() -> argparse.ArgumentParser:
     s_doctor.add_argument("--fix", action="store_true", help="Auto-reparar anomalías e inconsistencias encontradas")
     s_doctor.add_argument("--json", action="store_true", help="Salida JSON estructurada")
     s_doctor.add_argument(
+        "--strict", action="store_true",
+        help="Sale con código 1 si hay algún FAIL (útil en CI/arranque de sesión)",
+    )
+    s_doctor.add_argument(
         "--sizes", action="store_true",
         help="Mostrar el desglose de peso de .context-map (y avisar si excede el tope)",
     )
