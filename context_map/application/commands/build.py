@@ -184,6 +184,21 @@ def cmd_build(args) -> None:
         brief_path = os.path.join(CONTEXT_DIR, "CONTEXT.md")
         readiness = analizar_readiness(".")
         generar_brief(proj, nodes, edges, readiness.score, brief_path)
+        # Salud del entorno (auto-diagnóstico): línea resumen en el brief.
+        try:
+            from context_map.domain.health.doctor import run as _run_doctor
+
+            _rep = _run_doctor(".", fix=False)
+            _salud = (
+                f"Salud del entorno: {sum(1 for c in _rep.checks if c.status == 'OK')} OK · "
+                f"{len(_rep.warnings)} WARN · {len(_rep.failed)} FAIL"
+            )
+            if _rep.failed:
+                _salud += " (" + ", ".join(c.name for c in _rep.failed) + ")"
+            with open(brief_path, "a", encoding="utf-8") as _f:
+                _f.write(f"\n\n> {_salud}\n")
+        except Exception:  # noqa: BLE001 — no romper el build por el doctor
+            pass
         # Capa mínima (P1.2): el agente elige según su presupuesto de tokens.
         from context_map.presentation.briefs.brief_minimo import generar_brief_minimo, medir_brief
 
