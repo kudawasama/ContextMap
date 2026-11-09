@@ -102,7 +102,9 @@ def cmd_update(args) -> None:
         if "Acceso denegado" in (res.stderr or "") or "os error 5" in (res.stderr or ""):
             print("   (El proceso actual bloquea el directorio; lanzando instalación diferida...)")
             detached = (
-                f'timeout /t 3 /nobreak >nul & uv tool install --force "git+{ref}"'
+                f'timeout /t 3 /nobreak >nul & echo Instalando ContextMap... & '
+                f'uv tool install --force "git+{ref}" & echo. & '
+                f'echo Resultado arriba. Presiona una tecla para cerrar. & pause >nul'
             )
             subprocess.Popen(
                 ["cmd", "/c", "start", "ContextMap Update", "cmd", "/c", detached],
