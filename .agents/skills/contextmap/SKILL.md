@@ -9,6 +9,7 @@ El script propone, **el agente dispone**: el contexto solo vale cuando el agente
 lo revisó y lo corrigió.
 
 ## Protocolo de inicio (en este orden)
+0. **Auto-diagnóstico**: `ctxmap doctor --json` (o `mcp__contextmap__doctor`). Si hay `FAIL`, repáralos o repórtalos; nunca `--fix` sin confirmación del usuario. Los `WARN` se informan.
 1. **Proyecto correcto**: el vault es `.context-map/vault-ContextMap/`. Si preguntan por otro proyecto, dilo ANTES de responder.
 2. **Brief**: `mcp__contextmap__context` (capa mínima por defecto) o `.context-map/CONTEXT.md`. Si su sección «Estado del Contexto» avisa de diario más nuevo que el build → `ctxmap refresh .` primero.
 3. **Pendientes REALES** (nunca una sola fuente): `7.0-MANUAL/BACKLOG.md` + `7.0-MANUAL/Diario/` + `5.0-BACKLOG/5.1-Tareas.md` + `3.2-DOCUMENTOS/`.
@@ -23,6 +24,7 @@ lo revisó y lo corrigió.
 ```bash
 ctxmap refresh .                      # scan + build (preserva manuales) + check
 ctxmap check .                        # readiness + salud del vault
+ctxmap doctor --json                  # salud del entorno
 ctxmap search "tema"                  # pasajes con citas
 ctxmap ingest .context-map/raw/docs/  # MD/TXT/PDF -> DOCUMENTO
 ctxmap personal query "tema"          # memoria multi-proyecto
