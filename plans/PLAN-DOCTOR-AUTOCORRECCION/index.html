@@ -1,0 +1,1434 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Captura el alma de tu proyecto, establece gobernanza automática y mantiene vivo el contexto para cualquier Agente de IA.">
+      
+      
+        <meta name="author" content="kudawasama">
+      
+      
+        <link rel="canonical" href="https://kudawasama.github.io/ContextMap/plans/PLAN-DOCTOR-AUTOCORRECCION/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Doctor & Auto-corrección (Self-Healing) — Plan de Implementación - ContextMap — Narrative Mental Map for AI Agents</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#doctor-auto-correccion-self-healing-plan-de-implementacion" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-header__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ContextMap — Narrative Mental Map for AI Agents
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Doctor &amp; Auto-corrección (Self-Healing) — Plan de Implementación
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  🏠 Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../PI_PACKAGE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📦 Paquete e instalación
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../GOBERNANZA-AGENTES/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🧭 Gobernanza de agentes
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../PORTABILIDAD/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🔐 Portabilidad y secretos
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../WEB_CLIPPER/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ✂️ Web Clipper
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../LLM/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🧠 LLM y conocimiento
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../LAUNCH_KIT/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🚀 Launch Kit
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../COMPARATIVO-ECOSISTEMA-CONTEXTO/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📊 Comparativa del ecosistema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../INVESTIGACION-JEV/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  🔬 Investigación Jev
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  📜 Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ContextMap — Narrative Mental Map for AI Agents" class="md-nav__button md-logo" aria-label="ContextMap — Narrative Mental Map for AI Agents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ContextMap — Narrative Mental Map for AI Agents
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kudawasama/ContextMap" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kudawasama/ContextMap
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏠 Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PI_PACKAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📦 Paquete e instalación
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GOBERNANZA-AGENTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧭 Gobernanza de agentes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PORTABILIDAD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔐 Portabilidad y secretos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WEB_CLIPPER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ✂️ Web Clipper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LLM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧠 LLM y conocimiento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LAUNCH_KIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🚀 Launch Kit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../COMPARATIVO-ECOSISTEMA-CONTEXTO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📊 Comparativa del ecosistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INVESTIGACION-JEV/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔬 Investigación Jev
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/kudawasama/ContextMap/blob/master/CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📜 Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#estado-actual-fase-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado actual (Fase 0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-0-prerrequisito-extraer-el-validador-de-topologia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 0 — Prerrequisito: extraer el validador de topología
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 0 — Prerrequisito: extraer el validador de topología">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-01-presentationvaulttopologiapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 0.1: presentation/vault/topologia.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-1-nuevos-chequeos-tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 1 — Nuevos chequeos (TDD)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 1 — Nuevos chequeos (TDD)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-11-check_update_available-no-check_cli_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.1: check_update_available (no check_cli_version)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-12-check_mcp_deps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.2: check_mcp_deps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-13-check_vault_index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.3: check_vault_index
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-14-check_context_freshness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.4: check_context_freshness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-15-check_skill_collisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.5: check_skill_collisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-16-check_generated_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.6: check_generated_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-17-check_topologia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 1.7: check_topologia
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-2-integracion-en-el-arranque-de-sesion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 2 — Integración en el arranque de sesión
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fase 2 — Integración en el arranque de sesión">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-21-skill-operativa-context-mapcontextmap-skillmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.1: skill operativa .context-map/contextmap-skill.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-22-skill-nativa-agentsskillscontextmapskillmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.2: skill nativa .agents/skills/contextmap/SKILL.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-23-agentsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.3: AGENTS.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-24-recomendada-salud-visible-en-el-brief" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.4 (recomendada): salud visible en el brief
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-25-contrato-de-salida-cli-nuevo-strict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task 2.5: contrato de salida CLI (nuevo --strict)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-3-verificacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Verificación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fase-4-documentacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Documentación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#riesgos-y-decisiones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riesgos y decisiones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estimacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estimación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuera-de-alcance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuera de alcance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="doctor-auto-correccion-self-healing-plan-de-implementacion">Doctor &amp; Auto-corrección (Self-Healing) — Plan de Implementación</h1>
+<blockquote>
+<p><strong>Motivación:</strong> <code>domain/health/doctor.py</code> ya cubre 6 chequeos (git, directorio
+de actualización, vault, nombre, notas manuales e historial) y ya tiene CLI
+(<code>ctxmap doctor</code>, <code>--fix</code>, <code>--json</code>, <code>--sizes</code>) y tool MCP (<code>doctor</code>, con
+<code>confirm</code>). Falta (1) cubrir los fallos de <strong>calidad del entorno</strong> que hoy no
+se detectan (índice FTS5 ausente/viejo, reglas agénticas desactualizadas,
+skills duplicadas, dependencias MCP rotas, contexto viejo), (2) una
+<strong>auto-reparación segura y acotada</strong> y (3) que el <strong>protocolo de inicio</strong> de la
+skill base y de <code>AGENTS.md</code> obligue a validar la salud antes de trabajar.</p>
+</blockquote>
+<p><strong>Goal:</strong> <code>ctxmap doctor</code> es el punto único de salud del proyecto: determinista,
+rápido (objetivo &lt; 2 s sin red), con auto-reparación solo de lo reversible, y
+presente en el arranque de sesión (skill + <code>AGENTS.md</code> + brief).</p>
+<p><strong>Arquitectura:</strong> cada chequeo es una función <code>check_*(report, fix, project_dir)</code>
+registrada en <code>CHECKS</code>; <code>run()</code> ya los itera, y CLI/MCP ya los consumen, así que
+<strong>no hace falta tocar la fachada</strong> salvo el contrato de salida (exit code
+<code>--strict</code>). La lógica reutilizable se extrae a módulos de producción, nunca se
+importa desde <code>__tests__</code>.</p>
+<p><strong>Tech Stack:</strong> Python 3.10+, stdlib (<code>os</code>, <code>sqlite3</code>, <code>hashlib</code>, <code>subprocess</code>,
+<code>importlib.metadata</code>), pytest. Sin dependencias nuevas.</p>
+<p><strong>Principios:</strong> determinista · no destructivo por defecto · auto-fix solo
+reversible e idempotente · sin red obligatoria · compatible con el pre-commit
+(que ya ejecuta <code>ctxmap refresh</code>, no <code>doctor</code>).</p>
+<hr />
+<h2 id="estado-actual-fase-0">Estado actual (Fase 0)</h2>
+<table>
+<thead>
+<tr>
+<th>Artefacto</th>
+<th>Estado real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>domain/health/doctor.py</code> — 6 checks en <code>CHECKS</code></td>
+<td>✅ existente</td>
+</tr>
+<tr>
+<td>CLI <code>doctor</code> con <code>--fix</code>, <code>--json</code>, <code>--sizes</code></td>
+<td>✅ existente (sin exit code de fallo)</td>
+</tr>
+<tr>
+<td>Tool MCP <code>doctor(target, fix, confirm)</code></td>
+<td>✅ existente; <code>fix=True</code> exige <code>confirm=True</code></td>
+</tr>
+<tr>
+<td><code>run()</code> itera <code>CHECKS</code> y CLI/MCP lo consumen</td>
+<td>✅ existente</td>
+</tr>
+<tr>
+<td>Frescura del contexto (build vs commits/sesiones)</td>
+<td>✅ existe en <code>domain/analysis/signals.py::ultima_actividad</code></td>
+</tr>
+<tr>
+<td>Aviso de actualización (metadatos + GitHub, caché 24 h)</td>
+<td>✅ existe en <code>infrastructure/version_check.py</code></td>
+</tr>
+<tr>
+<td>Reglas agénticas gestionadas con manifiesto <code>ruta → hash</code></td>
+<td>✅ existe en <code>domain/ecosystem/adaptador.py</code> (<code>revisar_reglas_agente</code>)</td>
+</tr>
+<tr>
+<td>Índice FTS5 del vault</td>
+<td>✅ existe (<code>core/storage/vault_index.py</code>), sin chequeo de salud</td>
+</tr>
+<tr>
+<td>Validador de topología en producción</td>
+<td>❌ solo dentro de <code>__tests__/test_topologia_arbol.py</code></td>
+</tr>
+<tr>
+<td>Colisiones de skills entre orígenes (incidente 2026-11-09)</td>
+<td>❌ no existe</td>
+</tr>
+<tr>
+<td>Contrato de inicio de sesión en skill base / <code>AGENTS.md</code></td>
+<td>⚠️ parcial (solo <code>ctxmap check</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusión de la revisión:</strong> el borrador anterior duplicaba lógica ya
+existente (versión y frescura), proponía importar código de test desde dominio y
+no cubría la ruta real del incidente. Este documento lo corrige.</p>
+<hr />
+<h2 id="fase-0-prerrequisito-extraer-el-validador-de-topologia">Fase 0 — Prerrequisito: extraer el validador de topología</h2>
+<h3 id="task-01-presentationvaulttopologiapy">Task 0.1: <code>presentation/vault/topologia.py</code></h3>
+<p><strong>Objective:</strong> que el chequeo de topología use código de producción y que el
+test siga cubriéndolo, sin que <code>domain</code> importe desde <code>__tests__</code>.</p>
+<ul>
+<li>Crear <code>analizar_topologia(vault_dir: str) -&gt; ResultadoTopologia</code> moviendo la
+  lógica de <code>test_topologia_arbol.py::_analizar_vault</code> (sin padre, colisiones de
+  nombre base, wikilinks rotos, índices de concepto).</li>
+<li><code>ResultadoTopologia</code> (dataclass): <code>sin_padre</code>, <code>colisiones</code>, <code>enlaces_rotos</code>,
+  <code>indices_invalidos</code>, <code>ok</code> (propiedad).</li>
+<li><code>test_topologia_arbol.py</code> importa y usa <code>analizar_topologia</code>; su
+  comportamiento no cambia.</li>
+</ul>
+<p><strong>Tests:</strong> los 3 tests actuales de topología siguen verdes sin cambios de
+aserción.</p>
+<p><strong>Aceptación:</strong> <code>grep -r "__tests__" context_map/domain context_map/presentation</code>
+no devuelve importaciones de test en producción.</p>
+<hr />
+<h2 id="fase-1-nuevos-chequeos-tdd">Fase 1 — Nuevos chequeos (TDD)</h2>
+<p>Cada task añade su función a <code>CHECKS</code> y sus tests a
+<code>context_map/__tests__/test_doctor.py</code> (archivo existente, no crear otro).</p>
+<h3 id="task-11-check_update_available-no-check_cli_version">Task 1.1: <code>check_update_available</code> (no <code>check_cli_version</code>)</h3>
+<p><strong>Objective:</strong> avisar si hay versión más nueva, <strong>reutilizando</strong>
+<code>infrastructure/version_check.py</code>.</p>
+<ul>
+<li><code>version_local()</code> (metadatos del paquete, fallback a <code>pyproject.toml</code> del
+  paquete) + <code>hay_actualizacion()</code> (GitHub, caché 24 h).</li>
+<li><code>OK</code> si no hay actualización o no se pudo verificar (sin red/caché).</li>
+<li><code>WARN</code> si la remota es mayor. Nunca <code>FAIL</code> por red.</li>
+<li>Sin auto-fix (lo decide el usuario).</li>
+<li><strong>No leer <code>pyproject.toml</code> del proyecto analizado</strong>: ese archivo pertenece al
+  proyecto del usuario y no declara la versión de ContextMap.</li>
+</ul>
+<p><strong>Tests:</strong> remota mayor → <code>WARN</code>; excepción/red caída → <code>OK</code>; sin actualización
+→ <code>OK</code>.</p>
+<h3 id="task-12-check_mcp_deps">Task 1.2: <code>check_mcp_deps</code></h3>
+<p><strong>Objective:</strong> detectar un servidor MCP roto por versiones incompatibles.</p>
+<ul>
+<li><code>importlib.metadata.version("mcp")</code> y <code>version("pydantic")</code>.</li>
+<li>Si <code>mcp</code> <strong>no está instalado</strong> → <code>OK</code> con mensaje «extra [mcp] no instalado;
+  no aplica» (un usuario solo-CLI no debe ver un WARN permanente).</li>
+<li>Si <code>mcp</code> está instalado y <code>pydantic &lt; 2.13</code> → <code>FAIL</code> (el import de
+  <code>mcp_server</code> se rompe; piso real en <code>pyproject.toml</code>) sin auto-fix.</li>
+<li>Si ambos cumplen (<code>mcp &gt;= 1.2,&lt;2</code>, <code>pydantic &gt;= 2.13,&lt;3</code>) → <code>OK</code>.</li>
+</ul>
+<p><strong>Tests:</strong> metadata simulada para los tres casos.</p>
+<h3 id="task-13-check_vault_index">Task 1.3: <code>check_vault_index</code></h3>
+<p><strong>Objective:</strong> índice FTS5 presente y fresco respecto al vault.</p>
+<ul>
+<li>Resolver el vault con la misma lógica que <code>check_vault_default</code>
+  (<code>vault_nombre(nombre_del_repo)</code> y, si no existe, el primer <code>vault*</code>).</li>
+<li>Sin vault → <code>OK</code> («sin vault aún»). Sin <code>.context-map/state/vault_index.db</code> →
+  <code>WARN</code> (ejecutar <code>ctxmap build</code>).</li>
+<li>Frescura: <code>mtime</code> máximo de los <code>.md</code> del vault &gt; <code>mtime</code> del <code>.db</code> → <code>WARN</code>.</li>
+<li><code>fix</code>: reindexar <strong>solo</strong> con <code>abrir_indice</code> + <code>indexar_vault</code> (no lanzar un
+  <code>build</code> completo) y recalcular el estado.</li>
+<li>Sin BD de vault o con SQLite corrupto → <code>WARN</code>, nunca excepción.</li>
+</ul>
+<p><strong>Tests:</strong> sin BD → <code>WARN</code>; BD más vieja que una nota → <code>WARN</code>; <code>fix</code> crea e
+indexa (<code>COUNT(*) == nº de .md</code>); vault vacío → <code>OK</code>.</p>
+<h3 id="task-14-check_context_freshness">Task 1.4: <code>check_context_freshness</code></h3>
+<p><strong>Objective:</strong> detectar contexto desactualizado <strong>sin reinventar</strong> la lógica.</p>
+<ul>
+<li>Ejecutar <code>analizar_readiness(project_dir)</code> y leer <code>resultado.frescura</code>
+  (producido por <code>signals.ultima_actividad</code>: último build vs último commit y
+  sesiones de Hermes pendientes).</li>
+<li><code>WARN</code> si <code>frescura["aviso"]</code>; el mensaje es el propio aviso.</li>
+<li>Sin auto-fix (<code>refresh</code> puede ser costoso).</li>
+<li>Corregir la descripción anterior («brief vs diario»): la comparación real es
+  <strong>último build vs actividad posterior</strong>, no brief vs diario.</li>
+</ul>
+<p><strong>Tests:</strong> <code>analizar_readiness</code> monkeypatcheado con y sin <code>aviso</code>; nunca lanza
+si el análisis falla (<code>OK</code> con mensaje de omisión).</p>
+<h3 id="task-15-check_skill_collisions">Task 1.5: <code>check_skill_collisions</code></h3>
+<p><strong>Objective:</strong> evitar que una copia manual de la skill gane a la del paquete
+(incidente 2026-11-09).</p>
+<ul>
+<li>Raíces <strong>conocidas y acotadas</strong> (solo si existen):</li>
+<li><code>~/.agents/skills</code></li>
+<li><code>&lt;proyecto&gt;/.agents/skills</code></li>
+<li><code>~/.claude/skills</code></li>
+<li><code>~/.pi/agent/npm/node_modules/@*/*/skills</code> ← ruta real del incidente</li>
+<li><code>&lt;proyecto&gt;/node_modules/@*/*/skills</code></li>
+<li><strong>No</strong> recorrer <code>node_modules/**</code> completo (viola el objetivo de &lt; 2 s):
+  profundidad máxima 3 por raíz, <code>os.scandir</code>, sin seguir symlinks.</li>
+<li>Extraer <code>name:</code> del frontmatter con un parser tolerante (reutilizar el patrón
+  de <code>core/storage/vault_index.py</code>).</li>
+<li>Un <code>name</code> en ≥ 2 orígenes → <code>WARN</code> listando rutas. <strong>No afirmar cuál gana</strong>:
+  el orden depende del agente; para pi se documenta que gana «el primero
+  descubierto», como información, no como veredicto del doctor.</li>
+<li>Sin auto-fix (mover/borrar es decisión del usuario).</li>
+</ul>
+<p><strong>Tests:</strong> home y proyecto simulados con <code>monkeypatch</code>; duplicado → <code>WARN</code> con
+ambas rutas; único → <code>OK</code>; rutas inexistentes → <code>OK</code>; no se escanea
+<code>node_modules</code> genérico.</p>
+<h3 id="task-16-check_generated_rules">Task 1.6: <code>check_generated_rules</code></h3>
+<p><strong>Objective:</strong> detectar reglas agénticas gestionadas que quedaron viejas o
+fueron editadas, usando el manifiesto existente.</p>
+<ul>
+<li>Leer <code>.context-map/state/reglas_generadas.json</code> (<code>ruta → hash</code>). Sin manifiesto
+  → <code>OK</code> (proyecto antiguo o sin reglas).</li>
+<li><strong>Prerrequisito de código:</strong> añadir <code>dry_run: bool = False</code> a
+  <code>revisar_reglas_agente()</code> para poder calcular estados (<code>creados</code>,
+  <code>actualizados</code>, <code>omitidos</code>, <code>respetados</code>) <strong>sin escribir</strong>.</li>
+<li><code>WARN</code> si hay <code>actualizados</code> (plantilla nueva) o <code>respetados</code> con marcador
+  (edición manual de un bloque gestionado); el mensaje indica <code>ctxmap adapt</code>.</li>
+<li><code>fix</code>: ejecutar <code>revisar_reglas_agente()</code> real (idempotente; respeta ediciones
+  manuales) y reportar el resultado.</li>
+</ul>
+<p><strong>Tests:</strong> <code>dry_run</code> no escribe; plantilla cambiada → <code>WARN</code> y <code>fix</code> actualiza;
+edición manual → se respeta; sin manifiesto → <code>OK</code>.</p>
+<h3 id="task-17-check_topologia">Task 1.7: <code>check_topologia</code></h3>
+<p><strong>Objective:</strong> convertir el test de topología en chequeo de salud.</p>
+<ul>
+<li>Usar <code>analizar_topologia(vault_dir)</code> de la Fase 0.</li>
+<li><code>OK</code> si <code>resultado.ok</code>; <code>FAIL</code> con el conteo de violaciones en caso contrario.</li>
+<li>Sin auto-fix (se corrige con <code>ctxmap build</code>).</li>
+<li>Si no hay vault → <code>OK</code> (lo reporta <code>check_vault_default</code>).</li>
+</ul>
+<p><strong>Tests:</strong> vault temporal sano → <code>OK</code>; wikilink roto / nombre duplicado →
+<code>FAIL</code> con el detalle.</p>
+<hr />
+<h2 id="fase-2-integracion-en-el-arranque-de-sesion">Fase 2 — Integración en el arranque de sesión</h2>
+<blockquote>
+<p>Aclaración importante: una skill <strong>instruye</strong>, no ejecuta. No hay hook que
+fuerce el chequeo al abrir sesión. Por eso el plan combina (a) instrucción
+explícita en los artefactos que el agente lee y (b) resumen de salud en el
+brief, que se genera solo.</p>
+</blockquote>
+<h3 id="task-21-skill-operativa-context-mapcontextmap-skillmd">Task 2.1: skill operativa <code>.context-map/contextmap-skill.md</code></h3>
+<p><strong>Objective:</strong> el «CÓMO» que genera <code>build</code> incluye la validación de inicio.</p>
+<ul>
+<li><code>presentation/briefs/skill.py::generar_skill_contextmap</code>: añadir
+  <code>ctxmap doctor</code> a la lista de comandos y un paso 0 del protocolo:
+  «Antes de trabajar: <code>ctxmap doctor --json</code>. Si hay <code>FAIL</code>, repara o reporta;
+  nunca <code>--fix</code> sin confirmación del usuario».</li>
+<li>Este archivo se regenera en cada <code>build</code>, así que llega a proyectos existentes
+  sin <code>adapt --overwrite</code>.</li>
+</ul>
+<h3 id="task-22-skill-nativa-agentsskillscontextmapskillmd">Task 2.2: skill nativa <code>.agents/skills/contextmap/SKILL.md</code></h3>
+<ul>
+<li><code>domain/ecosystem/rules_templates.py::_generar_antigravity_skill</code>: añadir el
+  paso 0 al «Protocolo de inicio» y <code>ctxmap doctor</code> a la lista de comandos.</li>
+<li>Nota: <code>adapt</code> escribe en <code>.agents/skills/</code> <strong>del proyecto</strong>, nunca en
+  <code>~/.agents/skills/</code>; el plan no debe prometer lo contrario.</li>
+</ul>
+<h3 id="task-23-agentsmd">Task 2.3: <code>AGENTS.md</code></h3>
+<ul>
+<li><code>_generar_agents_md</code> y <code>presentation/briefs/agents.py</code>: añadir <code>ctxmap doctor</code>
+  al protocolo de inicio.</li>
+<li><strong>Modos:</strong> <code>adapt</code> por defecto usa <code>modo="respect"</code> y no toca <code>AGENTS.md</code>
+  existente. Para propagar el cambio en proyectos ya inicializados hay que usar
+  <code>ctxmap adapt --merge</code> (bloque delimitado por <code>CONTEXTMAP:BEGIN/END</code>) o
+  <code>--overwrite</code>. Documentarlo; no asumir que «regenerar con adapt» basta.</li>
+</ul>
+<h3 id="task-24-recomendada-salud-visible-en-el-brief">Task 2.4 (recomendada): salud visible en el brief</h3>
+<ul>
+<li>En <code>build</code>, ejecutar <code>run(fix=False)</code> y añadir una línea «Salud del entorno:
+  N OK · M WARN · K FAIL» en <code>.context-map/CONTEXT.md</code>, con los nombres de los
+  <code>FAIL</code>. Coste: los checks son deterministas y locales.</li>
+<li>Beneficio: el agente ve el estado aunque no invoque <code>doctor</code>.</li>
+</ul>
+<h3 id="task-25-contrato-de-salida-cli-nuevo-strict">Task 2.5: contrato de salida CLI (nuevo <code>--strict</code>)</h3>
+<ul>
+<li><code>doctor_cmd.py</code> hoy <strong>siempre sale con código 0</strong>; un script o el arranque de
+  sesión no pueden distinguir OK de FAIL.</li>
+<li>Añadir <code>--strict</code>: exit 1 si <code>report.failed</code> no está vacío (los <code>WARN</code> no
+  fallan). Sin <code>--strict</code>, comportamiento actual.</li>
+<li>Actualizar <code>parser.py</code> y tests de CLI.</li>
+<li><strong>MCP:</strong> sin cambios de firma; <code>doctor</code> ya llama a <code>run()</code> y ya exige
+  <code>confirm=True</code> para <code>fix=True</code>. No se añaden tools (siguen siendo 34).</li>
+</ul>
+<hr />
+<h2 id="fase-3-verificacion">Fase 3 — Verificación</h2>
+<ul>
+<li><code>python -m pytest</code> → 100 % verde (incluye <code>test_doctor.py</code>,
+  <code>test_topologia_arbol.py</code>, <code>test_revision_reglas.py</code>, <code>test_dependencias_mcp.py</code>).</li>
+<li><code>ctxmap doctor</code> → 6 checks actuales + 6 nuevos (12 en total).</li>
+<li><code>ctxmap doctor --json</code> → JSON válido con los 12.</li>
+<li><code>ctxmap doctor --strict</code> → exit 1 con un FAIL simulado, exit 0 en proyecto sano.</li>
+<li><code>ctxmap doctor --fix</code> en un proyecto temporal → reindexa el vault, actualiza
+  reglas gestionadas y no toca nada editable por el usuario.</li>
+<li><code>ctxmap build</code> → regenera <code>contextmap-skill.md</code> con el paso 0 y el brief con
+  la línea de salud.</li>
+<li><code>ctxmap adapt --merge</code> → <code>AGENTS.md</code> y <code>SKILL.md</code> con el paso 0.</li>
+<li><code>context_map/__tests__/test_topologia_arbol.py</code> sigue pasando y ya no contiene
+  la lógica duplicada.</li>
+</ul>
+<hr />
+<h2 id="fase-4-documentacion">Fase 4 — Documentación</h2>
+<ul>
+<li><code>docs/GOBERNANZA-AGENTES.md</code>: sección «Auto-diagnóstico» con la diferencia
+  <code>check</code> (readiness) vs <code>doctor</code> (salud del entorno + reparación).</li>
+<li><code>AGENTS.md</code> del repo: <code>ctxmap doctor</code> en el protocolo de inicio.</li>
+<li><code>CHANGELOG.md</code>: entrada en <code>[Unreleased]</code>.</li>
+<li><code>7.0-MANUAL/DOMINIO.md</code>: nota del módulo de salud.</li>
+<li>Marcar este plan como implementado al cerrar.</li>
+</ul>
+<hr />
+<h2 id="riesgos-y-decisiones">Riesgos y decisiones</h2>
+<table>
+<thead>
+<tr>
+<th>Riesgo</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El arranque de sesión se vuelve lento</td>
+<td>Checks locales, sin red obligatoria; escaneo acotado de skills; objetivo &lt; 2 s.</td>
+</tr>
+<tr>
+<td>Una skill solo «aconseja», no ejecuta</td>
+<td>Instrucción explícita en skill + <code>AGENTS.md</code> + resumen de salud en el brief (Task 2.4).</td>
+</tr>
+<tr>
+<td><code>--fix</code> destructivo</td>
+<td>Solo índice y reglas gestionadas; <code>revisar_reglas_agente</code> respeta ediciones manuales; MCP exige <code>confirm=True</code>.</td>
+</tr>
+<tr>
+<td>Duplicación con <code>ctxmap check</code></td>
+<td><code>check</code> = readiness del proyecto; <code>doctor</code> = entorno + reparación. Reutiliza <code>ultima_actividad</code>, no la copia.</td>
+</tr>
+<tr>
+<td>Falsos positivos de colisión</td>
+<td>Solo raíces conocidas, sin recorrer <code>node_modules</code> completo; se reporta, no se borra.</td>
+</tr>
+<tr>
+<td><code>AGENTS.md</code> no se actualiza</td>
+<td>Documentar <code>adapt --merge</code>/<code>--overwrite</code>; <code>contextmap-skill.md</code> y el brief sí se regeneran siempre.</td>
+</tr>
+<tr>
+<td>Importar código de test desde dominio</td>
+<td>Fase 0 extrae el validador a <code>presentation/vault/topologia.py</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="estimacion">Estimación</h2>
+<ul>
+<li>Fase 0 (extracción topología): 1 h.</li>
+<li>Fase 1 (6 chequeos + <code>dry_run</code> + tests): 4–5 h.</li>
+<li>Fase 2 (skill, AGENTS, brief, <code>--strict</code>): 2 h.</li>
+<li>Fase 3–4: 1–2 h.</li>
+</ul>
+<p><strong>Total: ~8–10 h.</strong> Entregable por bloques: (1) Fase 0 + 1.3/1.7, (2) 1.1/1.2/1.4,
+(3) 1.5/1.6, (4) Fase 2 y documentación.</p>
+<hr />
+<h2 id="fuera-de-alcance">Fuera de alcance</h2>
+<ul>
+<li>Hook que ejecute <code>doctor</code> en cada commit (el pre-commit ya hace <code>refresh</code>).</li>
+<li>Comprobación remota de PyPI en cada arranque (la caché de 24 h de
+  <code>version_check</code> es suficiente).</li>
+<li>Reparación automática de colisiones de skills (requiere decisión humana).</li>
+<li>Nuevas tools MCP (el inventario se mantiene en 34).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
