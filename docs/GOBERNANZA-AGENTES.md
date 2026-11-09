@@ -197,3 +197,10 @@ python -m context_map.cli check .       # 4. readiness
 ```
 
 * **Commits**: *Conventional Commits* en español (`feat:`, `fix:`, `refactor:`, `docs:`…).
+
+
+## Auto-diagnóstico (doctor)
+
+Antes de trabajar, el agente ejecuta `ctxmap doctor --json` (o `ctxmap check .`).
+`check` = readiness del proyecto; `doctor` = salud del entorno + auto-reparación.
+El arranque de sesión no se fuerza por hook: la skill base y `AGENTS.md` lo exigen.

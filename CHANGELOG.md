@@ -78,6 +78,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
   respetados. Suite total: **488 tests**.
 
+## [Unreleased]
+
+### ✨ Añadido
+
+- `ctxmap doctor` ampliado con 6 nuevos chequeos: `update_available`, `mcp_deps`,
+  `vault_index`, `context_freshness`, `skill_collisions`, `generated_rules`,
+  `topologia` (13 en total).
+- `ctxmap doctor --strict`: sale con código 1 si hay algún FAIL.
+- Validador de topología extraído a `presentation/vault/topologia.py` (reutilizado
+  por tests y doctor).
+- `revisar_reglas_agente(..., dry_run=True)` para previsualizar sin escribir.
+- Skill base y `AGENTS.md` incluyen auto-diagnóstico en el protocolo de inicio.
+
 ## [2.16.0] — 2026-11-04
 
 ### ✨ Añadido
