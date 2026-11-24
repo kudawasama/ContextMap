@@ -596,6 +596,11 @@ def check_skill_collisions(report: DoctorReport, fix: bool = False, project_dir:
             raices.append(r)
 
     skills: dict[str, list[str]] = {}
+    # El mismo SKILL.md se alcanza por dos caminos (el recorrido libre de
+    # node_modules y el glob ``*/*/skills``), y sin deduplicar cada skill
+    # aparecía «duplicada» consigo misma: siete colisiones fantasma que
+    # enterraban la única real.
+    vistos: set[str] = set()
 
     def _parse_name(path: str) -> str | None:
         try:
@@ -626,8 +631,13 @@ def check_skill_collisions(report: DoctorReport, fix: bool = False, project_dir:
                         _escanear(entry.path, profundidad + 1)
                     elif entry.name == "SKILL.md":
                         name = _parse_name(entry.path)
-                        if name:
-                            skills.setdefault(name, []).append(entry.path)
+                        if not name:
+                            continue
+                        clave = os.path.normcase(os.path.realpath(entry.path))
+                        if clave in vistos:
+                            continue
+                        vistos.add(clave)
+                        skills.setdefault(name, []).append(entry.path)
         except (OSError, PermissionError):
             return
 
@@ -682,11 +692,9 @@ def check_generated_rules(report: DoctorReport, fix: bool = False, project_dir: 
 
     actualizados = resultado.get("actualizados", [])
     respetados = resultado.get("respetados", [])
-    if actualizados or respetados:
+    if actualizados:
         check.status = "WARN"
-        partes = []
-        if actualizados:
-            partes.append(f"{len(actualizados)} desactualizada(s): {', '.join(actualizados)}")
+        partes = [f"{len(actualizados)} desactualizada(s): {', '.join(actualizados)}"]
         if respetados:
             partes.append(f"{len(respetados)} editada(s) manualmente: {', '.join(respetados)}")
         check.message = "; ".join(partes) + ". Ejecuta `ctxmap adapt`."
@@ -703,7 +711,17 @@ def check_generated_rules(report: DoctorReport, fix: bool = False, project_dir: 
                 check.fix_message = f"No se pudo actualizar: {exc}"
     else:
         check.status = "OK"
-        check.message = "Reglas agénticas gestionadas al día."
+        if respetados:
+            # Un archivo editado a mano se **respeta** por diseño: no es una
+            # regla sin aplicar, es contenido propio del proyecto. Marcarlo en
+            # WARN convertía el respeto en ruido y el semáforo dejaba de
+            # significar nada.
+            check.message = (
+                f"Reglas agénticas al día; {len(respetados)} archivo(s) con "
+                f"contenido propio respetado(s): {', '.join(respetados)}."
+            )
+        else:
+            check.message = "Reglas agénticas gestionadas al día."
     report.add(check)
 
 

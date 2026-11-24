@@ -172,3 +172,53 @@ def test_cli_doctor_expone_strict_warn():
     args = create_parser().parse_args(["doctor", ".", "--strict-warn"])
     assert args.strict_warn is True
     assert args.strict is False
+
+
+def test_skill_collisions_no_reporta_la_misma_ruta_dos_veces(tmp_path, monkeypatch):
+    """El mismo SKILL.md alcanzado por dos raíces no es una colisión.
+
+    Regresión: el chequeo recorría ``~/.pi/agent/npm/node_modules`` entero y
+    además el glob ``*/*/skills``, así que cada skill se encontraba dos veces y
+    siete «colisiones» fantasma tapaban la única real.
+    """
+    from context_map.domain.health.doctor import DoctorReport, check_skill_collisions
+
+    home = tmp_path / "home"
+    skill = home / ".agents" / "skills" / "demo" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("---\nname: demo\n---\n", encoding="utf-8")
+
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+
+    report = DoctorReport()
+    # project_dir == home: las dos raíces (.agents del proyecto y del usuario)
+    # apuntan al mismo directorio.
+    check_skill_collisions(report, project_dir=str(home))
+
+    check = report.checks[0]
+    assert check.status == "OK", check.message
+    assert "demo:" not in check.message
+
+
+def test_skill_collisions_detecta_duplicados_reales(tmp_path, monkeypatch):
+    """Dos copias con el mismo nombre en orígenes distintos sí son colisión."""
+    from context_map.domain.health.doctor import DoctorReport, check_skill_collisions
+
+    home = tmp_path / "home"
+    proyecto = tmp_path / "proyecto"
+    for base in (home, proyecto):
+        ruta = base / ".agents" / "skills" / "demo" / "SKILL.md"
+        ruta.parent.mkdir(parents=True)
+        ruta.write_text("---\nname: demo\n---\n", encoding="utf-8")
+
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+
+    report = DoctorReport()
+    check_skill_collisions(report, project_dir=str(proyecto))
+
+    check = report.checks[0]
+    assert check.status == "WARN"
+    assert "demo:" in check.message
+    assert check.message.count("SKILL.md") == 2

@@ -126,6 +126,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Notas manuales reparadas: 10 enlaces a destinos desaparecidos en
   `7.0-MANUAL/Diario/` (historial), `7.0-MANUAL/MEJORAS/`,
   `8.0-KNOWLEDGE/` y `90-CONOCIMIENTO/00-INBOX/`.
+- `doctor: skill_collisions` deduplica por ruta real: el mismo `SKILL.md` se
+  alcanzaba por el recorrido libre de `node_modules` y por el glob `*/*/skills`,
+  así que cada skill aparecía «duplicada» consigo misma y siete colisiones
+  fantasma tapaban la única real.
+- `doctor: generated_rules` deja de marcar en WARN los archivos con contenido
+  propio: el adaptador los **respeta** por diseño, no son reglas sin aplicar.
 - `check_mcp_deps` ya no sugiere `ctxmap-ai[mcp]` (paquete inexistente en
   PyPI): propone `pip install -e ".[mcp]"` con el intérprete correcto del venv.
 - `version_local()` prioriza el `pyproject.toml` del árbol fuente sobre los
