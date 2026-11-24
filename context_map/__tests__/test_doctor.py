@@ -95,3 +95,80 @@ def test_check_history_fix_archiva(tmp_path):
     assert check.fix_applied is True
     assert "archivados" in check.fix_message
     assert len(list(hist.glob("*.md"))) <= SNAPSHOT_KEEP_DEFAULT + 1
+
+
+def test_check_interpreter_ok_sin_venv(tmp_path):
+    """Sin `.venv` en el proyecto el chequeo es OK (no hay intérprete exigido)."""
+    from context_map.domain.health import doctor
+
+    report = doctor.DoctorReport()
+    doctor.check_interpreter(report, fix=False, project_dir=str(tmp_path))
+
+    check = report.checks[0]
+    assert check.name == "interpreter"
+    assert check.status == "OK"
+    assert "Sin venv" in check.message
+
+
+def test_check_interpreter_avisa_si_no_es_el_del_venv(tmp_path):
+    """Con `.venv` presente y otro intérprete activo, avisa (regla fija)."""
+    from context_map.domain.health import doctor
+
+    scripts = tmp_path / ".venv" / "Scripts"
+    scripts.mkdir(parents=True)
+    (scripts / "python.exe").write_text("", encoding="utf-8")
+
+    report = doctor.DoctorReport()
+    doctor.check_interpreter(report, fix=False, project_dir=str(tmp_path))
+
+    check = report.checks[0]
+    assert check.status == "WARN"
+    assert "venv del proyecto" in check.message
+
+
+def test_check_interpreter_ok_si_coincide(tmp_path, monkeypatch):
+    """Si el intérprete activo es el del venv, el chequeo es OK."""
+    from context_map.domain.health import doctor
+
+    scripts = tmp_path / ".venv" / "Scripts"
+    scripts.mkdir(parents=True)
+    falso = scripts / "python.exe"
+    falso.write_text("", encoding="utf-8")
+    monkeypatch.setattr(doctor.sys, "executable", str(falso))
+
+    report = doctor.DoctorReport()
+    doctor.check_interpreter(report, fix=False, project_dir=str(tmp_path))
+
+    assert report.checks[0].status == "OK"
+
+
+def test_check_mcp_deps_no_sugiere_paquete_inexistente():
+    """El consejo de reparación debe ser instalable (no `ctxmap-ai`, ausente en PyPI)."""
+    from context_map.domain.health import doctor
+
+    report = doctor.DoctorReport()
+    doctor.check_mcp_deps(report, fix=False, project_dir=".")
+
+    check = report.checks[0]
+    assert check.name == "mcp_deps"
+    assert "ctxmap-ai" not in check.message
+    if check.status == "FAIL":
+        assert "[mcp]" in check.message
+
+
+def test_checks_incluye_interpreter_antes_de_mcp():
+    """El orden importa: primero el intérprete, después sus dependencias."""
+    from context_map.domain.health import doctor
+
+    nombres = [fn.__name__ for fn in doctor.CHECKS]
+    assert "check_interpreter" in nombres
+    assert nombres.index("check_interpreter") < nombres.index("check_mcp_deps")
+
+
+def test_cli_doctor_expone_strict_warn():
+    """La bandera de CI (`--strict-warn`) existe y se parsea."""
+    from context_map.application.cli.parser import create_parser
+
+    args = create_parser().parse_args(["doctor", ".", "--strict-warn"])
+    assert args.strict_warn is True
+    assert args.strict is False

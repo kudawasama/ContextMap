@@ -10,6 +10,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 
 from context_map.core.storage.store import (
@@ -367,8 +368,89 @@ def check_update_available(report: DoctorReport, fix: bool = False, project_dir:
     report.add(check)
 
 
+def _interprete_del_venv(project_dir: str) -> str:
+    """Devuelve la ruta del intérprete del venv del proyecto, si existe.
+
+    Args:
+        project_dir (str): Raíz del proyecto a inspeccionar.
+
+    Returns:
+        str: Ruta del intérprete del venv, o cadena vacía si no hay ``.venv``.
+    """
+    for rel in ((".venv", "Scripts", "python.exe"), (".venv", "bin", "python")):
+        ruta = os.path.join(project_dir, *rel)
+        if os.path.exists(ruta):
+            return ruta
+    return ""
+
+
+def _mismo_interprete(a: str, b: str) -> bool:
+    """Compara dos rutas de intérprete resolviendo enlaces simbólicos.
+
+    Args:
+        a (str): Primera ruta de ejecutable.
+        b (str): Segunda ruta de ejecutable.
+
+    Returns:
+        bool: True si ambas rutas apuntan al mismo binario.
+    """
+    try:
+        return os.path.normcase(os.path.realpath(a)) == os.path.normcase(os.path.realpath(b))
+    except OSError:
+        return os.path.normcase(a) == os.path.normcase(b)
+
+
+def check_interpreter(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica que se esté ejecutando con el intérprete del venv del proyecto.
+
+    Regla fija de estabilidad: las dependencias del proyecto (``pydantic``,
+    ``mcp``, ``pymupdf``…) viven en ``.venv``. Si el proyecto tiene venv y el
+    proceso actual es otro Python, los chequeos mienten (FAIL por dependencias
+    ausentes) y los tests se recolectan a medias.
+
+    Args:
+        report (DoctorReport): Reporte donde se agrega el resultado.
+        fix (bool): Sin uso; se mantiene por la firma común de los chequeos.
+        project_dir (str): Raíz del proyecto a diagnosticar.
+    """
+    check = DoctorCheck(name="interpreter")
+    venv_py = _interprete_del_venv(project_dir)
+    actual = os.path.abspath(sys.executable)
+    if not venv_py:
+        check.status = "OK"
+        check.message = f"Sin venv del proyecto; intérprete activo: {actual}"
+    elif _mismo_interprete(actual, venv_py):
+        check.status = "OK"
+        check.message = f"Intérprete del venv del proyecto: {actual}"
+    else:
+        check.status = "WARN"
+        check.message = (
+            f"Ejecutando con {actual} en vez del venv del proyecto ({venv_py}): "
+            "las dependencias reales pueden faltar. Usa el intérprete del venv, "
+            'p. ej. `.venv/Scripts/python.exe -m context_map.cli doctor`.'
+        )
+    report.add(check)
+
+
 def check_mcp_deps(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Verifica que el extra ``mcp`` sea importable con el pydantic mínimo.
+
+    FastMCP construye el modelo de salida de cada tool con
+    ``create_model(nombre, result=<tipo>)``, que pydantic < 2.13 rechaza: el
+    import de ``context_map.infrastructure.mcp_server`` se cae y con él todas
+    las tools MCP (y la recolección del suite de tests).
+
+    Args:
+        report (DoctorReport): Reporte donde se agrega el resultado.
+        fix (bool): Sin uso; se mantiene por la firma común de los chequeos.
+        project_dir (str): Raíz del proyecto; se usa para resolver el venv.
+    """
     check = DoctorCheck(name="mcp_deps")
+    venv_py = _interprete_del_venv(project_dir)
+    if venv_py and not _mismo_interprete(os.path.abspath(sys.executable), venv_py):
+        comando = f'"{venv_py}" -m pip install -e ".[mcp]"'
+    else:
+        comando = 'pip install -e ".[mcp]"'
     try:
         import importlib.metadata as md
 
@@ -376,7 +458,10 @@ def check_mcp_deps(report: DoctorReport, fix: bool = False, project_dir: str = "
         pydantic_v = md.version("pydantic")
     except Exception:
         check.status = "OK"
-        check.message = "Extra [mcp] no instalado; no aplica."
+        check.message = (
+            "Extra [mcp] no instalado en este intérprete; las tools MCP no se "
+            f"exponen. Para habilitarlas: {comando}"
+        )
         report.add(check)
         return
     try:
@@ -387,7 +472,7 @@ def check_mcp_deps(report: DoctorReport, fix: bool = False, project_dir: str = "
         check.status = "FAIL"
         check.message = (
             f"pydantic {pydantic_v} < 2.13: el servidor MCP no importa. "
-            "Instala `ctxmap-ai[mcp]`."
+            f"Instala el extra en este intérprete: {comando}"
         )
     else:
         check.status = "OK"
@@ -649,6 +734,7 @@ def check_topologia(report: DoctorReport, fix: bool = False, project_dir: str = 
 
 CHECKS = [
     check_git_available,
+    check_interpreter,
     check_update_dir,
     check_vault_default,
     check_project_name_consistency,

@@ -185,6 +185,10 @@ def create_parser() -> argparse.ArgumentParser:
         help="Sale con código 1 si hay algún FAIL (útil en CI/arranque de sesión)",
     )
     s_doctor.add_argument(
+        "--strict-warn", action="store_true", dest="strict_warn",
+        help="Sale con código 1 también ante cualquier WARN (reglas fijas de estabilidad)",
+    )
+    s_doctor.add_argument(
         "--sizes", action="store_true",
         help="Mostrar el desglose de peso de .context-map (y avisar si excede el tope)",
     )

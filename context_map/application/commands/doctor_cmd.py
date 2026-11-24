@@ -43,6 +43,7 @@ def cmd_doctor(args: dict[str, Any]) -> None:
     as_json = bool(args.get("json", False))
     sizes = bool(args.get("sizes", False))
     strict = bool(args.get("strict", False))
+    strict_warn = bool(args.get("strict_warn", False))
 
     if sizes:
         datos = medir_pesos(target_dir)
@@ -85,5 +86,10 @@ def cmd_doctor(args: dict[str, Any]) -> None:
         print("✨ [OK] Sistema saludable y libre de fallos críticos.")
     else:
         print(f"⚠️ [ATENCIÓN] Encontrados {len(report.failed)} fallos. Corre `ctxmap doctor --fix` para reparar.")
+    if report.warnings:
+        nombres = ", ".join(c.name for c in report.warnings)
+        print(f"⚠️ [AVISOS] {len(report.warnings)} advertencia(s): {nombres}")
     if strict and not report.ok:
+        sys.exit(1)
+    if strict_warn and (not report.ok or report.warnings):
         sys.exit(1)

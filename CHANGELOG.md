@@ -80,6 +80,39 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### 🛡️ Reglas fijas de estabilidad (invariantes del motor)
+
+- Nuevo catálogo `context_map/domain/health/invariantes.py`: cada regla fija
+  declara qué chequeo la mide, su severidad, por qué existe y cómo se repara.
+  Ocho invariantes: intérprete del proyecto, dependencias MCP, vault único,
+  notas manuales intactas, topología de árbol, índice FTS5 al día, historial
+  acotado y contexto fresco.
+- Nuevo chequeo `doctor: interpreter`: avisa cuando el proceso no es el Python
+  del `.venv` del proyecto. Era la causa raíz de un fallo silencioso: con el
+  intérprete global (pydantic 2.9.2) el servidor MCP no importa y el suite se
+  recolecta a medias (5 módulos sin colectar, 9 fallos). Con `.venv`
+  (pydantic 2.13.4): **515 tests en verde**.
+- `ctxmap doctor --strict-warn`: puerta dura que sale con código 1 también ante
+  cualquier WARN, para CI y cierre de sesión. `--strict` sigue fallando solo
+  con FAIL.
+- El resumen del doctor lista ahora los chequeos en WARN por nombre.
+- `Makefile` con `PY` resuelto al intérprete del venv y nuevos objetivos
+  `make verify` (tests + reglas fijas) y `make rules` (solo invariantes).
+- `AGENTS.md` §6 reescrito con las órdenes correctas y §7 nuevo con la tabla de
+  reglas fijas; añadir una regla exige chequeo + invariante + fila en la tabla.
+- `test_invariantes.py`: contrato ejecutable que falla si un invariante pierde
+  su chequeo, si la severidad es inválida o si `--strict-warn` deja de cortar.
+
+### 🐛 Corregido
+
+- `check_mcp_deps` ya no sugiere `ctxmap-ai[mcp]` (paquete inexistente en
+  PyPI): propone `pip install -e ".[mcp]"` con el intérprete correcto del venv.
+- `version_local()` prioriza el `pyproject.toml` del árbol fuente sobre los
+  metadatos de la instalación editable; se acaba el falso «Actualización
+  disponible» justo después de subir la versión.
+- El resumen de avisos del doctor concatenaba implícitamente literales y
+  repetía el prefijo dentro de la lista de nombres.
+
 ### ✨ Añadido
 
 - `ctxmap doctor` ampliado con 6 nuevos chequeos: `update_available`, `mcp_deps`,

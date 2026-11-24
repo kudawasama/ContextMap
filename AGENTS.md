@@ -53,10 +53,55 @@ son independientes y **nunca** se cruzan.
 * **Memoria viva**: documenta ideas/decisiones/lecciones del día en `7.0-MANUAL/Diario/` y, si son reutilizables, en `8.0-KNOWLEDGE/` (Lección · Cómo se resolvió · Prompt · Instrucción · Conexiones).
 
 ## 6. Verificación y commits
+
+> **Regla fija #0 — intérprete**: todos los comandos se ejecutan con el
+> intérprete del venv del proyecto (`.venv/Scripts/python.exe` en Windows,
+> `.venv/bin/python` en POSIX). El `python` global no trae el extra `[mcp]`
+> (pydantic ≥ 2.13) y hace que la suite se recolecte a medias. `make` ya lo
+> resuelve solo; si invocas Python a mano, usa el del venv.
+
 ```bash
-python -m pytest                                  # 1. tests 100%
-python -m context_map.cli scan .                  # 2. escanear
-python -m context_map.cli build --clean --brief   # 3. vault + brief
-python -m context_map.cli check .                 # 4. readiness
+make test      # 1. suite completa (pytest con el intérprete del venv)
+make verify    # 2. PUERTA DE CALIDAD: tests + reglas fijas (doctor --strict-warn)
+make scan      # 3. escanear
+make build     # 4. vault + brief
+make check     # 5. readiness
 ```
+
+Equivalentes sin `make`:
+
+```bash
+.venv/Scripts/python.exe -m pytest                          # tests
+.venv/Scripts/python.exe -m context_map.cli doctor . --strict-warn  # reglas fijas
+.venv/Scripts/python.exe -m context_map.cli build --clean --brief   # vault + brief
+.venv/Scripts/python.exe -m context_map.cli check .                 # readiness
+```
+
 * **Commits**: *Conventional Commits* en español (`feat:`, `fix:`, `refactor:`, `docs:`…).
+
+## 7. Reglas fijas de estabilidad (invariantes)
+
+Las reglas que sostienen la confianza en el diagnóstico están declaradas en
+`context_map/domain/health/invariantes.py` y se miden con el `doctor`. No son
+sugerencias: `ctxmap doctor --strict-warn` devuelve **código 1** si alguna se
+incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
+
+| Invariante | Chequeo | Severidad | Reparación |
+|---|---|---|---|
+| `interprete_del_proyecto` | `interpreter` | WARN | usar el Python del `.venv` |
+| `dependencias_mcp_importables` | `mcp_deps` | FAIL | `pip install -e ".[mcp]"` |
+| `vault_unico_por_proyecto` | `vault_default` | WARN | `ctxmap doctor --fix .` |
+| `notas_manuales_intactas` | `manual_notes_preservation` | WARN | `ctxmap doctor --fix .` |
+| `topologia_de_arbol` | `topologia` | WARN | `ctxmap build --clean --brief .` |
+| `indice_fts5_al_dia` | `vault_index` | WARN | `ctxmap build .` |
+| `historial_acotado` | `history` | WARN | `ctxmap history prune .` |
+| `contexto_fresco` | `context_freshness` | WARN | `ctxmap refresh .` |
+
+* `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
+  borra o renombra un chequeo que sostiene una regla fija.
+* Estas reglas son del **motor**. Las reglas de **negocio** del proyecto van al
+  catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`),
+  que `context_map/domain/reglas/reglas.py` convierte en nodos `REGLA`.
+* Añadir una regla fija = añadir el chequeo en `doctor.CHECKS` + su entrada en
+  `INVARIANTES` + su fila en esta tabla. Sin las tres, no es una regla.
+

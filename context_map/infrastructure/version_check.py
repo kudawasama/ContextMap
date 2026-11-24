@@ -20,16 +20,52 @@ _CACHE_PATH = os.path.join(os.path.expanduser("~"), ".context-map-version.json")
 _CACHE_TTL = 24 * 3600  # 24 horas
 
 
+def _version_del_repo() -> str:
+    """Lee ``project.version`` del ``pyproject.toml`` del árbol fuente.
+
+    Sube hasta tres niveles desde este módulo para encontrar el
+    ``pyproject.toml`` del repo. Así, trabajando en el código local, la versión
+    real es la del repo y no los metadatos de una instalación editable que
+    quedó atrás tras subir la versión (falso "actualización disponible").
+
+    Returns:
+        str: Versión declarada en el repo, o cadena vacía si no se encuentra.
+    """
+    base = os.path.abspath(os.path.dirname(__file__))
+    for _ in range(4):
+        candidato = os.path.join(base, "pyproject.toml")
+        if os.path.isfile(candidato):
+            try:
+                import tomllib
+
+                with open(candidato, "rb") as f:
+                    data = tomllib.load(f)
+                version = str(data.get("project", {}).get("version", ""))
+                if version:
+                    return version
+            except Exception:  # noqa: BLE001
+                return ""
+        padre = os.path.dirname(base)
+        if padre == base:
+            break
+        base = padre
+    return ""
+
+
 def version_local() -> str:
     """Versión local de ContextMap.
 
-    Usa los metadatos del paquete instalado; si corre desde el repo sin
-    instalar, lee ``pyproject.toml``. Prueba ambos nombres de distribución
-    (``context-map`` histórico y ``context-map-ai`` actual).
+    Prioriza el ``pyproject.toml`` del árbol fuente (si se ejecuta desde el
+    repo) y cae a los metadatos del paquete instalado; si tampoco existen,
+    devuelve ``0.0.0``. Prueba ambos nombres de distribución (``context-map``
+    histórico y ``context-map-ai`` actual).
 
     Returns:
         str: Versión local (ej. "1.3.0").
     """
+    repo = _version_del_repo()
+    if repo:
+        return repo
     try:
         import importlib.metadata as md
 
@@ -42,14 +78,7 @@ def version_local() -> str:
                 continue
     except Exception:
         pass
-    try:
-        import tomllib
-
-        with open(os.path.join(os.path.dirname(__file__), "..", "..", "pyproject.toml"), "rb") as f:
-            data = tomllib.load(f)
-        return str(data.get("project", {}).get("version", "0.0.0"))
-    except Exception:
-        return "0.0.0"
+    return "0.0.0"
 
 
 def _normalizar(v: str) -> tuple:
