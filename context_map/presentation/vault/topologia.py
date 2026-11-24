@@ -14,6 +14,46 @@ from typing import List
 
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
+#: Bloques y tramos de código: un wikilink escrito ahí es **texto literal**
+#: (documentación, ejemplos), no una arista del grafo.
+_FENCE_RE = re.compile(r"```.*?```", re.S)
+_CODE_SPAN_RE = re.compile(r"`[^`\n]*`")
+_MARCA_RE = re.compile(r"\x00(\d+)\x00")
+
+
+def texto_enlazable(contenido: str) -> str:
+    """Devuelve el texto de una nota sin los tramos que no generan aristas.
+
+    El validador busca wikilinks con una expresión regular sobre todo el
+    fichero, así que una nota que **documente** un enlace roto
+    (``p.ej. [[...]]`` dentro de comillas invertidas) se acusaba a sí misma.
+    Ese falso positivo obligaba a mutilar la documentación para callar al
+    validador.
+
+    El orden importa: primero caen los bloques cercados, después se protegen
+    los wikilinks ya formados y solo al final se retiran los tramos de código
+    en línea. Al revés se rompían los enlaces cuyo **título** contiene
+    comillas invertidas (típico en los riesgos consolidados:
+    ``[[... `keywords.py` ya no existe...]]``), y el padre desaparecía.
+
+    Args:
+        contenido (str): Markdown completo de la nota.
+
+    Returns:
+        str: El mismo Markdown sin los tramos que no generan aristas.
+    """
+    sin_bloques = _FENCE_RE.sub(" ", contenido)
+
+    enlaces: list[str] = []
+
+    def _proteger(m: re.Match[str]) -> str:
+        enlaces.append(m.group(0))
+        return f"\x00{len(enlaces) - 1}\x00"
+
+    protegido = LINK_RE.sub(_proteger, sin_bloques)
+    sin_codigo = _CODE_SPAN_RE.sub(" ", protegido)
+    return _MARCA_RE.sub(lambda m: enlaces[int(m.group(1))], sin_codigo)
+
 SIN_PADRE_PERMITIDOS = {"00-INDICE.md", "00-CONEXIONES.md", "90-CONOCIMIENTO.md"}
 
 ENLACES_DOCUMENTALES_PERMITIDOS = {"entre-notas"}
@@ -79,7 +119,7 @@ def analizar_topologia(vault_dir: str) -> ResultadoTopologia:
         ruta = os.path.join(vault_dir, rel)
         try:
             with open(ruta, encoding="utf-8") as fh:
-                contenido = fh.read()
+                contenido = texto_enlazable(fh.read())
         except OSError:
             continue
         for m in LINK_RE.findall(contenido):
@@ -105,7 +145,7 @@ def analizar_topologia(vault_dir: str) -> ResultadoTopologia:
         ruta = os.path.join(vault_dir, rel)
         try:
             with open(ruta, encoding="utf-8") as fh:
-                contenido = fh.read()
+                contenido = texto_enlazable(fh.read())
         except OSError:
             continue
         for m in LINK_RE.findall(contenido):

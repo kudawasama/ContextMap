@@ -15,6 +15,7 @@ from context_map.core.normalization.standardize import inferir_concepto
 from context_map.presentation.vault.consolidated.dominios import _linea_tags_inline
 from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.templates import _normalize_tags
+from context_map.presentation.vault.wikilink import enlace
 
 ICONOS_STATUS = {"completado": "✅", "pendiente": "⏳", "activo": "🔄"}
 
@@ -228,6 +229,6 @@ def _render_indice_concepto(
         else:
             slug = _nombre_nota_idea(n)
         icono = ICONOS_STATUS.get(n.status, "💡")
-        index_parts.append(f"- {icono} [[{slug}|{n.title}]]")
+        index_parts.append(f"- {icono} {enlace(slug, n.title)}")
     index_parts.extend(pie_fn(backlink))
     _escribir_markdown(directorio, f"{concepto}-{status_label}.md", index_parts)

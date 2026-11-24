@@ -8,6 +8,7 @@ from context_map.core.models import Node
 from context_map.presentation.vault.consolidated.dominios import _linea_tags_inline
 from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
+from context_map.presentation.vault.wikilink import enlace
 
 
 def _render_nota_riesgo(
@@ -164,7 +165,7 @@ def _render_seccion_riesgos(
                 continue  # mismo riesgo con paths en distinto orden
             seen_riesgo_idx.add(key)
             slug = _safe_filename(n.title)
-            partes.append(f"- [[{slug}|⚠️ {n.title}]]")
+            partes.append(f"- {enlace(slug, '⚠️ ' + n.title)}")
         partes.append("")
     else:
         partes.append("✅ **Sin riesgos o alertas críticas detectadas.**")

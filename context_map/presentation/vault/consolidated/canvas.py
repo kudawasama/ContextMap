@@ -21,6 +21,7 @@ from datetime import date, datetime
 
 from context_map.core.models import Edge, Node
 from context_map.presentation.vault.consolidated.rutas import ruta_archivo_nodo
+from context_map.presentation.vault.wikilink import enlace
 
 
 def _canvas_id(clave: str) -> str:
@@ -263,7 +264,7 @@ def render_nota_dia(output_dir: str, project_name: str, nodes: list[Node]) -> st
     for n in ingresados:
         ruta_nodo = ruta_archivo_nodo(n)
         if ruta_nodo:
-            partes.append(f"- [[{ruta_nodo}|{n.title}]]")
+            partes.append(f"- {enlace(ruta_nodo, n.title)}")
         else:
             partes.append(f"- **{n.title}**")
     partes.append("")

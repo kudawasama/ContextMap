@@ -102,9 +102,30 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   reglas fijas; añadir una regla exige chequeo + invariante + fila en la tabla.
 - `test_invariantes.py`: contrato ejecutable que falla si un invariante pierde
   su chequeo, si la severidad es inválida o si `--strict-warn` deja de cortar.
+- `test_wikilinks_seguros.py`: contrato de los enlaces del vault (alias hostiles,
+  destinos con extensión, tablas y wikilinks documentados en código).
 
 ### 🐛 Corregido
 
+- **Topología en árbol: 16 violaciones → 0.** Los índices de concepto escribían
+  `[[01-GENERAL-01-01.md|[f51c772] feat: …]]`: la extensión `.md` sobraba y el
+  corchete del alias cerraba el enlace antes de tiempo, así que el regex de
+  enlaces no casaba nada y el batch quedaba huérfano (también en el Graph View).
+  Nuevo módulo `presentation/vault/wikilink.py` (`alias_seguro`, `destino_seguro`,
+  `enlace`) usado por los seis renderizadores que interpolaban títulos a pelo:
+  `notas_ideas`, `canvas`, `secciones_estructura`, `secciones_riesgos`,
+  `templates` y `atomic` (con `tabla=True` para no romper columnas Markdown).
+- `_safe_filename` retira `[`, `]`, `#` y `^` del nombre de archivo, para que un
+  título con corchetes no genere un destino que Obsidian no puede enlazar.
+- `topologia.texto_enlazable()`: el validador ya no cuenta los wikilinks
+  escritos dentro de bloques o tramos de código. Una nota que **documentaba** un
+  enlace roto (`p.ej. \`[[...]]\``) se acusaba a sí misma y obligaba a mutilar la
+  documentación. Los enlaces se protegen antes de retirar el código en línea, de
+  modo que un título con comillas invertidas
+  (`[[… \`keywords.py\` ya no existe…]]`) siga contando como arista.
+- Notas manuales reparadas: 10 enlaces a destinos desaparecidos en
+  `7.0-MANUAL/Diario/` (historial), `7.0-MANUAL/MEJORAS/`,
+  `8.0-KNOWLEDGE/` y `90-CONOCIMIENTO/00-INBOX/`.
 - `check_mcp_deps` ya no sugiere `ctxmap-ai[mcp]` (paquete inexistente en
   PyPI): propone `pip install -e ".[mcp]"` con el intérprete correcto del venv.
 - `version_local()` prioriza el `pyproject.toml` del árbol fuente sobre los

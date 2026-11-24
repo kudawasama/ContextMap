@@ -19,6 +19,7 @@ from context_map.presentation.vault.templates import (
     _slugificar,
     _wiki_links,
 )
+from context_map.presentation.vault.wikilink import enlace
 
 
 def _render_nota(node: Node, all_nodes: list[Node], edges: list[Edge]) -> str:
@@ -341,13 +342,18 @@ def _render_conexiones(
                     and os.path.isfile(os.path.join(output_dir, r_tgt))
                 ):
                     partes.append(
-                        f"| [[{r_src}\\|{src_title}]] | [[{r_tgt}\\|{tgt_title}]] "
+                        f"| {enlace(r_src, src_title, tabla=True)} "
+                        f"| {enlace(r_tgt, tgt_title, tabla=True)} "
                         f"| {e.kind} | {e.note or '—'} |"
                     )
                 else:
                     partes.append(f"| {src_title} | {tgt_title} | {e.kind} | {e.note or '—'} |")
             else:
-                partes.append(f"| [[{src_slug}\\|{src_title}]] | [[{tgt_slug}\\|{tgt_title}]] | {e.kind} | {e.note or '—'} |")
+                partes.append(
+                    f"| {enlace(src_slug, src_title, tabla=True)} "
+                    f"| {enlace(tgt_slug, tgt_title, tabla=True)} "
+                    f"| {e.kind} | {e.note or '—'} |"
+                )
         else:
             partes.append(f"| {src_title} | {tgt_title} | {e.kind} | {e.note or '—'} |")
 

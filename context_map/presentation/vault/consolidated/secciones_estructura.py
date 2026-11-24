@@ -8,6 +8,7 @@ from context_map.core.models import Node
 from context_map.presentation.vault.consolidated.dominios import _linea_tags_inline
 from context_map.presentation.vault.consolidated.escritura import _escribir_markdown
 from context_map.presentation.vault.templates import _normalize_tags, _safe_filename
+from context_map.presentation.vault.wikilink import enlace
 
 
 def _render_nota_documento(
@@ -238,7 +239,7 @@ def _render_seccion_estructura(
             slug = _safe_filename(n.title)
             concepto = getattr(n, "concept", "") or "GENERAL"
             index_parts.append(
-                f"- 📄 [[{slug}|{n.title}]] · `{concepto}` · {len(n.evidence)} citas"
+                f"- 📄 {enlace(slug, n.title)} · `{concepto}` · {len(n.evidence)} citas"
             )
             _render_nota_documento(n, project_name, fecha_actual, docs_dir, pie_fn)
         index_parts.append("")

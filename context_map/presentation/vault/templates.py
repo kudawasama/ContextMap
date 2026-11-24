@@ -11,6 +11,7 @@ import re
 from functools import lru_cache
 
 from context_map.core.models import Edge, Node
+from context_map.presentation.vault.wikilink import enlace
 
 # Mapeo de tipos a carpetas del vault
 TYPE_TO_FOLDER: dict[str, str] = {
@@ -94,7 +95,7 @@ def _safe_filename(text: str) -> str:
     """
     text = _clean_null_bytes(text)
     safe = re.sub(r"[\\/]+", "_", text)
-    safe = re.sub(r'[*?:"<>|\x00-\x1f]', "", safe)
+    safe = re.sub(r'[*?:"<>|\[\]#^\x00-\x1f]', "", safe)
     safe = safe.strip(". ")
     return safe[:100] or "nota"
 
@@ -152,19 +153,19 @@ def _wiki_links(node: Node, all_nodes: list[Node], edges: list[Edge]) -> list[st
             target = next((n for n in all_nodes if n.id == e.target), None)
             if target and target.id != node.id:
                 slug = _slugificar(target.title)
-                links.append(f"[[{slug}|{target.title[:50]}]]")
+                links.append(enlace(slug, target.title[:50]))
         elif e.target == node.id:
             source = next((n for n in all_nodes if n.id == e.source), None)
             if source and source.id != node.id:
                 slug = _slugificar(source.title)
-                links.append(f"[[{slug}|{source.title[:50]}]]")
+                links.append(enlace(slug, source.title[:50]))
 
     seen: set[str] = set()
     unique: list[str] = []
-    for enlace in links:
-        if enlace not in seen:
-            seen.add(enlace)
-            unique.append(enlace)
+    for link in links:
+        if link not in seen:
+            seen.add(link)
+            unique.append(link)
     return unique[:10]
 
 
