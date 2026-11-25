@@ -190,11 +190,15 @@ Instrucción específica · Conexiones). Lo conversado siempre queda.
 Antes de dar por completada cualquier tarea o comitear en Git:
 
 ```bash
-python -m pytest                        # 1. tests (100%)
-python -m context_map.cli scan .        # 2. escanear y actualizar el mapa
-python -m context_map.cli build --clean --brief   # 3. vault + brief
-python -m context_map.cli check .       # 4. readiness
+.venv/Scripts/python.exe -m pytest                            # 1. tests (100%)
+.venv/Scripts/python.exe -m context_map.cli scan .             # 2. escanear
+.venv/Scripts/python.exe -m context_map.cli build --clean --brief   # 3. vault + brief
+.venv/Scripts/python.exe -m context_map.cli check .            # 4. readiness
+.venv/Scripts/python.exe -m context_map.cli doctor . --strict-warn  # 5. reglas fijas
 ```
+
+El intérprete es **siempre** el del `.venv` del proyecto (regla `REG-EJE-001`): el
+`python` global no trae el extra `[mcp]` y hace que la suite se recolecte a medias.
 
 * **Commits**: *Conventional Commits* en español (`feat:`, `fix:`, `refactor:`, `docs:`…).
 
@@ -204,3 +208,124 @@ python -m context_map.cli check .       # 4. readiness
 Antes de trabajar, el agente ejecuta `ctxmap doctor --json` (o `ctxmap check .`).
 `check` = readiness del proyecto; `doctor` = salud del entorno + auto-reparación.
 El arranque de sesión no se fuerza por hook: la skill base y `AGENTS.md` lo exigen.
+
+## 7. Etiquetas (tags) — creación y formato
+
+Las etiquetas son el índice vivo del vault: una etiqueta mal escrita no rompe
+ningún test, solo desaparece del grafo y de la búsqueda. Por eso son regla fija
+y las audita `ctxmap doctor` (`vault_tags`).
+
+**Formato obligatorio** (lo aplica `core/normalization/cleaning.py`):
+
+| Regla | Correcto | Incorrecto |
+|---|---|---|
+| Minúsculas | `basededatos` | `BaseDeDatos` |
+| Solo `a-z`, `0-9`, `-` y `:` | `context-map` | `context map`, `v2.7` |
+| Un nivel de prefijo con `:` | `class:fix` | `class:fix:urgente` |
+| Sin acentos ni eñes | `diseno` | `diseño` |
+| Sin duplicados | `["ideas","ideas"]` → una | duplicadas |
+
+* **Toda nota del vault declara `tags:` en su frontmatter.** Sin `tags:` la nota
+  es invisible para el índice; el chequeo `vault_tags` la marca en WARN.
+* **Crear una etiqueta nueva** = `kebab-case`, en singular y en el idioma del
+  proyecto (aquí, español o el término técnico en inglés ya asentado:
+  `basededatos`, `tui`, `context-map`). Nunca dos formas del mismo concepto:
+  si existe el sinónimo, se añade a `TAG_MERGE` y se usa el canonónico.
+* **Prohibidas** (`TAGS_ELIMINAR`): `todo`, `otro`, `docstring`, `__init__.py`.
+  No informan de nada y ensucian el grafo.
+* **Etiqueta de clasificación**: todo nodo del grafo lleva `class:<id>`
+  (`class:fix`, `class:feature`…), inferido por `normalization/inference.py`.
+  No se escribe a mano: la pone el motor.
+* Antes de inventar una etiqueta, se busca si ya existe (`ctxmap search` o
+  `/tags` del vault). Una etiqueta nueva que nadie más usa es ruido.
+
+## 8. Documentación obligatoria
+
+Un cambio sin documentar es un cambio que la próxima sesión va a repetir.
+
+| Qué | Dónde | Cuándo |
+|---|---|---|
+| Decisión y su porqué | `docs/plans/` o nota de decisión | al decidir |
+| Lógica nuclear del dominio | `7.0-MANUAL/DOMINIO.md` | al tocar el núcleo |
+| Cambio visible | `CHANGELOG.md` (`[Unreleased]`, Keep a Changelog) | en el mismo commit |
+| Norma nueva del proyecto | `AGENTS.md` (contrato) + `docs/GOBERNANZA-AGENTES.md` (detalle) | antes de la regla |
+| Fuente externa | `.context-map/raw/docs/` + `ctxmap refresh .` | al ingerirla |
+| Lo que pasó hoy | `7.0-MANUAL/Diario/YYYY-MM-DD.md` | al cerrar sesión |
+
+* El `CHANGELOG.md` no se rellena al final: entra en el mismo commit que el
+  cambio, con el tipo correcto (`Corregido`, `Añadido`, `Cambiado`, `Eliminado`).
+* `7.0-MANUAL/DOMINIO.md` describe **cómo decide el sistema**, no la lista de
+  archivos. Si el código y el documento discrepan, gana el documento hasta que
+  alguien demuestre lo contrario con una prueba.
+* Nada de documentación duplicada: un solo sitio por asunto y enlaces entre
+  ellos, no copias.
+
+## 9. Humanización de la prosa
+
+El vault lo lee una persona (y un agente que debe entenderla). Una plantilla sin
+redactar no es contexto: es ruido con formato.
+
+* **Todos los archivos del vault se redactan**: índice, nota, resumen. Nada de
+  «TODO: describir», «lorem», ni tablas con celdas vacías.
+* **No se borra historia**: lo tosco se corrige, no se elimina.
+* **Ruido fuera** (lo descartan los predicados de `normalization/humanizacion.py`):
+  métricas repetitivas del scanner, `TODO`/`FIXME` crudos, mensajes de chat,
+  entrypoints de carpetas de scratch y resúmenes plantilla.
+* **Contexto narrativo por tipo**: `IDEA`, `RIESGO`, `CAMBIO`/`CORRECCION`,
+  `BASE`, `PRUEBA`, `FUTURO`. Cada uno cuenta qué es, por qué importa y qué
+  sigue; no todos con la misma frase.
+* La prosa va **en español técnico profesional**: directo, sin relleno, sin
+  «obviamente» ni signos de admiración.
+
+## 10. Memoria viva y Second Brain
+
+* Chats y exportaciones van a `.context-map/chats/` y se procesan en
+  `ctxmap refresh .`; no se copian a mano al vault.
+* El **Second Brain** se responde con citas (`knowledge_wiki_ask`): una respuesta
+  sin fuente es una invención. Si no hay pasaje que lo respalde, se dice.
+* Antes de preguntar «qué hicimos con X», se busca en la memoria multi-proyecto
+  (`personal_query`): las lecciones de otros proyectos aplican a este.
+* Lección reutilizable → `8.0-KNOWLEDGE/` con el formato Lección · Cómo se
+  resolvió · Prompt · Instrucción · Conexiones. Una lección sin instrucción
+  accionable no es lección.
+* **Pendientes nunca con una sola fuente**: `7.0-MANUAL/BACKLOG.md` +
+  `7.0-MANUAL/Diario/` + `5.0-BACKLOG/5.1-Tareas.md` + `3.2-DOCUMENTOS/`.
+
+## 11. Secretos y datos sensibles
+
+* **Nunca** un secreto en el repo, en el vault ni en un brief: ni claves, ni
+  tokens, ni cadenas de conexión, ni datos personales de terceros.
+* Los secretos se inyectan por el proxy (`core/secrets/proxy.py`:
+  `entorno_con_secretos`) y la salida se sanea (`sanear_salida`) antes de
+  escribirla o exportarla.
+* El vault de secretos (`core/secrets/vault.py`) exige `cryptography`; sin ella
+  **no** se cae a texto plano: se falla con un mensaje claro.
+* Si un secreto aparece en el historial de git, se rota. Borrar el commit no
+  basta: el objeto sigue ahí.
+* Los IDs de variables se validan sin colisión (`validar_ids_sin_colision`)
+  antes de exportar el entorno: dos claves con el mismo prefijo se pisan.
+
+## 12. Publicación y versionado
+
+* La versión vive en `pyproject.toml` y se refleja en el mismo commit en
+  `CHANGELOG.md`. `version_local()` lee el `pyproject.toml` del árbol fuente:
+  el binario editable no manda.
+* Un cambio de comportamiento sube al menos el *minor*; una corrección, el
+  *patch*. Se etiqueta `vX.Y.Z` **después** de la puerta de calidad en verde.
+* El paquete de agentes (`@kudawa/pi-contextmap`) lleva su propia versión y su
+  propia `SKILL.md` genérica (`vault-<Proyecto>`, sin nombres de proyecto); la
+  skill específica del proyecto se genera en `.agents/skills/` del repo y **no**
+  se publica en `~/.agents` cuando el proyecto es el home.
+* `push` y `tag` solo con confirmación explícita del dueño.
+
+## 13. Límites y rendimiento
+
+* Un vault de más de ~15 MB o ~1.000 notas deja de ser «un contexto»: se
+  mantiene acotado (build por secciones, `--brief` para el agente).
+* El `doctor` debe terminar en minutos, no colgarse: los proyectos enormes
+  (p. ej. gobernanza con 20 MB) necesitan modo acotado en lugar de un barrido
+  completo silencioso.
+* No se commitean artefactos derivados: `.context-map/state/`,
+  `.context-map/history/`, `.context-map/vault-*/` regenerable y los `.db`.
+* Las tareas caras (scan completo, ingesta, embeddings) se anuncian antes de
+  ejecutarse: el dueño decide si paga el tiempo.

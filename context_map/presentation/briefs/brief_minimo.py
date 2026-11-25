@@ -34,6 +34,15 @@ from context_map.presentation.briefs.sections import (
 LIMITE_ALMA = 480
 LIMITE_TITULOS = 3
 LIMITE_TITULO = 72
+#: Tope de reglas fijas en la capa mínima: el brief no puede crecer con el catálogo.
+LIMITE_REGLAS_MIN = 12
+#: Orden de importancia para la capa mínima: primero lo que más se rompe en
+#: la práctica (vault, etiquetas, ejecución), no el orden del archivo.
+ORDEN_CATEGORIAS = (
+    "REG-VLT", "REG-ETQ", "REG-EJE", "REG-INI", "REG-SAL",
+    "REG-HUM", "REG-DOC", "REG-MEM", "REG-ARQ", "REG-SEG",
+    "REG-PUB", "REG-LIM",
+)
 
 
 def _recortar(texto: str, limite: int) -> str:
@@ -82,22 +91,40 @@ def reglas_fijas(project_dir: str = ".") -> str:
         return ""
 
     criticas: dict[str, list[str]] = {}
-    for regla in reglas:
+    mostradas = 0
+    ordenadas = sorted(
+        reglas,
+        key=lambda r: (
+            ORDEN_CATEGORIAS.index(str(r.get("categoria")))
+            if str(r.get("categoria")) in ORDEN_CATEGORIAS
+            else len(ORDEN_CATEGORIAS),
+            str(r.get("id", "")),
+        ),
+    )
+    for regla in ordenadas:
         if str(regla.get("prioridad", "")).lower() != "critica":
             continue
         etiqueta = str(regla.get("resumen") or regla.get("nombre") or "")[:48]
         categoria = str(regla.get("categoria") or "REG")
         sufijo = str(regla.get("id", "")).rsplit("-", 1)[-1]
+        if mostradas >= LIMITE_REGLAS_MIN:
+            continue
         criticas.setdefault(categoria, []).append(f"{sufijo} {etiqueta}")
+        mostradas += 1
 
     if not criticas:
         return ""
 
+    ocultas = sum(
+        1 for r in reglas
+        if str(r.get("prioridad", "")).lower() == "critica"
+    ) - mostradas
     lineas = ["## 📜 Reglas fijas (el catálogo manda)", ""]
     for categoria, items in criticas.items():
         lineas.append(f"- **{categoria}** " + " · ".join(items))
+    cola = f"; +{ocultas} crítica(s) más en el catálogo" if ocultas > 0 else ""
     lineas.append(
-        f"_({len(reglas)} reglas en `references/reglas/reglas_registro.yaml`; "
+        f"_({len(reglas)} reglas en `references/reglas/reglas_registro.yaml`{cola}; "
         "si una contradice el código, manda la regla)_"
     )
     return "\n".join(lineas)

@@ -124,6 +124,16 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="ctxmap refresh .",
     ),
+    Invariante(
+        nombre="etiquetas_del_vault",
+        chequeo="vault_tags",
+        severidad="WARN",
+        motivo=(
+            "Una etiqueta mal escrita no rompe nada visible: la nota desaparece "
+            "del grafo y de la búsqueda en silencio. Si no se mide, se acumula."
+        ),
+        reparacion="corregir `tags:` en el frontmatter de la nota señalada",
+    ),
 )
 
 

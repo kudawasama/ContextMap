@@ -783,6 +783,89 @@ def check_topologia(report: DoctorReport, fix: bool = False, project_dir: str = 
     report.add(check)
 
 
+def check_vault_tags(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
+    """Audita las etiquetas del frontmatter de las notas del vault.
+
+    Una etiqueta mal escrita no rompe la compilación: rompe el grafo de Obsidian
+    y la búsqueda, en silencio. Esta regla fija (``ETQ``) exige que cada nota
+    declare ``tags:`` y que cada etiqueta sea minúscula, sin espacios, con
+    ``-`` o ``:`` como separadores y sin las etiquetas muertas del motor.
+
+    Args:
+        report (DoctorReport): Reporte donde se añade el resultado.
+        fix (bool): Sin reparación automática (las etiquetas son contenido).
+        project_dir (str): Raíz del proyecto.
+    """
+    import re  # noqa: PLC0415 — local: el chequeo es autónomo
+
+    check = DoctorCheck(name="vault_tags")
+    context_dir = os.path.join(project_dir, ".context-map")
+    vaults = [
+        d for d in (os.listdir(context_dir) if os.path.isdir(context_dir) else [])
+        if d.startswith("vault-") and os.path.isdir(os.path.join(context_dir, d))
+    ]
+    if not vaults:
+        check.status = "OK"
+        check.message = "Sin vault aún."
+        report.add(check)
+        return
+
+    from context_map.core.normalization.mappings import TAGS_ELIMINAR  # noqa: PLC0415
+
+    patron = re.compile(r"^[a-z0-9]+(?:[-:][a-z0-9]+)*$")
+    vault_path = os.path.join(context_dir, sorted(vaults)[0])
+    sin_tags: list[str] = []
+    invalidas: list[str] = []
+    notas = 0
+
+    for raiz, _dirs, archivos in os.walk(vault_path):
+        for archivo in archivos:
+            if not archivo.endswith(".md"):
+                continue
+            ruta = os.path.join(raiz, archivo)
+            relativa = os.path.relpath(ruta, vault_path).replace(os.sep, "/")
+            notas += 1
+            try:
+                with open(ruta, encoding="utf-8") as f:
+                    cabecera = f.read(1500)
+            except (OSError, UnicodeDecodeError):
+                continue
+            if not cabecera.startswith("---"):
+                sin_tags.append(relativa)
+                continue
+            bloque = cabecera.split("---", 2)[1] if cabecera.count("---") >= 2 else ""
+            linea = next(
+                (ln.split(":", 1)[1] for ln in bloque.splitlines()
+                 if ln.strip().startswith("tags:")),
+                "",
+            )
+            etiquetas = [
+                t.strip().strip("\"'") for t in linea.strip().strip("[]").split(",")
+                if t.strip().strip("\"'")
+            ]
+            if not etiquetas:
+                sin_tags.append(relativa)
+                continue
+            malas = [t for t in etiquetas if not patron.match(t) or t in TAGS_ELIMINAR]
+            if len(set(etiquetas)) != len(etiquetas):
+                malas.append("duplicada")
+            if malas:
+                invalidas.append(f"{relativa}: {', '.join(malas)}")
+
+    problemas = len(sin_tags) + len(invalidas)
+    if problemas:
+        check.status = "WARN"
+        ejemplo = (invalidas or sin_tags)[0]
+        check.message = (
+            f"{problemas} nota(s) con etiquetas fuera de norma "
+            f"({len(sin_tags)} sin 'tags', {len(invalidas)} con etiquetas inválidas): {ejemplo}"
+        )
+    else:
+        check.status = "OK"
+        check.message = f"Etiquetas válidas en {notas} nota(s)."
+    report.add(check)
+
+
 CHECKS = [
     check_git_available,
     check_interpreter,
@@ -798,6 +881,7 @@ CHECKS = [
     check_skill_collisions,
     check_generated_rules,
     check_topologia,
+    check_vault_tags,
 ]
 
 

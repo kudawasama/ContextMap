@@ -134,3 +134,80 @@ def test_el_resumen_cabe_en_una_linea() -> None:
         assert resumen, f"{regla['id']}: falta 'resumen' (lo usa el brief mínimo)"
         assert len(resumen) <= 45, f"{regla['id']}: resumen de {len(resumen)} car. (máx. 45)"
         assert "\n" not in resumen
+
+
+# ── verificación: ninguna regla puede ser decorativa ──────────────────────
+
+def _nombres_de_chequeos() -> set[str]:
+    """Nombres de los chequeos del doctor, leídos de su propio fuente.
+
+    Evita mantener una lista paralela: si alguien renombra un chequeo, esta
+    lectura lo ve y las reglas que dependían de él fallan.
+    """
+    from context_map.domain import health
+
+    ruta = os.path.join(os.path.dirname(health.__file__), "doctor.py")
+    with open(ruta, encoding="utf-8") as f:
+        fuente = f.read()
+    # Dos formas conviven en el módulo: posicional `DoctorCheck("x", …)` y por
+    # palabra clave `DoctorCheck(name="x")`. Se aceptan las dos.
+    nombres = set(re.findall(r'DoctorCheck\(name="([a-z_]+)"', fuente))
+    nombres |= set(re.findall(r'DoctorCheck\(\s*"([a-z_]+)"', fuente))
+    return nombres
+
+
+def test_toda_regla_declara_como_se_verifica() -> None:
+    """Sin `verificacion` una regla es una intención, no una regla."""
+    for regla in _reglas():
+        assert str(regla.get("verificacion", "")).strip(), f"{regla['id']}: falta 'verificacion'"
+
+
+def test_los_chequeos_citados_existen_en_el_doctor() -> None:
+    """`doctor:<chequeo>` debe apuntar a un chequeo real (si no, nadie la mide)."""
+    disponibles = _nombres_de_chequeos()
+    for regla in _reglas():
+        verif = str(regla["verificacion"])
+        if not verif.startswith("doctor:"):
+            continue
+        chequeo = verif.split(":", 1)[1]
+        assert chequeo in disponibles, (
+            f"{regla['id']}: el chequeo {chequeo!r} no existe en doctor.CHECKS "
+            f"(disponibles: {sorted(disponibles)})"
+        )
+
+
+def test_los_tests_citados_existen() -> None:
+    """`test:<archivo>` debe ser un archivo real de la suite."""
+    for regla in _reglas():
+        verif = str(regla["verificacion"])
+        if not verif.startswith("test:"):
+            continue
+        archivo = verif.split(":", 1)[1]
+        ruta = os.path.join(RAIZ, "context_map", "__tests__", archivo)
+        assert os.path.isfile(ruta), f"{regla['id']}: test inexistente {archivo!r}"
+
+
+def test_la_verificacion_es_de_un_tipo_conocido() -> None:
+    """Un tipo libre haría creer que algo se comprueba cuando no."""
+    for regla in _reglas():
+        verif = str(regla["verificacion"])
+        assert verif == "manual" or verif.startswith(("doctor:", "test:")), (
+            f"{regla['id']}: verificacion desconocida {verif!r}"
+        )
+
+
+def test_hay_reglas_verificadas_por_el_motor() -> None:
+    """Un catálogo 100% «manual» sería un documento de buenas intenciones."""
+    automatizadas = [
+        r for r in _reglas() if str(r["verificacion"]) != "manual"
+    ]
+    assert len(automatizadas) >= 20, (
+        f"solo {len(automatizadas)} reglas con verificación automática: "
+        "el catálogo necesita más puertas duras"
+    )
+
+
+def test_toda_categoria_declarada_tiene_reglas() -> None:
+    """Una categoría sin reglas es una promesa vacía en el brief."""
+    categorias = {str(r["categoria"]) for r in _reglas()}
+    assert len(categorias) >= 10, f"categorías cubiertas: {sorted(categorias)}"

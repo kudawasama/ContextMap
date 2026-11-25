@@ -86,7 +86,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   declara qué chequeo la mide, su severidad, por qué existe y cómo se repara.
   Ocho invariantes: intérprete del proyecto, dependencias MCP, vault único,
   notas manuales intactas, topología de árbol, índice FTS5 al día, historial
-  acotado y contexto fresco.
+  acotado, contexto fresco y etiquetas del vault.
 - Nuevo chequeo `doctor: interpreter`: avisa cuando el proceso no es el Python
   del `.venv` del proyecto. Era la causa raíz de un fallo silencioso: con el
   intérprete global (pydantic 2.9.2) el servidor MCP no importa y el suite se
@@ -152,27 +152,52 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 - `ctxmap doctor` ampliado con 6 nuevos chequeos: `update_available`, `mcp_deps`,
   `vault_index`, `context_freshness`, `skill_collisions`, `generated_rules`,
-  `topologia` (13 en total).
+  `topologia`, `vault_tags` (15 en total).
 - `ctxmap doctor --strict`: sale con código 1 si hay algún FAIL.
 - Validador de topología extraído a `presentation/vault/topologia.py` (reutilizado
   por tests y doctor).
 - `revisar_reglas_agente(..., dry_run=True)` para previsualizar sin escribir.
 - Skill base y `AGENTS.md` incluyen auto-diagnóstico en el protocolo de inicio.
 - **Catálogo de reglas del proyecto** en `references/reglas/reglas_registro.yaml`
-  (16 reglas `REG-XXX-###` con `norma` y `seccion` reales): la capa de datos que
-  faltaba entre los invariantes del motor y las reglas del agente. Cada regla se
-  refleja en el brief completo («Reglas de Negocio») y en nodos `REGLA` del vault.
-- **El brief mínimo ahora trae las reglas fijas** («📜 Reglas fijas», solo
-  prioridad `critica`, con `resumen` de una línea). Antes el agente leía qué pasó
-  y qué queda, pero no a qué estaba obligado: 692 → 818 tk (+126 tk, −57.9 %
-  frente al brief completo).
+  (**71 reglas `REG-XXX-###` en 12 categorías** con `norma` y `seccion` reales):
+  la capa de datos que faltaba entre los invariantes del motor y las reglas del
+  agente. Categorías: `INI` inicio, `EJE` ejecución, `VLT` vault, `ETQ` etiquetas,
+  `DOC` documentación, `HUM` humanización, `MEM` memoria, `ARQ` arquitectura,
+  `SAL` salud, `SEG` seguridad, `PUB` publicación y `LIM` límites. Cada regla
+  declara además `verificacion`: `doctor:<chequeo>`, `test:<archivo>` o `manual`,
+  así que una regla o la mide la máquina o se sabe que es conducta auditable.
+  Se reflejan en el brief completo («Reglas de Negocio») y en nodos `REGLA`.
+- **El brief mínimo ahora trae las reglas fijas** («📜 Reglas fijas»): solo
+  prioridad `critica`, ordenadas por riesgo real (vault → etiquetas → ejecución)
+  y acotadas a **12** (`LIMITE_REGLAS_MIN`) para que el brief no crezca con el
+  catálogo; el resto se resume en «+N crítica(s) más». Antes el agente leía qué
+  pasó y qué queda, pero no a qué estaba obligado: 692 → 863 tk (−56.2 % frente
+  al brief completo).
 - `reglas_del_proyecto()` en `domain/reglas/reglas.py`: atajo público para
   obtener las reglas una a una (lo consume el brief mínimo).
 - `context_map/__tests__/test_reglas_del_repo.py`: contrato del catálogo real
   (≥10 reglas, IDs únicos y con formato, categoría = prefijo, `norma` existente,
-  `seccion` presente en la norma, `resumen` ≤ 45 caracteres).
-- `AGENTS.md` §8: cómo entrar una regla nueva (primero la norma, después el YAML).
+  `seccion` presente en la norma, `resumen` ≤ 45 caracteres, `verificacion`
+  declarada, `doctor:<chequeo>` existente en el doctor —leído de su fuente—,
+  `test:<archivo>` existente y ≥20 reglas con verificación automática).
+- Nuevo chequeo `doctor: vault_tags` (regla `ETQ`): valida el frontmatter de cada
+  nota del vault — declara `tags`, minúsculas, separador `-`/`:`, sin `TAGS_ELIMINAR`
+  y sin duplicados. Sin `--fix` a propósito: las etiquetas son contenido.
+- Invariante `etiquetas_del_vault` (WARN) en `domain/health/invariantes.py`.
+- `docs/GOBERNANZA-AGENTES.md` §7–§13: normas escritas que faltaban y que ahora
+  respaldan las reglas del catálogo — etiquetas, documentación obligatoria,
+  humanización, memoria viva, secretos, publicación y límites.
 - `AGENTS.md` §6: comandos de verificación que funcionan sin `make`.
+
+### 🐛 Corregido (etiquetas)
+
+- `00-CONEXIONES.md` se generaba sin `tags:` (`atomic.py`): ahora declara
+  `tags: ["conexiones"]`. El índice de conexiones era invisible para `vault_tags`
+  y para el índice FTS5 del vault.
+- `7.0-MANUAL/7.0-MANUAL.md` no declaraba etiquetas: `tags: ["manual", "indice"]`.
+- La nota manual `PLAN-MEJORA-v2.7-2026-10-07.md` usaba la etiqueta `v2.7`, que el
+  patrón `[a-z0-9:-]+` no admite: normalizada a `v2-7` (nota `preserve`: se
+  corrige el dato, no se reescribe la historia).
 
 ## [2.16.0] — 2026-11-04
 

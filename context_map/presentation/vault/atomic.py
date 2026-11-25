@@ -306,6 +306,7 @@ def _render_conexiones(
     partes = [
         "---",
         "type: conexiones",
+        'tags: ["conexiones"]',
         f"created: {datetime.now().isoformat(timespec='seconds')}",
         "---",
         "",

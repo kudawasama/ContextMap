@@ -97,12 +97,14 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `indice_fts5_al_dia` | `vault_index` | WARN | `ctxmap build .` |
 | `historial_acotado` | `history` | WARN | `ctxmap history prune .` |
 | `contexto_fresco` | `context_freshness` | WARN | `ctxmap refresh .` |
+| `etiquetas_del_vault` | `vault_tags` | WARN | corregir `tags:` en la nota señalada |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
 * Estas reglas son del **motor**. Las reglas de **negocio** del proyecto van al
-  catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`),
-  que `context_map/domain/reglas/reglas.py` convierte en nodos `REGLA`.
+  catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`,
+  71 reglas en 12 categorías), que `context_map/domain/reglas/reglas.py`
+  convierte en nodos `REGLA` y que el brief mínimo resume en «📜 Reglas fijas».
 * Añadir una regla fija = añadir el chequeo en `doctor.CHECKS` + su entrada en
   `INVARIANTES` + su fila en esta tabla. Sin las tres, no es una regla.
 

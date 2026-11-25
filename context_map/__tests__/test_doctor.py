@@ -256,3 +256,46 @@ def test_skill_collisions_tapar_la_del_paquete_es_lo_esperado(tmp_path, monkeypa
     check = report.checks[0]
     assert check.status == "OK", check.message
     assert "prevalece" in check.message
+
+
+def test_vault_tags_detecta_etiquetas_fuera_de_norma(tmp_path):
+    """`vault_tags` es la puerta de la regla ETQ: sin ella, las etiquetas se pudren."""
+    from context_map.domain.health.doctor import DoctorReport, check_vault_tags
+
+    vault = tmp_path / ".context-map" / "vault-Demo"
+    (vault / "1.0-PROPOSITO").mkdir(parents=True)
+    (vault / "1.0-PROPOSITO" / "buena.md").write_text(
+        '---\ntype: proposito\ntags: ["proposito", "context-map"]\n---\n\n# Buena\n',
+        encoding="utf-8",
+    )
+    (vault / "1.0-PROPOSITO" / "mala.md").write_text(
+        '---\ntype: proposito\ntags: ["v2.7", "otro"]\n---\n\n# Mala\n',
+        encoding="utf-8",
+    )
+    (vault / "1.0-PROPOSITO" / "sin.md").write_text(
+        "---\ntype: proposito\n---\n\n# Sin tags\n", encoding="utf-8"
+    )
+
+    report = DoctorReport()
+    check_vault_tags(report, project_dir=str(tmp_path))
+    check = report.checks[0]
+
+    assert check.status == "WARN"
+    assert "2 nota(s) con etiquetas fuera de norma" in check.message
+    assert "v2.7" in check.message or "sin.md" in check.message
+
+
+def test_vault_tags_ok_con_etiquetas_validas(tmp_path):
+    """Con etiquetas limpias el chequeo no debe inventar avisos."""
+    from context_map.domain.health.doctor import DoctorReport, check_vault_tags
+
+    vault = tmp_path / ".context-map" / "vault-Demo"
+    vault.mkdir(parents=True)
+    (vault / "nota.md").write_text(
+        '---\ntype: proposito\ntags: ["proposito", "class:fix"]\n---\n\n# Nota\n',
+        encoding="utf-8",
+    )
+
+    report = DoctorReport()
+    check_vault_tags(report, project_dir=str(tmp_path))
+    assert report.checks[0].status == "OK"

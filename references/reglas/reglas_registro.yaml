@@ -1,21 +1,26 @@
 # Catálogo de reglas fijas del proyecto ContextMap (fuente única de verdad).
 #
 # Convención Gobernanza: este archivo vive en el REPO (versionado, con tests y
-# auditor), no en el vault. `ctxmap scan`, `ctxmap build` y el brief lo leen
-# para reflejar cada regla como nodo REGLA y resumirla en CONTEXT.md.
+# auditor), no en el vault. `ctxmap scan`, `ctxmap build` y el brief lo leen para
+# reflejar cada regla como nodo REGLA y resumirla en CONTEXT.md / CONTEXT.min.md.
 #
 # Para qué sirve: un agente que lee el brief sabe QUÉ está obligado a hacer en
-# este proyecto sin adivinar ni depender de la memoria del chat.
+# este proyecto, sin adivinar ni depender de la memoria del chat.
 #
 # Campos obligatorios por regla (los valida
 # `context_map/__tests__/test_reglas_del_repo.py`):
-#   id         REG-<CAT>-<NNN>, único, 3 letras de categoría
-#   nombre     una línea, en imperativo, sin ambigüedad
-#   categoria  el prefijo del id
-#   prioridad  critica | alta | media
-#   estado     implementada | pendiente
-#   norma      archivo real del repo donde está la regla completa
-#   seccion    sección o apartado concreto dentro de ese archivo
+#   id            REG-<CAT>-<NNN>, único, 3 letras de categoría
+#   resumen       una línea (45 caracteres máx.), la que sale en el brief mínimo
+#   nombre        la regla completa, en imperativo
+#   categoria     el prefijo del id
+#   prioridad     critica | alta | media
+#   estado        implementada | pendiente
+#   norma         archivo real del repo donde está escrita la regla
+#   seccion       apartado concreto dentro de ese archivo
+#   verificacion  doctor:<chequeo> | test:<archivo> | manual
+#                 doctor: el chequeo debe existir en doctor.CHECKS
+#                 test:   el archivo debe existir en context_map/__tests__
+#                 manual: conducta, se audita a mano
 #
 # Nota: estas reglas NO se improvisan ni se editan desde el chat. Una regla
 # nueva entra aquí con su `norma` ya escrita en el repo, o no entra.
@@ -25,6 +30,84 @@ proyecto: "ContextMap"
 actualizado: "2026-11-24"
 
 reglas:
+
+  - id: REG-INI-001
+    resumen: "doctor y check antes de tocar"
+    nombre: "Diagnosticar el sistema antes de modificar nada: doctor y check"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-INI-002
+    resumen: "el brief antes de opinar"
+    nombre: "Leer la capa mínima del brief antes de responder sobre el estado"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-INI-003
+    resumen: "refresh si el brief está viejo"
+    nombre: "Refrescar el contexto cuando el brief avisa de diario más nuevo que el build"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "doctor:context_freshness"
+
+  - id: REG-INI-004
+    resumen: "pendientes con cuatro fuentes"
+    nombre: "Cruzar backlog manual, diario, tareas y documentos antes de decir qué queda"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-INI-005
+    resumen: "proyecto y vault correctos"
+    nombre: "Confirmar de qué proyecto se habla y su vault antes de responder"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "doctor:name_consistency"
+
+  - id: REG-INI-006
+    resumen: "leer el código, no suponer"
+    nombre: "No suponer rutas ni lógica: inspeccionar el código fuente antes de proponer cambios"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-INI-007
+    resumen: "memoria de otros proyectos"
+    nombre: "Buscar en la memoria multi-proyecto cuando falte contexto histórico"
+    categoria: REG-INI
+    categoria_nombre: "Inicio de sesión"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "10. Memoria viva y Second Brain"
+    verificacion: "manual"
+
   - id: REG-EJE-001
     resumen: "intérprete del venv"
     nombre: "Ejecutar siempre con el intérprete del venv del proyecto"
@@ -34,6 +117,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "6. Verificación y commits — Regla fija #0"
+    verificacion: "doctor:interpreter"
 
   - id: REG-EJE-002
     resumen: "puerta de calidad en verde"
@@ -44,6 +128,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "6. Verificación y commits"
+    verificacion: "manual"
 
   - id: REG-EJE-003
     resumen: "rebuild antes de opinar"
@@ -54,9 +139,10 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
+    verificacion: "doctor:context_freshness"
 
   - id: REG-EJE-004
-    resumen: "no `adapt` sin confirmar"
+    resumen: "no adapt sin confirmar"
     nombre: "No ejecutar ctxmap adapt sin confirmación: sobrescribe reglas escritas a mano"
     categoria: REG-EJE
     categoria_nombre: "Ejecución y verificación"
@@ -64,6 +150,29 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-EJE-005
+    resumen: "evidencia, no autoreporte"
+    nombre: "Verificar con la salida real de los comandos, nunca con el autoreporte"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "6. Verificación Obligatoria y Commits"
+    verificacion: "manual"
+
+  - id: REG-EJE-006
+    resumen: "dependencias MCP importables"
+    nombre: "El extra [mcp] debe importarse con el intérprete del proyecto"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "doctor:mcp_deps"
 
   - id: REG-VLT-001
     resumen: "un solo padre por nota"
@@ -74,113 +183,631 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "4. Topología del vault"
+    verificacion: "doctor:topologia"
 
   - id: REG-VLT-002
-    resumen: "wikilinks sin `.md` ni `]`"
-    nombre: "Wikilinks sin extensión .md y con el alias saneado"
+    resumen: "wikilinks sin .md ni corchetes"
+    nombre: "Escribir los wikilinks sin extensión y con el alias saneado"
     categoria: REG-VLT
     categoria_nombre: "Vault y topología"
     prioridad: critica
     estado: implementada
     norma: "AGENTS.md"
     seccion: "4. Topología del vault"
+    verificacion: "test:test_wikilinks_seguros.py"
 
   - id: REG-VLT-003
     resumen: "no borrar historia (preserve)"
-    nombre: "No borrar historia: las notas manuales llevan preserve y las zonas propias se respetan"
+    nombre: "Las notas manuales llevan preserve y el build nunca las borra"
     categoria: REG-VLT
     categoria_nombre: "Vault y topología"
     prioridad: critica
     estado: implementada
     norma: "AGENTS.md"
     seccion: "5. Contexto narrativo y memoria viva"
+    verificacion: "doctor:manual_notes_preservation"
 
   - id: REG-VLT-004
     resumen: "un vault por proyecto"
-    nombre: "Un solo vault por proyecto: .context-map/vault-<NombreProyecto>"
+    nombre: "Un solo vault por proyecto; los obsoletos se archivan en _legacy"
     categoria: REG-VLT
     categoria_nombre: "Vault y topología"
     prioridad: alta
     estado: implementada
     norma: "AGENTS.md"
     seccion: "4. Topología del vault"
+    verificacion: "doctor:vault_default"
 
   - id: REG-VLT-005
-    resumen: "vault sin plantillas vacías"
-    nombre: "Humanizar el vault: índices con propósito, nunca plantillas vacías"
+    resumen: "pie de padre en toda nota"
+    nombre: "Toda nota generada cierra con su enlace único de padre"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.2 Reglas Obligatorias (violarlas = bug)"
+    verificacion: "doctor:topologia"
+
+  - id: REG-VLT-006
+    resumen: "índices de concepto únicos"
+    nombre: "Los índices de concepto llevan el estado en el nombre (Pendientes/Futuras/Completas)"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.2 Reglas Obligatorias (violarlas = bug)"
+    verificacion: "doctor:topologia"
+
+  - id: REG-VLT-007
+    resumen: "00-INDICE solo seis raíces"
+    nombre: "00-INDICE.md enlaza únicamente a las seis secciones raíz"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.2 Reglas Obligatorias (violarlas = bug)"
+    verificacion: "doctor:topologia"
+
+  - id: REG-VLT-008
+    resumen: "batches con índice real"
+    nombre: "Los batches NN-CONCEPTO-INICIO-FIN cuelgan de un índice que los enlaza"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.2 Reglas Obligatorias (violarlas = bug)"
+    verificacion: "doctor:topologia"
+
+  - id: REG-VLT-009
+    resumen: "conexiones sin wikilinks en árbol"
+    nombre: "00-CONEXIONES.md se renderiza sin wikilinks en modo jerárquico"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: media
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.2 Reglas Obligatorias (violarlas = bug)"
+    verificacion: "test:test_conexiones.py"
+
+  - id: REG-VLT-010
+    resumen: "zonas manuales intactas"
+    nombre: "7.0-MANUAL, 8.0-KNOWLEDGE y 90-CONOCIMIENTO solo se tocan para redactar"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "5. Metodología de Contexto Narrativo con Alma"
+    verificacion: "doctor:manual_notes_preservation"
+
+  - id: REG-VLT-011
+    resumen: "índice FTS5 al día"
+    nombre: "El índice FTS5 del vault se regenera en cada build o refresh"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "doctor:vault_index"
+
+  - id: REG-VLT-012
+    resumen: "historial acotado"
+    nombre: "Los snapshots se podan: el historial no crece sin límite"
     categoria: REG-VLT
     categoria_nombre: "Vault y topología"
     prioridad: media
     estado: implementada
     norma: "AGENTS.md"
-    seccion: "5. Contexto narrativo y memoria viva"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "doctor:history"
 
-  - id: REG-ARQ-001
-    resumen: "módulo/submódulo/archivo.py"
-    nombre: "Arquitectura modular modulo/submodulo/archivo.py según la capa"
-    categoria: REG-ARQ
-    categoria_nombre: "Arquitectura y estructura"
+  - id: REG-VLT-013
+    resumen: "verificación de topología inamovible"
+    nombre: "test_topologia_arbol.py debe pasar: 0 sin padre, 0 colisiones, 0 enlaces rotos"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "4.3 Verificación Automática (inamovible)"
+    verificacion: "test:test_topologia_arbol.py"
+
+  - id: REG-ETQ-001
+    resumen: "minúsculas y sin espacios"
+    nombre: "Escribir las etiquetas en minúsculas, con guion o dos puntos y sin acentos"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "doctor:vault_tags"
+
+  - id: REG-ETQ-002
+    resumen: "toda nota declara tags"
+    nombre: "Toda nota del vault declara su lista de tags en el frontmatter"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "doctor:vault_tags"
+
+  - id: REG-ETQ-003
+    resumen: "sin etiquetas muertas"
+    nombre: "No usar las etiquetas muertas del motor: todo, otro, docstring, __init__.py"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
     prioridad: alta
     estado: implementada
-    norma: "AGENTS.md"
-    seccion: "2. Arquitectura"
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "doctor:vault_tags"
 
-  - id: REG-ARQ-002
-    resumen: "raíz limpia (5 archivos)"
-    nombre: "Raíz limpia: solo README, LICENSE, pyproject.toml, AGENTS.md y .gitignore"
-    categoria: REG-ARQ
-    categoria_nombre: "Arquitectura y estructura"
+  - id: REG-ETQ-004
+    resumen: "crear etiqueta = kebab-case"
+    nombre: "Una etiqueta nueva es kebab-case, singular y en el idioma del proyecto"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
     prioridad: alta
     estado: implementada
-    norma: "AGENTS.md"
-    seccion: "1. Reglas globales"
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "manual"
+
+  - id: REG-ETQ-005
+    resumen: "un sinónimo no es una etiqueta"
+    nombre: "Si existe sinónimo, se unifica en el mapeo y se usa el canónico"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "test:test_standardize.py"
+
+  - id: REG-ETQ-006
+    resumen: "class: lo pone el motor"
+    nombre: "La etiqueta de clasificación se infiere, nunca se escribe a mano"
+    categoria: REG-ETQ
+    categoria_nombre: "Etiquetas"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "7. Etiquetas (tags) — creación y formato"
+    verificacion: "test:test_standardize.py"
 
   - id: REG-DOC-001
     resumen: "español técnico"
-    nombre: "Español técnico profesional en respuestas, comentarios y docstrings"
+    nombre: "Responder y documentar en español técnico profesional"
     categoria: REG-DOC
-    categoria_nombre: "Documentación y estilo"
+    categoria_nombre: "Documentación"
     prioridad: alta
     estado: implementada
     norma: "AGENTS.md"
     seccion: "1. Reglas globales"
+    verificacion: "manual"
 
   - id: REG-DOC-002
-    resumen: "docstrings + type hints"
+    resumen: "docstrings y type hints"
     nombre: "Docstrings formales (Google/PEP 257) y type hints estrictos"
     categoria: REG-DOC
-    categoria_nombre: "Documentación y estilo"
+    categoria_nombre: "Documentación"
     prioridad: alta
     estado: implementada
     norma: "AGENTS.md"
     seccion: "1. Reglas globales"
+    verificacion: "manual"
 
   - id: REG-DOC-003
     resumen: "commits convencionales"
     nombre: "Commits con Conventional Commits en español"
     categoria: REG-DOC
-    categoria_nombre: "Documentación y estilo"
+    categoria_nombre: "Documentación"
     prioridad: alta
     estado: implementada
     norma: "AGENTS.md"
     seccion: "6. Verificación y commits"
+    verificacion: "manual"
 
   - id: REG-DOC-004
-    resumen: "no suponer rutas ni lógica"
-    nombre: "No suponer rutas ni lógica: inspeccionar el código fuente antes de proponer cambios"
+    resumen: "CHANGELOG en el mismo commit"
+    nombre: "Todo cambio visible entra en CHANGELOG.md dentro del mismo commit"
     categoria: REG-DOC
-    categoria_nombre: "Documentación y estilo"
+    categoria_nombre: "Documentación"
     prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "8. Documentación obligatoria"
+    verificacion: "manual"
+
+  - id: REG-DOC-005
+    resumen: "DOMINIO documenta el núcleo"
+    nombre: "La lógica nuclear se documenta en 7.0-MANUAL/DOMINIO.md"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación"
+    prioridad: alta
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
 
-  - id: REG-INV-001
-    resumen: "contrato de invariantes"
-    nombre: "Los invariantes del motor son el contrato: añadir uno exige chequeo, entrada en INVARIANTES y fila en AGENTS.md"
-    categoria: REG-INV
-    categoria_nombre: "Invariantes del motor"
+  - id: REG-DOC-006
+    resumen: "fuentes externas a raw/docs"
+    nombre: "Las fuentes externas van a .context-map/raw/docs/ y luego un refresh"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación"
+    prioridad: media
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "manual"
+
+  - id: REG-DOC-007
+    resumen: "decisión documentada"
+    nombre: "Toda decisión relevante se documenta con su porqué"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "8. Documentación obligatoria"
+    verificacion: "manual"
+
+  - id: REG-DOC-008
+    resumen: "norma antes que regla"
+    nombre: "Una regla nueva exige su norma escrita primero en el repo"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "8. Reglas del proyecto como datos (`REG-XXX-###`)"
+    verificacion: "test:test_reglas_del_repo.py"
+
+  - id: REG-HUM-001
+    resumen: "vault redactado, no plantilla"
+    nombre: "Redactar todos los archivos del vault: nada de plantillas vacías"
+    categoria: REG-HUM
+    categoria_nombre: "Humanización de la prosa"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "5. Contexto narrativo y memoria viva"
+    verificacion: "manual"
+
+  - id: REG-HUM-002
+    resumen: "lo tosco se redacta"
+    nombre: "No borrar historia: lo tosco se redacta, no se elimina"
+    categoria: REG-HUM
+    categoria_nombre: "Humanización de la prosa"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "5. Contexto narrativo y memoria viva"
+    verificacion: "manual"
+
+  - id: REG-HUM-003
+    resumen: "ruido narrativo fuera"
+    nombre: "Métricas de scan, TODO crudos, chats y entrypoints scratch no entran al vault"
+    categoria: REG-HUM
+    categoria_nombre: "Humanización de la prosa"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "9. Humanización de la prosa"
+    verificacion: "test:test_humanizacion.py"
+
+  - id: REG-HUM-004
+    resumen: "contexto por tipo de nodo"
+    nombre: "Cada tipo cuenta qué es, por qué importa y qué sigue"
+    categoria: REG-HUM
+    categoria_nombre: "Humanización de la prosa"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "9. Humanización de la prosa"
+    verificacion: "test:test_humanizacion.py"
+
+  - id: REG-HUM-005
+    resumen: "prosa sin relleno"
+    nombre: "Prosa directa y sin relleno: nada de obviedades ni signos de admiración"
+    categoria: REG-HUM
+    categoria_nombre: "Humanización de la prosa"
+    prioridad: media
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "9. Humanización de la prosa"
+    verificacion: "manual"
+
+  - id: REG-MEM-001
+    resumen: "chats al cargador"
+    nombre: "Los chats van a .context-map/chats/ y se procesan en refresh"
+    categoria: REG-MEM
+    categoria_nombre: "Memoria viva"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "10. Memoria viva y Second Brain"
+    verificacion: "manual"
+
+  - id: REG-MEM-002
+    resumen: "diario del día al cerrar"
+    nombre: "Documentar el día en el diario del proyecto al cerrar sesión"
+    categoria: REG-MEM
+    categoria_nombre: "Memoria viva"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "10. Memoria viva y Second Brain"
+    verificacion: "test:test_diario_consolidado.py"
+
+  - id: REG-MEM-003
+    resumen: "lección con instrucción accionable"
+    nombre: "Una lección reutilizable va al knowledge con Lección, Cómo, Prompt, Instrucción y Conexiones"
+    categoria: REG-MEM
+    categoria_nombre: "Memoria viva"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "10. Memoria viva y Second Brain"
+    verificacion: "manual"
+
+  - id: REG-MEM-004
+    resumen: "Second Brain con citas"
+    nombre: "Responder del Second Brain siempre con citas; sin fuente, se dice"
+    categoria: REG-MEM
+    categoria_nombre: "Memoria viva"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "10. Memoria viva y Second Brain"
+    verificacion: "manual"
+
+  - id: REG-ARQ-001
+    resumen: "modulo/submodulo/archivo.py"
+    nombre: "Respetar la arquitectura por capas y la ruta modulo/submodulo/archivo.py"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "2. Arquitectura"
+    verificacion: "manual"
+
+  - id: REG-ARQ-002
+    resumen: "raíz limpia"
+    nombre: "La raíz solo lleva README, LICENSE, pyproject.toml, AGENTS.md y .gitignore"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "1. Reglas globales"
+    verificacion: "manual"
+
+  - id: REG-ARQ-003
+    resumen: "cada cosa en su capa"
+    nombre: "core, domain, application, infrastructure y presentation no se mezclan"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "2. Arquitectura de Código (Clean Architecture Jerárquica)"
+    verificacion: "manual"
+
+  - id: REG-ARQ-004
+    resumen: "tests junto al módulo"
+    nombre: "Los tests viven en el paquete de tests y cubren el módulo que tocan"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura"
+    prioridad: media
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "2. Arquitectura de Código (Clean Architecture Jerárquica)"
+    verificacion: "manual"
+
+  - id: REG-SAL-001
+    resumen: "invariantes como contrato"
+    nombre: "Añadir un invariante exige chequeo, entrada en INVARIANTES y fila en AGENTS.md"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
     prioridad: critica
     estado: implementada
     norma: "AGENTS.md"
     seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "test:test_invariantes.py"
+
+  - id: REG-SAL-002
+    resumen: "doctor verde al cerrar"
+    nombre: "Cerrar la sesión con doctor --strict-warn en 0, no con avisos ignorados"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "6. Verificación y commits"
+    verificacion: "manual"
+
+  - id: REG-SAL-003
+    resumen: "--fix solo con confirmación"
+    nombre: "ctxmap doctor --fix solo con confirmación: reescribe contenido"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "6. Verificación Obligatoria y Commits"
+    verificacion: "manual"
+
+  - id: REG-SAL-004
+    resumen: "git disponible"
+    nombre: "git debe estar en el PATH: el historial y el diff dependen de él"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: media
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "doctor:git_cli"
+
+  - id: REG-SAL-005
+    resumen: "reglas de agente al día"
+    nombre: "Los archivos de reglas generados no se editan a mano: se regeneran"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "doctor:generated_rules"
+
+  - id: REG-SAL-006
+    resumen: "sin skills duplicadas"
+    nombre: "Una skill no se publica en dos ámbitos con el mismo nombre"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: media
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+    verificacion: "doctor:skill_collisions"
+
+  - id: REG-SAL-007
+    resumen: "versión al día"
+    nombre: "El repositorio de actualización es válido y la versión se reporta bien"
+    categoria: REG-SAL
+    categoria_nombre: "Salud del sistema (doctor)"
+    prioridad: media
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
+    verificacion: "doctor:update_available"
+
+  - id: REG-SEG-001
+    resumen: "ningún secreto versionado"
+    nombre: "Nunca commitear secretos, tokens ni datos personales de terceros"
+    categoria: REG-SEG
+    categoria_nombre: "Seguridad y secretos"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "11. Secretos y datos sensibles"
+    verificacion: "manual"
+
+  - id: REG-SEG-002
+    resumen: "secretos por proxy"
+    nombre: "Los secretos se inyectan con el proxy y la salida se sanea"
+    categoria: REG-SEG
+    categoria_nombre: "Seguridad y secretos"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "11. Secretos y datos sensibles"
+    verificacion: "test:test_mcp_server_seguridad.py"
+
+  - id: REG-SEG-003
+    resumen: "secreto filtrado se rota"
+    nombre: "Si un secreto entra en el historial de git, se rota: borrar el commit no basta"
+    categoria: REG-SEG
+    categoria_nombre: "Seguridad y secretos"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "11. Secretos y datos sensibles"
+    verificacion: "manual"
+
+  - id: REG-PUB-001
+    resumen: "versión en pyproject y CHANGELOG"
+    nombre: "La versión sube en pyproject.toml y CHANGELOG.md en el mismo commit"
+    categoria: REG-PUB
+    categoria_nombre: "Publicación y versionado"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "12. Publicación y versionado"
+    verificacion: "manual"
+
+  - id: REG-PUB-002
+    resumen: "tag tras la puerta"
+    nombre: "Se etiqueta la versión solo con la puerta de calidad en verde"
+    categoria: REG-PUB
+    categoria_nombre: "Publicación y versionado"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "12. Publicación y versionado"
+    verificacion: "manual"
+
+  - id: REG-PUB-003
+    resumen: "push y tag con OK"
+    nombre: "push y tag solo con confirmación explícita del dueño"
+    categoria: REG-PUB
+    categoria_nombre: "Publicación y versionado"
+    prioridad: critica
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "12. Publicación y versionado"
+    verificacion: "manual"
+
+  - id: REG-PUB-004
+    resumen: "skill genérica sin proyecto"
+    nombre: "La skill publicada del paquete es genérica, nunca de un proyecto concreto"
+    categoria: REG-PUB
+    categoria_nombre: "Publicación y versionado"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "12. Publicación y versionado"
+    verificacion: "test:test_ecosistema.py"
+
+  - id: REG-LIM-001
+    resumen: "vault acotado"
+    nombre: "Un vault de más de 15 MB se mantiene acotado con build por secciones"
+    categoria: REG-LIM
+    categoria_nombre: "Límites y rendimiento"
+    prioridad: media
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "13. Límites y rendimiento"
+    verificacion: "manual"
+
+  - id: REG-LIM-002
+    resumen: "doctor no se cuelga"
+    nombre: "El doctor termina en minutos: los proyectos enormes necesitan modo acotado"
+    categoria: REG-LIM
+    categoria_nombre: "Límites y rendimiento"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "13. Límites y rendimiento"
+    verificacion: "manual"
+
+  - id: REG-LIM-003
+    resumen: "sin artefactos derivados"
+    nombre: "No se commitean state, history, bases de datos ni el vault regenerable"
+    categoria: REG-LIM
+    categoria_nombre: "Límites y rendimiento"
+    prioridad: alta
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "13. Límites y rendimiento"
+    verificacion: "manual"
+
+  - id: REG-LIM-004
+    resumen: "la tarea cara se anuncia"
+    nombre: "Scan completo, ingesta y embeddings se anuncian antes de ejecutarse"
+    categoria: REG-LIM
+    categoria_nombre: "Límites y rendimiento"
+    prioridad: media
+    estado: implementada
+    norma: "docs/GOBERNANZA-AGENTES.md"
+    seccion: "13. Límites y rendimiento"
+    verificacion: "manual"
