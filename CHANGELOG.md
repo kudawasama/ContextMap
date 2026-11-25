@@ -129,7 +129,15 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - `doctor: skill_collisions` deduplica por ruta real: el mismo `SKILL.md` se
   alcanzaba por el recorrido libre de `node_modules` y por el glob `*/*/skills`,
   así que cada skill aparecía «duplicada» consigo misma y siete colisiones
-  fantasma tapaban la única real.
+  fantasma tapaban la única real. Además distingue **jerarquía** (la skill del
+  proyecto tapa la genérica del paquete: OK) de **ambigüedad** (dos copias del
+  mismo ámbito o una copia global de otro proyecto: WARN).
+- `adapt` no publica `.agents/skills/contextmap/SKILL.md` cuando el proyecto es
+  el home: ahí `.agents/skills` **es** la carpeta global de skills, y generar
+  una skill con el vault de un solo proyecto la convertía en una instrucción
+  falsa para todos los demás. Archivada la copia que ya existía en
+  `~/.agents/_archivo-skills/contextmap-personal-2026-11-24/` (decía
+  `vault-jose.cespedes` cuando el vault real era `vault-Personal`).
 - `doctor: generated_rules` deja de marcar en WARN los archivos con contenido
   propio: el adaptador los **respeta** por diseño, no son reglas sin aplicar.
 - `check_mcp_deps` ya no sugiere `ctxmap-ai[mcp]` (paquete inexistente en

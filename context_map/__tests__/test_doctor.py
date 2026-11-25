@@ -222,3 +222,37 @@ def test_skill_collisions_detecta_duplicados_reales(tmp_path, monkeypatch):
     assert check.status == "WARN"
     assert "demo:" in check.message
     assert check.message.count("SKILL.md") == 2
+
+
+def test_skill_collisions_tapar_la_del_paquete_es_lo_esperado(tmp_path, monkeypatch):
+    """La skill del proyecto tapando la genérica del paquete NO es un WARN.
+
+    El paquete trae el texto neutro (`vault-<Proyecto>`) y el proyecto el suyo
+    con su vault real: ese sombreado es el contrato. Marcarlo en WARN dejaba el
+    semáforo permanentemente en ámbar y enseñaba a ignorarlo.
+    """
+    from context_map.domain.health.doctor import DoctorReport, check_skill_collisions
+
+    home = tmp_path / "home"
+    proyecto = tmp_path / "proyecto"
+
+    skill_proyecto = proyecto / ".agents" / "skills" / "demo" / "SKILL.md"
+    skill_proyecto.parent.mkdir(parents=True)
+    skill_proyecto.write_text("---\nname: demo\n---\n", encoding="utf-8")
+
+    skill_paquete = (
+        home / ".pi" / "agent" / "npm" / "node_modules" / "@x" / "pkg"
+        / "skills" / "demo" / "SKILL.md"
+    )
+    skill_paquete.parent.mkdir(parents=True)
+    skill_paquete.write_text("---\nname: demo\n---\n", encoding="utf-8")
+
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+
+    report = DoctorReport()
+    check_skill_collisions(report, project_dir=str(proyecto))
+
+    check = report.checks[0]
+    assert check.status == "OK", check.message
+    assert "prevalece" in check.message

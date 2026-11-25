@@ -274,6 +274,28 @@ _COMPROBADORES_AGENTES: dict[str, Callable[[EcosistemaInfo, str], bool]] = {
 }
 
 
+def _es_directorio_home(target_dir: str) -> bool:
+    """Indica si el proyecto es el propio directorio personal del usuario.
+
+    Cuando el proyecto **es** ``~``, su carpeta local ``.agents/skills`` es a la
+    vez la carpeta global de skills del usuario: generar ahí
+    ``.agents/skills/contextmap/SKILL.md`` publicaba una skill con el vault de un
+    solo proyecto para **todos** los demás, y con el nombre en disputa con la
+    skill genérica del paquete. El resultado era una skill global que mentía.
+
+    Args:
+        target_dir (str): Directorio raíz del proyecto en curso.
+
+    Returns:
+        bool: True si ``target_dir`` es el home del usuario.
+    """
+    try:
+        home = os.path.expanduser("~")
+        return os.path.normcase(os.path.realpath(target_dir)) == os.path.normcase(os.path.realpath(home))
+    except (OSError, RuntimeError):
+        return False
+
+
 def _reglas_por_agente(
     project_name: str,
     eco: EcosistemaInfo,
@@ -296,8 +318,7 @@ def _reglas_por_agente(
     Returns:
         list[tuple[str, str]]: Pares (ruta relativa, contenido) de reglas activas.
     """
-    reglas_agentes: list[tuple[bool, str, Callable[[], str]]] = [
-        (_comprobar_agente("claude", eco, target_dir), "CLAUDE.md", lambda: _generar_claude_md(project_name, eco, fecha)),
+    reglas_agentes: list[tuple[bool, str, Callable[[], str]]] = [        (_comprobar_agente("claude", eco, target_dir), "CLAUDE.md", lambda: _generar_claude_md(project_name, eco, fecha)),
         (_comprobar_agente("cursor", eco, target_dir), ".cursor/rules/contextmap.mdc", lambda: _generar_cursor_rules(project_name, eco)),
         (_comprobar_agente("cursor", eco, target_dir), ".cursorrules", lambda: _generar_cursor_rules(project_name, eco)),
         (_comprobar_agente("windsurf", eco, target_dir), ".windsurfrules", lambda: _generar_windsurf_rules(project_name, eco)),
@@ -307,7 +328,14 @@ def _reglas_por_agente(
         (_comprobar_agente("aider", eco, target_dir), ".aider.conf.yml", lambda: _generar_aider_conf(project_name, eco)),
         (_comprobar_agente("opencode", eco, target_dir), "opencode.json", lambda: _generar_opencode_json(project_name, eco)),
         (_comprobar_agente("copilot", eco, target_dir), ".github/copilot-instructions.md", lambda: _generar_copilot_instructions(project_name, eco)),
-        (_comprobar_agente("antigravity", eco, target_dir), ".agents/skills/contextmap/SKILL.md", lambda: _generar_antigravity_skill(project_name, eco)),
+        # La skill de Antigravity nunca se escribe en ``~/.agents``: ahí esa
+        # carpeta es la global, no la del proyecto (ver _es_directorio_home).
+        (
+            _comprobar_agente("antigravity", eco, target_dir)
+            and not _es_directorio_home(target_dir),
+            ".agents/skills/contextmap/SKILL.md",
+            lambda: _generar_antigravity_skill(project_name, eco),
+        ),
     ]
     return [
         (ruta, generar())

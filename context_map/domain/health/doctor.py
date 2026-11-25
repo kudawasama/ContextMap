@@ -654,12 +654,45 @@ def check_skill_collisions(report: DoctorReport, fix: bool = False, project_dir:
                 _escanear(skills_dir, 0)
 
     colisiones = {n: ps for n, ps in skills.items() if len(ps) > 1}
-    if colisiones:
-        detalle = "; ".join(f"{n}: {', '.join(ps)}" for n, ps in colisiones.items())
+
+    def _ambito(ruta: str) -> str:
+        """Clasifica una copia por su origen: proyecto, paquete o global."""
+        normal = os.path.normcase(os.path.realpath(ruta))
+        raiz_proyecto = os.path.normcase(os.path.realpath(project_dir))
+        raiz_home = os.path.normcase(os.path.realpath(home))
+        if "node_modules" in normal.replace("/", os.sep):
+            return "paquete"
+        if raiz_proyecto != raiz_home and normal.startswith(raiz_proyecto + os.sep):
+            return "proyecto"
+        if normal.startswith(raiz_home + os.sep):
+            return "global"
+        return "externo"
+
+    ambiguas: dict[str, list[str]] = {}
+    sombreadas: dict[str, list[str]] = {}
+    for nombre, rutas in colisiones.items():
+        ambitos = [_ambito(r) for r in rutas]
+        # Tapar la skill **genérica del paquete** es el contrato: el paquete
+        # trae el texto neutro y el proyecto el suyo. Tapar una copia global
+        # (otro proyecto que se publicó en ``~/.agents``) es el caso que sí
+        # miente: dos proyectos discutiendo el mismo nombre.
+        if "proyecto" in ambitos and set(ambitos) - {"proyecto"} <= {"paquete"}:
+            sombreadas[nombre] = rutas
+        else:
+            ambiguas[nombre] = rutas
+
+    if ambiguas:
+        detalle = "; ".join(f"{n}: {', '.join(ps)}" for n, ps in ambiguas.items())
         check.status = "WARN"
         check.message = (
-            f"Skill duplicada detectada (el agente usa la primera descubierta): "
-            f"{detalle}"
+            f"Skill duplicada dentro del mismo ámbito (el agente usa la primera "
+            f"descubierta): {detalle}"
+        )
+    elif sombreadas:
+        check.status = "OK"
+        nombres = ", ".join(sombreadas)
+        check.message = (
+            f"La skill del proyecto prevalece sobre la del paquete: {nombres}."
         )
     else:
         check.status = "OK"

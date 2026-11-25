@@ -573,3 +573,45 @@ if __name__ == "__main__":
 
     print()
     print("Todos los tests pasaron correctamente.")
+
+
+def test_adaptar_no_publica_skill_global_en_el_home(tmp_path, monkeypatch) -> None:
+    """En el proyecto home, `.agents/skills` es la carpeta GLOBAL de skills.
+
+    Regresión: generar ahí `.agents/skills/contextmap/SKILL.md` publicaba una
+    skill con el vault de un solo proyecto (`vault-jose.cespedes`) para todos
+    los demás, y encima desactualizada (el vault real era `vault-Personal`).
+    """
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".context-map").mkdir()
+    (home / ".agents").mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+
+    eco = detectar_ecosistema(str(home))
+    generados = adaptar_ecosistema("Personal", eco, target_dir=str(home), overwrite=True)
+
+    skill = home / ".agents" / "skills" / "contextmap" / "SKILL.md"
+    assert not skill.exists(), "no debe publicarse una skill global con el vault de ~"
+    assert all("SKILL.md" not in g for g in generados)
+
+
+def test_adaptar_si_genera_la_skill_dentro_de_un_proyecto(tmp_path, monkeypatch) -> None:
+    """La guarda es solo para el home: un proyecto normal conserva su skill."""
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+
+    proyecto = tmp_path / "proyecto"
+    proyecto.mkdir()
+    (proyecto / ".context-map").mkdir()
+    (proyecto / ".agents").mkdir()
+
+    eco = detectar_ecosistema(str(proyecto))
+    adaptar_ecosistema("Demo", eco, target_dir=str(proyecto), overwrite=True)
+
+    skill = proyecto / ".agents" / "skills" / "contextmap" / "SKILL.md"
+    assert skill.is_file(), "un proyecto normal debe seguir generando su skill"
+    assert "vault-Demo" in skill.read_text(encoding="utf-8")
