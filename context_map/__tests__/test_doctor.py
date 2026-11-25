@@ -299,3 +299,27 @@ def test_vault_tags_ok_con_etiquetas_validas(tmp_path):
     report = DoctorReport()
     check_vault_tags(report, project_dir=str(tmp_path))
     assert report.checks[0].status == "OK"
+
+
+def test_un_chequeo_que_explota_no_tumba_el_diagnostico(monkeypatch, tmp_path):
+    """Un fallo puntual debe verse como FAIL localizado, no ocultar los demás.
+
+    Caso real: `texto_enlazable` lanzaba `IndexError` con una nota de
+    codificación mixta; el doctor entero se caía y el proyecto parecía
+    «colgado» en lugar de mostrar un aviso.
+    """
+    from context_map.domain.health import doctor
+
+    def explota(report, fix=False, project_dir="."):
+        raise IndexError("list index out of range")
+
+    def sano(report, fix=False, project_dir="."):
+        report.add(doctor.DoctorCheck(name="sano", status="OK", message="bien"))
+
+    monkeypatch.setattr(doctor, "CHECKS", [explota, sano])
+    report = doctor.run(cwd=str(tmp_path))
+
+    assert [c.name for c in report.checks] == ["explota", "sano"]
+    assert report.checks[0].status == "FAIL"
+    assert "IndexError" in report.checks[0].message
+    assert report.checks[1].status == "OK"

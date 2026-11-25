@@ -36,12 +36,19 @@ def texto_enlazable(contenido: str) -> str:
     comillas invertidas (típico en los riesgos consolidados:
     ``[[... `keywords.py` ya no existe...]]``), y el padre desaparecía.
 
+    Los bytes NUL se retiran antes de nada: una nota con codificación mixta
+    (UTF-8 con restos de UTF-16) contiene ``\x00`` sueltos, y un ``\x00``
+    seguido de dígitos y otro ``\x00`` se leía como una marca de protección
+    inventada (``IndexError``). Se descubrió con 6 notas así en un vault
+    ajeno: el validador reventaba y el doctor entero caía con él.
+
     Args:
         contenido (str): Markdown completo de la nota.
 
     Returns:
         str: El mismo Markdown sin los tramos que no generan aristas.
     """
+    contenido = contenido.replace("\x00", "")
     sin_bloques = _FENCE_RE.sub(" ", contenido)
 
     enlaces: list[str] = []
@@ -52,7 +59,16 @@ def texto_enlazable(contenido: str) -> str:
 
     protegido = LINK_RE.sub(_proteger, sin_bloques)
     sin_codigo = _CODE_SPAN_RE.sub(" ", protegido)
-    return _MARCA_RE.sub(lambda m: enlaces[int(m.group(1))], sin_codigo)
+
+    def _restaurar(m: re.Match[str]) -> str:
+        indice = int(m.group(1))
+        # Cinturón y tirantes: una marca fuera de rango se deja como estaba en
+        # lugar de tumbar el análisis entero.
+        if indice >= len(enlaces):
+            return m.group(0)
+        return enlaces[indice]
+
+    return _MARCA_RE.sub(_restaurar, sin_codigo)
 
 SIN_PADRE_PERMITIDOS = {"00-INDICE.md", "00-CONEXIONES.md", "90-CONOCIMIENTO.md"}
 

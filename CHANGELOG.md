@@ -152,7 +152,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 - `ctxmap doctor` ampliado con 6 nuevos chequeos: `update_available`, `mcp_deps`,
   `vault_index`, `context_freshness`, `skill_collisions`, `generated_rules`,
-  `topologia`, `vault_tags` (15 en total).
+  `topologia`, `vault_tags` (15 en total). `run()` es ahora tolerante a
+  excepciones por chequeo: un fallo localizado no oculta el resto.
 - `ctxmap doctor --strict`: sale con código 1 si hay algún FAIL.
 - Validador de topología extraído a `presentation/vault/topologia.py` (reutilizado
   por tests y doctor).
@@ -188,6 +189,34 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   respaldan las reglas del catálogo — etiquetas, documentación obligatoria,
   humanización, memoria viva, secretos, publicación y límites.
 - `AGENTS.md` §6: comandos de verificación que funcionan sin `make`.
+
+- `ctxmap reglas [target] [--categoria] [--prioridad] [--verificar] [--json]`:
+  el catálogo deja de ser un YAML que hay que abrir a mano. `--verificar` cruza
+  cada regla con el chequeo del doctor que la mide y sale con código 1 si alguna
+  está incumplida; las reglas de conducta se marcan como tales en vez de fingir
+  una comprobación que no existe.
+- `AGENTS.md` §8: cómo consultar el catálogo y qué significa `--verificar`.
+
+### 🐛 Corregido (el doctor ya no «se cuelga»: reventaba)
+
+- **`texto_enlazable` lanzaba `IndexError` con notas de codificación mixta.**
+  Seis notas de `G:/Mi unidad/EE RR/00_GOBERNANZA_IA` contienen bytes NUL sueltos
+  (UTF-8 con restos de UTF-16); un NUL entre dígitos (` 12 `) se leía como
+  una marca de protección de wikilink inventada y el índice se salía de rango.
+  Lo que parecía «el doctor no termina en 180 s» era el validador muriendo en
+  `check_topologia`. Ahora los NUL se retiran antes de analizar y una marca fuera
+  de rango se deja intacta en lugar de tumbar el análisis. Medido después:
+  **doctor completo en 12 s** (antes: excepción).
+- `doctor.run()` ya no propaga la excepción de un chequeo: la registra como FAIL
+  de **ese** chequeo y sigue con los demás. Un fallo puntual (nota corrupta,
+  permiso denegado) se ve como aviso localizado en vez de ocultar los otros
+  catorce resultados.
+- `test_wikilinks_seguros.py` (+4): NUL entre dígitos, NUL con dígitos largos,
+  NUL que no oculta un enlace real y `analizar_topologia` sobre una nota corrupta.
+- `test_doctor.py` (+1): un chequeo que explota no tumba el diagnóstico.
+- `test_reglas_cmd.py` (nuevo, 10): listado, filtros por categoría/prioridad,
+  JSON, aviso sin catálogo, `--verificar` en verde y en rojo, y el catálogo real
+  del repo.
 
 ### 🐛 Corregido (etiquetas)
 

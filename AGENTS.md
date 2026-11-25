@@ -126,6 +126,18 @@ references/reglas/reglas_registro.yaml
    → vault 2.0-IDEAS/… nodos REGLA en el grafo
 ```
 
+Consulta (una regla que no se puede consultar acaba siendo un adorno):
+
+```bash
+.venv/Scripts/python.exe -m context_map.cli reglas .                  # todas
+.venv/Scripts/python.exe -m context_map.cli reglas . --categoria VLT  # por categoría
+.venv/Scripts/python.exe -m context_map.cli reglas . --verificar      # ¿cuáles incumplo?
+```
+
+`--verificar` cruza cada regla con el chequeo del doctor que la mide y sale con
+código 1 si alguna está en WARN/FAIL: la misma puerta que `--strict-warn`, pero
+dicha en reglas en vez de en chequeos.
+
 * **Contrato ejecutable**: `context_map/__tests__/test_reglas_del_repo.py`
   exige catálogo con ≥10 reglas, IDs `REG-<CAT>-<NNN>` únicos, categoría = prefijo
   del ID, `prioridad`/`estado` en valores conocidos, `norma` existente en el repo

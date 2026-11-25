@@ -11,6 +11,7 @@ from context_map.application.commands.adapt import cmd_adapt
 from context_map.application.commands.auto import cmd_auto
 from context_map.application.commands.build import cmd_build
 from context_map.application.commands.doctor_cmd import cmd_doctor
+from context_map.application.commands.reglas_cmd import cmd_reglas
 from context_map.application.commands.enrich import cmd_enrich
 from context_map.application.commands.hook import cmd_hook
 from context_map.application.commands.importers import (
@@ -59,6 +60,7 @@ __all__ = [
     "cmd_weekly",
     "cmd_brief",
     "cmd_doctor",
+    "cmd_reglas",
     "cmd_update",
     "cmd_ingest",
     "cmd_adapt",

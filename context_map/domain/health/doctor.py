@@ -888,6 +888,11 @@ CHECKS = [
 def run(cwd: str = "", fix: bool = False) -> DoctorReport:
     """Ejecuta los chequeos de diagnóstico y retorna el reporte consolidado.
 
+    Un chequeo que lanza una excepción no puede tumbar el diagnóstico
+    completo: se registra como FAIL de **ese** chequeo y los demás siguen.
+    Así un fallo puntual (una nota corrupta, un permiso denegado) se ve como
+    un aviso localizado en lugar de ocultar los otros catorce resultados.
+
     Args:
         cwd (str): Directorio de trabajo opcional para la ejecución.
         fix (bool): Si es True, aplica auto-reparaciones automáticas.
@@ -898,7 +903,19 @@ def run(cwd: str = "", fix: bool = False) -> DoctorReport:
     project_dir = cwd or "."
     report = DoctorReport()
     for fn in CHECKS:
-        fn(report, fix=fix, project_dir=project_dir)
+        try:
+            fn(report, fix=fix, project_dir=project_dir)
+        except Exception as exc:  # noqa: BLE001 - el doctor no debe caerse
+            nombre = getattr(fn, "__name__", "chequeo").replace("check_", "", 1)
+            report.add(
+                DoctorCheck(
+                    name=nombre,
+                    status="FAIL",
+                    message=(
+                        f"el chequeo lanzó una excepción: {type(exc).__name__}: {exc}"
+                    ),
+                )
+            )
     return report
 
 

@@ -13,6 +13,7 @@ import re
 
 import pytest
 
+from context_map.presentation.vault.topologia import analizar_topologia, texto_enlazable
 from context_map.presentation.vault.wikilink import (
     alias_seguro,
     destino_seguro,
@@ -166,3 +167,37 @@ class TestValidadorIgnoraCodigo:
         limpio = texto_enlazable("antes `[[x]]` despues [[real]]")
         assert "[[real]]" in limpio
         assert "[[x]]" not in limpio
+
+
+class TestBytesNulos:
+    """Una nota con codificación mixta no puede tumbar el validador.
+
+    Caso real: 6 notas de un vault ajeno contenían ``\x00`` sueltos (UTF-8 con
+    restos de UTF-16). Un NUL entre dígitos se leía como marca de protección
+    inventada y ``texto_enlazable`` lanzaba ``IndexError``; el doctor entero
+    caía con él y el proyecto parecía «colgado».
+    """
+
+    def test_nul_entre_digitos_no_rompe(self) -> None:
+        assert texto_enlazable("a\x001\x00b") == "a1b"
+
+    def test_nul_con_digitos_largos_no_rompe(self) -> None:
+        assert texto_enlazable("dato 12\x0034\x00 fin") == "dato 1234 fin"
+
+    def test_nul_no_oculta_un_wikilink_real(self) -> None:
+        contenido = "antes \x00 [[padre]] después \x002\x00"
+        assert "[[padre]]" in texto_enlazable(contenido)
+
+    def test_analizar_topologia_sobrevive_a_una_nota_corrupta(self, tmp_path) -> None:
+        vault = tmp_path / "vault-Demo"
+        (vault / "1.0-PROPOSITO").mkdir(parents=True)
+        (vault / "00-INDICE.md").write_text(
+            "---\ntags: [\"indice\"]\n---\n\n# Índice\n", encoding="utf-8"
+        )
+        (vault / "1.0-PROPOSITO" / "nota.md").write_bytes(
+            "---\ntype: proposito\ntags: [\"proposito\"]\n---\n\n"
+            "# Nota\n\n[[00-INDICE]]\n\nbasura \x0012\x00 aquí\n".encode("utf-8")
+        )
+        resultado = analizar_topologia(str(vault))
+        assert resultado.archivos >= 2
+        assert not any("IndexError" in e for e in resultado.errores)

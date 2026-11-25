@@ -193,6 +193,25 @@ def create_parser() -> argparse.ArgumentParser:
         help="Mostrar el desglose de peso de .context-map (y avisar si excede el tope)",
     )
 
+    s_reglas = sub.add_parser(
+        "reglas",
+        help="Lista el catálogo de reglas fijas del proyecto (y cuáles se incumplen)",
+    )
+    s_reglas.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_reglas.add_argument(
+        "--categoria", default="",
+        help="Filtrar por categoría (REG-VLT, VLT, REG-ETQ, ...)",
+    )
+    s_reglas.add_argument(
+        "--prioridad", default="",
+        help="Filtrar por prioridad: critica | alta | media",
+    )
+    s_reglas.add_argument(
+        "--verificar", action="store_true",
+        help="Cruzar cada regla con el doctor y salir con código 1 si hay incumplidas",
+    )
+    s_reglas.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+
     s_watch = sub.add_parser("watch", help="Daemon escuchador en segundo plano para sincronización continua")
     s_watch.add_argument("target", nargs="?", default=".", help="Ruta del proyecto a monitorear")
     s_watch.add_argument("--debounce-ms", type=int, default=500, help="Tiempo en ms a esperar tras modificaciones (default: 500)")
