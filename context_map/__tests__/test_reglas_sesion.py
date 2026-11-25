@@ -191,6 +191,26 @@ def test_fix_con_permiso_esta_verde(tmp_path):
     assert estado == "OK"
 
 
+def test_ingest_sin_permiso_avisa(tmp_path):
+    """REG-LIM-004: corrió la tarea cara sin `--confirmar`, o sea sin anunciarla."""
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "ingest", "exit": 0, "autorizado": False},
+    ])
+    estado, mensaje = _estado(sesion.check_permisos_explicitos, tmp_path)
+    assert estado == "WARN"
+    assert "ingest" in mensaje
+
+
+def test_una_tarea_detenida_no_es_una_falta(tmp_path):
+    """Detenerse sin `--confirmar` es obedecer: la puerta hizo su trabajo."""
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "ingest", "exit": 2, "autorizado": False},
+    ])
+    estado, mensaje = _estado(sesion.check_permisos_explicitos, tmp_path)
+    assert estado == "OK"
+    assert "se detuvieron sin `--confirmar`" in mensaje
+
+
 # ── tag_con_puerta_verde: PUB-002 ─────────────────────────────────────────
 
 def test_sin_git_no_juzga_tags(tmp_path):

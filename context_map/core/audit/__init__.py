@@ -1,6 +1,7 @@
 """Auditoría de lo que el motor ejecutó (bitácora de evidencia)."""
 
 from context_map.core.audit.bitacora import (
+    CODIGO_RECHAZO,
     COMANDOS_CON_PERMISO,
     MAX_LINEAS,
     del_dia,
@@ -13,6 +14,7 @@ from context_map.core.audit.bitacora import (
 )
 
 __all__ = [
+    "CODIGO_RECHAZO",
     "COMANDOS_CON_PERMISO",
     "MAX_LINEAS",
     "del_dia",

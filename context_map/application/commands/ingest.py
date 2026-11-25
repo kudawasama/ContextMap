@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 
+from context_map.application.commands._coste import anunciar, detener
 from context_map.application.commands._helpers import (
     STATE_DIR,
     append_nodes_edges,
@@ -130,6 +131,11 @@ def cmd_ingest(args) -> None:
     ensure_dirs(proj)
 
     target = getattr(args, "target", None) or "."
+
+    # REG-LIM-004: una tarea cara se anuncia y no se ejecuta sin --confirmar.
+    if not anunciar(args, "ingest", target)["puede_seguir"]:
+        detener()
+
     try:
         archivos = _recolectar_archivos(target)
     except ValueError as err:

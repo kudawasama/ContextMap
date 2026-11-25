@@ -5,6 +5,8 @@ import ast
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from context_map.application.commands.enrich import _formatear_docstring, cmd_enrich
 
 
@@ -37,7 +39,7 @@ def test_cmd_enrich_persiste_cambios_en_disco() -> None:
         test_file = Path(tmpdir) / "matematica.py"
         test_file.write_text(codigo_original, encoding="utf-8")
 
-        args = argparse.Namespace(path=str(test_file), model=None, dry_run=False)
+        args = argparse.Namespace(path=str(test_file), model=None, dry_run=False, confirmar=True)
         ret = cmd_enrich(args)
         assert ret == 0
 
@@ -66,3 +68,32 @@ def test_cmd_enrich_dry_run_no_modifica_disco() -> None:
 
         contenido_despues = test_file.read_text(encoding="utf-8")
         assert contenido_despues == codigo_original
+
+
+def test_enrich_sin_confirmar_no_toca_el_archivo() -> None:
+    """REG-LIM-004: sin `--confirmar` la tarea cara se detiene y no escribe nada."""
+    codigo_original = "def dividir(a: int, b: int) -> float:\n    return a / b\n"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_file = Path(tmpdir) / "aritmetica.py"
+        test_file.write_text(codigo_original, encoding="utf-8")
+
+        args = argparse.Namespace(path=str(test_file), model=None, dry_run=False)
+        with pytest.raises(SystemExit) as salida:
+            cmd_enrich(args)
+
+        assert salida.value.code == 2
+        assert test_file.read_text(encoding="utf-8") == codigo_original
+
+
+def test_enrich_en_vista_previa_no_pide_permiso() -> None:
+    """La vista previa no gasta ni escribe: no hay permiso que exigir."""
+    codigo_original = "def multiplicar(a: int, b: int) -> int:\n    return a * b\n"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_file = Path(tmpdir) / "producto.py"
+        test_file.write_text(codigo_original, encoding="utf-8")
+
+        args = argparse.Namespace(path=str(test_file), model=None, dry_run=True)
+        assert cmd_enrich(args) == 0
+        assert test_file.read_text(encoding="utf-8") == codigo_original

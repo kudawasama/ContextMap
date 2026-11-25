@@ -86,6 +86,8 @@ son independientes y **nunca** se cruzan.
 
 # 5. ¿Qué queda pendiente? (cruce de las cuatro fuentes)
 .venv/Scripts/python.exe -m context_map.cli pendientes .
+
+# 6. Tareas caras: `ingest` y `enrich` se anuncian y exigen --confirmar (REG-LIM-004)
 ```
 
 `make` es **opcional** (no está instalado en todas las máquinas): si existe,
@@ -129,7 +131,7 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `notas_redactadas` | `notas_sin_plantilla` | WARN | redactar la nota o borrarla |
 | `vault_con_peso_acotado` | `vault_acotado` | WARN | podar o `build` por secciones |
 | `sesion_con_evidencia` | `bitacora_sesion` | WARN | `ctxmap brief` al empezar y `ctxmap doctor` antes de commitear |
-| `permisos_explicitos` | `permisos_explicitos` | WARN | repetir con `--confirmar` tras hablar con el dueño |
+| `permisos_explicitos` | `permisos_explicitos` | WARN | repetir con `--confirmar` tras hablar con el dueño (`adapt`, `ingest`, `enrich`, `push`, `doctor --fix`) |
 | `tag_amparado` | `tag_con_puerta_verde` | WARN | doctor en verde y volver a etiquetar |
 | `credencial_rotada` | `secreto_en_el_historial` | WARN | rotar la credencial y purgar el historial |
 | `historia_conservada` | `historia_preservada` | WARN | restaurar las notas perdidas |

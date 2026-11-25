@@ -8,6 +8,7 @@ import argparse
 import ast
 from pathlib import Path
 
+from context_map.application.commands._coste import anunciar, detener
 from context_map.domain.analyzers.ast_summary import ASTSummaryExtractor
 from context_map.domain.health.hardware import evaluar_hardware_pc
 from context_map.infrastructure.integrations.ollama import OllamaLocalClient
@@ -58,6 +59,12 @@ def cmd_enrich(args: argparse.Namespace) -> int:
 
     modo_str = " (MODO PREVIEW / DRY-RUN)" if dry_run else ""
     print(f"[enrich] Analizando directorio: {ruta_target}{modo_str}")
+
+    # REG-LIM-004: se anuncia el costo medido; sin --confirmar no se ejecuta.
+    # La vista previa no llama al modelo ni escribe, así que solo se anuncia.
+    costo = anunciar(args, "enrich", str(ruta_target))
+    if not costo["puede_seguir"] and not dry_run:
+        detener()
 
     # 1. Diagnóstico de Hardware y RAM
     hw = evaluar_hardware_pc()

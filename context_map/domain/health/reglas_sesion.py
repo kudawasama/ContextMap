@@ -29,7 +29,12 @@ import sqlite3
 import subprocess
 from typing import Any
 
-from context_map.core.audit.bitacora import COMANDOS_CON_PERMISO, del_dia, leer
+from context_map.core.audit.bitacora import (
+    CODIGO_RECHAZO,
+    COMANDOS_CON_PERMISO,
+    del_dia,
+    leer,
+)
 from context_map.domain.health.doctor import DoctorCheck, DoctorReport
 from context_map.domain.health.reglas_proyecto import MARCADORES_FALSO, PATRONES_SECRETO
 
@@ -229,7 +234,7 @@ def check_permisos_explicitos(report: DoctorReport, fix: bool = False, project_d
         project_dir (str): Raíz del proyecto.
     """
     check = DoctorCheck(name="permisos_explicitos")
-    sin_permiso = [
+    sensibles = [
         e for e in leer(project_dir)
         if e.get("autorizado") is False
         and (
@@ -237,10 +242,19 @@ def check_permisos_explicitos(report: DoctorReport, fix: bool = False, project_d
             or (e.get("comando") == "doctor" and "fix" in (e.get("flags") or []))
         )
     ]
+    # Una tarea que se detuvo sin `--confirmar` no ejecutó nada: la puerta hizo su
+    # trabajo. Contarla como falta sería castigar al que obedeció.
+    sin_permiso = [e for e in sensibles if e.get("exit") != CODIGO_RECHAZO]
+    detenidas = len(sensibles) - len(sin_permiso)
 
     if not sin_permiso:
         check.status = "OK"
         check.message = "Ninguna ejecución sensible sin autorización registrada."
+        if detenidas:
+            check.message += (
+                f" {detenidas} tarea(s) cara(s) se detuvieron sin `--confirmar` "
+                "(REG-LIM-004): se anunciaron y no se ejecutaron."
+            )
         report.add(check)
         return
 

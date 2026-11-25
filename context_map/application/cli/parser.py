@@ -64,6 +64,11 @@ def create_parser() -> argparse.ArgumentParser:
     s_enrich.add_argument("--model", default=None, help="Modelo de Ollama preferido (ej. qwen2.5-coder:1.5b)")
     s_enrich.add_argument("--dry-run", action="store_true", help="Solo muestra la vista previa sin modificar archivos")
     s_enrich.add_argument("--no-ollama", action="store_true", help="Desactiva Ollama y utiliza exclusivamente inferencia AST offline")
+    s_enrich.add_argument(
+        "--confirmar",
+        action="store_true",
+        help="Confirma una tarea cara: sin esta bandera enrich se detiene (REG-LIM-004)",
+    )
 
     sub.add_parser("init", help="Crea estructura .context-map/")
 
@@ -146,6 +151,11 @@ def create_parser() -> argparse.ArgumentParser:
     s_ingest.add_argument("--raw", action="store_true", help="Alias para --mode raw")
     s_ingest.add_argument("--brief", action="store_true", help="Regenerar brief tras ingerir")
     s_ingest.add_argument("--quiet", action="store_true", help="Modo silencioso")
+    s_ingest.add_argument(
+        "--confirmar",
+        action="store_true",
+        help="Confirma una tarea cara: sin esta bandera ingest se detiene (REG-LIM-004)",
+    )
 
     s_sessions = sub.add_parser("import-sessions", help="Importa sesiones de Hermes")
     s_sessions.add_argument("--project", default="Repo", help="Nombre del proyecto")

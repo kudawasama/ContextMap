@@ -31,7 +31,12 @@ RUTA_RELATIVA = os.path.join(".context-map", "state", "bitacora.jsonl")
 MAX_LINEAS = 2000
 
 #: Comandos que modifican el proyecto y por tanto exigen autorización explícita.
-COMANDOS_CON_PERMISO = ("adapt", "push")
+COMANDOS_CON_PERMISO = ("adapt", "ingest", "enrich", "push")
+
+#: Código de salida de una tarea cara que se negó a correr sin ``--confirmar``.
+#: No es un fallo: es la puerta haciendo su trabajo, y la bitácora no lo cuenta
+#: como ejecución no autorizada (nada se ejecutó).
+CODIGO_RECHAZO = 2
 
 #: Claves que se aceptan en una entrada; cualquier otra se descarta.
 CLAVES = ("ts", "comando", "exit", "duracion_s", "flags", "notas", "autorizado")

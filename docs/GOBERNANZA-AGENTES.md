@@ -254,7 +254,7 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Lo que sigue en `manual` (4 reglas) no es lo que falta por medir: es lo que
+Lo que sigue en `manual` (3 reglas) no es lo que falta por medir: es lo que
 **ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
 enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
 Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
@@ -464,3 +464,30 @@ redactar no es contexto: es ruido con formato.
   `.context-map/history/`, `.context-map/vault-*/` regenerable y los `.db`.
 * Las tareas caras (scan completo, ingesta, embeddings) se anuncian antes de
   ejecutarse: el dueño decide si paga el tiempo.
+
+### 13.1 El anuncio del costo lo hace el motor (`REG-LIM-004`)
+
+Un anuncio que depende de la memoria del agente se olvida justo cuando importa.
+`ingest` y `enrich` ahora se anuncian solos y **no arrancan** sin `--confirmar`
+(`application/commands/_coste.py`):
+
+```
+$ ctxmap ingest ./docs
+[coste] Tarea cara: ingest docs · 42 archivo(s) · 3.1 MB · referencia: 61.0 s (mediana de lo que tardó antes)
+[coste] Falta `--confirmar`: no se ejecuta (código 2, REG-LIM-004).
+```
+
+* **El costo se mide, no se inventa**: archivos y bytes del objetivo reales, y la
+  mediana de duración de ejecuciones anteriores del mismo comando según la
+  bitácora. Sin historial se dice «sin historial de tiempos» — una cifra de
+  segundos inventada no es información, es ruido con formato de dato.
+* **Se detiene, no avisa**: si el aviso se puede ignorar, no es una puerta. Sale
+  con código `2` (`CODIGO_RECHAZO`) y nada se procesa.
+* **Detenerse no es una falta**: `permisos_explicitos` cuenta un intento con
+  código `2` como prueba de que la puerta funcionó, no como ejecución sin
+  permiso. Castigar al que obedece enseña a no obedecer.
+* **La vista previa no pide permiso**: `enrich --dry-run` no llama al modelo ni
+  escribe, así que se anuncia y sigue: no se registra como no autorizada.
+* **Solo las caras**: `scan`, `build` y `refresh` son recorridos locales que ya
+  quedan medidos en la bitácora; exigirles bandera habría convertido la puerta
+  en ruido dentro del flujo normal de verificación.

@@ -803,11 +803,11 @@ reglas:
 
   - id: REG-LIM-004
     resumen: "la tarea cara se anuncia"
-    nombre: "Scan completo, ingesta y embeddings se anuncian antes de ejecutarse"
+    nombre: "La ingesta y el enriquecimiento se anuncian y no corren sin --confirmar"
     categoria: REG-LIM
     categoria_nombre: "Límites y rendimiento"
     prioridad: media
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "13. Límites y rendimiento"
-    verificacion: "manual"
+    verificacion: "doctor:permisos_explicitos"

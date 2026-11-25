@@ -161,7 +161,9 @@ def _registrar_ejecucion(args, inicio: float, codigo: int) -> None:
         destino = str(getattr(args, "target", None) or ".")
         duracion = time.perf_counter() - inicio
         autorizado = None
-        if comando in COMANDOS_CON_PERMISO:
+        # Una vista previa no gasta ni escribe: no hay permiso que exigir.
+        vista_previa = bool(getattr(args, "dry_run", False))
+        if comando in COMANDOS_CON_PERMISO and not vista_previa:
             autorizado = bool(getattr(args, "confirmar", False))
         elif comando == "doctor" and getattr(args, "fix", False):
             autorizado = bool(getattr(args, "confirmar", False))

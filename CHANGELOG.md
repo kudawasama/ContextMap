@@ -81,6 +81,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Añadido
+- **`ingest` y `enrich` se anuncian y no corren sin `--confirmar`**
+  (`application/commands/_coste.py`, `REG-LIM-004`). El anuncio mide archivos y
+  bytes reales del objetivo y cita la mediana de duración de ejecuciones
+  anteriores según la bitácora; sin historial dice «sin historial de tiempos» en
+  vez de inventar segundos. Sin la bandera se detiene con código
+  `CODIGO_RECHAZO = 2` y no procesa nada: **un aviso que se puede ignorar no es
+  una puerta**. Catálogo: **68 de 71**.
+- **Detenerse no es una falta**: `permisos_explicitos` cuenta el intento con
+  código `2` como prueba de que la puerta funcionó, no como ejecución sin
+  permiso — castigar al que obedece enseña a no obedecer. `enrich --dry-run` no
+  pide permiso: no llama al modelo ni escribe.
+- `scan`, `build` y `refresh` **no** piden bandera: son recorridos locales que ya
+  quedan medidos en la bitácora, y exigirles `--confirmar` habría convertido la
+  puerta en ruido dentro del flujo normal de verificación.
 - **`ctxmap pendientes .`: el cruce de las cuatro fuentes lo hace el motor**
   (`domain/reporting/pendientes.py` + `application/commands/pendientes_cmd.py`).
   Cruza el backlog manual (`7.0-MANUAL/BACKLOG.md`), las tareas
