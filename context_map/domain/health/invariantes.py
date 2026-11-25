@@ -352,6 +352,16 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="completar el porqué con `ctxmap personal add ... --contexto`",
     ),
+    Invariante(
+        nombre="codigo_leido",
+        chequeo="lecturas_previas",
+        severidad="WARN",
+        motivo=(
+            "Proponer cambios sobre código que no se abrió es adivinar con formato "
+            "de solución. La lectura deja huella; el commit muestra qué se tocó."
+        ),
+        reparacion="leer el archivo antes de cambiarlo (`ctxmap hook lectura --instalar`)",
+    ),
 )
 
 

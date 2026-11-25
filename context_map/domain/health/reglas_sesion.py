@@ -35,6 +35,7 @@ from context_map.core.audit.bitacora import (
     del_dia,
     leer,
 )
+from context_map.core.audit.lecturas import hay_registro, primera_lectura, rutas_leidas
 from context_map.domain.health.doctor import DoctorCheck, DoctorReport
 from context_map.domain.health.reglas_proyecto import MARCADORES_FALSO, PATRONES_SECRETO
 
@@ -700,6 +701,133 @@ def check_decisiones_con_porque(
     report.add(check)
 
 
+# ── lecturas_previas: INI-006 ─────────────────────────────────────────────
+
+#: Extensiones de código: lo que se toca sin leer es código, no documentación.
+EXTENSIONES_CODIGO = frozenset({
+    ".py", ".ts", ".tsx", ".js", ".jsx", ".go", ".rs", ".java", ".rb", ".php",
+    ".cs", ".c", ".h", ".cpp", ".kt", ".swift", ".sql", ".sh", ".ps1", ".vue",
+    ".svelte", ".mjs", ".cjs",
+})
+
+#: Estados de ``git show --name-status`` que implican que el archivo existía antes.
+ESTADOS_EXISTENTES = ("M", "R", "C", "T")
+
+
+def _archivos_del_commit(project_dir: str) -> list[tuple[str, str]]:
+    """Archivos del último commit con su estado de cambio.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        List[Tuple[str, str]]: Pares ``(estado, ruta)``; vacío si no hay git.
+    """
+    salida = _git(project_dir, "show", "--name-status", "--format=", "-M", "HEAD")
+    if not salida:
+        return []
+    pares: list[tuple[str, str]] = []
+    for linea in salida.splitlines():
+        partes = linea.strip().split("	")
+        if len(partes) < 2:
+            continue
+        estado = partes[0][:1]
+        ruta = partes[-1]
+        pares.append((estado, ruta))
+    return pares
+
+
+def check_lecturas_previas(
+    report: DoctorReport, fix: bool = False, project_dir: str = "."
+) -> None:
+    """Verifica que el último commit no tocara código que nunca se leyó (INI-006).
+
+    La regla es conducta —nadie puede demostrar que el agente leyó por dentro—
+    pero **sí queda huella** de qué archivos abrió cuando el harness tiene hooks.
+    El chequeo cruza esa huella con el último commit.
+
+    Lo que se declara fuera de alcance, en vez de fingir cobertura:
+
+    * Sin registro de lecturas (hook no instalado, o chat manual) no hay
+      evidencia que juzgar: se dice, no se pone un verde silencioso.
+    * Un archivo **nuevo** en el commit no se juzga: no se podía leer lo que no
+      existía todavía.
+    * Los commits anteriores a la primera lectura no se juzgan: nada se mira
+      hacia atrás.
+
+    Args:
+        report (DoctorReport): Reporte donde registrar el chequeo.
+        fix (bool): Ignorado: un aviso de conducta no se repara escribiendo.
+        project_dir (str): Raíz del proyecto.
+    """
+    check = DoctorCheck(name="lecturas_previas")
+
+    if not hay_registro(project_dir):
+        check.status = "OK"
+        check.message = (
+            "Sin registro de lecturas (hook `ctxmap hook lectura --instalar` no "
+            "instalado): INI-006 no se puede juzgar en este proyecto, y se declara "
+            "el hueco en vez de fingir cobertura."
+        )
+        report.add(check)
+        return
+
+    inicio = primera_lectura(project_dir)
+    fecha_commit = _git(project_dir, "log", "-1", "--format=%cI", "HEAD")
+    if not fecha_commit or not inicio:
+        check.status = "OK"
+        check.message = "Sin commit o sin lecturas fechadas: no hay nada que cruzar."
+        report.add(check)
+        return
+    if fecha_commit.replace(" ", "T")[:19] < inicio[:19]:
+        check.status = "OK"
+        check.message = (
+            "El último commit es anterior a la primera lectura registrada: "
+            "nada se juzga hacia atrás."
+        )
+        report.add(check)
+        return
+
+    leidas = rutas_leidas(project_dir)
+    tocados = [
+        ruta for estado, ruta in _archivos_del_commit(project_dir)
+        if estado in ESTADOS_EXISTENTES
+        and os.path.splitext(ruta)[1].lower() in EXTENSIONES_CODIGO
+    ]
+    sin_leer = sorted(
+        ruta for ruta in tocados
+        if os.path.normcase(ruta).replace("\\", "/").replace(os.sep, "/").lower() not in leidas
+    )
+
+    if not tocados:
+        check.status = "OK"
+        check.message = (
+            "El último commit no toca código existente (solo archivos nuevos, "
+            "borrados o documentación): no hay nada que cruzar."
+        )
+        report.add(check)
+        return
+
+    if not sin_leer:
+        check.status = "OK"
+        check.message = (
+            f"Los {len(tocados)} archivo(s) de código del último commit están "
+            "en el registro de lecturas."
+        )
+        report.add(check)
+        return
+
+    check.status = "WARN"
+    muestra = ", ".join(sin_leer[:3])
+    extra = "" if len(sin_leer) <= 3 else f" (+{len(sin_leer) - 3} más)"
+    check.message = (
+        f"{len(sin_leer)} archivo(s) de código tocados en el último commit sin "
+        f"lectura registrada: {muestra}{extra} — REG-INI-006. No es una acusación: "
+        "si el hook no estaba activo, la huella no existe."
+    )
+    report.add(check)
+
+
 CHECKS_SESION = (
     check_bitacora_sesion,
     check_permisos_explicitos,
@@ -708,4 +836,5 @@ CHECKS_SESION = (
     check_historia_preservada,
     check_doctor_rapido,
     check_decisiones_con_porque,
+    check_lecturas_previas,
 )

@@ -95,7 +95,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
-    verificacion: "manual"
+    verificacion: "doctor:lecturas_previas"
 
   - id: REG-INI-007
     resumen: "memoria de otros proyectos"

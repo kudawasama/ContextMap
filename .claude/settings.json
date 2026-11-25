@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Users\\jose.cespedes\\Desktop\\ContextMap\\.venv\\Scripts\\python.exe\" -m context_map.cli hook lectura --quiet",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -104,10 +104,24 @@ def create_parser() -> argparse.ArgumentParser:
     s_scan.add_argument("--project", default="Repo", help="Nombre del proyecto")
     s_scan.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
-    s_hook = sub.add_parser("hook", help="Gestión e instalación de Git pre-commit hooks")
-    s_hook.add_argument("action", nargs="?", choices=["install", "uninstall"], default="install", help="Acción: install o uninstall")
+    s_hook = sub.add_parser("hook", help="Git hooks y receptor de lecturas (REG-INI-006)")
+    s_hook.add_argument(
+        "action",
+        nargs="?",
+        choices=["install", "uninstall", "lectura"],
+        default="install",
+        help="Acción: install, uninstall o lectura (receptor de PreToolUse)",
+    )
     s_hook.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_hook.add_argument("--force", action="store_true", help="Sobrescribir hooks existentes")
+    s_hook.add_argument(
+        "--instalar",
+        action="store_true",
+        help="Con `lectura`: añade el hook a .claude/settings.json sin pisar lo existente",
+    )
+    s_hook.add_argument("--ruta", default="", help="Con `lectura`: ruta leída (si no viene por stdin)")
+    s_hook.add_argument("--origen", default="hook", help="Con `lectura`: harness que la reporta")
+    s_hook.add_argument("--quiet", action="store_true", help="Con `lectura`: no imprime nada")
 
     s_sync = sub.add_parser("sync", help="Sync incremental (use --migrate para migración)")
     s_sync.add_argument("--project", default="Repo", help="Nombre del proyecto")

@@ -81,6 +81,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Añadido
+- **La lectura de código deja huella** (`core/audit/lecturas.py`,
+  `domain/ecosystem/hooks_lectura.py`, `REG-INI-006`). `ctxmap hook lectura`
+  anota `{ts, ruta, origen}` en `.context-map/state/lecturas.jsonl` desde un
+  hook `PreToolUse`; el chequeo `lecturas_previas` cruza esa huella con los
+  archivos de código del último commit. Catálogo: **69 de 71**.
+- `ctxmap hook lectura . --instalar` escribe la entrada en
+  `.claude/settings.json` **fusionando** con lo que ya hubiera. El comando usa el
+  intérprete del `.venv` del proyecto: un `ctxmap` global desactualizado saldría
+  con código 2 y, en un `PreToolUse`, **el 2 bloquea la herramienta** — una regla
+  que impide leer el código para poder cumplirla sería una trampa.
+- Lo que no se puede juzgar se declara: sin registro no hay evidencia, un archivo
+  nuevo no se juzga (no se podía leer lo que no existía) y los commits anteriores
+  a la primera lectura tampoco.
 - **`ingest` y `enrich` se anuncian y no corren sin `--confirmar`**
   (`application/commands/_coste.py`, `REG-LIM-004`). El anuncio mide archivos y
   bytes reales del objetivo y cita la mediana de duración de ejecuciones

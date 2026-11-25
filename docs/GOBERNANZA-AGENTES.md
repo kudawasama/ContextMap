@@ -254,7 +254,7 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Lo que sigue en `manual` (3 reglas) no es lo que falta por medir: es lo que
+Lo que sigue en `manual` (2 reglas) no es lo que falta por medir: es lo que
 **ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
 enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
 Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
@@ -491,3 +491,35 @@ $ ctxmap ingest ./docs
 * **Solo las caras**: `scan`, `build` y `refresh` son recorridos locales que ya
   quedan medidos en la bitácora; exigirles bandera habría convertido la puerta
   en ruido dentro del flujo normal de verificación.
+
+### 13.2 La lectura de código deja huella (`REG-INI-006`)
+
+«No supongas la lógica: lee el código» es la regla más antigua del protocolo y la
+única que nadie podía comprobar. El interior de la sesión no se puede auditar,
+pero **sí el acto de abrir un archivo**, cuando el harness tiene hooks.
+
+```
+$ ctxmap hook lectura . --instalar     # una vez por proyecto
+$ echo '{"tool_input":{"file_path":"context_map/x.py"}}' | ctxmap hook lectura .
+```
+
+* **Receptor mudo y a prueba de fallos**: `hook lectura` lee el JSON de
+  `PreToolUse` por stdin (`tool_input.file_path`, plano o cadena cruda), anota
+  `{ts, ruta, origen}` en `.context-map/state/lecturas.jsonl` y **siempre** sale
+  con 0. Si no puede escribir, se pierde la huella, no la sesión.
+* **La huella no es una fuga**: solo ruta relativa y origen; ni contenido ni
+  rutas absolutas de la máquina.
+* **El chequeo cruza huella y commit**: `lecturas_previas` compara los archivos
+  de código del último commit (`git show --name-status`) con lo leído. WARN con
+  los nombres, porque un aviso que no dice cuál es el archivo no se puede actuar.
+* **Lo que no se juzga, se declara**: sin registro no hay evidencia (se dice, no
+  se pone un verde silencioso); un archivo **nuevo** no se juzga —no se podía
+  leer lo que no existía—; y los commits anteriores a la primera lectura tampoco
+  (nada se mira hacia atrás).
+* **El comando usa el intérprete del proyecto, no el `ctxmap` global**: un
+  binario desactualizado no conoce `hook lectura` y saldría con código 2, que en
+  un `PreToolUse` **bloquea la herramienta**. Una regla que impide leer el código
+  para poder cumplirla sería una trampa.
+* **La instalación fusiona**: `.claude/settings.json` se respeta; se añade
+  nuestra entrada y nada más. La marca se busca en el comando, no en una clave
+  propia: los harnesses validan su esquema.

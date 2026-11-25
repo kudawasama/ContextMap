@@ -88,6 +88,9 @@ son independientes y **nunca** se cruzan.
 .venv/Scripts/python.exe -m context_map.cli pendientes .
 
 # 6. Tareas caras: `ingest` y `enrich` se anuncian y exigen --confirmar (REG-LIM-004)
+
+# 7. Traza de lecturas de código (REG-INI-006, solo harnesses con hooks)
+.venv/Scripts/python.exe -m context_map.cli hook lectura . --instalar
 ```
 
 `make` es **opcional** (no está instalado en todas las máquinas): si existe,
@@ -137,6 +140,7 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `historia_conservada` | `historia_preservada` | WARN | restaurar las notas perdidas |
 | `diagnostico_rapido` | `doctor_rapido` | WARN | acotar el chequeo que se lleva el tiempo |
 | `decision_con_porque` | `decisiones_con_porque` | WARN | completar el porqué al registrar la decisión |
+| `codigo_leido` | `lecturas_previas` | WARN | `ctxmap hook lectura . --instalar` y leer antes de tocar |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
