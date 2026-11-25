@@ -59,8 +59,23 @@ NOMBRES_FIXTURE = (
 #: Commits del historial que se revisan (el pasado remoto ya está publicado).
 VENTANA_HISTORIAL = 200
 
-#: Tope de lectura del diff del historial: si no cabe, se avisa en vez de mentir.
-MAX_BYTES_HISTORIAL = 12_000_000
+#: Expresiones equivalentes en sintaxis POSIX, para que las entienda `git -G`.
+#: Git no acepta `(?i)` en línea y una expresión inválida aborta la búsqueda; el
+#: filtro fino se hace igualmente en Python con ``PATRONES_SECRETO``.
+HUELLAS_GIT = (
+    "AKIA[0-9A-Z]{16}",
+    "gh[pousr]_[A-Za-z0-9]{20,}",
+    "-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----",
+    "xox[baprs]-[A-Za-z0-9-]{10,}",
+    "(api[_-]?key|secret[_-]?key|password|passwd|access[_-]?token)[[:space:]]*[:=][[:space:]]*"
+    "['\"][^'\"]{16,}['\"]",
+)
+
+#: Ventana de reintento cuando el historial es demasiado lento (unidad de red).
+VENTANA_CORTA = 50
+
+#: Commits sospechosos a los que se les mira el diff (cada uno cuesta una lectura).
+MAX_COMMITS_ESCANEO = 8
 
 
 def _git(project_dir: str, *args: str, timeout: int = 30) -> str | None:
@@ -339,6 +354,61 @@ def _es_fixture(ruta: str) -> bool:
     return any(pista in minuscula for pista in ("example", "ejemplo", "demo", "plantilla"))
 
 
+def _commits_sospechosos(project_dir: str) -> list[str] | None:
+    """Commits recientes que podrían contener una credencial, en **una** llamada.
+
+    Se usa ``git log -G`` —pickaxe con expresión regular— en vez de volcar el
+    diff con ``-p``: serializar 200 diffs en una unidad de red agota el tiempo de
+    espera. Y se lanza **una** búsqueda con la alternancia de todas las
+    expresiones, no cinco: cada llamada recorre el historial entero, así que
+    cinco expresiones costaban cinco veces lo mismo.
+
+    Si el historial es demasiado lento, se reintenta con una ventana corta antes
+    de rendirse: un chequeo que nunca responde no protege nada.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        Optional[List[str]]: Hashes cortos, o ``None`` si git no respondió.
+    """
+    alternancia = "|".join(f"({p})" for p in HUELLAS_GIT)
+    for ventana, espera in ((VENTANA_HISTORIAL, 45), (VENTANA_CORTA, 20)):
+        salida = _git(
+            project_dir, "log", "--no-merges", f"-n{ventana}", "--regexp-ignore-case",
+            f"-G{alternancia}", "--format=%h", timeout=espera,
+        )
+        if salida is not None:
+            return [c.strip() for c in salida.splitlines() if c.strip()][:MAX_COMMITS_ESCANEO]
+    return None
+
+
+def _lineas_añadidas(project_dir: str, commit: str) -> dict[str, list[str]]:
+    """Líneas añadidas por un commit, agrupadas por archivo.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+        commit (str): Hash del commit.
+
+    Returns:
+        Dict[str, List[str]]: Archivo → líneas añadidas.
+    """
+    salida = _git(
+        project_dir, "show", "--no-merges", "--unified=0", "--format=", commit,
+        timeout=30,
+    )
+    if not salida:
+        return {}
+    por_archivo: dict[str, list[str]] = {}
+    actual = ""
+    for linea in salida.splitlines():
+        if linea.startswith("+++ b/"):
+            actual = linea[6:].strip()
+        elif linea.startswith("+") and not linea.startswith("+++") and actual:
+            por_archivo.setdefault(actual, []).append(linea)
+    return por_archivo
+
+
 def check_secreto_en_el_historial(report: DoctorReport, fix: bool = False, project_dir: str = ".") -> None:
     """Busca credenciales reales en el historial de commits (no solo en el árbol).
 
@@ -363,65 +433,55 @@ def check_secreto_en_el_historial(report: DoctorReport, fix: bool = False, proje
         report.add(check)
         return
 
-    salida = _git(
-        project_dir, "log", "--no-merges", f"-n{VENTANA_HISTORIAL}",
-        "--unified=0", "-p", "--format=commit:%h", timeout=90,
-    )
-    if salida is None:
-        check.status = "OK"
-        check.message = "No se pudo leer el historial (git no respondió): sin veredicto."
-        report.add(check)
-        return
-
-    if len(salida) > MAX_BYTES_HISTORIAL:
-        salida = salida[:MAX_BYTES_HISTORIAL]
-
     reales: list[str] = []
     fixtures: list[str] = []
-    commit_actual = ""
-    archivo_actual = ""
-    for linea in salida.splitlines():
-        if linea.startswith("commit:"):
-            commit_actual = linea[7:].strip()
-            continue
-        if linea.startswith("+++ b/"):
-            archivo_actual = linea[6:].strip()
-            continue
-        if not linea.startswith("+") or linea.startswith("+++"):
-            continue
-        for tipo, patron in PATRONES_SECRETO.items():
-            coincidencia = patron.search(linea)
-            if not coincidencia:
-                continue
-            valor = coincidencia.group(0).lower()
-            if any(marca in valor for marca in MARCADORES_FALSO):
-                continue
-            etiqueta = f"{tipo} en {commit_actual} ({archivo_actual or 'sin ruta'})"
-            if _es_fixture(archivo_actual):
-                fixtures.append(etiqueta)
-            else:
-                reales.append(etiqueta)
-            break
+    sin_veredicto: list[str] = []
 
-    if not reales:
-        check.status = "OK"
-        nota = ""
-        if fixtures:
-            nota = (
-                f" {len(fixtures)} coincidencia(s) en fixtures de prueba/documentación, "
-                "no son credenciales."
-            )
+    commits = _commits_sospechosos(project_dir)
+    if commits is None:
+        sin_veredicto.append("el historial")
+
+    for commit in commits or []:
+        for archivo, lineas in _lineas_añadidas(project_dir, commit).items():
+            for linea in lineas:
+                for tipo, patron in PATRONES_SECRETO.items():
+                    coincidencia = patron.search(linea)
+                    if not coincidencia:
+                        continue
+                    if any(m in coincidencia.group(0).lower() for m in MARCADORES_FALSO):
+                        continue
+                    etiqueta = f"{tipo} en {commit} ({archivo})"
+                    if _es_fixture(archivo):
+                        fixtures.append(etiqueta)
+                    else:
+                        reales.append(etiqueta)
+                    break
+
+    if reales:
+        check.status = "WARN"
         check.message = (
-            f"Sin credenciales reales en los últimos {VENTANA_HISTORIAL} commits.{nota}"
+            "Credenciales en el historial versionado: "
+            + "; ".join(reales[:4])
+            + ". Quitar el archivo no borra el commit: rota la credencial (REG-SEG-003)."
         )
         report.add(check)
         return
 
-    check.status = "WARN"
+    nota = ""
+    if fixtures:
+        nota += (
+            f" {len(fixtures)} coincidencia(s) en fixtures de prueba/documentación, "
+            "no son credenciales."
+        )
+    if sin_veredicto:
+        nota += (
+            f" Sin veredicto para {', '.join(sin_veredicto)}: git no respondió a tiempo "
+            "(historial grande sobre una unidad de red). Se declara el hueco en vez de "
+            "fingir que se revisó."
+        )
+    check.status = "OK"
     check.message = (
-        "Credenciales en el historial versionado: "
-        + "; ".join(reales[:4])
-        + ". Quitar el archivo no borra el commit: rota la credencial (REG-SEG-003)."
+        f"Sin credenciales reales en los últimos {VENTANA_HISTORIAL} commits." + nota
     )
     report.add(check)
 

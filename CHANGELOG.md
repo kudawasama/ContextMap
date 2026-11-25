@@ -142,6 +142,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   historial, no subcadenas: buscar `AKIA` a secas marcaba la propia definición
   del detector (`r"AKIA[0-9A-Z]{16}"`) como si fuera una clave. Las
   coincidencias en pruebas y documentación se informan como fixtures, aparte.
+- El escaneo del historial es **una** llamada a `git log -G` con la alternancia de
+  todas las expresiones (cinco llamadas recorrían el historial cinco veces), con
+  expresiones en sintaxis POSIX —git no admite `(?i)` en línea y una expresión
+  inválida aborta la búsqueda— y un reintento con ventana corta. En una unidad de
+  red el veredicto puede quedar en «sin veredicto»: se declara el hueco en vez de
+  fingir que se revisó, y `doctor_rapido` señala el costo real.
 - **Nada se juzga hacia atrás.** Ni los commits anteriores a la primera entrada
   de la bitácora ni los tags creados antes de que existiera: exigir evidencia
   retroactiva produce un rojo perpetuo, y un rojo perpetuo se ignora.
