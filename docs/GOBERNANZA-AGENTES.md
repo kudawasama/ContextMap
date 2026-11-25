@@ -254,7 +254,7 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Lo que sigue en `manual` (5 reglas) no es lo que falta por medir: es lo que
+Lo que sigue en `manual` (4 reglas) no es lo que falta por medir: es lo que
 **ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
 enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
 Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
