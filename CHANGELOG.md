@@ -158,6 +158,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   por tests y doctor).
 - `revisar_reglas_agente(..., dry_run=True)` para previsualizar sin escribir.
 - Skill base y `AGENTS.md` incluyen auto-diagnóstico en el protocolo de inicio.
+- **Catálogo de reglas del proyecto** en `references/reglas/reglas_registro.yaml`
+  (16 reglas `REG-XXX-###` con `norma` y `seccion` reales): la capa de datos que
+  faltaba entre los invariantes del motor y las reglas del agente. Cada regla se
+  refleja en el brief completo («Reglas de Negocio») y en nodos `REGLA` del vault.
+- **El brief mínimo ahora trae las reglas fijas** («📜 Reglas fijas», solo
+  prioridad `critica`, con `resumen` de una línea). Antes el agente leía qué pasó
+  y qué queda, pero no a qué estaba obligado: 692 → 818 tk (+126 tk, −57.9 %
+  frente al brief completo).
+- `reglas_del_proyecto()` en `domain/reglas/reglas.py`: atajo público para
+  obtener las reglas una a una (lo consume el brief mínimo).
+- `context_map/__tests__/test_reglas_del_repo.py`: contrato del catálogo real
+  (≥10 reglas, IDs únicos y con formato, categoría = prefijo, `norma` existente,
+  `seccion` presente en la norma, `resumen` ≤ 45 caracteres).
+- `AGENTS.md` §8: cómo entrar una regla nueva (primero la norma, después el YAML).
+- `AGENTS.md` §6: comandos de verificación que funcionan sin `make`.
 
 ## [2.16.0] — 2026-11-04
 

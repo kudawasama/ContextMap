@@ -58,6 +58,51 @@ def _titulos(nodes: list[Node], tipo: str, limite: int = LIMITE_TITULOS) -> tupl
     return titulos[:limite], len(titulos)
 
 
+def reglas_fijas(project_dir: str = ".") -> str:
+    """Sección mínima con las reglas fijas del proyecto (capa B).
+
+    El brief completo ya tiene su “Reglas de Negocio”, pero los agentes leen la
+    capa mínima por defecto: sin esta línea, el agente sabe qué pasó y qué
+    queda, pero no a qué está obligado. Manda la prioridad ``critica``; el
+    total y la ruta del catálogo quedan a la vista para ampliar.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        str: Bloque Markdown, o cadena vacía si el proyecto no tiene catálogo.
+    """
+    try:
+        from context_map.domain.reglas.reglas import reglas_del_proyecto
+
+        reglas = reglas_del_proyecto(project_dir)
+    except Exception:  # noqa: BLE001 — el brief nunca debe romperse por esto
+        return ""
+    if not reglas:
+        return ""
+
+    criticas: dict[str, list[str]] = {}
+    for regla in reglas:
+        if str(regla.get("prioridad", "")).lower() != "critica":
+            continue
+        etiqueta = str(regla.get("resumen") or regla.get("nombre") or "")[:48]
+        categoria = str(regla.get("categoria") or "REG")
+        sufijo = str(regla.get("id", "")).rsplit("-", 1)[-1]
+        criticas.setdefault(categoria, []).append(f"{sufijo} {etiqueta}")
+
+    if not criticas:
+        return ""
+
+    lineas = ["## 📜 Reglas fijas (el catálogo manda)", ""]
+    for categoria, items in criticas.items():
+        lineas.append(f"- **{categoria}** " + " · ".join(items))
+    lineas.append(
+        f"_({len(reglas)} reglas en `references/reglas/reglas_registro.yaml`; "
+        "si una contradice el código, manda la regla)_"
+    )
+    return "\n".join(lineas)
+
+
 def como_ampliar_contexto() -> str:
     """Sección compacta que enseña al agente a pedir más contexto.
 
@@ -111,6 +156,7 @@ def generar_brief_minimo(
         resumen_ejecutivo(project_name, stats, readiness_score, version),
         estado_proyecto(stats),
         aviso_frescura(frescura),
+        reglas_fijas(project_dir),
     ]
 
     if riesgos:

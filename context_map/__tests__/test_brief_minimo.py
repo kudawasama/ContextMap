@@ -96,3 +96,61 @@ def test_brief_minimo_sin_nodos_no_falla(tmp_path) -> None:
     ruta = os.path.join(raiz, ".context-map", "CONTEXT.min.md")
     texto = generar_brief_minimo("Demo", [], 0, ruta, project_dir=raiz)
     assert "Demo" in texto and "Ampliar contexto" in texto
+
+
+def test_brief_minimo_incluye_las_reglas_fijas(tmp_path) -> None:
+    """El agente lee la capa mínima: si las reglas no están ahí, no las ve.
+
+    Regresión: la capa completa tenía "Reglas de Negocio" pero la mínima —la que
+    se lee por defecto— no decía nada de las obligaciones del proyecto.
+    """
+    raiz = _proyecto(tmp_path)
+    catalogo = os.path.join(raiz, "references", "reglas")
+    os.makedirs(catalogo, exist_ok=True)
+    with open(os.path.join(catalogo, "reglas_registro.yaml"), "w", encoding="utf-8") as f:
+        f.write(
+            "version: 1.0\nreglas:\n"
+            "  - id: REG-EJE-001\n"
+            "    resumen: \"intérprete del venv\"\n"
+            "    nombre: \"Ejecutar con el intérprete del venv\"\n"
+            "    categoria: REG-EJE\n"
+            "    prioridad: critica\n"
+            "    estado: implementada\n"
+            "    norma: \"AGENTS.md\"\n"
+            "    seccion: \"3. Protocolo\"\n"
+            "  - id: REG-DOC-001\n"
+            "    resumen: \"español técnico\"\n"
+            "    nombre: \"Responder en español técnico\"\n"
+            "    categoria: REG-DOC\n"
+            "    prioridad: media\n"
+            "    estado: implementada\n"
+            "    norma: \"AGENTS.md\"\n"
+            "    seccion: \"1. Reglas globales\"\n"
+        )
+
+    texto = generar_brief_minimo(
+        "Demo",
+        _nodos(),
+        readiness_score=90,
+        output_path=os.path.join(raiz, ".context-map", "CONTEXT.min.md"),
+        project_dir=raiz,
+    )
+
+    assert "Reglas fijas" in texto
+    assert "001 intérprete del venv" in texto
+    assert "references/reglas/reglas_registro.yaml" in texto
+    # Solo las críticas pueblan la línea; la media queda en el catálogo.
+    assert "español técnico" not in texto
+
+
+def test_brief_minimo_sin_catalogo_no_inventa_reglas(tmp_path) -> None:
+    """Un proyecto sin catálogo no debe ver una sección vacía ni falsa."""
+    raiz = _proyecto(tmp_path)
+    texto = generar_brief_minimo(
+        "Demo",
+        _nodos(),
+        readiness_score=90,
+        output_path=os.path.join(raiz, ".context-map", "CONTEXT.min.md"),
+        project_dir=raiz,
+    )
+    assert "Reglas fijas" not in texto

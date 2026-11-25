@@ -231,6 +231,22 @@ def resumen_catalogo(ruta: str | None) -> dict:
     return {"total": len(reglas), "categorias": categorias, "ruta": ruta_rel}
 
 
+def reglas_del_proyecto(ruta_raiz: str) -> list[dict]:
+    """Devuelve las reglas del catálogo del proyecto (o lista vacía).
+
+    Atajo público para quien necesita las reglas una a una —el brief mínimo
+    arma con ellas la línea de obligaciones— en vez del resumen agregado.
+
+    Args:
+        ruta_raiz (str): Directorio raíz del proyecto.
+
+    Returns:
+        list[dict]: Reglas del catálogo, vacía si el proyecto no tiene.
+    """
+    catalogo = _buscar_catalogo(ruta_raiz)
+    return parsear_catalogo(catalogo) if catalogo else []
+
+
 def buscar_y_resumir(ruta_raiz: str) -> dict:
     """Busca el catálogo en el proyecto y devuelve su resumen (o vacío).
 

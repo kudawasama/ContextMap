@@ -106,3 +106,29 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 * Añadir una regla fija = añadir el chequeo en `doctor.CHECKS` + su entrada en
   `INVARIANTES` + su fila en esta tabla. Sin las tres, no es una regla.
 
+## 8. Reglas del proyecto como datos (`REG-XXX-###`)
+
+El agente no debe deducir qué está obligado a hacer: lo lee. La fuente única de
+verdad de **este** proyecto es `references/reglas/reglas_registro.yaml`
+(versionada en el repo, no en el vault). Cada regla declara `id`, `nombre`,
+`resumen` (una línea, para el brief mínimo), `categoria`, `prioridad`, `estado`,
+`norma` (archivo real del repo) y `seccion` (dónde está escrita).
+
+Flujo completo:
+
+```
+references/reglas/reglas_registro.yaml
+   → ctxmap scan      (eventos REGLA)
+   → .context-map/CONTEXT.md      «Reglas de Negocio» (catálogo completo)
+   → .context-map/CONTEXT.min.md  «📜 Reglas fijas» (solo prioridad `critica`)
+   → vault 2.0-IDEAS/… nodos REGLA en el grafo
+```
+
+* **Contrato ejecutable**: `context_map/__tests__/test_reglas_del_repo.py`
+  exige catálogo con ≥10 reglas, IDs `REG-<CAT>-<NNN>` únicos, categoría = prefijo
+  del ID, `prioridad`/`estado` en valores conocidos, `norma` existente en el repo
+  y `seccion` presente dentro de esa norma. Si una regla miente, el test falla.
+* **Añadir una regla**: primero se escribe la norma en `AGENTS.md` (o en
+  `docs/`), después la entrada en el YAML. Al revés no: no hay reglas sin norma.
+* **Una regla nueva no se improvisa en el chat.** Si no está en el catálogo, no
+  es una regla del proyecto.

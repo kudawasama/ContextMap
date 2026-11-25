@@ -1,0 +1,186 @@
+# Catálogo de reglas fijas del proyecto ContextMap (fuente única de verdad).
+#
+# Convención Gobernanza: este archivo vive en el REPO (versionado, con tests y
+# auditor), no en el vault. `ctxmap scan`, `ctxmap build` y el brief lo leen
+# para reflejar cada regla como nodo REGLA y resumirla en CONTEXT.md.
+#
+# Para qué sirve: un agente que lee el brief sabe QUÉ está obligado a hacer en
+# este proyecto sin adivinar ni depender de la memoria del chat.
+#
+# Campos obligatorios por regla (los valida
+# `context_map/__tests__/test_reglas_del_repo.py`):
+#   id         REG-<CAT>-<NNN>, único, 3 letras de categoría
+#   nombre     una línea, en imperativo, sin ambigüedad
+#   categoria  el prefijo del id
+#   prioridad  critica | alta | media
+#   estado     implementada | pendiente
+#   norma      archivo real del repo donde está la regla completa
+#   seccion    sección o apartado concreto dentro de ese archivo
+#
+# Nota: estas reglas NO se improvisan ni se editan desde el chat. Una regla
+# nueva entra aquí con su `norma` ya escrita en el repo, o no entra.
+
+version: 1.0
+proyecto: "ContextMap"
+actualizado: "2026-11-24"
+
+reglas:
+  - id: REG-EJE-001
+    resumen: "intérprete del venv"
+    nombre: "Ejecutar siempre con el intérprete del venv del proyecto"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "6. Verificación y commits — Regla fija #0"
+
+  - id: REG-EJE-002
+    resumen: "puerta de calidad en verde"
+    nombre: "Pasar la puerta de calidad antes de cerrar: tests en verde y doctor --strict-warn en 0"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "6. Verificación y commits"
+
+  - id: REG-EJE-003
+    resumen: "rebuild antes de opinar"
+    nombre: "Reconstruir el contexto (build --clean --brief) antes de opinar sobre el estado"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+
+  - id: REG-EJE-004
+    resumen: "no `adapt` sin confirmar"
+    nombre: "No ejecutar ctxmap adapt sin confirmación: sobrescribe reglas escritas a mano"
+    categoria: REG-EJE
+    categoria_nombre: "Ejecución y verificación"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+
+  - id: REG-VLT-001
+    resumen: "un solo padre por nota"
+    nombre: "Topología árbol: cada nota cuelga de exactamente un padre"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "4. Topología del vault"
+
+  - id: REG-VLT-002
+    resumen: "wikilinks sin `.md` ni `]`"
+    nombre: "Wikilinks sin extensión .md y con el alias saneado"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "4. Topología del vault"
+
+  - id: REG-VLT-003
+    resumen: "no borrar historia (preserve)"
+    nombre: "No borrar historia: las notas manuales llevan preserve y las zonas propias se respetan"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "5. Contexto narrativo y memoria viva"
+
+  - id: REG-VLT-004
+    resumen: "un vault por proyecto"
+    nombre: "Un solo vault por proyecto: .context-map/vault-<NombreProyecto>"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "4. Topología del vault"
+
+  - id: REG-VLT-005
+    resumen: "vault sin plantillas vacías"
+    nombre: "Humanizar el vault: índices con propósito, nunca plantillas vacías"
+    categoria: REG-VLT
+    categoria_nombre: "Vault y topología"
+    prioridad: media
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "5. Contexto narrativo y memoria viva"
+
+  - id: REG-ARQ-001
+    resumen: "módulo/submódulo/archivo.py"
+    nombre: "Arquitectura modular modulo/submodulo/archivo.py según la capa"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura y estructura"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "2. Arquitectura"
+
+  - id: REG-ARQ-002
+    resumen: "raíz limpia (5 archivos)"
+    nombre: "Raíz limpia: solo README, LICENSE, pyproject.toml, AGENTS.md y .gitignore"
+    categoria: REG-ARQ
+    categoria_nombre: "Arquitectura y estructura"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "1. Reglas globales"
+
+  - id: REG-DOC-001
+    resumen: "español técnico"
+    nombre: "Español técnico profesional en respuestas, comentarios y docstrings"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación y estilo"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "1. Reglas globales"
+
+  - id: REG-DOC-002
+    resumen: "docstrings + type hints"
+    nombre: "Docstrings formales (Google/PEP 257) y type hints estrictos"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación y estilo"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "1. Reglas globales"
+
+  - id: REG-DOC-003
+    resumen: "commits convencionales"
+    nombre: "Commits con Conventional Commits en español"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación y estilo"
+    prioridad: alta
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "6. Verificación y commits"
+
+  - id: REG-DOC-004
+    resumen: "no suponer rutas ni lógica"
+    nombre: "No suponer rutas ni lógica: inspeccionar el código fuente antes de proponer cambios"
+    categoria: REG-DOC
+    categoria_nombre: "Documentación y estilo"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "3. Protocolo de inicio"
+
+  - id: REG-INV-001
+    resumen: "contrato de invariantes"
+    nombre: "Los invariantes del motor son el contrato: añadir uno exige chequeo, entrada en INVARIANTES y fila en AGENTS.md"
+    categoria: REG-INV
+    categoria_nombre: "Invariantes del motor"
+    prioridad: critica
+    estado: implementada
+    norma: "AGENTS.md"
+    seccion: "7. Reglas fijas de estabilidad (invariantes)"
