@@ -86,6 +86,14 @@ def create_parser() -> argparse.ArgumentParser:
                          help="Importar sesiones recientes de Hermes antes del build (memoria viva)")
     s_build.add_argument("--quiet", action="store_true", help="Modo silencioso sin mensajes de salida")
 
+    s_pend = sub.add_parser(
+        "pendientes",
+        help="Cruza backlog manual, tareas, diario y documentos antes de responder qué queda",
+    )
+    s_pend.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_pend.add_argument("--limite", type=int, default=12, help="Máximo de pendientes por fuente (default: 12)")
+    s_pend.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+
     s_scan = sub.add_parser("scan", help="Escanea proyecto y genera eventos")
     s_scan.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_scan.add_argument("--project", default="Repo", help="Nombre del proyecto")

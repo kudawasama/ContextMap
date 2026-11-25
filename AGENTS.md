@@ -27,13 +27,19 @@ Clean Architecture jerárquica `modulo/submodulo/archivo.py`:
 1. **Proyecto correcto**: el vault de ESTE repo es `.context-map/vault-ContextMap/`. Si preguntan por otro proyecto o vault, dilo **antes** de responder.
 2. **Leer el brief**: `.context-map/CONTEXT.md` (o la tool `context(minimo=True)`).
 3. **Frescura**: si el brief avisa de diario más nuevo que el build, ejecuta `ctxmap refresh .` antes de opinar sobre el estado.
-4. **Pendientes reales**: cruza `.context-map/vault-ContextMap/7.0-MANUAL/BACKLOG.md` + `3.2-DOCUMENTOS/` + el diario más reciente.
+4. **Pendientes reales**: ejecuta `ctxmap pendientes .` — el motor cruza el
+   backlog manual + `5.0-BACKLOG/5.1-Tareas.md` + la última entrada del diario +
+   `3.2-DOCUMENTOS/` y te dice qué fuente falta. Cruzar a mano cuatro archivos es
+   lo que se olvida; el comando no se olvida (`REG-INI-004`).
 5. **Backlog y vault**: `2.0-IDEAS/2.1-Ideas-Pendientes/` y `5.0-BACKLOG/5.1-Tareas.md`.
 6. **No suponer rutas o lógica**: inspecciona el código fuente antes de proponer cambios.
 7. **Dominio y documentos**: documenta la lógica nuclear en `7.0-MANUAL/DOMINIO.md`; las fuentes externas van a `.context-map/raw/docs/` + `ctxmap refresh .`.
 8. **Memoria viva**: los chats/exportaciones en `.context-map/chats/` se procesan en `ctxmap refresh .`.
 
-> ⚠️ Nunca respondas "¿qué queda pendiente?" con un único documento: cruza **brief + backlog manual + diario + documentos**.
+> ⚠️ Nunca respondas "¿qué queda pendiente?" con un único documento: el cruce
+> lo hace `ctxmap pendientes .` (brief + backlog manual + tareas + diario +
+> documentos), y si una fuente no existe el comando lo declara en vez de
+> suponer que está vacía.
 
 ## 4. Topología del vault (Obsidian Graph View) — REGLA INAMOVIBLE
 Árbol puro: **cada nota cuelga de EXACTAMENTE UN padre**; las ramas 2.1 / 2.2 / 2.3
@@ -77,6 +83,9 @@ son independientes y **nunca** se cruzan.
 
 # 4. Readiness
 .venv/Scripts/python.exe -m context_map.cli check .
+
+# 5. ¿Qué queda pendiente? (cruce de las cuatro fuentes)
+.venv/Scripts/python.exe -m context_map.cli pendientes .
 ```
 
 `make` es **opcional** (no está instalado en todas las máquinas): si existe,

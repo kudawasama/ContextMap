@@ -195,6 +195,7 @@ Antes de dar por completada cualquier tarea o comitear en Git:
 .venv/Scripts/python.exe -m context_map.cli build --clean --brief   # 3. vault + brief
 .venv/Scripts/python.exe -m context_map.cli check .            # 4. readiness
 .venv/Scripts/python.exe -m context_map.cli doctor . --strict-warn  # 5. reglas fijas
+.venv/Scripts/python.exe -m context_map.cli pendientes .        # 6. qué queda (cruce)
 ```
 
 El intérprete es **siempre** el del `.venv` del proyecto (regla `REG-EJE-001`): el
@@ -253,11 +254,13 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Lo que sigue en `manual` (18 reglas) no es lo que falta por medir: es lo que
+Lo que sigue en `manual` (5 reglas) no es lo que falta por medir: es lo que
 **ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
-enseñar la salida real en vez del autoreporte, cruzar cuatro fuentes antes de
-decir qué queda—. Eso no deja huella en el repositorio; se audita leyendo la
-sesión.
+enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
+Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
+cruce de fuentes dejó de depender de la memoria del agente (`ctxmap pendientes`,
+§6.4), salió de esta lista: no se midió la intención, se **eliminó la
+necesidad** de la regla.
 
 ## Auto-diagnóstico (doctor)
 
@@ -305,12 +308,41 @@ Tres decisiones que no conviene deshacer:
 `--contexto` no explica su porqué, y eso el registro lo dice sin ambigüedad. No
 se juzga si la decisión era relevante — eso es criterio, no dato.
 
-Lo que sigue sin medirse, y por qué: cruzar cuatro fuentes (`INI-004`),
-inspeccionar el código antes de proponer (`INI-006`), buscar en la memoria de
-otros proyectos (`INI-007`), distinguir evidencia de autoreporte (`EJE-005`) y
-anunciar el costo de una tarea larga (`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
+Lo que sigue sin medirse, y por qué: inspeccionar el código antes de proponer
+(`INI-006`), buscar en la memoria de otros proyectos (`INI-007`), distinguir
+evidencia de autoreporte (`EJE-005`) y anunciar el costo de una tarea larga
+(`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
 repositorio guarda. Fingir un chequeo ahí sería medir otra cosa con el mismo
 nombre.
+
+### 6.4 El cruce de pendientes lo hace el motor
+
+Responder «¿qué queda pendiente?» leyendo un solo documento es la forma más
+fácil de equivocarse de buena fe: el backlog manual, las tareas, la última
+entrada del diario y los documentos sin nota dicen cosas distintas, y la
+respuesta completa es la unión. `ctxmap pendientes .` la calcula
+(`context_map/domain/reporting/pendientes.py`) y devuelve:
+
+* cada fuente con su **total** y sus primeros pendientes (`--limite`, 12 por
+  defecto; mostrar doce no es decir que solo hay doce), y
+* las fuentes **ausentes** declaradas: no se puede cruzar lo que no existe, y
+  callarlo convertiría una lista incompleta en algo con aspecto de completa.
+
+Tres decisiones que costaron un bug cada una:
+
+1. **Un backlog en tabla también cuenta.** El backlog de `00_GOBERNANZA_IA` no
+   usa casillas sino una tabla con columna `Estado`; buscar solo `- [ ]` habría
+   respondido «nada pendiente» sobre un backlog con trabajo abierto. Se miran
+   casillas, filas con estado abierto (`Abierto`, `Pendiente`, `En curso`,
+   `Por hacer`) y líneas que empiezan por «Pendiente:».
+2. **La cabecera de la tabla no es un pendiente.** La columna se llama
+   «Pendiente»; la fila de cabecera (la que precede a `|---|---|`) se descarta.
+3. **`^` necesita `re.MULTILINE`.** Sin esa bandera el `$` del patrón exigía el
+   fin del archivo y una casilla en la segunda línea no casaba: el cruce
+   devolvía cero con el archivo lleno. Lo cazó el test, no la lectura.
+
+Un documento de `3.2-DOCUMENTOS/` deja de estar pendiente cuando **alguna nota
+del vault lo nombra**: si nadie lo citó, nadie lo trabajó.
 
 ## 7. Etiquetas (tags) — creación y formato
 

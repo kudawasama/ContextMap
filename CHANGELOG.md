@@ -81,6 +81,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Añadido
+- **`ctxmap pendientes .`: el cruce de las cuatro fuentes lo hace el motor**
+  (`domain/reporting/pendientes.py` + `application/commands/pendientes_cmd.py`).
+  Cruza el backlog manual (`7.0-MANUAL/BACKLOG.md`), las tareas
+  (`5.0-BACKLOG/5.1-Tareas.md`), la última entrada del diario y los documentos de
+  `3.2-DOCUMENTOS/` que ninguna nota cita, con `--limite` y `--json`. Cierra
+  `REG-INI-004` sin medir la intención: **elimina la necesidad de la regla**, que
+  es distinto de vigilar su cumplimiento. Catálogo: **67 de 71** con verificación
+  de máquina.
+- Un backlog **en tabla** también se lee: el de `00_GOBERNANZA_IA` usa columna
+  `Estado`, no casillas; buscar solo `- [ ]` habría respondido «nada pendiente»
+  sobre un backlog con trabajo abierto. La cabecera de la tabla (la que precede a
+  `|---|---|`) se descarta, porque la columna se llama «Pendiente».
+- Bug cazado por el test: sin `re.MULTILINE`, el `$` del patrón exigía el fin del
+  archivo y una casilla en la segunda línea no casaba — cero pendientes con el
+  archivo lleno.
+- Una fuente **ausente se declara**: no se puede cruzar lo que no existe, y
+  callarlo convierte una lista incompleta en algo con aspecto de completa.
 - **Cuatro reglas de conducta pasan a medirse** (`domain/health/reglas_proyecto.py`):
   `commits_convencionales` (`REG-DOC-003`), `changelog_commit` (`REG-DOC-004`),
   `diario_del_dia` (`REG-MEM-002`) y `secretos_versionados` (`REG-SEG-001`).

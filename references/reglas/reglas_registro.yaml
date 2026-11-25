@@ -73,7 +73,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
-    verificacion: "manual"
+    verificacion: "test:test_pendientes.py"
 
   - id: REG-INI-005
     resumen: "proyecto y vault correctos"
