@@ -523,3 +523,8 @@ $ echo '{"tool_input":{"file_path":"context_map/x.py"}}' | ctxmap hook lectura .
 * **La instalación fusiona**: `.claude/settings.json` se respeta; se añade
   nuestra entrada y nada más. La marca se busca en el comando, no en una clave
   propia: los harnesses validan su esquema.
+* **Harness sin hooks (pi, Cursor, chat manual)**: el agente que inspecciona con
+  `bash`/`grep` anota él mismo lo que abrió —
+  `ctxmap hook lectura . --ruta <archivo> --origen agente`. Es la única forma de
+  que la huella exista cuando nadie la escribe sola; sin ella el chequeo avisa,
+  y avisa con razón.

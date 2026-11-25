@@ -89,8 +89,10 @@ son independientes y **nunca** se cruzan.
 
 # 6. Tareas caras: `ingest` y `enrich` se anuncian y exigen --confirmar (REG-LIM-004)
 
-# 7. Traza de lecturas de código (REG-INI-006, solo harnesses con hooks)
+# 7. Traza de lecturas de código (REG-INI-006)
 .venv/Scripts/python.exe -m context_map.cli hook lectura . --instalar
+#    Si tu harness no tiene hooks, anota lo que abriste con bash/grep:
+.venv/Scripts/python.exe -m context_map.cli hook lectura . --ruta <archivo> --origen agente --quiet
 ```
 
 `make` es **opcional** (no está instalado en todas las máquinas): si existe,
