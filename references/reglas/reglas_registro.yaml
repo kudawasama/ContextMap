@@ -359,7 +359,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "7. Etiquetas (tags) — creación y formato"
-    verificacion: "manual"
+    verificacion: "doctor:vault_tags"
 
   - id: REG-ETQ-005
     resumen: "un sinónimo no es una etiqueta"
@@ -392,7 +392,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "1. Reglas globales"
-    verificacion: "manual"
+    verificacion: "doctor:idioma_de_la_documentacion"
 
   - id: REG-DOC-002
     resumen: "docstrings y type hints"
@@ -403,7 +403,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "1. Reglas globales"
-    verificacion: "manual"
+    verificacion: "doctor:docstrings_y_tipos"
 
   - id: REG-DOC-003
     resumen: "commits convencionales"
@@ -436,7 +436,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
-    verificacion: "manual"
+    verificacion: "doctor:dominio_documentado"
 
   - id: REG-DOC-006
     resumen: "fuentes externas a raw/docs"
@@ -447,7 +447,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "3. Protocolo de inicio"
-    verificacion: "manual"
+    verificacion: "doctor:fuentes_procesadas"
 
   - id: REG-DOC-007
     resumen: "decisión documentada"
@@ -480,7 +480,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "5. Contexto narrativo y memoria viva"
-    verificacion: "manual"
+    verificacion: "doctor:notas_sin_plantilla"
 
   - id: REG-HUM-002
     resumen: "lo tosco se redacta"
@@ -524,7 +524,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "9. Humanización de la prosa"
-    verificacion: "manual"
+    verificacion: "doctor:notas_sin_plantilla"
 
   - id: REG-MEM-001
     resumen: "chats al cargador"
@@ -535,7 +535,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "10. Memoria viva y Second Brain"
-    verificacion: "manual"
+    verificacion: "doctor:fuentes_procesadas"
 
   - id: REG-MEM-002
     resumen: "diario del día al cerrar"
@@ -557,7 +557,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "10. Memoria viva y Second Brain"
-    verificacion: "manual"
+    verificacion: "doctor:lecciones_completas"
 
   - id: REG-MEM-004
     resumen: "Second Brain con citas"
@@ -579,7 +579,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "2. Arquitectura"
-    verificacion: "manual"
+    verificacion: "doctor:capas_respetadas"
 
   - id: REG-ARQ-002
     resumen: "raíz limpia"
@@ -590,7 +590,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "1. Reglas globales"
-    verificacion: "manual"
+    verificacion: "doctor:raiz_limpia"
 
   - id: REG-ARQ-003
     resumen: "cada cosa en su capa"
@@ -601,7 +601,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "2. Arquitectura de Código (Clean Architecture Jerárquica)"
-    verificacion: "manual"
+    verificacion: "doctor:capas_respetadas"
 
   - id: REG-ARQ-004
     resumen: "tests junto al módulo"
@@ -612,7 +612,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "2. Arquitectura de Código (Clean Architecture Jerárquica)"
-    verificacion: "manual"
+    verificacion: "doctor:modulos_con_test"
 
   - id: REG-SAL-001
     resumen: "invariantes como contrato"
@@ -733,7 +733,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "12. Publicación y versionado"
-    verificacion: "manual"
+    verificacion: "doctor:version_documentada"
 
   - id: REG-PUB-002
     resumen: "tag tras la puerta"
@@ -777,7 +777,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "13. Límites y rendimiento"
-    verificacion: "manual"
+    verificacion: "doctor:vault_acotado"
 
   - id: REG-LIM-002
     resumen: "doctor no se cuelga"
@@ -799,7 +799,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "13. Límites y rendimiento"
-    verificacion: "manual"
+    verificacion: "doctor:derivados_fuera_de_git"
 
   - id: REG-LIM-004
     resumen: "la tarea cara se anuncia"

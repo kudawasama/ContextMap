@@ -93,6 +93,38 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - `secretos_versionados` nunca imprime el valor encontrado, solo ruta y tipo:
   un reporte de salud que copia el secreto al log lo propaga.
 - `docs/GOBERNANZA-AGENTES.md` §6.1 y la tabla de invariantes de `AGENTS.md`.
+- **Doce chequeos más: el repo y el vault también se miden.** El catálogo pasa a
+  **53 de 71 reglas con verificación automática** (antes 37) y el doctor a
+  **31 chequeos** (antes 19). Dos módulos nuevos:
+  - `domain/health/reglas_calidad.py`: `version_documentada` (`PUB-001`),
+    `derivados_fuera_de_git` (`LIM-003`), `raiz_limpia` (`ARQ-002`),
+    `capas_respetadas` (`ARQ-001`/`ARQ-003`), `modulos_con_test` (`ARQ-004`),
+    `docstrings_y_tipos` (`DOC-002`), `idioma_de_la_documentacion` (`DOC-001`).
+  - `domain/health/reglas_vault.py`: `dominio_documentado` (`DOC-005`),
+    `fuentes_procesadas` (`DOC-006`/`MEM-001`), `lecciones_completas` (`MEM-003`),
+    `notas_sin_plantilla` (`HUM-001`/`HUM-005`), `vault_acotado` (`LIM-001`).
+- `capas_respetadas` es un **trinquete**: `MAX_IMPORTS_CRUZADOS = 53` congela la
+  deuda de imports entre capas medida hoy y prohíbe la nueva. El tope solo puede
+  bajar.
+- Los umbrales se declaran con su número y su motivo: `TOPE_SIN_TIPOS = 0.20`,
+  `TOPE_INGLES = 0.10`, `LIMITE_MB = 15`. Nadie tiene que adivinar de dónde sale
+  un aviso.
+- `modulos_con_test` destapó que `domain/reporting/` no tenía ningún test: se
+  añadió `context_map/__tests__/test_reporting.py` (5 tests sobre el reporte
+  semanal, incluido un `graph.jsonl` con una línea corrupta).
+- `lecciones_completas` acepta «diseño» y «fases» como «cómo se resolvió»: una
+  lección puede contar cómo se diseñó cuando la solución aún no existe, y el
+  índice de la sección ya no se cuenta como lección.
+- `AGENTS.md` §1: la norma de «raíz limpia» se corrigió **antes** que el chequeo
+  (declaraba 5 archivos y el repo tiene 16 legítimos).
+- `docs/GOBERNANZA-AGENTES.md` §6.2 con la tabla de los doce chequeos y las tres
+  decisiones que no conviene deshacer.
+- `idioma_de_la_documentacion` no escanea entornos ni dependencias: un proyecto
+  con `.venv_drive_slow/` reportaba los `LICENSE.md` de numpy como prosa inglesa
+  propia (medido en `00_GOBERNANZA_IA`). Se descarta por prefijo y por sufijo
+  (`.venv*`, `venv*`, `*.egg-info`), no por lista cerrada.
+- Tests: `test_reglas_calidad.py` (24) y `test_reglas_vault.py` (20) con árboles
+  de proyecto y vaults reales en `tmp_path`.
 - `context_map/__tests__/test_reglas_proyecto.py`: 29 tests con repositorios git
   reales en `tmp_path` (no mocks), incluidas las dos caras: detectar y no
   inventar avisos.

@@ -174,6 +174,114 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="rotar el secreto y sacarlo del historial de git",
     ),
+    Invariante(
+        nombre="version_anunciada",
+        chequeo="version_documentada",
+        severidad="WARN",
+        motivo=(
+            "Una versión que no está en el CHANGELOG no tiene historia: nadie sabe qué cambió."
+        ),
+        reparacion="anunciar la versión en `CHANGELOG.md`",
+    ),
+    Invariante(
+        nombre="sin_derivados_versionados",
+        chequeo="derivados_fuera_de_git",
+        severidad="WARN",
+        motivo=(
+            "El vault se regenera y el estado se pierde: versionarlos llena el índice de ruido que miente."
+        ),
+        reparacion="sacar `.context-map/` del índice y añadirlo a `.gitignore`",
+    ),
+    Invariante(
+        nombre="raiz_sin_sueltos",
+        chequeo="raiz_limpia",
+        severidad="WARN",
+        motivo=(
+            "Un archivo suelto en la raíz es un archivo que nadie encuentra después."
+        ),
+        reparacion="moverlo a su capa o declararlo en la norma (`AGENTS.md` §1.1)",
+    ),
+    Invariante(
+        nombre="capas_sin_retroceso",
+        chequeo="capas_respetadas",
+        severidad="WARN",
+        motivo=(
+            "Un import que sube de capa convierte la arquitectura en un dibujo; el tope congela la deuda y prohíbe la nueva."
+        ),
+        reparacion="resolver la dependencia hacia dentro o bajarla por inyección",
+    ),
+    Invariante(
+        nombre="dominio_con_test",
+        chequeo="modulos_con_test",
+        severidad="WARN",
+        motivo=(
+            "Un submódulo de dominio sin test es código que se puede romper en silencio."
+        ),
+        reparacion="escribir el test del submódulo en `context_map/__tests__/`",
+    ),
+    Invariante(
+        nombre="codigo_documentado",
+        chequeo="docstrings_y_tipos",
+        severidad="WARN",
+        motivo=(
+            "Sin docstring ni tipos, el siguiente que lea el módulo tiene que ejecutarlo para entenderlo."
+        ),
+        reparacion="docstring de módulo y anotaciones completas en la firma",
+    ),
+    Invariante(
+        nombre="documentacion_en_espanol",
+        chequeo="idioma_de_la_documentacion",
+        severidad="WARN",
+        motivo=(
+            "Un documento en otro idioma parte la memoria del proyecto en dos."
+        ),
+        reparacion="traducir el documento o marcarlo como traducción (`*_EN.md`)",
+    ),
+    Invariante(
+        nombre="dominio_explicado",
+        chequeo="dominio_documentado",
+        severidad="WARN",
+        motivo=(
+            "Si la lógica nuclear solo vive en el código, cada cambio empieza releyéndolo entero."
+        ),
+        reparacion="redactar `7.0-MANUAL/DOMINIO.md` en el vault",
+    ),
+    Invariante(
+        nombre="fuentes_al_dia",
+        chequeo="fuentes_procesadas",
+        severidad="WARN",
+        motivo=(
+            "Una fuente sin procesar es contexto que el agente no tiene y cree tener."
+        ),
+        reparacion="ejecutar `ctxmap refresh .`",
+    ),
+    Invariante(
+        nombre="lecciones_reutilizables",
+        chequeo="lecciones_completas",
+        severidad="WARN",
+        motivo=(
+            "Una lección sin «cómo se resolvió» no se puede volver a aplicar: es un recuerdo, no una lección."
+        ),
+        reparacion="completar las cinco secciones de la lección",
+    ),
+    Invariante(
+        nombre="notas_redactadas",
+        chequeo="notas_sin_plantilla",
+        severidad="WARN",
+        motivo=(
+            "Una nota con marcadores de plantilla ocupa el grafo sin decir nada."
+        ),
+        reparacion="redactar la nota o borrarla si no aporta",
+    ),
+    Invariante(
+        nombre="vault_con_peso_acotado",
+        chequeo="vault_acotado",
+        severidad="WARN",
+        motivo=(
+            "Un vault sin tope acaba costando más de leer que el problema que resuelve."
+        ),
+        reparacion="podar lo que ya no se usa o `build` por secciones",
+    ),
 )
 
 

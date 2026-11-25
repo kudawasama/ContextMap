@@ -9,7 +9,12 @@ Claude, Windsurf, Copilot…). El detalle, los diagramas y los ejemplos viven en
 ## 1. Reglas globales
 * **Idioma**: español técnico profesional en respuestas, comentarios y docstrings.
 * **Docstrings** formales (Google / PEP 257) y **Type Hinting** estricto en Python.
-* **Raíz limpia**: sin archivos sueltos; solo `README.md`, `LICENSE`, `pyproject.toml`, `AGENTS.md` y `.gitignore`.
+* **Raíz limpia**: sin archivos sueltos. La raíz solo lleva lo declarado en
+  `RAIZ_PERMITIDA` (`context_map/domain/health/reglas_calidad.py`): los README,
+  `LICENSE`, `pyproject.toml`, `AGENTS.md`, `CLAUDE.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `Makefile`, `mkdocs.yml`,
+  `action.yml`, `.pre-commit-hooks.yaml`, `.gitignore` y `uv.lock`. Un archivo
+  nuevo en la raíz se declara en la norma o no existe; lo mide `raiz_limpia`.
 
 ## 2. Arquitectura
 Clean Architecture jerárquica `modulo/submodulo/archivo.py`:
@@ -102,17 +107,34 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `changelog_al_dia` | `changelog_commit` | WARN | registrar el cambio y commitearlo junto |
 | `diario_del_dia` | `diario_del_dia` | WARN | escribir `7.0-MANUAL/Diario/<hoy>.md` |
 | `sin_secretos` | `secretos_versionados` | WARN | rotar el secreto y sacarlo del historial |
+| `version_anunciada` | `version_documentada` | WARN | anunciar la versión en `CHANGELOG.md` |
+| `sin_derivados_versionados` | `derivados_fuera_de_git` | WARN | sacar `.context-map/` del índice |
+| `raiz_sin_sueltos` | `raiz_limpia` | WARN | moverlo a su capa o declararlo |
+| `capas_sin_retroceso` | `capas_respetadas` | WARN | resolver la dependencia hacia dentro |
+| `dominio_con_test` | `modulos_con_test` | WARN | test del submódulo en `__tests__/` |
+| `codigo_documentado` | `docstrings_y_tipos` | WARN | docstring de módulo + anotaciones |
+| `documentacion_en_espanol` | `idioma_de_la_documentacion` | WARN | traducir o marcar como traducción |
+| `dominio_explicado` | `dominio_documentado` | WARN | redactar `7.0-MANUAL/DOMINIO.md` |
+| `fuentes_al_dia` | `fuentes_procesadas` | WARN | `ctxmap refresh .` |
+| `lecciones_reutilizables` | `lecciones_completas` | WARN | completar las cinco secciones |
+| `notas_redactadas` | `notas_sin_plantilla` | WARN | redactar la nota o borrarla |
+| `vault_con_peso_acotado` | `vault_acotado` | WARN | podar o `build` por secciones |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
 * Estas reglas son del **motor**. Las reglas de **negocio** del proyecto van al
   catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`,
-  71 reglas en 12 categorías), que `context_map/domain/reglas/reglas.py`
+  71 reglas en 12 categorías, 53 con verificación automática), que `context_map/domain/reglas/reglas.py`
   convierte en nodos `REGLA` y que el brief mínimo resume en «📜 Reglas fijas».
-* Los cuatro últimos chequeos viven en `domain/health/reglas_proyecto.py`: no
-  miden el motor, miden **conducta** (convención de commits, CHANGELOG en el
-  commit, diario del día, secretos versionados). Nunca escriben archivos: el
-  historial y los secretos se arreglan con una decisión humana.
+* Tres módulos aportan los 16 chequeos que no son del motor:
+  `reglas_proyecto.py` mide **conducta** (commits, CHANGELOG, diario, secretos),
+  `reglas_calidad.py` mide el **repo** (versión anunciada, derivados, raíz,
+  capas, tests, docstrings, idioma) y `reglas_vault.py` mide el **vault**
+  (dominio, fuentes, lecciones, plantillas, peso). Ninguno escribe archivos: lo
+  que arreglan es contenido o historial, y eso lo decide una persona.
+* `capas_respetadas` lleva **tope de no regresión** (`MAX_IMPORTS_CRUZADOS`):
+  la deuda actual está congelada y una violación nueva rompe la puerta. El tope
+  solo puede bajar.
 * Añadir una regla fija = añadir el chequeo en `doctor.CHECKS` + su entrada en
   `INVARIANTES` + su fila en esta tabla. Sin las tres, no es una regla.
 

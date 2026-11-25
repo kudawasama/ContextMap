@@ -218,8 +218,46 @@ miran el motor, miran **cómo se trabaja**, y viven en
 Los cuatro son `WARN` y se ignoran entre sí: un chequeo roto no arrastra a los
 demás. Los falsos positivos están declarados (`__tests__/`, `conftest.py`,
 marcadores `example`/`fake`/`tu-token`), porque un aviso que se repite cada día
-deja de leerse. Lo que no se mide —idioma, decisiones, qué se descartó— sigue
-siendo `manual` y se audita leyendo, no ejecutando.
+deja de leerse.
+
+### 6.2 El repositorio y el vault también se miden
+
+`reglas_calidad.py` mide el **estado del repo** y `reglas_vault.py` el del
+**vault**. Son doce chequeos más, y con ellos **53 de las 71 reglas** tienen
+verificación automática:
+
+| Chequeo | Reglas | Qué mide |
+|---|---|---|
+| `version_documentada` | `PUB-001` | la versión de `pyproject.toml` está en el CHANGELOG |
+| `derivados_fuera_de_git` | `LIM-003` | ni vault, ni estado, ni bases en el índice de git |
+| `raiz_limpia` | `ARQ-002` | la raíz solo lleva lo declarado en la norma |
+| `capas_respetadas` | `ARQ-001`, `ARQ-003` | las cinco capas existen y los imports no suben de capa |
+| `modulos_con_test` | `ARQ-004` | todo submódulo de `domain/` aparece en un test |
+| `docstrings_y_tipos` | `DOC-002` | docstring por módulo y suelo de anotaciones |
+| `idioma_de_la_documentacion` | `DOC-001` | los documentos están en español |
+| `dominio_documentado` | `DOC-005` | hay `7.0-MANUAL/DOMINIO.md` y no es un esqueleto |
+| `fuentes_procesadas` | `DOC-006`, `MEM-001` | ninguna fuente de `raw/`/`chats/` es más nueva que el brief |
+| `lecciones_completas` | `MEM-003` | cada lección tiene sus cinco secciones |
+| `notas_sin_plantilla` | `HUM-001`, `HUM-005` | sin marcadores de plantilla ni relleno |
+| `vault_acotado` | `LIM-001` | el vault no pasa de 15 MB |
+
+Tres decisiones que conviene no deshacer:
+
+1. **`capas_respetadas` es un trinquete.** La arquitectura real tiene deuda
+   (imports `application <-> infrastructure`), y negarlo sería peor que
+   congelarlo: `MAX_IMPORTS_CRUZADOS` fija el número de hoy y una violación
+   nueva rompe la puerta. El tope **solo puede bajar**.
+2. **Los umbrales se declaran con su número.** `TOPE_SIN_TIPOS = 0.20` y
+   `TOPE_INGLES = 0.10` no son verdad revelada: son el suelo medido para que la
+   regla no nazca en rojo ni deje de vigilar. Se bajan cuando se limpia.
+3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
+   llevan `{{title}}` por definición; el chequeo las salta.
+
+Lo que sigue en `manual` (18 reglas) no es lo que falta por medir: es lo que
+**ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
+enseñar la salida real en vez del autoreporte, cruzar cuatro fuentes antes de
+decir qué queda—. Eso no deja huella en el repositorio; se audita leyendo la
+sesión.
 
 ## Auto-diagnóstico (doctor)
 

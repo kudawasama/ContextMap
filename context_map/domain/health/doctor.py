@@ -867,14 +867,17 @@ def check_vault_tags(report: DoctorReport, fix: bool = False, project_dir: str =
 
 
 def _checks_de_conducta() -> list:
-    """Chequeos de las reglas de conducta (módulo aparte, import diferido).
+    """Chequeos de reglas externas a este módulo (import diferido, sin ciclo).
 
-    Se importan aquí dentro para no crear un ciclo: ``reglas_proyecto``
-    necesita ``DoctorCheck``/``DoctorReport`` de este módulo.
+    ``reglas_proyecto`` (conducta), ``reglas_calidad`` (higiene del repo) y
+    ``reglas_vault`` (contenido del vault) necesitan ``DoctorCheck`` y
+    ``DoctorReport`` de aquí; importarlos al cargar este módulo crearía un ciclo.
     """
+    from context_map.domain.health.reglas_calidad import CHECKS_CALIDAD
     from context_map.domain.health.reglas_proyecto import CHECKS_CONDUCTA
+    from context_map.domain.health.reglas_vault import CHECKS_VAULT
 
-    return list(CHECKS_CONDUCTA)
+    return [*CHECKS_CONDUCTA, *CHECKS_CALIDAD, *CHECKS_VAULT]
 
 
 CHECKS = [
