@@ -195,6 +195,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   cada regla con el chequeo del doctor que la mide y sale con código 1 si alguna
   está incumplida; las reglas de conducta se marcan como tales en vez de fingir
   una comprobación que no existe.
+- `ctxmap reglas` entiende los **dos esquemas** de catálogo en uso: el nuevo
+  (`verificacion: doctor:x|test:x|manual`) y el de los catálogos escritos a
+  mano antes de esta convención (`test: archivo.py`, sin `resumen` ni
+  `seccion`). Sin `resumen` se corta el `nombre` en vez de imprimir `None`.
 - `AGENTS.md` §8: cómo consultar el catálogo y qué significa `--verificar`.
 
 ### 🐛 Corregido (el doctor ya no «se cuelga»: reventaba)

@@ -157,3 +157,50 @@ def test_catalogo_real_del_repo_tiene_reglas_verificables():
     reglas = reglas_del_proyecto(raiz)
     assert len(reglas) >= 10
     assert all("verificacion" in r for r in reglas)
+
+
+# ── segundo esquema: catálogos escritos antes de esta convención ──────────
+
+CATALOGO_ANTIGUO = """\
+reglas:
+  - id: REG-ING-001
+    nombre: "DB activa es SIEMPRE dte_reportes.db (nunca la legacy)"
+    categoria: REG-ING
+    celula_nombre: "Ingesta DTE"
+    prioridad: critica
+    estado: implementada
+    norma: "REG-ING-001_db_activa.md"
+    test: "test_reg_ing_001.py"
+"""
+
+
+def _proyecto_antiguo(tmp_path):
+    raiz = tmp_path / "viejo"
+    destino = raiz / "4_infraestructura_core" / "references" / "reglas"
+    destino.mkdir(parents=True)
+    (destino / "reglas_registro.yaml").write_text(CATALOGO_ANTIGUO, encoding="utf-8")
+    return raiz
+
+
+def test_esquema_antiguo_no_imprime_none_ni_pierde_el_test(tmp_path, capsys):
+    """Un catálogo sin `resumen`/`verificacion` debe seguir siendo legible."""
+    cmd_reglas(_args(_proyecto_antiguo(tmp_path), verificar=True))
+    salida = capsys.readouterr().out
+
+    assert "None" not in salida
+    assert "REG-ING-001" in salida
+    assert "test:test_reg_ing_001.py" in salida
+    assert "1 las comprueba la máquina" in salida
+
+
+def test_esquema_antiguo_reconoce_la_seccion_ausente(tmp_path, capsys):
+    cmd_reglas(_args(_proyecto_antiguo(tmp_path)))
+    salida = capsys.readouterr().out
+    assert "→ None" not in salida
+    assert "norma: REG-ING-001_db_activa.md" in salida
+
+
+def test_filtro_por_categoria_del_esquema_antiguo(tmp_path, capsys):
+    raiz = _proyecto_antiguo(tmp_path)
+    cmd_reglas(_args(raiz, categoria="ING"))
+    assert "REG-ING-001" in capsys.readouterr().out

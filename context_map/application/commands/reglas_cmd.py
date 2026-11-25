@@ -23,7 +23,7 @@ ORDEN_CATEGORIAS = (
 )
 
 SIMBOLO_PRIORIDAD = {"critica": "🔴", "alta": "🟠", "media": "🟡"}
-SIMBOLO_ESTADO = {"OK": "✅", "WARN": "⚠️", "FAIL": "❌"}
+SIMBOLO_ESTADO = {"OK": "✅", "WARN": "⚠️", "FAIL": "❌", "test": "🧪"}
 
 
 def _orden(regla: dict[str, Any]) -> tuple[int, str]:
@@ -58,11 +58,49 @@ def _estados_del_doctor(target_dir: str) -> dict[str, str]:
     return {check.name: check.status for check in report.checks}
 
 
+def _resumen(regla: dict[str, Any]) -> str:
+    """Resumen de una línea, también para catálogos con otro esquema.
+
+    Los catálogos escritos a mano antes de esta convención no tienen
+    ``resumen``: ahí se corta el ``nombre`` para no imprimir ``None``.
+    """
+    resumen = str(regla.get("resumen") or "").strip()
+    if resumen:
+        return resumen
+    nombre = str(regla.get("nombre") or regla.get("id") or "").strip()
+    return nombre if len(nombre) <= 60 else nombre[:57] + "..."
+
+
+def _verificacion(regla: dict[str, Any]) -> str:
+    """Cómo se comprueba la regla, entendiendo los dos esquemas en uso.
+
+    El esquema nuevo usa ``verificacion`` (``doctor:x``/``test:x``/``manual``);
+    los catálogos antiguos declaraban ``test: nombre_del_test.py``.
+    """
+    verif = str(regla.get("verificacion") or "").strip()
+    if verif:
+        return verif
+    test = str(regla.get("test") or "").strip()
+    return f"test:{test}" if test else "manual"
+
+
+def _es_automatica(regla: dict[str, Any]) -> bool:
+    """¿La comprueba la máquina (un chequeo del doctor o un test)?"""
+    return _verificacion(regla).startswith(("doctor:", "test:"))
+
+
 def _estado_de(regla: dict[str, Any], estados: dict[str, str]) -> str:
-    """Estado de la regla según su verificación (``·`` si no es automática)."""
-    verif = str(regla.get("verificacion", ""))
+    """Estado de la regla según su verificación.
+
+    ``doctor:`` se resuelve contra el reporte del doctor; ``test:`` se marca
+    como tal sin ejecutar la suite (demasiado caro para un listado); el resto
+    es conducta auditable y se muestra como ``·``.
+    """
+    verif = _verificacion(regla)
     if verif.startswith("doctor:"):
         return estados.get(verif.split(":", 1)[1], "?")
+    if verif.startswith("test:"):
+        return "test"
     return "·"
 
 
@@ -97,7 +135,7 @@ def cmd_reglas(args: dict[str, Any]) -> None:
 
     reglas = _filtrar(reglas, categoria, prioridad)
     estados = _estados_del_doctor(target_dir) if verificar else {}
-    automaticas = sum(1 for r in reglas if _estado_de(r, {}) != "·")
+    automaticas = sum(1 for r in reglas if _es_automatica(r))
 
     if como_json:
         payload = []
@@ -135,15 +173,16 @@ def cmd_reglas(args: dict[str, Any]) -> None:
             categoria_actual = str(regla.get("categoria"))
             print(f"\n  ── {categoria_actual} · {regla.get('categoria_nombre', '')}")
         marca = SIMBOLO_PRIORIDAD.get(str(regla.get("prioridad", "")), "·")
-        linea = f"   {marca} {regla.get('id')}  {regla.get('resumen')}"
+        linea = f"   {marca} {regla.get('id')}  {_resumen(regla)}"
         if verificar:
             estado = _estado_de(regla, estados)
             linea += f"  {SIMBOLO_ESTADO.get(estado, estado)}"
         print(linea)
         print(
-            f"      {regla.get('nombre')}\n"
-            f"      norma: {regla.get('norma')} → {regla.get('seccion')}\n"
-            f"      verifica: {regla.get('verificacion')}"
+            f"      {_resumen(regla)}\n"
+            f"      norma: {regla.get('norma')}"
+            f"{(' → ' + str(regla['seccion'])) if regla.get('seccion') else ''}\n"
+            f"      verifica: {_verificacion(regla)}"
         )
 
     incumplidas = [
@@ -155,7 +194,7 @@ def cmd_reglas(args: dict[str, Any]) -> None:
         if incumplidas:
             print(f"⚠️  {len(incumplidas)} regla(s) incumplida(s) ahora mismo:")
             for regla in incumplidas:
-                print(f"   - {regla.get('id')}: {regla.get('resumen')}")
+                print(f"   - {regla.get('id')}: {_resumen(regla)}")
             sys.exit(1)
         print("✅ Todas las reglas que la máquina comprueba están en verde.")
         return
