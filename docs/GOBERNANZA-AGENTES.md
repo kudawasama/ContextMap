@@ -265,6 +265,49 @@ Antes de trabajar, el agente ejecuta `ctxmap doctor --json` (o `ctxmap check .`)
 `check` = readiness del proyecto; `doctor` = salud del entorno + auto-reparación.
 El arranque de sesión no se fuerza por hook: la skill base y `AGENTS.md` lo exigen.
 
+### 6.3 Reglas de sesión: la bitácora
+
+Las reglas que hablan de la sesión —diagnosticar antes de tocar, cerrar con la
+puerta en verde, no reescribir reglas ni publicar sin permiso— no se pueden leer
+en el código: ocurren en la conversación. Hasta ahora solo se podían creer de
+palabra. La solución no fue bajar el listón, fue **fabricar la evidencia**: cada
+comando de la CLI anota una línea en `.context-map/state/bitacora.jsonl`
+(`context_map/core/audit/bitacora.py`).
+
+La entrada es mínima a propósito: instante, comando, código de salida, duración,
+banderas relevantes, número de notas del vault y si había permiso. Nunca copia
+rutas de datos ni contenido.
+
+| Chequeo | Reglas que cubre | Qué mide | Qué **no** hace |
+|---|---|---|---|
+| `bitacora_sesion` | `INI-001`, `INI-002`, `EJE-002`, `SAL-002` | brief leído, diagnóstico previo al primer commit del día y última puerta en verde | no juzga lo que el agente dice en el chat |
+| `permisos_explicitos` | `EJE-004`, `SAL-003`, `PUB-003` | `adapt`, `doctor --fix` y `push` ejecutados sin `--confirmar` | no bloquea el comando: deja constancia |
+| `tag_con_puerta_verde` | `PUB-002` | que el tag publicado tenga un doctor en verde previo | no reescribe ni retira tags |
+| `secreto_en_el_historial` | `SEG-003` | credenciales **reales** en el historial (no en fixtures) | nunca imprime el valor |
+| `historia_preservada` | `HUM-002` | caída de notas entre dos `build` consecutivos | no restaura: avisa |
+| `doctor_rapido` | `LIM-002` | duración del último doctor (límite 120 s) | no acota el vault |
+
+Tres decisiones que no conviene deshacer:
+
+1. **Un registro cerrado no puede exigir evidencia retroactiva.** Ni los commits
+   anteriores a la primera entrada de la bitácora ni los tags creados antes de
+   que existiera se juzgan. Convertir el pasado en deuda produce un rojo
+   perpetuo, y un rojo perpetuo enseña a ignorar el aviso.
+2. **El valor del secreto no se copia al mensaje.** Se informa el tipo y el
+   commit. Un reporte que reproduce la credencial la propaga al log.
+3. **Un fixture no es una credencial.** Las coincidencias que solo aparecen en
+   pruebas y documentación se cuentan aparte, con su nombre. Y se buscan las
+   **expresiones reales**, no subcadenas: buscar `AKIA` a secas marcaba la propia
+   definición del detector como si fuera una clave de AWS.
+
+Lo que sigue sin medirse, y por qué: cruzar cuatro fuentes (`INI-004`),
+inspeccionar el código antes de proponer (`INI-006`), buscar en la memoria de
+otros proyectos (`INI-007`), distinguir evidencia de autoreporte (`EJE-005`),
+documentar el porqué (`DOC-007`) y anunciar el costo de una tarea larga
+(`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
+repositorio guarda. Fingir un chequeo ahí sería medir otra cosa con el mismo
+nombre.
+
 ## 7. Etiquetas (tags) — creación y formato
 
 Las etiquetas son el índice vivo del vault: una etiqueta mal escrita no rompe

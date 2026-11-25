@@ -875,9 +875,10 @@ def _checks_de_conducta() -> list:
     """
     from context_map.domain.health.reglas_calidad import CHECKS_CALIDAD
     from context_map.domain.health.reglas_proyecto import CHECKS_CONDUCTA
+    from context_map.domain.health.reglas_sesion import CHECKS_SESION
     from context_map.domain.health.reglas_vault import CHECKS_VAULT
 
-    return [*CHECKS_CONDUCTA, *CHECKS_CALIDAD, *CHECKS_VAULT]
+    return [*CHECKS_CONDUCTA, *CHECKS_CALIDAD, *CHECKS_VAULT, *CHECKS_SESION]
 
 
 CHECKS = [

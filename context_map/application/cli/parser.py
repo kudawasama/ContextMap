@@ -189,6 +189,10 @@ def create_parser() -> argparse.ArgumentParser:
         help="Sale con código 1 también ante cualquier WARN (reglas fijas de estabilidad)",
     )
     s_doctor.add_argument(
+        "--confirmar", action="store_true",
+        help="El dueño autorizó reparar archivos (necesario junto a --fix; REG-SAL-003)",
+    )
+    s_doctor.add_argument(
         "--sizes", action="store_true",
         help="Mostrar el desglose de peso de .context-map (y avisar si excede el tope)",
     )
@@ -260,6 +264,10 @@ def create_parser() -> argparse.ArgumentParser:
     s_adapt.add_argument("--merge", action="store_true", help="Fusionar: anexa/actualiza bloque ContextMap preservando reglas del usuario")
     s_adapt.add_argument("--revisar", action="store_true", help="Solo revisar/poner al día las reglas propias de ContextMap (idempotente; no toca AGENTS.md ni .hermes/)")
     s_adapt.add_argument("--quiet", action="store_true", help="Sin salida (para hooks/arranque)")
+    s_adapt.add_argument(
+        "--confirmar", action="store_true",
+        help="El dueño autorizó reescribir AGENTS.md/CLAUDE.md (REG-EJE-004); sin esto queda en la bitácora como no autorizado",
+    )
 
     s_secret = sub.add_parser(
         "secret",

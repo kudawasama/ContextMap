@@ -119,11 +119,38 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   (declaraba 5 archivos y el repo tiene 16 legítimos).
 - `docs/GOBERNANZA-AGENTES.md` §6.2 con la tabla de los doce chequeos y las tres
   decisiones que no conviene deshacer.
+- **Bitácora de ejecuciones: la evidencia de lo que pasó, no de lo que se dice.**
+  Las reglas de sesión (`INI-001`, `INI-002`, `EJE-002`, `EJE-004`, `SAL-002`,
+  `SAL-003`, `PUB-002`, `PUB-003`, `SEG-003`, `HUM-002`, `LIM-002`) hablaban de
+  actos que no dejaban rastro. Ahora lo dejan:
+  - `context_map/core/audit/bitacora.py` escribe
+    `.context-map/state/bitacora.jsonl` en **cada comando de la CLI** (instante,
+    comando, código de salida, duración, banderas, notas del vault y si había
+    permiso). Rotación acotada a 2000 entradas; nunca tumba el comando que
+    registra ni copia datos del proyecto.
+  - `domain/health/reglas_sesion.py`: seis chequeos nuevos —
+    `bitacora_sesion`, `permisos_explicitos`, `tag_con_puerta_verde`,
+    `secreto_en_el_historial`, `historia_preservada`, `doctor_rapido`.
+  - `adapt` y `doctor --fix` aceptan `--confirmar`: sin él la ejecución queda
+    registrada como no autorizada y el doctor lo avisa.
+- **Catálogo: 53 → 65 de 71 reglas comprobadas por la máquina.** Quedan 6
+  `manual`, y son exactamente las que dependen de lo que el agente piensa
+  (cruzar cuatro fuentes, inspeccionar el código, buscar en la memoria,
+  distinguir evidencia de autoreporte, documentar el porqué, anunciar el costo).
+  El doctor pasa de 31 a **37 chequeos**.
+- `secreto_en_el_historial` aplica las **expresiones reales** al diff del
+  historial, no subcadenas: buscar `AKIA` a secas marcaba la propia definición
+  del detector (`r"AKIA[0-9A-Z]{16}"`) como si fuera una clave. Las
+  coincidencias en pruebas y documentación se informan como fixtures, aparte.
+- **Nada se juzga hacia atrás.** Ni los commits anteriores a la primera entrada
+  de la bitácora ni los tags creados antes de que existiera: exigir evidencia
+  retroactiva produce un rojo perpetuo, y un rojo perpetuo se ignora.
 - `idioma_de_la_documentacion` no escanea entornos ni dependencias: un proyecto
   con `.venv_drive_slow/` reportaba los `LICENSE.md` de numpy como prosa inglesa
   propia (medido en `00_GOBERNANZA_IA`). Se descarta por prefijo y por sufijo
   (`.venv*`, `venv*`, `*.egg-info`), no por lista cerrada.
-- Tests: `test_reglas_calidad.py` (24) y `test_reglas_vault.py` (20) con árboles
+- Tests: `test_reglas_calidad.py` (24), `test_reglas_vault.py` (20),
+  `test_bitacora.py` (9) y `test_reglas_sesion.py` (30) con árboles
   de proyecto y vaults reales en `tmp_path`.
 - `context_map/__tests__/test_reglas_proyecto.py`: 29 tests con repositorios git
   reales en `tmp_path` (no mocks), incluidas las dos caras: detectar y no

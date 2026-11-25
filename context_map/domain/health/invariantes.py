@@ -282,6 +282,66 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="podar lo que ya no se usa o `build` por secciones",
     ),
+    Invariante(
+        nombre="sesion_con_evidencia",
+        chequeo="bitacora_sesion",
+        severidad="WARN",
+        motivo=(
+            "Leer el brief, diagnosticar antes de tocar y cerrar con la puerta en verde "
+            "solo se puede demostrar si el motor lo dejó registrado."
+        ),
+        reparacion="ejecutar `ctxmap brief` al empezar y `ctxmap doctor` antes de commitear",
+    ),
+    Invariante(
+        nombre="permisos_explicitos",
+        chequeo="permisos_explicitos",
+        severidad="WARN",
+        motivo=(
+            "Reescribir reglas, reparar archivos o publicar sin permiso del dueño "
+            "se hace una vez y se lamenta durante meses."
+        ),
+        reparacion="repetir la acción con `--confirmar` tras hablar con el dueño",
+    ),
+    Invariante(
+        nombre="tag_amparado",
+        chequeo="tag_con_puerta_verde",
+        severidad="WARN",
+        motivo=(
+            "Un tag es una promesa pública: si no hubo doctor en verde, la promesa "
+            "no está respaldada."
+        ),
+        reparacion="ejecutar el doctor, corregir y volver a etiquetar",
+    ),
+    Invariante(
+        nombre="credencial_rotada",
+        chequeo="secreto_en_el_historial",
+        severidad="WARN",
+        motivo=(
+            "Quitar el archivo no borra el commit: una credencial versionada sigue "
+            "siendo válida para quien la encuentre."
+        ),
+        reparacion="rotar la credencial en el proveedor y purgar el historial si aplica",
+    ),
+    Invariante(
+        nombre="historia_conservada",
+        chequeo="historia_preservada",
+        severidad="WARN",
+        motivo=(
+            "Ninguna nota se borra sin decisión humana: un vault que adelgaza entre "
+            "construcciones perdió historia."
+        ),
+        reparacion="restaurar las notas perdidas desde el historial antes de seguir",
+    ),
+    Invariante(
+        nombre="diagnostico_rapido",
+        chequeo="doctor_rapido",
+        severidad="WARN",
+        motivo=(
+            "Un diagnóstico que se hace esperar deja de ejecutarse, y una puerta que "
+            "no se ejecuta no protege nada."
+        ),
+        reparacion="medir qué chequeo se lleva el tiempo y acotar su barrido",
+    ),
 )
 
 

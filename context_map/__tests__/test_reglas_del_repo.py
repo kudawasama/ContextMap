@@ -151,7 +151,7 @@ def _nombres_de_chequeos() -> set[str]:
     # Los chequeos del motor viven en doctor.py; los demás, en el trío
     # reglas_proyecto / reglas_calidad / reglas_vault. El contrato cubre todos.
     for archivo in ("doctor.py", "reglas_proyecto.py", "reglas_calidad.py",
-                    "reglas_vault.py"):
+                    "reglas_vault.py", "reglas_sesion.py"):
         ruta = os.path.join(carpeta, archivo)
         if os.path.isfile(ruta):
             with open(ruta, encoding="utf-8") as f:

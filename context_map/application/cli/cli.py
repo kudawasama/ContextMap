@@ -5,10 +5,13 @@ Despacha el comando solicitado al handler correspondiente.
 
 from __future__ import annotations
 
+import os
 import sys
+import time
 from pathlib import Path
 
 from context_map.application.cli.parser import create_parser
+from context_map.core.audit.bitacora import COMANDOS_CON_PERMISO, registrar
 from context_map.application.commands import (
     cmd_auto,
     cmd_brief,
@@ -94,6 +97,87 @@ def _configurar_utf8_consola() -> None:
             pass
 
 
+def _flags_relevantes(args) -> list[str]:
+    """Banderas de la ejecución que merece la pena dejar en la bitácora.
+
+    Se anotan solo las que cambian el significado del comando (``strict-warn``,
+    ``fix``, ``confirmar``…), nunca valores de ruta: la bitácora no copia datos
+    del proyecto.
+
+    Args:
+        args: Namespace de argumentos de la CLI.
+
+    Returns:
+        List[str]: Nombres de banderas activas.
+    """
+    interesantes = (
+        "fix", "confirmar", "strict", "strict_warn", "overwrite", "merge",
+        "revisar", "verificar", "clean", "brief", "json",
+    )
+    activas = []
+    for nombre in interesantes:
+        if getattr(args, nombre, False):
+            activas.append(nombre.replace("_", "-"))
+    return activas
+
+
+def _contar_notas(project_dir: str) -> int | None:
+    """Cuenta las notas Markdown del vault activo (para detectar historia perdida).
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        Optional[int]: Número de notas, o ``None`` si no hay vault.
+    """
+    base = os.path.join(project_dir, ".context-map")
+    if not os.path.isdir(base):
+        return None
+    try:
+        total = 0
+        for nombre in os.listdir(base):
+            if not nombre.startswith("vault-"):
+                continue
+            for _raiz, _dirs, archivos in os.walk(os.path.join(base, nombre)):
+                total += sum(1 for a in archivos if a.endswith(".md"))
+        return total or None
+    except OSError:
+        return None
+
+
+def _registrar_ejecucion(args, inicio: float, codigo: int) -> None:
+    """Anota la ejecución en la bitácora del proyecto (nunca falla).
+
+    Args:
+        args: Namespace de argumentos de la CLI.
+        inicio (float): ``perf_counter`` tomado antes de despachar el comando.
+        codigo (int): Código de salida con el que terminó.
+    """
+    try:
+        comando = str(getattr(args, "cmd", "") or "")
+        if not comando:
+            return
+        destino = str(getattr(args, "target", None) or ".")
+        duracion = time.perf_counter() - inicio
+        autorizado = None
+        if comando in COMANDOS_CON_PERMISO:
+            autorizado = bool(getattr(args, "confirmar", False))
+        elif comando == "doctor" and getattr(args, "fix", False):
+            autorizado = bool(getattr(args, "confirmar", False))
+        notas = _contar_notas(destino) if comando in ("build", "refresh") else None
+        registrar(
+            comando=comando,
+            exit_code=codigo,
+            duracion_s=duracion,
+            flags=_flags_relevantes(args),
+            notas=notas,
+            autorizado=autorizado,
+            project_dir=destino,
+        )
+    except Exception:  # noqa: BLE001 - registrar no puede romper el comando
+        pass
+
+
 def main() -> None:
     """Punto de entrada principal de la CLI."""
     _configurar_utf8_consola()
@@ -143,14 +227,26 @@ def main() -> None:
     }
 
     if args.cmd == "sync":
-        if getattr(args, "migrate", False):
-            cmd_sync_migrate(args)
-        else:
-            cmd_sync(args)
+        inicio = time.perf_counter()
+        try:
+            if getattr(args, "migrate", False):
+                cmd_sync_migrate(args)
+            else:
+                cmd_sync(args)
+        except SystemExit as salida:
+            _registrar_ejecucion(args, inicio, int(salida.code or 0))
+            raise
+        _registrar_ejecucion(args, inicio, 0)
     else:
         cmd_func = commands.get(args.cmd)
         if cmd_func:
-            cmd_func(args)
+            inicio = time.perf_counter()
+            try:
+                cmd_func(args)
+            except SystemExit as salida:
+                _registrar_ejecucion(args, inicio, int(salida.code or 0))
+                raise
+            _registrar_ejecucion(args, inicio, 0)
         else:
             p.print_help()
 

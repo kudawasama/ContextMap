@@ -119,18 +119,28 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `lecciones_reutilizables` | `lecciones_completas` | WARN | completar las cinco secciones |
 | `notas_redactadas` | `notas_sin_plantilla` | WARN | redactar la nota o borrarla |
 | `vault_con_peso_acotado` | `vault_acotado` | WARN | podar o `build` por secciones |
+| `sesion_con_evidencia` | `bitacora_sesion` | WARN | `ctxmap brief` al empezar y `ctxmap doctor` antes de commitear |
+| `permisos_explicitos` | `permisos_explicitos` | WARN | repetir con `--confirmar` tras hablar con el dueño |
+| `tag_amparado` | `tag_con_puerta_verde` | WARN | doctor en verde y volver a etiquetar |
+| `credencial_rotada` | `secreto_en_el_historial` | WARN | rotar la credencial y purgar el historial |
+| `historia_conservada` | `historia_preservada` | WARN | restaurar las notas perdidas |
+| `diagnostico_rapido` | `doctor_rapido` | WARN | acotar el chequeo que se lleva el tiempo |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
 * Estas reglas son del **motor**. Las reglas de **negocio** del proyecto van al
   catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`,
-  71 reglas en 12 categorías, 53 con verificación automática), que `context_map/domain/reglas/reglas.py`
+  71 reglas en 12 categorías, 65 con verificación automática), que `context_map/domain/reglas/reglas.py`
   convierte en nodos `REGLA` y que el brief mínimo resume en «📜 Reglas fijas».
-* Tres módulos aportan los 16 chequeos que no son del motor:
+* Cuatro módulos aportan los 22 chequeos que no son del motor:
   `reglas_proyecto.py` mide **conducta** (commits, CHANGELOG, diario, secretos),
   `reglas_calidad.py` mide el **repo** (versión anunciada, derivados, raíz,
   capas, tests, docstrings, idioma) y `reglas_vault.py` mide el **vault**
-  (dominio, fuentes, lecciones, plantillas, peso). Ninguno escribe archivos: lo
+  (dominio, fuentes, lecciones, plantillas, peso). `reglas_sesion.py` mide la
+  **sesión** leyendo la bitácora (`.context-map/state/bitacora.jsonl`), que la CLI
+  escribe sola en cada comando (`context_map/core/audit/bitacora.py`): qué se
+  ejecutó, cuándo, con qué código de salida, cuánto tardó y si había permiso.
+  Ninguno escribe archivos: lo
   que arreglan es contenido o historial, y eso lo decide una persona.
 * `capas_respetadas` lleva **tope de no regresión** (`MAX_IMPORTS_CRUZADOS`):
   la deuda actual está congelada y una violación nueva rompe la puerta. El tope
