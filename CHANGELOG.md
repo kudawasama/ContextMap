@@ -80,6 +80,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Añadido
+- **Cuatro reglas de conducta pasan a medirse** (`domain/health/reglas_proyecto.py`):
+  `commits_convencionales` (`REG-DOC-003`), `changelog_commit` (`REG-DOC-004`),
+  `diario_del_dia` (`REG-MEM-002`) y `secretos_versionados` (`REG-SEG-001`).
+  El catálogo queda en **37 de 71 reglas comprobadas por la máquina** (antes 33)
+  y el doctor en **19 chequeos** (antes 15). Los cuatro son `WARN`, no escriben
+  archivos y declaran sus falsos positivos (`__tests__/`, `conftest.py`,
+  marcadores `example`/`fake`/`tu-token`).
+- `changelog_commit` mira **solo la punta**: la deuda de commits viejos no es
+  accionable y una regla que nunca puede ponerse en verde deja de ser regla.
+- `secretos_versionados` nunca imprime el valor encontrado, solo ruta y tipo:
+  un reporte de salud que copia el secreto al log lo propaga.
+- `docs/GOBERNANZA-AGENTES.md` §6.1 y la tabla de invariantes de `AGENTS.md`.
+- `context_map/__tests__/test_reglas_proyecto.py`: 29 tests con repositorios git
+  reales en `tmp_path` (no mocks), incluidas las dos caras: detectar y no
+  inventar avisos.
+
 ### 🛡️ Reglas fijas de estabilidad (invariantes del motor)
 
 - Nuevo catálogo `context_map/domain/health/invariantes.py`: cada regla fija

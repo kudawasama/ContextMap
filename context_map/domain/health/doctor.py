@@ -866,6 +866,17 @@ def check_vault_tags(report: DoctorReport, fix: bool = False, project_dir: str =
     report.add(check)
 
 
+def _checks_de_conducta() -> list:
+    """Chequeos de las reglas de conducta (módulo aparte, import diferido).
+
+    Se importan aquí dentro para no crear un ciclo: ``reglas_proyecto``
+    necesita ``DoctorCheck``/``DoctorReport`` de este módulo.
+    """
+    from context_map.domain.health.reglas_proyecto import CHECKS_CONDUCTA
+
+    return list(CHECKS_CONDUCTA)
+
+
 CHECKS = [
     check_git_available,
     check_interpreter,
@@ -882,7 +893,7 @@ CHECKS = [
     check_generated_rules,
     check_topologia,
     check_vault_tags,
-]
+] + _checks_de_conducta()
 
 
 def run(cwd: str = "", fix: bool = False) -> DoctorReport:

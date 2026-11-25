@@ -98,6 +98,10 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `historial_acotado` | `history` | WARN | `ctxmap history prune .` |
 | `contexto_fresco` | `context_freshness` | WARN | `ctxmap refresh .` |
 | `etiquetas_del_vault` | `vault_tags` | WARN | corregir `tags:` en la nota señalada |
+| `commits_validos` | `commits_convencionales` | WARN | usar `tipo(alcance): asunto` |
+| `changelog_al_dia` | `changelog_commit` | WARN | registrar el cambio y commitearlo junto |
+| `diario_del_dia` | `diario_del_dia` | WARN | escribir `7.0-MANUAL/Diario/<hoy>.md` |
+| `sin_secretos` | `secretos_versionados` | WARN | rotar el secreto y sacarlo del historial |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
@@ -105,6 +109,10 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
   catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`,
   71 reglas en 12 categorías), que `context_map/domain/reglas/reglas.py`
   convierte en nodos `REGLA` y que el brief mínimo resume en «📜 Reglas fijas».
+* Los cuatro últimos chequeos viven en `domain/health/reglas_proyecto.py`: no
+  miden el motor, miden **conducta** (convención de commits, CHANGELOG en el
+  commit, diario del día, secretos versionados). Nunca escriben archivos: el
+  historial y los secretos se arreglan con una decisión humana.
 * Añadir una regla fija = añadir el chequeo en `doctor.CHECKS` + su entrada en
   `INVARIANTES` + su fila en esta tabla. Sin las tres, no es una regla.
 

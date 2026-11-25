@@ -134,6 +134,46 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="corregir `tags:` en el frontmatter de la nota señalada",
     ),
+    Invariante(
+        nombre="commits_validos",
+        chequeo="commits_convencionales",
+        severidad="WARN",
+        motivo=(
+            "Un historial sin forma no se puede leer ni filtrar: el tipo del "
+            "commit es la única señal de qué cambió y por qué."
+        ),
+        reparacion="usar `tipo(alcance): asunto` en el próximo commit",
+    ),
+    Invariante(
+        nombre="changelog_al_dia",
+        chequeo="changelog_commit",
+        severidad="WARN",
+        motivo=(
+            "Un cambio de código sin entrada en el CHANGELOG es un cambio que "
+            "la próxima versión explicará mal."
+        ),
+        reparacion="registrar el cambio en `CHANGELOG.md` y commitearlo junto",
+    ),
+    Invariante(
+        nombre="diario_del_dia",
+        chequeo="diario_del_dia",
+        severidad="WARN",
+        motivo=(
+            "El diario es lo único que conserva el porqué de una sesión: el "
+            "diff dice qué cambió, nunca qué se descartó ni por qué."
+        ),
+        reparacion="escribir `7.0-MANUAL/Diario/<hoy>.md` en el vault",
+    ),
+    Invariante(
+        nombre="sin_secretos",
+        chequeo="secretos_versionados",
+        severidad="WARN",
+        motivo=(
+            "Un secreto versionado queda en el historial para siempre; borrar "
+            "el commit no lo elimina."
+        ),
+        reparacion="rotar el secreto y sacarlo del historial de git",
+    ),
 )
 
 

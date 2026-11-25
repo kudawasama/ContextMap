@@ -202,6 +202,24 @@ El intérprete es **siempre** el del `.venv` del proyecto (regla `REG-EJE-001`):
 
 * **Commits**: *Conventional Commits* en español (`feat:`, `fix:`, `refactor:`, `docs:`…).
 
+### 6.1 Reglas de conducta que sí se miden
+
+De las 71 reglas del catálogo, 37 las comprueba la máquina. Cuatro de ellas no
+miran el motor, miran **cómo se trabaja**, y viven en
+`context_map/domain/health/reglas_proyecto.py`:
+
+| Chequeo | Regla | Qué mide | Qué **no** hace |
+|---|---|---|---|
+| `commits_convencionales` | `REG-DOC-003` | asunto de los últimos 50 commits no-merge | no reescribe el historial |
+| `changelog_commit` | `REG-DOC-004` | el commit de la **punta** que toca código, ¿toca `CHANGELOG.md`? | no mira la deuda vieja, que ya no es accionable |
+| `diario_del_dia` | `REG-MEM-002` | si hoy hay commits, ¿hay `Diario/<hoy>.md`? | no escribe el diario |
+| `secretos_versionados` | `REG-SEG-001` | patrones de clave en archivos rastreados por git | no imprime el valor, nunca |
+
+Los cuatro son `WARN` y se ignoran entre sí: un chequeo roto no arrastra a los
+demás. Los falsos positivos están declarados (`__tests__/`, `conftest.py`,
+marcadores `example`/`fake`/`tu-token`), porque un aviso que se repite cada día
+deja de leerse. Lo que no se mide —idioma, decisiones, qué se descartó— sigue
+siendo `manual` y se audita leyendo, no ejecutando.
 
 ## Auto-diagnóstico (doctor)
 

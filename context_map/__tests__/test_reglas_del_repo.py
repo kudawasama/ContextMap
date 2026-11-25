@@ -146,9 +146,15 @@ def _nombres_de_chequeos() -> set[str]:
     """
     from context_map.domain import health
 
-    ruta = os.path.join(os.path.dirname(health.__file__), "doctor.py")
-    with open(ruta, encoding="utf-8") as f:
-        fuente = f.read()
+    carpeta = os.path.dirname(health.__file__)
+    fuente = ""
+    # Los chequeos del motor viven en doctor.py; los de conducta, en
+    # reglas_proyecto.py. El contrato cubre los dos archivos.
+    for archivo in ("doctor.py", "reglas_proyecto.py"):
+        ruta = os.path.join(carpeta, archivo)
+        if os.path.isfile(ruta):
+            with open(ruta, encoding="utf-8") as f:
+                fuente += f.read() + "\n"
     # Dos formas conviven en el módulo: posicional `DoctorCheck("x", …)` y por
     # palabra clave `DoctorCheck(name="x")`. Se aceptan las dos.
     nombres = set(re.findall(r'DoctorCheck\(name="([a-z_]+)"', fuente))

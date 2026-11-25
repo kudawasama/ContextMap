@@ -414,7 +414,7 @@ reglas:
     estado: implementada
     norma: "AGENTS.md"
     seccion: "6. Verificación y commits"
-    verificacion: "manual"
+    verificacion: "doctor:commits_convencionales"
 
   - id: REG-DOC-004
     resumen: "CHANGELOG en el mismo commit"
@@ -425,7 +425,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "8. Documentación obligatoria"
-    verificacion: "manual"
+    verificacion: "doctor:changelog_commit"
 
   - id: REG-DOC-005
     resumen: "DOMINIO documenta el núcleo"
@@ -546,7 +546,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "10. Memoria viva y Second Brain"
-    verificacion: "test:test_diario_consolidado.py"
+    verificacion: "doctor:diario_del_dia"
 
   - id: REG-MEM-003
     resumen: "lección con instrucción accionable"
@@ -700,7 +700,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "11. Secretos y datos sensibles"
-    verificacion: "manual"
+    verificacion: "doctor:secretos_versionados"
 
   - id: REG-SEG-002
     resumen: "secretos por proxy"
