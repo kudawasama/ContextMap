@@ -342,6 +342,16 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="medir qué chequeo se lleva el tiempo y acotar su barrido",
     ),
+    Invariante(
+        nombre="decision_con_porque",
+        chequeo="decisiones_con_porque",
+        severidad="WARN",
+        motivo=(
+            "Una decisión guardada sin contexto dice qué se hizo y no por qué: "
+            "no se puede revisar, que era el único motivo de guardarla."
+        ),
+        reparacion="completar el porqué con `ctxmap personal add ... --contexto`",
+    ),
 )
 
 

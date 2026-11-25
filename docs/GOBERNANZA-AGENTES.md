@@ -286,6 +286,7 @@ rutas de datos ni contenido.
 | `secreto_en_el_historial` | `SEG-003` | credenciales **reales** en el historial (no en fixtures) | nunca imprime el valor |
 | `historia_preservada` | `HUM-002` | caída de notas entre dos `build` consecutivos | no restaura: avisa |
 | `doctor_rapido` | `LIM-002` | duración del último doctor (límite 120 s) | no acota el vault |
+| `decisiones_con_porque` | `DOC-007` | decisiones guardadas en la memoria personal **sin** el campo `contexto` | no juzga si la decisión era relevante |
 
 Tres decisiones que no conviene deshacer:
 
@@ -300,11 +301,14 @@ Tres decisiones que no conviene deshacer:
    **expresiones reales**, no subcadenas: buscar `AKIA` a secas marcaba la propia
    definición del detector como si fuera una clave de AWS.
 
+`DOC-007` entró por la única rendija medible: una decisión guardada sin
+`--contexto` no explica su porqué, y eso el registro lo dice sin ambigüedad. No
+se juzga si la decisión era relevante — eso es criterio, no dato.
+
 Lo que sigue sin medirse, y por qué: cruzar cuatro fuentes (`INI-004`),
 inspeccionar el código antes de proponer (`INI-006`), buscar en la memoria de
-otros proyectos (`INI-007`), distinguir evidencia de autoreporte (`EJE-005`),
-documentar el porqué (`DOC-007`) y anunciar el costo de una tarea larga
-(`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
+otros proyectos (`INI-007`), distinguir evidencia de autoreporte (`EJE-005`) y
+anunciar el costo de una tarea larga (`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
 repositorio guarda. Fingir un chequeo ahí sería medir otra cosa con el mismo
 nombre.
 

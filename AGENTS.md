@@ -125,14 +125,15 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `credencial_rotada` | `secreto_en_el_historial` | WARN | rotar la credencial y purgar el historial |
 | `historia_conservada` | `historia_preservada` | WARN | restaurar las notas perdidas |
 | `diagnostico_rapido` | `doctor_rapido` | WARN | acotar el chequeo que se lleva el tiempo |
+| `decision_con_porque` | `decisiones_con_porque` | WARN | completar el porqué al registrar la decisión |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.
 * Estas reglas son del **motor**. Las reglas de **negocio** del proyecto van al
   catálogo versionado `references/reglas/reglas_registro.yaml` (IDs `REG-XXX-###`,
-  71 reglas en 12 categorías, 65 con verificación automática), que `context_map/domain/reglas/reglas.py`
+  71 reglas en 12 categorías, 66 con verificación automática), que `context_map/domain/reglas/reglas.py`
   convierte en nodos `REGLA` y que el brief mínimo resume en «📜 Reglas fijas».
-* Cuatro módulos aportan los 22 chequeos que no son del motor:
+* Cuatro módulos aportan los 23 chequeos que no son del motor:
   `reglas_proyecto.py` mide **conducta** (commits, CHANGELOG, diario, secretos),
   `reglas_calidad.py` mide el **repo** (versión anunciada, derivados, raíz,
   capas, tests, docstrings, idioma) y `reglas_vault.py` mide el **vault**

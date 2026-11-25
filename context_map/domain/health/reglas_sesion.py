@@ -12,6 +12,10 @@ Frontera explícita —esto **no** se mide aquí, y no por falta de ganas:
 - Distinguir evidencia real de autoreporte al escribir el cierre (`REG-EJE-005`).
 - Anunciar el costo de una tarea larga (`REG-LIM-004`).
 
+`REG-DOC-007` sí entra, y por una rendija concreta: una decisión guardada en la
+memoria personal **sin** el campo ``contexto`` no explica su porqué. Se mide lo
+que el registro guarda, no la conversación que lo originó.
+
 Dependen de lo que el agente **piensa** y escribe en la conversación, que no deja
 huella en el repositorio. Un chequeo que las «comprobara» estaría midiendo otra
 cosa y llamándola igual.
@@ -21,6 +25,7 @@ from __future__ import annotations
 
 import os
 import re
+import sqlite3
 import subprocess
 from typing import Any
 
@@ -567,6 +572,120 @@ def check_doctor_rapido(report: DoctorReport, fix: bool = False, project_dir: st
 
 
 #: Chequeos de conducta de la sesión, en el orden en que se ejecutan.
+
+def _nombres_del_proyecto(project_dir: str) -> tuple[str, ...]:
+    """Variantes del nombre de la carpeta, para encontrar el proyecto en la BD.
+
+    La memoria personal guarda nombres escritos a mano (``EE RR`` convive con
+    ``EE_RR``), así que se prueban las variantes razonables en vez de exigir una
+    coincidencia exacta que dejaría el chequeo mudo.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        Tuple[str, ...]: Nombres candidatos, sin repetir.
+    """
+    base = os.path.basename(os.path.abspath(project_dir)) or "."
+    variantes = {
+        base,
+        base.replace("_", " "),
+        base.replace(" ", "_"),
+        base.replace("-", " "),
+        base.replace(" ", "-"),
+    }
+    return tuple(sorted(v for v in variantes if v))
+
+
+def check_decisiones_con_porque(
+    report: DoctorReport, fix: bool = False, project_dir: str = ".",
+) -> None:
+    """Comprueba que las decisiones registradas declaren su porqué (``REG-DOC-007``).
+
+    Una decisión sin ``contexto`` es un titular: dice qué se hizo y no por qué.
+    Dentro de un año, el titular no permite revisar la decisión, que es el único
+    motivo para haberla guardado.
+
+    El alcance es honesto y acotado: mira el registro de decisiones de la memoria
+    personal (``ctxmap personal add --tipo decision --contexto "..."``), que es
+    donde el motor guarda decisiones con un campo para el porqué. No juzga si la
+    decisión era relevante ni si se escribió en el vault — eso es criterio, no
+    dato. Si el proyecto no tiene decisiones registradas, no hay nada que auditar
+    y se dice así en vez de fingir un verde.
+
+    Una decisión guardada con un ``--proyecto`` que la BD no conoce queda sin
+    dueño (``proyecto_id`` nulo) y no aparece en ninguna consulta por proyecto:
+    se pierde del mapa. Eso lo delata ``ctxmap personal repair``, no esta regla.
+
+    Args:
+        report (DoctorReport): Informe donde se anota el resultado.
+        fix (bool): Ignorado: el porqué no se rellena solo sin inventarlo.
+        project_dir (str): Raíz del proyecto.
+    """
+    check = DoctorCheck(name="decisiones_con_porque")
+    try:
+        from context_map.core.personal.bd import resolver_ruta_bd
+
+        ruta = resolver_ruta_bd()
+    except Exception as err:  # pragma: no cover - import defensivo
+        check.status = "OK"
+        check.message = f"Sin memoria personal disponible ({err}): nada que auditar."
+        report.add(check)
+        return
+
+    if not os.path.isfile(ruta):
+        check.status = "OK"
+        check.message = "Sin Base de Datos personal: no hay decisiones que auditar."
+        report.add(check)
+        return
+
+    nombres = _nombres_del_proyecto(project_dir)
+    marcas = ", ".join("?" for _ in nombres)
+    try:
+        conexion = sqlite3.connect(f"file:{ruta}?mode=ro", uri=True)
+        try:
+            total = conexion.execute(
+                "SELECT COUNT(*) FROM decisiones d "
+                "JOIN proyectos p ON p.id = d.proyecto_id "
+                f"WHERE p.nombre IN ({marcas})",
+                nombres,
+            ).fetchone()[0]
+            sin_porque = conexion.execute(
+                "SELECT COUNT(*) FROM decisiones d "
+                "JOIN proyectos p ON p.id = d.proyecto_id "
+                f"WHERE p.nombre IN ({marcas}) "
+                "AND TRIM(COALESCE(d.contexto, '')) = ''",
+                nombres,
+            ).fetchone()[0]
+        finally:
+            conexion.close()
+    except sqlite3.Error as err:
+        check.status = "OK"
+        check.message = f"No se pudo leer la memoria personal ({err}): sin veredicto."
+        report.add(check)
+        return
+
+    if total == 0:
+        check.status = "OK"
+        check.message = "Sin decisiones registradas en este proyecto: nada que auditar."
+        report.add(check)
+        return
+
+    if sin_porque:
+        check.status = "WARN"
+        check.message = (
+            f"{sin_porque} de {total} decisión(es) guardadas sin el porqué. "
+            "Rehacerlas con `ctxmap personal add --tipo decision --contexto \"...\"` "
+            "o completar el contexto (REG-DOC-007)."
+        )
+        report.add(check)
+        return
+
+    check.status = "OK"
+    check.message = f"Las {total} decisión(es) registradas explican su porqué."
+    report.add(check)
+
+
 CHECKS_SESION = (
     check_bitacora_sesion,
     check_permisos_explicitos,
@@ -574,4 +693,5 @@ CHECKS_SESION = (
     check_secreto_en_el_historial,
     check_historia_preservada,
     check_doctor_rapido,
+    check_decisiones_con_porque,
 )

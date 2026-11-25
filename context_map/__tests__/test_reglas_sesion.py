@@ -328,3 +328,85 @@ def test_doctor_lento_avisa(tmp_path):
 
 def test_el_limite_es_declarado_y_no_oculto(tmp_path):
     assert sesion.LIMITE_DOCTOR_SEGUNDOS == 120.0
+
+
+# --------------------------------------------------------------------------
+# decisiones_con_porque (REG-DOC-007): el porqué guardado, no el conversado
+# --------------------------------------------------------------------------
+
+
+def _bd_con_decision(tmp_path, proyecto: str, contexto: str) -> str:
+    """Crea una BD personal real con una decisión y devuelve su ruta."""
+    from context_map.core.personal.bd import Decision, PersonalDB
+
+    ruta = os.path.join(str(tmp_path), "personal.db")
+    db = PersonalDB(ruta)
+    try:
+        db.registrar_proyecto(proyecto)
+        db.agregar_decision(Decision(decision="usar JSONL en vez de SQLite", contexto=contexto, proyecto=proyecto))
+    finally:
+        db.cerrar()
+    return ruta
+
+
+def _proyecto_llamado(tmp_path, nombre: str) -> str:
+    """Crea la carpeta del proyecto con el nombre que la BD usará."""
+    raiz = os.path.join(str(tmp_path), "trabajo", nombre)
+    os.makedirs(raiz, exist_ok=True)
+    return raiz
+
+
+def test_una_decision_sin_porque_avisa(tmp_path, monkeypatch) -> None:
+    """Una decisión guardada sin contexto no se puede revisar: WARN."""
+    proyecto = _proyecto_llamado(tmp_path, "MiProyecto")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", _bd_con_decision(tmp_path, "MiProyecto", ""))
+    report = DoctorReport()
+    sesion.check_decisiones_con_porque(report, project_dir=proyecto)
+    check = report.checks[-1]
+    assert check.status == "WARN"
+    assert "sin el porqué" in check.message
+
+
+def test_una_decision_con_porque_pasa(tmp_path, monkeypatch) -> None:
+    """Con contexto redactado, la regla se cumple."""
+    proyecto = _proyecto_llamado(tmp_path, "MiProyecto")
+    monkeypatch.setenv(
+        "CTXMAP_PERSONAL_DB",
+        _bd_con_decision(tmp_path, "MiProyecto", "SQLite bloquea en escrituras concurrentes; JSONL no."),
+    )
+    report = DoctorReport()
+    sesion.check_decisiones_con_porque(report, project_dir=proyecto)
+    check = report.checks[-1]
+    assert check.status == "OK"
+    assert "explican su porqué" in check.message
+
+
+def test_el_chequeo_no_cuenta_decisiones_de_otro_proyecto(tmp_path, monkeypatch) -> None:
+    """La deuda de un proyecto no se le cobra a otro."""
+    proyecto = _proyecto_llamado(tmp_path, "Mio")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", _bd_con_decision(tmp_path, "Ajeno", ""))
+    report = DoctorReport()
+    sesion.check_decisiones_con_porque(report, project_dir=proyecto)
+    check = report.checks[-1]
+    assert check.status == "OK"
+    assert "Sin decisiones registradas" in check.message
+
+
+def test_el_nombre_de_la_carpeta_se_prueba_con_variantes(tmp_path, monkeypatch) -> None:
+    """`EE RR` y `EE_RR` son el mismo proyecto escrito de dos maneras."""
+    proyecto = _proyecto_llamado(tmp_path, "EE_RR")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", _bd_con_decision(tmp_path, "EE RR", ""))
+    report = DoctorReport()
+    sesion.check_decisiones_con_porque(report, project_dir=proyecto)
+    assert report.checks[-1].status == "WARN"
+
+
+def test_sin_base_de_datos_personal_no_se_inventa_nada(tmp_path, monkeypatch) -> None:
+    """Sin BD no hay evidencia: se declara, no se finge un rojo ni un verde falso."""
+    proyecto = _proyecto_llamado(tmp_path, "Suelto")
+    monkeypatch.setenv("CTXMAP_PERSONAL_DB", os.path.join(str(tmp_path), "no-existe.db"))
+    report = DoctorReport()
+    sesion.check_decisiones_con_porque(report, project_dir=proyecto)
+    check = report.checks[-1]
+    assert check.status == "OK"
+    assert "Sin Base de Datos personal" in check.message

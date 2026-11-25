@@ -133,11 +133,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
     `secreto_en_el_historial`, `historia_preservada`, `doctor_rapido`.
   - `adapt` y `doctor --fix` aceptan `--confirmar`: sin él la ejecución queda
     registrada como no autorizada y el doctor lo avisa.
-- **Catálogo: 53 → 65 de 71 reglas comprobadas por la máquina.** Quedan 6
+- **Catálogo: 53 → 66 de 71 reglas comprobadas por la máquina.** Quedan 5
   `manual`, y son exactamente las que dependen de lo que el agente piensa
   (cruzar cuatro fuentes, inspeccionar el código, buscar en la memoria,
-  distinguir evidencia de autoreporte, documentar el porqué, anunciar el costo).
-  El doctor pasa de 31 a **37 chequeos**.
+  distinguir evidencia de autoreporte, anunciar el costo). El doctor pasa de 31
+  a **38 chequeos**.
+- `decisiones_con_porque` (`REG-DOC-007`): una decisión guardada sin el campo
+  `contexto` dice qué se hizo y no por qué, que era el único motivo de
+  guardarla. Lee la memoria personal en modo lectura, prueba las variantes del
+  nombre de la carpeta (`EE RR` convive con `EE_RR`) y no imprime el texto de la
+  decisión. Una decisión guardada con un `--proyecto` que la BD no conoce queda
+  sin dueño y no aparece en ninguna consulta: eso lo delata `personal repair`.
 - `secreto_en_el_historial` aplica las **expresiones reales** al diff del
   historial, no subcadenas: buscar `AKIA` a secas marcaba la propia definición
   del detector (`r"AKIA[0-9A-Z]{16}"`) como si fuera una clave. Las
@@ -156,7 +162,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   propia (medido en `00_GOBERNANZA_IA`). Se descarta por prefijo y por sufijo
   (`.venv*`, `venv*`, `*.egg-info`), no por lista cerrada.
 - Tests: `test_reglas_calidad.py` (24), `test_reglas_vault.py` (20),
-  `test_bitacora.py` (9) y `test_reglas_sesion.py` (30) con árboles
+  `test_bitacora.py` (9) y `test_reglas_sesion.py` (34) con árboles
   de proyecto y vaults reales en `tmp_path`.
 - `context_map/__tests__/test_reglas_proyecto.py`: 29 tests con repositorios git
   reales en `tmp_path` (no mocks), incluidas las dos caras: detectar y no

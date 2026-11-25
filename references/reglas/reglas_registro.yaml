@@ -458,7 +458,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "8. Documentación obligatoria"
-    verificacion: "manual"
+    verificacion: "doctor:decisiones_con_porque"
 
   - id: REG-DOC-008
     resumen: "norma antes que regla"
