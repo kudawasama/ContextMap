@@ -57,25 +57,26 @@ son independientes y **nunca** se cruzan.
 > **Regla fija #0 — intérprete**: todos los comandos se ejecutan con el
 > intérprete del venv del proyecto (`.venv/Scripts/python.exe` en Windows,
 > `.venv/bin/python` en POSIX). El `python` global no trae el extra `[mcp]`
-> (pydantic ≥ 2.13) y hace que la suite se recolecte a medias. `make` ya lo
-> resuelve solo; si invocas Python a mano, usa el del venv.
+> (pydantic ≥ 2.13) y hace que la suite se recolecte a medias. Si invocas
+> Python a mano, usa el del venv; `make`, cuando existe, lo resuelve solo.
 
 ```bash
-make test      # 1. suite completa (pytest con el intérprete del venv)
-make verify    # 2. PUERTA DE CALIDAD: tests + reglas fijas (doctor --strict-warn)
-make scan      # 3. escanear
-make build     # 4. vault + brief
-make check     # 5. readiness
+# 1. Suite completa (con el intérprete del venv)
+.venv/Scripts/python.exe -m pytest
+
+# 2. PUERTA DE CALIDAD: reglas fijas (falla con FAIL o WARN)
+.venv/Scripts/python.exe -m context_map.cli doctor . --strict-warn
+
+# 3. Vault + brief
+.venv/Scripts/python.exe -m context_map.cli build --clean --brief
+
+# 4. Readiness
+.venv/Scripts/python.exe -m context_map.cli check .
 ```
 
-Equivalentes sin `make`:
-
-```bash
-.venv/Scripts/python.exe -m pytest                          # tests
-.venv/Scripts/python.exe -m context_map.cli doctor . --strict-warn  # reglas fijas
-.venv/Scripts/python.exe -m context_map.cli build --clean --brief   # vault + brief
-.venv/Scripts/python.exe -m context_map.cli check .                 # readiness
-```
+`make` es **opcional** (no está instalado en todas las máquinas): si existe,
+`make verify` encadena los pasos 1 y 2 y resuelve el intérprete solo. Los
+comandos de arriba son los que siempre funcionan.
 
 * **Commits**: *Conventional Commits* en español (`feat:`, `fix:`, `refactor:`, `docs:`…).
 
