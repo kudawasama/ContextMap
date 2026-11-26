@@ -39,7 +39,7 @@ COMANDOS_CON_PERMISO = ("adapt", "ingest", "enrich", "push")
 CODIGO_RECHAZO = 2
 
 #: Claves que se aceptan en una entrada; cualquier otra se descarta.
-CLAVES = ("ts", "comando", "exit", "duracion_s", "flags", "notas", "autorizado")
+CLAVES = ("ts", "comando", "exit", "duracion_s", "flags", "notas", "autorizado", "fallos")
 
 
 def ruta_bitacora(project_dir: str = ".") -> str:
@@ -61,6 +61,7 @@ def registrar(
     flags: list[str] | None = None,
     notas: int | None = None,
     autorizado: bool | None = None,
+    fallos: int | None = None,
     project_dir: str = ".",
 ) -> None:
     """Añade una entrada a la bitácora del proyecto.
@@ -76,6 +77,10 @@ def registrar(
         flags (Optional[List[str]]): Banderas relevantes, sin valores de rutas.
         notas (Optional[int]): Notas del vault tras el comando (solo ``build``).
         autorizado (Optional[bool]): Para comandos que exigen permiso, si lo hubo.
+        fallos (Optional[int]): Chequeos en FAIL del diagnóstico, cuando lo hubo.
+            Permite distinguir «la puerta avisó» de «la puerta falló»: con
+            ``--strict-warn`` un WARN también sale con código 1, y sin este dato
+            el aviso parecería un fallo.
         project_dir (str): Raíz del proyecto.
     """
     try:
@@ -92,6 +97,8 @@ def registrar(
             entrada["notas"] = int(notas)
         if autorizado is not None:
             entrada["autorizado"] = bool(autorizado)
+        if fallos is not None:
+            entrada["fallos"] = int(fallos)
 
         ruta = ruta_bitacora(project_dir)
         os.makedirs(os.path.dirname(ruta), exist_ok=True)

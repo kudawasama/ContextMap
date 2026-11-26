@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -138,6 +138,31 @@ def test_puerta_final_en_rojo_avisa(tmp_path):
     estado, mensaje = _estado(sesion.check_bitacora_sesion, tmp_path)
     assert estado == "WARN"
     assert "REG-SAL-002" in mensaje
+
+
+def test_strict_warn_con_avisos_no_es_un_fallo(tmp_path):
+    """Con `--strict-warn` la puerta sale con 1 aunque solo avise: no es rojo."""
+    _repo(tmp_path)
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "brief", "exit": 0},
+        {"ts": PASADO, "comando": "doctor", "exit": 0},
+        {"ts": FUTURO, "comando": "doctor", "exit": 1, "flags": ["strict-warn"], "fallos": 0},
+    ])
+    estado, mensaje = _estado(sesion.check_bitacora_sesion, tmp_path)
+    assert estado == "OK", mensaje
+
+
+def test_strict_warn_con_fallos_reales_sigue_avisando(tmp_path):
+    """La bandera no tapa un FAIL de verdad."""
+    _repo(tmp_path)
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "brief", "exit": 0},
+        {"ts": PASADO, "comando": "doctor", "exit": 0},
+        {"ts": FUTURO, "comando": "doctor", "exit": 1, "flags": ["strict-warn"], "fallos": 2},
+    ])
+    estado, mensaje = _estado(sesion.check_bitacora_sesion, tmp_path)
+    assert estado == "WARN"
+    assert "2 fallo(s)" in mensaje
 
 
 def test_trabajar_sin_diagnostico_avisa(tmp_path):
@@ -348,6 +373,67 @@ def test_doctor_lento_avisa(tmp_path):
 
 def test_el_limite_es_declarado_y_no_oculto(tmp_path):
     assert sesion.LIMITE_DOCTOR_SEGUNDOS == 120.0
+
+
+# --------------------------------------------------------------------------
+# memoria_consultada (REG-INI-007): la memoria de otros proyectos
+# --------------------------------------------------------------------------
+
+def _con_vault(raiz: Path) -> Path:
+    """Crea un vault propio mínimo."""
+    vault = raiz / ".context-map" / f"vault-{raiz.name}"
+    vault.mkdir(parents=True, exist_ok=True)
+    (vault / "nota.md").write_text("# nota\n", encoding="utf-8")
+    return raiz
+
+
+def test_con_vault_propio_la_regla_no_aplica(tmp_path):
+    """Un verde por no mirar no sirve: se declara el motivo."""
+    _con_vault(tmp_path)
+    _bitacora(tmp_path, [{"ts": PASADO, "comando": "doctor", "exit": 0}])
+    estado, mensaje = _estado(sesion.check_memoria_consultada, tmp_path)
+    assert estado == "OK"
+    assert "no aplica" in mensaje
+
+
+def test_sin_vault_y_sin_sesiones_no_hay_conducta(tmp_path):
+    estado, mensaje = _estado(sesion.check_memoria_consultada, tmp_path)
+    assert estado == "OK"
+    assert "no hay conducta que juzgar" in mensaje
+
+
+def test_sesion_vieja_fuera_de_la_ventana_no_se_juzga(tmp_path):
+    viejo = (datetime.now() - timedelta(days=sesion.VENTANA_MEMORIA_DIAS + 3)).isoformat(timespec="seconds")
+    _bitacora(tmp_path, [{"ts": viejo, "comando": "doctor", "exit": 0}])
+    estado, mensaje = _estado(sesion.check_memoria_consultada, tmp_path)
+    assert estado == "OK"
+    assert "no hay conducta que juzgar" in mensaje
+
+
+def test_trabajar_sin_consultar_la_memoria_global_avisa(tmp_path):
+    """Proyecto sin memoria propia: la única fuente es la BD personal."""
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "brief", "exit": 0},
+        {"ts": PASADO, "comando": "doctor", "exit": 0},
+    ])
+    estado, mensaje = _estado(sesion.check_memoria_consultada, tmp_path)
+    assert estado == "WARN"
+    assert "REG-INI-007" in mensaje
+    assert "personal query" in mensaje
+
+
+def test_una_consulta_en_la_ventana_esta_verde(tmp_path):
+    _bitacora(tmp_path, [
+        {"ts": PASADO, "comando": "brief", "exit": 0},
+        {"ts": PASADO, "comando": "personal", "exit": 0},
+    ])
+    estado, mensaje = _estado(sesion.check_memoria_consultada, tmp_path)
+    assert estado == "OK"
+    assert "memoria multi-proyecto" in mensaje
+
+
+def test_la_ventana_es_declarada_y_no_oculta() -> None:
+    assert sesion.VENTANA_MEMORIA_DIAS == 7
 
 
 # --------------------------------------------------------------------------

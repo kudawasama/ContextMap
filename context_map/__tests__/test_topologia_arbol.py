@@ -396,3 +396,48 @@ if __name__ == "__main__":
 
     print()
     print("Todos los tests pasaron correctamente.")
+
+
+def test_la_nota_del_dia_nace_antes_del_indice() -> None:
+    """La nota del día se escribe antes del índice, para que no quede sin padre.
+
+    Si nace después, cada primer build del día deja un aviso «SIN PADRE»: un
+    rojo diario justo cuando nadie lo lee.
+    """
+    from datetime import date, datetime
+
+    from context_map.presentation.vault.topologia import analizar_topologia
+
+    hoy = date.today().isoformat()
+    nodos = [
+        Node(
+            id="BASE-HOY",
+            type="BASE",
+            title="base de hoy",
+            summary="nodo creado hoy",
+            source="test",
+            tags=["base"],
+            created_at=datetime.now().isoformat(timespec="seconds"),
+        )
+    ]
+    raiz = tempfile.mkdtemp(prefix="ctxmap_test_nota_dia_")
+    try:
+        output_dir = os.path.join(raiz, ".context-map", "vault-TestDia")
+        render_obsidian_vault(
+            project_name="TestDia",
+            nodes=nodos,
+            edges=[],
+            output_dir=output_dir,
+            mode="hierarchical",
+        )
+
+        nota = os.path.join(output_dir, "7.0-MANUAL", "Diario", f"{hoy}.md")
+        assert os.path.exists(nota), "la nota del día debe existir"
+
+        indice = open(os.path.join(output_dir, "00-INDICE.md"), encoding="utf-8").read()
+        assert f"Diario/{hoy}.md" in indice, "el índice debe catalogar la nota del día"
+
+        resultado = analizar_topologia(output_dir)
+        assert not resultado.sin_padre, resultado.sin_padre
+    finally:
+        shutil.rmtree(raiz, ignore_errors=True)

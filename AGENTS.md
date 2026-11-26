@@ -143,6 +143,7 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `diagnostico_rapido` | `doctor_rapido` | WARN | acotar el chequeo que se lleva el tiempo |
 | `decision_con_porque` | `decisiones_con_porque` | WARN | completar el porqué al registrar la decisión |
 | `codigo_leido` | `lecturas_previas` | WARN | `ctxmap hook lectura . --instalar` y leer antes de tocar |
+| `memoria_de_otros_proyectos` | `memoria_consultada` | WARN | `ctxmap personal query "términos" --limite 5` |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.

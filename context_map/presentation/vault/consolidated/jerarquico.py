@@ -255,6 +255,19 @@ def _render_hierarchical_vault(
 
     clasificados = _clasificar_nodos(nodes)
 
+    # La nota del día se escribe ANTES del índice:
+    # el índice cataloga las notas manuales (7.0-MANUAL, 8.0-KNOWLEDGE) para que
+    # cuelguen de un padre. Si nace después, el día recién empezado aparece como
+    # «SIN PADRE» en la topología — un aviso diario, justo cuando nadie lo lee.
+    project_root = _resolver_project_root(output_dir)
+    if project_root:
+        from context_map.presentation.vault.consolidated.canvas import render_nota_dia
+
+        try:
+            render_nota_dia(project_root, project_name, nodes)
+        except OSError as err:
+            logging.getLogger(__name__).warning("Nota del día omitida: %s", err)
+
     _render_indice_hierarchico(project_name, nodes, edges, clasificados, fecha_actual, output_dir)
     _render_seccion_proposito(project_name, nodes, edges, clasificados, fecha_actual, output_dir, _cabecera, _pie)
     _render_seccion_ideas(project_name, clasificados, fecha_actual, output_dir, _cabecera, _pie)
@@ -280,16 +293,14 @@ def _render_hierarchical_vault(
     # dejando vaults fantasma y falseando la señal «Vaults activos» de check.
     # Ahora la raíz se resuelve buscando el directorio `.context-map` padre y
     # los extras opcionales se escriben SOLO cuando ese marcador existe.
-    project_root = _resolver_project_root(output_dir)
-    # Fix CI (2026-08-12): los extras visuales (lienzo, plantillas, nota del
-    # día) son OPCIONALES — si el directorio base no es escribible se omiten
-    # sin romper el vault.
+    # Fix CI (2026-08-12): los extras visuales (lienzo, plantillas) son
+    # OPCIONALES — si el directorio base no es escribible se omiten sin romper
+    # el vault. La nota del día ya se escribió arriba, antes del índice.
     try:
         render_canvas(output_dir, nodes, edges)
         render_graph_json(output_dir, nodes)
         if project_root:
             render_plantillas(project_root, project_name)
-            render_nota_dia(project_root, project_name, nodes)
         os.makedirs(os.path.join(output_dir, "adjuntos"), exist_ok=True)
     except OSError as err:
         logging.getLogger(__name__).warning("Extras visuales omitidos: %s", err)

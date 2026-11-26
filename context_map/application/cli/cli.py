@@ -168,6 +168,7 @@ def _registrar_ejecucion(args, inicio: float, codigo: int) -> None:
         elif comando == "doctor" and getattr(args, "fix", False):
             autorizado = bool(getattr(args, "confirmar", False))
         notas = _contar_notas(destino) if comando in ("build", "refresh") else None
+        fallos = args.get("fallos") if isinstance(args, dict) else getattr(args, "fallos", None)
         registrar(
             comando=comando,
             exit_code=codigo,
@@ -175,6 +176,7 @@ def _registrar_ejecucion(args, inicio: float, codigo: int) -> None:
             flags=_flags_relevantes(args),
             notas=notas,
             autorizado=autorizado,
+            fallos=fallos,
             project_dir=destino,
         )
     except Exception:  # noqa: BLE001 - registrar no puede romper el comando

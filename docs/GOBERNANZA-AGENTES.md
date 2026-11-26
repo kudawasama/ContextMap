@@ -254,7 +254,7 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Lo que sigue en `manual` (2 reglas) no es lo que falta por medir: es lo que
+Queda **una sola** regla en `manual` (`REG-EJE-005`), y su motivo está escrito: es lo que
 **ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
 enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
 Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
@@ -528,3 +528,31 @@ $ echo '{"tool_input":{"file_path":"context_map/x.py"}}' | ctxmap hook lectura .
   `ctxmap hook lectura . --ruta <archivo> --origen agente`. Es la única forma de
   que la huella exista cuando nadie la escribe sola; sin ella el chequeo avisa,
   y avisa con razón.
+
+### 13.3 La memoria de otros proyectos, donde no hay memoria propia (`REG-INI-007`)
+
+«Busca en la memoria multi-proyecto cuando falte contexto histórico» tiene un
+«cuando» que no se puede juzgar en abstracto. Sí hay un caso en el que el
+contexto falta **siempre**: un proyecto **sin vault propio** no tiene memoria
+local que leer, así que la única fuente es la BD personal. Ahí el chequeo
+`memoria_consultada` exige una consulta dentro de la ventana de la sesión
+(`VENTANA_MEMORIA_DIAS = 7`).
+
+* **Un proyecto con vault no se juzga, y se dice**: apuntarse un verde por no
+  mirar es peor que un rojo.
+* **Sin sesiones en la ventana no hay conducta**: no se inventa auditoría sobre
+  días en los que nadie trabajó.
+* **La bitácora anota el comando, nunca su texto**: se comprueba que se consultó,
+  no qué se preguntó. El reporte tampoco copia términos.
+* **Se cumple con un comando**: `ctxmap personal query "términos" --limite 5`,
+  y el aviso lo dice literal para que no haya que adivinar la salida.
+
+### 13.4 La bandera más estricta no puede parecer un fallo
+
+`doctor --strict-warn` sale con código 1 cuando solo hay avisos. La bitácora
+guardaba el código y nada más, así que la puerta más exigente dejaba la sesión
+marcada como si hubiera fallado, y `bitacora_sesion` acusaba `REG-SAL-002` en la
+siguiente ejecución. Ahora las entradas de `doctor` guardan **`fallos`** (número
+de chequeos en FAIL) y el veredicto mira ese número: si existe, `exit != 0` con
+cero fallos es un aviso, no un rojo. Las entradas viejas, sin el campo, conservan
+la lectura antigua.

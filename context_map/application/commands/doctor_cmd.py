@@ -72,6 +72,13 @@ def cmd_doctor(args: dict[str, Any]) -> None:
         print(json.dumps(data, indent=2, ensure_ascii=False))
         return
 
+    # El número de fallos queda en la bitácora: con `--strict-warn` un WARN
+    # también sale con código 1, y sin este dato el aviso parecería un fallo.
+    if isinstance(args, dict):
+        args["fallos"] = len(report.failed)
+    else:
+        setattr(args, "fallos", len(report.failed))
+
     modo_str = " (Modo Self-Healing --fix)" if fix else ""
     print(f"\n🏥 ContextMap Doctor Report{modo_str}")
     print("=" * 50)

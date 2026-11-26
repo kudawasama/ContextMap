@@ -27,6 +27,7 @@ import os
 import re
 import sqlite3
 import subprocess
+from datetime import datetime
 from typing import Any
 
 from context_map.core.audit.bitacora import (
@@ -36,6 +37,7 @@ from context_map.core.audit.bitacora import (
     leer,
 )
 from context_map.core.audit.lecturas import hay_registro, primera_lectura, rutas_leidas
+from context_map.domain.health.reglas_vault import _vault_activo
 from context_map.domain.health.doctor import DoctorCheck, DoctorReport
 from context_map.domain.health.reglas_proyecto import MARCADORES_FALSO, PATRONES_SECRETO
 
@@ -199,10 +201,19 @@ def check_bitacora_sesion(report: DoctorReport, fix: bool = False, project_dir: 
     diagnosticos = [e for e in entradas if e.get("comando") in COMANDOS_DIAGNOSTICO]
     if diagnosticos:
         ultimo = diagnosticos[-1]
-        if int(ultimo.get("exit", 0)) != 0:
+        fallos = ultimo.get("fallos")
+        # Con `--strict-warn` la puerta sale con 1 también cuando solo hay
+        # avisos: la bandera más estricta parecería un fallo. El número de FAIL
+        # es el que distingue «avisó» de «falló».
+        if fallos is not None:
+            roja = int(fallos) > 0
+        else:
+            roja = int(ultimo.get("exit", 0)) != 0
+        if roja:
+            detalle = f"{fallos} fallo(s)" if fallos is not None else f"código {ultimo.get('exit')}"
             faltas.append(
-                f"la última puerta del día ({ultimo.get('comando')}) salió con código "
-                f"{ultimo.get('exit')} (REG-SAL-002)"
+                f"la última puerta del día ({ultimo.get('comando')}) salió con "
+                f"{detalle} (REG-SAL-002)"
             )
     elif juzgables:
         faltas.append("se trabajó hoy sin ejecutar doctor ni check (REG-EJE-002)")
@@ -828,6 +839,97 @@ def check_lecturas_previas(
     report.add(check)
 
 
+# ── memoria_consultada: INI-007 ───────────────────────────────────────────
+
+#: Comandos que consultan la memoria de todos los proyectos.
+COMANDOS_MEMORIA = ("personal",)
+
+#: Días hacia atrás que se consideran «esta sesión de trabajo».
+VENTANA_MEMORIA_DIAS = 7
+
+
+def _dentro_de_la_ventana(ts: str, dias: int = VENTANA_MEMORIA_DIAS) -> bool:
+    """Indica si una marca de tiempo cae dentro de la ventana reciente.
+
+    Args:
+        ts (str): Marca ISO 8601 de la bitácora.
+        dias (int): Días hacia atrás.
+
+    Returns:
+        bool: ``True`` si es reciente; una fecha ilegible no se juzga.
+    """
+    try:
+        momento = datetime.fromisoformat(str(ts).replace("Z", ""))
+    except ValueError:
+        return False
+    return (datetime.now() - momento).days <= dias
+
+
+def check_memoria_consultada(
+    report: DoctorReport, fix: bool = False, project_dir: str = "."
+) -> None:
+    """Verifica que se consulte la memoria multi-proyecto donde no hay memoria propia (INI-007).
+
+    La regla pide buscar en la memoria global «cuando falte contexto histórico».
+    Ese «cuando» no se puede juzgar en abstracto, pero sí hay un caso en el que
+    falta **siempre**: un proyecto **sin vault propio** no tiene memoria local
+    que leer, así que la única fuente es la BD personal. Ahí el chequeo exige
+    haberla consultado en la ventana de la sesión.
+
+    Lo que se declara fuera de alcance, en vez de fingir cobertura:
+
+    * Un proyecto **con** vault tiene memoria propia: la regla no aplica y se
+      dice, en lugar de apuntarse un verde por no mirar.
+    * Sin sesiones en la ventana no hay conducta que juzgar.
+    * No se registra ni se imprime la consulta: la bitácora anota el comando,
+      nunca su texto.
+
+    Args:
+        report (DoctorReport): Reporte donde registrar el chequeo.
+        fix (bool): Ignorado: no se repara escribiendo.
+        project_dir (str): Raíz del proyecto.
+    """
+    check = DoctorCheck(name="memoria_consultada")
+
+    if _vault_activo(project_dir):
+        check.status = "OK"
+        check.message = (
+            "El proyecto tiene vault propio: la memoria multi-proyecto no es la "
+            "única fuente, así que INI-007 no aplica aquí."
+        )
+        report.add(check)
+        return
+
+    recientes = [
+        entrada for entrada in leer(project_dir)
+        if _dentro_de_la_ventana(entrada.get("ts", ""))
+    ]
+    if not recientes:
+        check.status = "OK"
+        check.message = (
+            f"Sin sesiones registradas en los últimos {VENTANA_MEMORIA_DIAS} días: "
+            "no hay conducta que juzgar."
+        )
+        report.add(check)
+        return
+
+    if any(entrada.get("comando") in COMANDOS_MEMORIA for entrada in recientes):
+        check.status = "OK"
+        check.message = (
+            "Se consultó la memoria multi-proyecto en esta ventana de trabajo."
+        )
+        report.add(check)
+        return
+
+    check.status = "WARN"
+    check.message = (
+        f"{len(recientes)} ejecución(es) en {VENTANA_MEMORIA_DIAS} día(s) en un "
+        "proyecto sin vault propio, sin una sola consulta a la memoria global — "
+        "REG-INI-007. Prueba: `ctxmap personal query \"términos\" --limite 5`."
+    )
+    report.add(check)
+
+
 CHECKS_SESION = (
     check_bitacora_sesion,
     check_permisos_explicitos,
@@ -837,4 +939,5 @@ CHECKS_SESION = (
     check_doctor_rapido,
     check_decisiones_con_porque,
     check_lecturas_previas,
+    check_memoria_consultada,
 )

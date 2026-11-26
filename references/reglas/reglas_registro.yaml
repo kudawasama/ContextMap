@@ -106,7 +106,7 @@ reglas:
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "10. Memoria viva y Second Brain"
-    verificacion: "manual"
+    verificacion: "doctor:memoria_consultada"
 
   - id: REG-EJE-001
     resumen: "intérprete del venv"

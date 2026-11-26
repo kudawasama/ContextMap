@@ -362,6 +362,16 @@ INVARIANTES: tuple[Invariante, ...] = (
         ),
         reparacion="leer el archivo antes de cambiarlo (`ctxmap hook lectura --instalar`)",
     ),
+    Invariante(
+        nombre="memoria_de_otros_proyectos",
+        chequeo="memoria_consultada",
+        severidad="WARN",
+        motivo=(
+            "Un proyecto sin vault propio no tiene memoria local: si nadie consulta "
+            "la BD personal, la sesión empieza sin contexto y lo llama experiencia."
+        ),
+        reparacion='`ctxmap personal query "términos" --limite 5`',
+    ),
 )
 
 

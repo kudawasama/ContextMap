@@ -81,6 +81,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Añadido
+- **La nota del día se escribe antes del índice**, así que ya cuelga de un
+  padre desde el primer build del día. Antes nacía después de que el índice
+  catalogara las notas manuales: cada mañana el vault estrenaba un aviso
+  «SIN PADRE» y la topología parecía rota por haber cambiado el día.
+- **La consulta a la memoria multi-proyecto se comprueba donde falta memoria
+  local** (`check_memoria_consultada`, `REG-INI-007`). Un proyecto **sin vault
+  propio** no tiene contexto que leer: si en la ventana de la sesión
+  (`VENTANA_MEMORIA_DIAS = 7`) no hay ninguna ejecución de `personal`, avisa con
+  el comando exacto. Un proyecto con vault no se juzga —y se declara el motivo,
+  en vez de apuntarse un verde por no mirar—. La bitácora anota el comando,
+  nunca el texto de la consulta. Catálogo: **70 de 71**.
 - **La lectura de código deja huella** (`core/audit/lecturas.py`,
   `domain/ecosystem/hooks_lectura.py`, `REG-INI-006`). `ctxmap hook lectura`
   anota `{ts, ruta, origen}` en `.context-map/state/lecturas.jsonl` desde un
