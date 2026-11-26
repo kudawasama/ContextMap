@@ -99,6 +99,15 @@ def create_parser() -> argparse.ArgumentParser:
     s_pend.add_argument("--limite", type=int, default=12, help="Máximo de pendientes por fuente (default: 12)")
     s_pend.add_argument("--json", action="store_true", help="Salida JSON estructurada")
 
+    s_evid = sub.add_parser(
+        "evidencia",
+        help="Muestra la evidencia de la sesión: lo que el motor ejecutó, no lo que se cuenta",
+    )
+    s_evid.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
+    s_evid.add_argument("--dia", default=None, help="Día a revisar (YYYY-MM-DD; por defecto, hoy)")
+    s_evid.add_argument("--limite", type=int, default=20, help="Máximo de ejecuciones a listar")
+    s_evid.add_argument("--json", action="store_true", help="Salida JSON estructurada")
+
     s_scan = sub.add_parser("scan", help="Escanea proyecto y genera eventos")
     s_scan.add_argument("target", nargs="?", default=".", help="Ruta del proyecto")
     s_scan.add_argument("--project", default="Repo", help="Nombre del proyecto")

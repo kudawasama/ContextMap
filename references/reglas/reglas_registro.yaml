@@ -154,14 +154,14 @@ reglas:
 
   - id: REG-EJE-005
     resumen: "evidencia, no autoreporte"
-    nombre: "Verificar con la salida real de los comandos, nunca con el autoreporte"
+    nombre: "El informe de la sesión se lee del registro del motor (ctxmap evidencia), no de la memoria del agente"
     categoria: REG-EJE
     categoria_nombre: "Ejecución y verificación"
     prioridad: critica
     estado: implementada
     norma: "docs/GOBERNANZA-AGENTES.md"
     seccion: "6. Verificación Obligatoria y Commits"
-    verificacion: "manual"
+    verificacion: "test:test_evidencia.py"
 
   - id: REG-EJE-006
     resumen: "dependencias MCP importables"

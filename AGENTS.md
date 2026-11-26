@@ -93,7 +93,15 @@ son independientes y **nunca** se cruzan.
 .venv/Scripts/python.exe -m context_map.cli hook lectura . --instalar
 #    Si tu harness no tiene hooks, anota lo que abriste con bash/grep:
 .venv/Scripts/python.exe -m context_map.cli hook lectura . --ruta <archivo> --origen agente --quiet
+
+# 8. Al informar: la evidencia se lee del registro, no se recuerda (REG-EJE-005)
+.venv/Scripts/python.exe -m context_map.cli evidencia .
 ```
+
+> Al reportar «tests pasan / doctor verde», enseña la salida real: `evidencia`
+> dice qué se ejecutó hoy, con qué código y qué puertas faltan. `pytest` no deja
+> rastro en la bitácora (no pasa por la CLI) y el informe lo declara fuera de
+> alcance en vez de insinuar que lo cubre.
 
 `make` es **opcional** (no está instalado en todas las máquinas): si existe,
 `make verify` encadena los pasos 1 y 2 y resuelve el intérprete solo. Los
@@ -144,6 +152,7 @@ incumple, y `make verify` es la puerta que debe estar en verde antes de cerrar.
 | `decision_con_porque` | `decisiones_con_porque` | WARN | completar el porqué al registrar la decisión |
 | `codigo_leido` | `lecturas_previas` | WARN | `ctxmap hook lectura . --instalar` y leer antes de tocar |
 | `memoria_de_otros_proyectos` | `memoria_consultada` | WARN | `ctxmap personal query "términos" --limite 5` |
+| — (test) | `test_evidencia.py` | — | `ctxmap evidencia .` para enseñar la salida real, no la memoria |
 
 * `context_map/__tests__/test_invariantes.py` es el contrato: falla si alguien
   borra o renombra un chequeo que sostiene una regla fija.

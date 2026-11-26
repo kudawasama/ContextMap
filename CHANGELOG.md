@@ -81,6 +81,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### Añadido
+- **`ctxmap evidencia`**: el informe de la sesión se lee del registro del motor
+  —bitácora + huella de lecturas— y no de la memoria de quien lo cuenta. Dice
+  qué puertas (`brief`, `doctor`, `check`, `reglas`) se ejecutaron, cuándo y cómo
+  terminaron; las que no se ejecutaron se declaran faltantes, y lo que no pasa
+  por la CLI (`pytest`, el chat) se declara fuera de alcance. `REG-EJE-005`
+  cierra así: **las 71 reglas del catálogo las comprueba la máquina**.
 - **La nota del día se escribe antes del índice**, así que ya cuelga de un
   padre desde el primer build del día. Antes nacía después de que el índice
   catalogara las notas manuales: cada mañana el vault estrenaba un aviso

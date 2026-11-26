@@ -22,6 +22,7 @@ from context_map.application.commands.importers import (
 )
 from context_map.application.commands.inbox import cmd_inbox
 from context_map.application.commands.pendientes_cmd import cmd_pendientes
+from context_map.application.commands.evidencia_cmd import cmd_evidencia
 from context_map.application.commands.ingest import cmd_ingest
 from context_map.application.commands.pack import cmd_pack, cmd_unpack
 from context_map.application.commands.personal import cmd_personal
@@ -74,4 +75,5 @@ __all__ = [
     "cmd_wiki",
     "cmd_review",
     "cmd_pendientes",
+    "cmd_evidencia",
 ]

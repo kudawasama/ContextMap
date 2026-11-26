@@ -254,13 +254,13 @@ Tres decisiones que conviene no deshacer:
 3. **Una plantilla no se juzga como nota.** Las de `templates/` o `Plantilla-*`
    llevan `{{title}}` por definición; el chequeo las salta.
 
-Queda **una sola** regla en `manual` (`REG-EJE-005`), y su motivo está escrito: es lo que
-**ocurre en la conversación** —pedir permiso antes de `adapt` o de `push`,
-enseñar la salida real en vez del autoreporte, leer el código antes de proponer—.
-Eso no deja huella en el repositorio; se audita leyendo la sesión. Cuando el
-cruce de fuentes dejó de depender de la memoria del agente (`ctxmap pendientes`,
-§6.4), salió de esta lista: no se midió la intención, se **eliminó la
-necesidad** de la regla.
+**Ninguna regla queda en `manual`.** Las que parecían imposibles de medir no se
+midieron por la puerta fácil: se les buscó la rendija donde la conducta deja
+rastro. El cruce de fuentes salió de la lista cuando dejó de depender de la
+memoria del agente (`ctxmap pendientes`, §6.4) —no se midió la intención, se
+**eliminó la necesidad** de la regla—, y «evidencia, no autoreporte» salió cuando
+el informe pasó a leerse del registro (`ctxmap evidencia`, §6.5) en vez de
+auditar la prosa del chat.
 
 ## Auto-diagnóstico (doctor)
 
@@ -308,12 +308,42 @@ Tres decisiones que no conviene deshacer:
 `--contexto` no explica su porqué, y eso el registro lo dice sin ambigüedad. No
 se juzga si la decisión era relevante — eso es criterio, no dato.
 
-Lo que sigue sin medirse, y por qué: inspeccionar el código antes de proponer
-(`INI-006`), buscar en la memoria de otros proyectos (`INI-007`), distinguir
-evidencia de autoreporte (`EJE-005`) y anunciar el costo de una tarea larga
-(`LIM-004`). Dependen de lo que el agente **piensa y escribe**, no de lo que el
-repositorio guarda. Fingir un chequeo ahí sería medir otra cosa con el mismo
-nombre.
+Tres reglas que también parecían inmedibles salieron de esta lista sin rebajar
+el listón: `INI-006` (leer el código antes de proponer) se mide con la huella de
+lecturas contra los archivos del último commit; `INI-007` (buscar en la memoria
+multi-proyecto) donde el proyecto **no tiene** vault propio y la consulta es la
+única fuente; `LIM-004` (anunciar el costo) porque el anuncio y la negativa a
+correr sin `--confirmar` son actos, y los actos quedan en la bitácora.
+
+Queda un caso que no es medible y conviene decirlo: distinguir evidencia de
+autoreporte **en la prosa**. La diferencia no está en el repositorio, está en si
+el número que se enseña salió de un comando o de la memoria de quien lo cuenta,
+y un chequeo de redacción marcaría texto técnico (medido: 1 de 5 notas del
+diario en este repo, y esas palabras aparecen al explicar un arreglo). Por eso no
+se audita la frase: se le quita al agente el monopolio del informe (§6.5).
+
+### 6.5 El informe se lee del registro (`ctxmap evidencia`)
+
+`ctxmap evidencia .` imprime lo que pasó hoy, tomado de las dos fuentes que
+escribe el motor: la bitácora (comando, código de salida, duración, `fallos`,
+banderas) y la huella de lecturas. De cada puerta (`brief`, `doctor`, `check`,
+`reglas`) dice si se ejecutó, cuándo y cómo terminó; de las que no se ejecutaron
+dice que faltan, en vez de darlas por buenas.
+
+Tres decisiones que lo sostienen:
+
+1. **Se copian campos declarados, no líneas enteras.** La bitácora es un archivo
+   del usuario: el informe transporta `ts`, `comando`, `exit`, `duracion_s`,
+   `flags`, `fallos` y `autorizado`, y nada más. Ni rutas ni texto de comandos.
+2. **Sin registro no se juzga, se declara.** Un proyecto sin bitácora sale
+   `sin-registro` y lo dice; un día sin ejecuciones, `sin-actividad`. Fingir un
+   verde porque no hay datos es la misma deshonestidad que fingir el dato.
+3. **Lo que no pasa por la CLI se declara fuera de alcance.** `pytest` y lo que
+   se escribe en el chat no dejan esta huella: el informe lo dice en voz alta en
+   lugar de insinuar una cobertura que no tiene.
+
+**«Aviso» no es «fallo»**, también aquí: si la entrada trae `fallos`, manda ese
+número; `--strict-warn` sale con código 1 aunque solo avise.
 
 ### 6.4 El cruce de pendientes lo hace el motor
 
