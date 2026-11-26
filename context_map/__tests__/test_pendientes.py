@@ -92,8 +92,64 @@ def test_una_fuente_ausente_se_declara(tmp_path) -> None:
 
     ausentes = pn.fuentes_ausentes(cruce)
     assert "Tareas" in ausentes
-    assert "Documentos sin nota" in ausentes
     assert "Backlog manual" not in ausentes
+
+
+def test_documentos_no_aplica_si_nunca_hubo_ingesta(tmp_path) -> None:
+    """Una fuente que el motor nunca crea no puede avisar todos los días.
+
+    `3.2-DOCUMENTOS/` nace con la primera ingesta: en un proyecto que no ingirió
+    nada, «ausente» sería un aviso eterno, y un aviso eterno se aprende a ignorar.
+    """
+    vault = _vault(tmp_path)
+    _escribir(os.path.join(vault, "7.0-MANUAL", "BACKLOG.md"), "- [ ] uno\n")
+
+    cruce = pn.cruzar_fuentes(str(tmp_path))
+    claves = {f["clave"]: f for f in cruce["fuentes"]}
+
+    assert claves["documentos"]["aplica"] is False
+    assert "ingesta" in claves["documentos"]["motivo"]
+    assert "Documentos sin nota" not in pn.fuentes_ausentes(cruce)
+    assert [x["nombre"] for x in pn.fuentes_no_aplicables(cruce)] == ["Documentos sin nota"]
+
+
+def test_documentos_si_aplica_si_hay_documentos_esperando(tmp_path) -> None:
+    """Con documentos en ``raw/docs``, la carpeta del vault debería existir."""
+    _vault(tmp_path)
+    _escribir(os.path.join(str(tmp_path), ".context-map", "raw", "docs", "informe.md"), "x")
+
+    cruce = pn.cruzar_fuentes(str(tmp_path))
+    claves = {f["clave"]: f for f in cruce["fuentes"]}
+
+    assert claves["documentos"]["aplica"] is True
+    assert "Documentos sin nota" in pn.fuentes_ausentes(cruce)
+
+
+def test_documentos_aplica_cuando_la_carpeta_existe(tmp_path) -> None:
+    """Si hay ingesta, la fuente se cruza como cualquier otra."""
+    vault = _vault(tmp_path)
+    _escribir(os.path.join(vault, "3.2-DOCUMENTOS", "informe.pdf"), "x")
+
+    cruce = pn.cruzar_fuentes(str(tmp_path))
+    claves = {f["clave"]: f for f in cruce["fuentes"]}
+
+    assert claves["documentos"]["aplica"] is True
+    assert "motivo" not in claves["documentos"]
+
+
+def test_el_comando_no_avisa_de_lo_que_no_aplica(tmp_path, capsys) -> None:
+    """El comando distingue «no aplica» de «ausente» en la salida."""
+    from context_map.application.commands.pendientes_cmd import cmd_pendientes
+
+    vault = _vault(tmp_path)
+    _escribir(os.path.join(vault, "7.0-MANUAL", "BACKLOG.md"), "- [ ] uno\n")
+    _escribir(os.path.join(vault, "5.0-BACKLOG", "5.1-Tareas.md"), "- [ ] dos\n")
+
+    cmd_pendientes({"target": str(tmp_path), "json": False, "limite": 5})
+
+    salida = capsys.readouterr().out
+    assert "no aplica" in salida
+    assert "Sin veredicto de" not in salida
 
 
 def test_sin_vault_no_inventa_pendientes(tmp_path) -> None:

@@ -5,80 +5,29 @@ Todas las notas de versión y cambios destacables en este proyecto serán docume
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.15.1] — 2026-11-03
-
-### 🧹 Poda de documentos ingeridos huérfanos
-
-- El grafo de este repo arrastraba dos nodos `DOCUMENTO` de **contenido demo**
-  (`carta-buffett-2012`, `inversion-largo-plazo`): se ingirieron el 2026-10-09
-  para probar `ctxmap ingest` y se quedaron como conocimiento del proyecto
-  (el vault los publicaba bajo `VALOR` y `ESTRATEGIA` como si fueran doctrina
-  propia).
-- `es_documento_huerfano()` (`poda.py`): un `DOCUMENTO` con `source == "ingest"`
-  y `classification == "docs"` cuya fuente ya no existe en el proyecto se poda.
-  La búsqueda de fuentes ignora el estado derivado (`state`, `maps`, `vault-*`,
-  `_legacy`) para no darse por viva con sus propias copias, y se calcula una
-  sola vez por raíz (`_stems_vivos`, `lru_cache`).
-- Lo que **no** se toca: cualquier `DOCUMENTO` manual, de agente o de otro
-  `source`, y cualquier nodo que conserve al menos una ruta viva.
-- Las dos fixtures demo salen de `.context-map/raw/docs/` a
-  `.context-map/state/archive/docs-demo-2026-11-03/` (archivadas, no borradas).
-  Grafo: **359 → 357 nodos**, 0 nodos de tipo `DOCUMENTO` inventados.
-
-### ✅ Pruebas
-
-- `test_poda_fantasmas.py` (+2): documento huérfano al desaparecer su archivo
-  (con limpieza de caché entre pasos) y documentos ajenos a la ingesta que
-  nunca se podan. Suite total: **490 tests**.
-
-## [2.15.0] — 2026-11-03
-
-### 🧹 Poda de nodos fantasma (rutas que ya no existen)
-
-- Nuevo `context_map/domain/scanning/poda.py`: el grafo es **acumulativo** y
-  nadie retiraba los nodos de archivos borrados. Consecuencia real: mientras
-  existían los worktrees de `.work/wt-base` y `.work/scratch`, el escáner los
-  analizó; al borrarlos, 5 nodos (2 entrypoints y 3 TODOs) y un RIESGO de
-  complejidad siguieron en `state/graph.jsonl` y el vault dibujó un riesgo
-  sobre `.work/wt-base/context_map/infrastructure/mcp_server.py`, inexistente.
-- `podar_estado()` se ejecuta en `build` y en `do_sync` (scan/refresh/importers).
-  Es **conservadora**: solo toca nodos `source == "scanner"` del mundo código,
-  elimina un nodo únicamente si **todas** sus rutas citadas están muertas, y
-  retira las aristas que quedan colgando. Es **idempotente** (no reescribe si
-  no hay fantasmas) y escribe el estado de forma atómica (`os.replace`).
-- Los nodos que sobreviven con rutas mixtas se **sanean** (solo RIESGO, donde
-  las rutas son una lista literal): se reescriben título, resumen y evidencias
-  conservando las rutas vivas. 4 riesgos dejaron de citar archivos borrados
-  (`common.py`, `keywords.py`, `personal.py`) sin perder los reales.
-- La comprobación de existencia es tolerante al saneado de nombres del vault
-  (`context_map/__tests__/x.py` se escribe `context_map/__/tests__/x.py` en
-  títulos y evidencias).
-
-### 🚫 `.work/` fuera del análisis
-
-- `infrastructure/analyzers/exclusions.py`: `.work` (worktrees y scratch
-  locales) entra en `CARPETAS_EXCLUIDAS` — era la causa raíz de los fantasmas.
-  `work`, `workers`, `workflows` y `.workspace` **no** se excluyen.
-
-### 🔁 Fin del bucle de reingesta
-
-- `evento_de_ruta_muerta()` (`poda.py`) descarta, antes de convertirse en nodo,
-  los eventos del escáner cuyas rutas ya no existen. `raw/events.jsonl` es
-  memoria histórica y conserva 8 eventos de `.work`, así que cada build
-  regeneraba los 5 nodos y la poda los retiraba otra vez (churn medido).
-  Ahora el filtro se aplica en `build` (`collect_events`) y en
-  `sync_incremental` (`project_root`). Medido tras dos builds seguidos:
-  `poda: 0 nodo(s) fantasma`.
-
-### ✅ Pruebas
-
-- `test_poda_fantasmas.py` (7): extracción de rutas, tolerancia al mangle de
-  `__tests__`, predicado de poda, saneo de riesgo mixto, retirada de aristas,
-  idempotencia del estado y filtro de reingesta.
-- `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
-  respetados. Suite total: **488 tests**.
-
 ## [Unreleased]
+
+### Añadido
+
+
+## [2.17.0] — 2026-11-26
+
+> **El catálogo de reglas se cierra: 71 reglas, las 71 medidas por la máquina.**
+> Las tareas caras se anuncian y no corren sin `--confirmar`; la lectura de
+> código deja huella; el informe de la sesión se lee del registro y no de la
+> memoria; y los avisos que sonaban siempre —la nota del día sin padre, la
+> fuente que el motor nunca crea— dejan de sonar.
+
+### Corregido
+- **"Documentos sin nota" ya no avisa donde no hay nada que esperar.** El build
+  solo crea `3.2-DOCUMENTOS/` cuando el proyecto ingirió documentos externos, así
+  que en un proyecto sin ingesta el cruce de pendientes avisaba todos los días de
+  una fuente ausente que nunca iba a existir —y un aviso que siempre suena se
+  aprende a ignorar. `cruzar_fuentes` distingue ahora **no aplica** (con motivo
+  declarado) de **ausente**: con `raw/docs` vacío la fuente se declara no
+  aplicable; con documentos esperando nota, la ausencia sí se avisa. Comprobado
+  antes de tocar el código: en los dos proyectos con vault revisados faltaba la
+  carpeta con `raw/docs` en 0 archivos.
 
 ### Añadido
 - **`ctxmap evidencia`**: el informe de la sesión se lee del registro del motor
@@ -354,7 +303,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 - **`texto_enlazable` lanzaba `IndexError` con notas de codificación mixta.**
   Seis notas de `G:/Mi unidad/EE RR/00_GOBERNANZA_IA` contienen bytes NUL sueltos
-  (UTF-8 con restos de UTF-16); un NUL entre dígitos (` 12 `) se leía como
+  (UTF-8 con restos de UTF-16); un NUL entre dígitos (`␀12␀`) se leía como
   una marca de protección de wikilink inventada y el índice se salía de rango.
   Lo que parecía «el doctor no termina en 180 s» era el validador muriendo en
   `check_topologia`. Ahora los NUL se retiran antes de analizar y una marca fuera
@@ -391,6 +340,79 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - Nueva tool MCP `context_search_vault` (búsqueda FTS5 del vault).
 - `core/storage/vault_index.py`: `abrir_indice`, `indexar_vault`, `buscar`
   (parser de frontmatter tolerante, sin dependencia de `yaml`).
+
+## [2.15.1] — 2026-11-03
+
+### 🧹 Poda de documentos ingeridos huérfanos
+
+- El grafo de este repo arrastraba dos nodos `DOCUMENTO` de **contenido demo**
+  (`carta-buffett-2012`, `inversion-largo-plazo`): se ingirieron el 2026-10-09
+  para probar `ctxmap ingest` y se quedaron como conocimiento del proyecto
+  (el vault los publicaba bajo `VALOR` y `ESTRATEGIA` como si fueran doctrina
+  propia).
+- `es_documento_huerfano()` (`poda.py`): un `DOCUMENTO` con `source == "ingest"`
+  y `classification == "docs"` cuya fuente ya no existe en el proyecto se poda.
+  La búsqueda de fuentes ignora el estado derivado (`state`, `maps`, `vault-*`,
+  `_legacy`) para no darse por viva con sus propias copias, y se calcula una
+  sola vez por raíz (`_stems_vivos`, `lru_cache`).
+- Lo que **no** se toca: cualquier `DOCUMENTO` manual, de agente o de otro
+  `source`, y cualquier nodo que conserve al menos una ruta viva.
+- Las dos fixtures demo salen de `.context-map/raw/docs/` a
+  `.context-map/state/archive/docs-demo-2026-11-03/` (archivadas, no borradas).
+  Grafo: **359 → 357 nodos**, 0 nodos de tipo `DOCUMENTO` inventados.
+
+### ✅ Pruebas
+
+- `test_poda_fantasmas.py` (+2): documento huérfano al desaparecer su archivo
+  (con limpieza de caché entre pasos) y documentos ajenos a la ingesta que
+  nunca se podan. Suite total: **490 tests**.
+
+## [2.15.0] — 2026-11-03
+
+### 🧹 Poda de nodos fantasma (rutas que ya no existen)
+
+- Nuevo `context_map/domain/scanning/poda.py`: el grafo es **acumulativo** y
+  nadie retiraba los nodos de archivos borrados. Consecuencia real: mientras
+  existían los worktrees de `.work/wt-base` y `.work/scratch`, el escáner los
+  analizó; al borrarlos, 5 nodos (2 entrypoints y 3 TODOs) y un RIESGO de
+  complejidad siguieron en `state/graph.jsonl` y el vault dibujó un riesgo
+  sobre `.work/wt-base/context_map/infrastructure/mcp_server.py`, inexistente.
+- `podar_estado()` se ejecuta en `build` y en `do_sync` (scan/refresh/importers).
+  Es **conservadora**: solo toca nodos `source == "scanner"` del mundo código,
+  elimina un nodo únicamente si **todas** sus rutas citadas están muertas, y
+  retira las aristas que quedan colgando. Es **idempotente** (no reescribe si
+  no hay fantasmas) y escribe el estado de forma atómica (`os.replace`).
+- Los nodos que sobreviven con rutas mixtas se **sanean** (solo RIESGO, donde
+  las rutas son una lista literal): se reescriben título, resumen y evidencias
+  conservando las rutas vivas. 4 riesgos dejaron de citar archivos borrados
+  (`common.py`, `keywords.py`, `personal.py`) sin perder los reales.
+- La comprobación de existencia es tolerante al saneado de nombres del vault
+  (`context_map/__tests__/x.py` se escribe `context_map/__/tests__/x.py` en
+  títulos y evidencias).
+
+### 🚫 `.work/` fuera del análisis
+
+- `infrastructure/analyzers/exclusions.py`: `.work` (worktrees y scratch
+  locales) entra en `CARPETAS_EXCLUIDAS` — era la causa raíz de los fantasmas.
+  `work`, `workers`, `workflows` y `.workspace` **no** se excluyen.
+
+### 🔁 Fin del bucle de reingesta
+
+- `evento_de_ruta_muerta()` (`poda.py`) descarta, antes de convertirse en nodo,
+  los eventos del escáner cuyas rutas ya no existen. `raw/events.jsonl` es
+  memoria histórica y conserva 8 eventos de `.work`, así que cada build
+  regeneraba los 5 nodos y la poda los retiraba otra vez (churn medido).
+  Ahora el filtro se aplica en `build` (`collect_events`) y en
+  `sync_incremental` (`project_root`). Medido tras dos builds seguidos:
+  `poda: 0 nodo(s) fantasma`.
+
+### ✅ Pruebas
+
+- `test_poda_fantasmas.py` (7): extracción de rutas, tolerancia al mangle de
+  `__tests__`, predicado de poda, saneo de riesgo mixto, retirada de aristas,
+  idempotencia del estado y filtro de reingesta.
+- `test_exclusiones_escaneo.py` (+2): `.work` excluido y nombres parecidos
+  respetados. Suite total: **488 tests**.
 
 ## [2.14.1] — 2026-11-02
 

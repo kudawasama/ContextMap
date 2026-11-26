@@ -15,6 +15,14 @@ Fuentes que se cruzan, todas dentro del vault activo:
 
 Una fuente **ausente** se declara como tal: no se puede cruzar lo que no existe,
 y callarlo convertiría el cruce en una lista incompleta con aspecto de completa.
+
+Pero «ausente» y «no aplica» no son lo mismo. ``3.2-DOCUMENTOS/`` solo nace
+cuando el proyecto ingirió documentos externos: en un proyecto que nunca ingirió
+nada, avisar cada vez de que la carpeta falta es ruido —y un aviso que siempre
+suena se aprende a ignorar. Se declara **no aplica** cuando no hay una sola razón
+para que exista (medido: en los dos proyectos con vault que se revisaron, la
+carpeta faltaba con ``raw/docs`` vacío). Lo que sí indica que debería existir se
+nombra: con documentos pendientes de procesar, la ausencia se avisa.
 """
 
 from __future__ import annotations
@@ -190,6 +198,41 @@ def _documentos_sin_nota(vault: str, limite: int) -> tuple[list[str], int, bool]
     return sin_nota[:limite], len(sin_nota), True
 
 
+def _documentos_pendientes(project_dir: str) -> int:
+    """Cuenta los documentos externos en espera de convertirse en nota.
+
+    Args:
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        int: Archivos bajo ``.context-map/raw/docs`` (0 si no hay carpeta).
+    """
+    raw = os.path.join(project_dir, ".context-map", "raw", "docs")
+    if not os.path.isdir(raw):
+        return 0
+    try:
+        return sum(len(archivos) for _base, _dirs, archivos in os.walk(raw))
+    except OSError:
+        return 0
+
+
+def _aplica_documentos(vault: str, project_dir: str) -> tuple[bool, str]:
+    """Decide si la fuente «Documentos sin nota» tiene sentido en este proyecto.
+
+    Args:
+        vault (str): Raíz del vault activo.
+        project_dir (str): Raíz del proyecto.
+
+    Returns:
+        Tuple[bool, str]: Si aplica y, cuando no, el motivo declarado.
+    """
+    if os.path.isdir(os.path.join(vault, "3.2-DOCUMENTOS")):
+        return True, ""
+    if _documentos_pendientes(project_dir) > 0:
+        return True, ""
+    return False, "el proyecto no ingirió documentos externos (`3.2-DOCUMENTOS/` nace con la primera ingesta)"
+
+
 def cruzar_fuentes(project_dir: str = ".", limite: int = 12) -> dict[str, Any]:
     """Cruza las cuatro fuentes y devuelve los pendientes con su origen.
 
@@ -219,9 +262,15 @@ def cruzar_fuentes(project_dir: str = ".", limite: int = 12) -> dict[str, Any]:
             "nombre": nombre,
             "ruta": "/".join((".context-map", os.path.basename(vault), relativa)),
             "presente": os.path.exists(ruta),
+            "aplica": True,
             "items": [],
             "total": 0,
         }
+        if clave == "documentos":
+            aplica, motivo = _aplica_documentos(vault, project_dir)
+            fuente["aplica"] = aplica
+            if not aplica:
+                fuente["motivo"] = motivo
 
         if fuente["presente"]:
             if clave == "diario":
@@ -246,6 +295,25 @@ def cruzar_fuentes(project_dir: str = ".", limite: int = 12) -> dict[str, Any]:
     return resultado
 
 
+def fuentes_no_aplicables(cruce: dict[str, Any]) -> list[dict[str, str]]:
+    """Fuentes que no tienen sentido en este proyecto, con su motivo.
+
+    No es lo mismo que una fuente ausente: aquí no falta nada, simplemente no
+    había nada que esperar (``3.2-DOCUMENTOS/`` sin ingesta previa).
+
+    Args:
+        cruce (dict): Resultado de :func:`cruzar_fuentes`.
+
+    Returns:
+        List[Dict[str, str]]: ``nombre`` y ``motivo`` de cada fuente no aplicable.
+    """
+    return [
+        {"nombre": f["nombre"], "motivo": f.get("motivo", "")}
+        for f in cruce.get("fuentes", [])
+        if not f.get("aplica", True)
+    ]
+
+
 def fuentes_ausentes(cruce: dict[str, Any]) -> list[str]:
     """Nombres de las fuentes que no existen en el vault.
 
@@ -255,4 +323,8 @@ def fuentes_ausentes(cruce: dict[str, Any]) -> list[str]:
     Returns:
         List[str]: Nombres legibles de las fuentes ausentes.
     """
-    return [f["nombre"] for f in cruce.get("fuentes", []) if not f.get("presente")]
+    return [
+        f["nombre"]
+        for f in cruce.get("fuentes", [])
+        if not f.get("presente") and f.get("aplica", True)
+    ]

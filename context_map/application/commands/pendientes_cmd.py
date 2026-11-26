@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import json
 
-from context_map.domain.reporting.pendientes import cruzar_fuentes, fuentes_ausentes
+from context_map.domain.reporting.pendientes import (
+    cruzar_fuentes,
+    fuentes_ausentes,
+    fuentes_no_aplicables,
+)
 
 
 def cmd_pendientes(args) -> None:
@@ -43,6 +47,9 @@ def cmd_pendientes(args) -> None:
 
     for fuente in cruce["fuentes"]:
         print()
+        if not fuente.get("aplica", True):
+            print(f"  ·  {fuente['nombre']}: no aplica — {fuente.get('motivo', 'sin motivo declarado')}")
+            continue
         if not fuente["presente"]:
             print(f"  ⚠️  {fuente['nombre']}: fuente ausente ({fuente['ruta']})")
             continue
